@@ -45,6 +45,8 @@ export interface DelayDetails {
 // Service interfaces
 export interface DelayDetectionService {
   checkForDelays(trackingInfo: TrackingInfo): Promise<DelayDetectionResult>;
+  setDelayThreshold(threshold: number): void;
+  getDelayThreshold(): number;
 }
 
 export interface EmailService {
@@ -57,6 +59,8 @@ export interface SMSService {
 
 export interface CarrierService {
   getTrackingInfo(trackingNumber: string, carrierCode: string): Promise<TrackingInfo>;
+  validateTrackingNumber(trackingNumber: string, carrierCode: string): Promise<boolean>;
+  getCarrierList(): Promise<Array<{ code: string; name: string }>>;
 }
 
 // Configuration types
