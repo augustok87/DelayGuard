@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { TrackingInfo, CarrierService as ICarrierService } from '../types';
+import { TrackingInfo, CarrierService as ICarrierService, ExternalServiceError } from '../types';
 
 export class CarrierService implements ICarrierService {
   private client: AxiosInstance;
@@ -68,7 +68,7 @@ export class CarrierService implements ICarrierService {
         }
       }
       
-      throw new Error(`Failed to fetch tracking information: ${error.message}`);
+      throw new ExternalServiceError('ShipEngine', error instanceof Error ? error.message : 'Unknown error');
     }
   }
 

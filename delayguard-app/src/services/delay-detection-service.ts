@@ -35,7 +35,7 @@ export class DelayDetectionService implements IDelayDetectionService {
       console.error('Error in delay detection:', error);
       return {
         isDelayed: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }

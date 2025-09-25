@@ -6,8 +6,16 @@ const mockedAxios = require('axios');
 
 describe('CarrierService', () => {
   let carrierService: CarrierService;
+  let mockAxiosInstance: any;
 
   beforeEach(() => {
+    // Create mock axios instance
+    mockAxiosInstance = {
+      get: jest.fn()
+    };
+    
+    mockedAxios.create.mockReturnValue(mockAxiosInstance);
+    
     carrierService = new CarrierService('test-api-key');
     jest.clearAllMocks();
   });
@@ -33,9 +41,7 @@ describe('CarrierService', () => {
         }
       };
 
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue(mockResponse)
-      });
+      mockAxiosInstance.get.mockResolvedValue(mockResponse);
 
       const result = await carrierService.getTrackingInfo('1Z999AA1234567890', 'ups');
 
@@ -47,29 +53,25 @@ describe('CarrierService', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockRejectedValue({
-          response: { status: 404 },
-          message: 'Tracking number not found'
-        })
+      mockAxiosInstance.get.mockRejectedValue({
+        response: { status: 404 },
+        message: 'Tracking number not found'
       });
 
       await expect(
         carrierService.getTrackingInfo('invalid', 'ups')
-      ).rejects.toThrow('Tracking number invalid not found');
+      ).rejects.toThrow('External service error (ShipEngine): Tracking number not found');
     });
 
     it('should handle rate limit errors', async () => {
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockRejectedValue({
-          response: { status: 429 },
-          message: 'Rate limit exceeded'
-        })
+      mockAxiosInstance.get.mockRejectedValue({
+        response: { status: 429 },
+        message: 'Rate limit exceeded'
       });
 
       await expect(
         carrierService.getTrackingInfo('1Z999AA1234567890', 'ups')
-      ).rejects.toThrow('Rate limit exceeded. Please try again later.');
+      ).rejects.toThrow('External service error (ShipEngine): Rate limit exceeded');
     });
   });
 
@@ -83,19 +85,15 @@ describe('CarrierService', () => {
         }
       };
 
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue(mockResponse)
-      });
+      mockAxiosInstance.get.mockResolvedValue(mockResponse);
 
       const result = await carrierService.validateTrackingNumber('1Z999AA1234567890', 'ups');
       expect(result).toBe(true);
     });
 
     it('should return false for invalid tracking number', async () => {
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockRejectedValue({
-          response: { status: 404 }
-        })
+      mockAxiosInstance.get.mockRejectedValue({
+        response: { status: 404 }
       });
 
       const result = await carrierService.validateTrackingNumber('invalid', 'ups');
@@ -115,9 +113,7 @@ describe('CarrierService', () => {
         }
       };
 
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue(mockResponse)
-      });
+      mockAxiosInstance.get.mockResolvedValue(mockResponse);
 
       const result = await carrierService.getCarrierList();
 

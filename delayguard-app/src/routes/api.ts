@@ -2,170 +2,114 @@ import Router from 'koa-router';
 import { verifyRequest } from '@shopify/koa-shopify-auth';
 import { query } from '../database/connection';
 import { getQueueStats } from '../queue/setup';
+import { analyticsRoutes } from './analytics';
+import { OptimizedApiService } from '../services/optimized-api';
+import { config } from '../server';
 
 const router = new Router();
+const optimizedApi = new OptimizedApiService(config);
 
 // Apply authentication to all API routes
 router.use(verifyRequest());
 
-// Get app settings
+// Include analytics routes
+router.use(analyticsRoutes.routes());
+
+// Get app settings (optimized)
 router.get('/settings', async (ctx) => {
-  try {
-    const shop = ctx.state.shopify.session.shop;
-    
-    const result = await query(
-      'SELECT * FROM app_settings WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $1)',
-      [shop]
-    );
-
-    if (result.rows.length === 0) {
-      // Return default settings if none exist
-      ctx.body = {
-        delayThresholdDays: 2,
-        emailEnabled: true,
-        smsEnabled: false,
-        notificationTemplate: 'default'
-      };
-    } else {
-      const settings = result.rows[0];
-      ctx.body = {
-        delayThresholdDays: settings.delay_threshold_days,
-        emailEnabled: settings.email_enabled,
-        smsEnabled: settings.sms_enabled,
-        notificationTemplate: settings.notification_template
-      };
+  const shop = ctx.state.shopify.session.shop;
+  const result = await optimizedApi.getSettings(shop);
+  
+  if (result.success) {
+    ctx.body = result.data;
+    if (result.responseTime) {
+      ctx.set('X-Response-Time', `${result.responseTime}ms`);
     }
-  } catch (error) {
-    console.error('Error fetching settings:', error);
+    if (result.cached) {
+      ctx.set('X-Cache', 'HIT');
+    }
+  } else {
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch settings' };
+    ctx.body = { error: result.error };
   }
 });
 
-// Update app settings
+// Update app settings (optimized)
 router.put('/settings', async (ctx) => {
-  try {
-    const shop = ctx.state.shopify.session.shop;
-    const { delayThresholdDays, emailEnabled, smsEnabled, notificationTemplate } = ctx.request.body;
+  const shop = ctx.state.shopify.session.shop;
+  const settings = ctx.request.body as any;
 
-    // Validate input
-    if (delayThresholdDays < 0 || delayThresholdDays > 30) {
-      ctx.status = 400;
-      ctx.body = { error: 'Delay threshold must be between 0 and 30 days' };
-      return;
-    }
+  // Validate input
+  if (settings.delayThresholdDays < 0 || settings.delayThresholdDays > 30) {
+    ctx.status = 400;
+    ctx.body = { error: 'Delay threshold must be between 0 and 30 days' };
+    return;
+  }
 
-    if (typeof emailEnabled !== 'boolean' || typeof smsEnabled !== 'boolean') {
-      ctx.status = 400;
-      ctx.body = { error: 'Email and SMS settings must be boolean values' };
-      return;
-    }
+  if (typeof settings.emailEnabled !== 'boolean' || typeof settings.smsEnabled !== 'boolean') {
+    ctx.status = 400;
+    ctx.body = { error: 'Email and SMS settings must be boolean values' };
+    return;
+  }
 
-    // Get shop ID
-    const shopResult = await query(
-      'SELECT id FROM shops WHERE shop_domain = $1',
-      [shop]
-    );
-
-    if (shopResult.rows.length === 0) {
-      ctx.status = 404;
-      ctx.body = { error: 'Shop not found' };
-      return;
-    }
-
-    const shopId = shopResult.rows[0].id;
-
-    // Upsert settings
-    await query(`
-      INSERT INTO app_settings (
-        shop_id, 
-        delay_threshold_days, 
-        email_enabled, 
-        sms_enabled, 
-        notification_template
-      ) VALUES ($1, $2, $3, $4, $5)
-      ON CONFLICT (shop_id)
-      DO UPDATE SET
-        delay_threshold_days = EXCLUDED.delay_threshold_days,
-        email_enabled = EXCLUDED.email_enabled,
-        sms_enabled = EXCLUDED.sms_enabled,
-        notification_template = EXCLUDED.notification_template,
-        updated_at = CURRENT_TIMESTAMP
-    `, [shopId, delayThresholdDays, emailEnabled, smsEnabled, notificationTemplate]);
-
+  const result = await optimizedApi.updateSettings(shop, settings);
+  
+  if (result.success) {
     ctx.body = { success: true };
-  } catch (error) {
-    console.error('Error updating settings:', error);
+    if (result.responseTime) {
+      ctx.set('X-Response-Time', `${result.responseTime}ms`);
+    }
+  } else {
     ctx.status = 500;
-    ctx.body = { error: 'Failed to update settings' };
+    ctx.body = { error: result.error };
   }
 });
 
-// Get delay alerts
+// Get delay alerts (optimized)
 router.get('/alerts', async (ctx) => {
-  try {
-    const shop = ctx.state.shopify.session.shop;
-    const { page = 1, limit = 20 } = ctx.query;
-
-    const offset = (Number(page) - 1) * Number(limit);
-
-    const result = await query(`
-      SELECT 
-        da.*,
-        o.order_number,
-        o.customer_name,
-        o.customer_email,
-        f.tracking_number,
-        f.carrier_code
-      FROM delay_alerts da
-      JOIN orders o ON da.order_id = o.id
-      JOIN shops s ON o.shop_id = s.id
-      LEFT JOIN fulfillments f ON da.fulfillment_id = f.id
-      WHERE s.shop_domain = $1
-      ORDER BY da.created_at DESC
-      LIMIT $2 OFFSET $3
-    `, [shop, Number(limit), offset]);
-
-    const countResult = await query(`
-      SELECT COUNT(*) as total
-      FROM delay_alerts da
-      JOIN orders o ON da.order_id = o.id
-      JOIN shops s ON o.shop_id = s.id
-      WHERE s.shop_domain = $1
-    `, [shop]);
-
-    ctx.body = {
-      alerts: result.rows,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: Number(countResult.rows[0].total),
-        pages: Math.ceil(Number(countResult.rows[0].total) / Number(limit))
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching alerts:', error);
+  const shop = ctx.state.shopify.session.shop;
+  const page = Number(ctx.query.page) || 1;
+  const limit = Number(ctx.query.limit) || 20;
+  
+  const result = await optimizedApi.getAlerts(shop, page, limit);
+  
+  if (result.success) {
+    ctx.body = result.data;
+    if (result.responseTime) {
+      ctx.set('X-Response-Time', `${result.responseTime}ms`);
+    }
+    if (result.cached) {
+      ctx.set('X-Cache', 'HIT');
+    }
+  } else {
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch alerts' };
+    ctx.body = { error: result.error };
   }
 });
 
-// Get queue statistics
+// Get queue statistics (optimized)
 router.get('/stats', async (ctx) => {
-  try {
-    const stats = await getQueueStats();
-    ctx.body = stats;
-  } catch (error) {
-    console.error('Error fetching stats:', error);
+  const shop = ctx.state.shopify.session.shop;
+  const result = await optimizedApi.getStats(shop);
+  
+  if (result.success) {
+    ctx.body = result.data;
+    if (result.responseTime) {
+      ctx.set('X-Response-Time', `${result.responseTime}ms`);
+    }
+    if (result.cached) {
+      ctx.set('X-Cache', 'HIT');
+    }
+  } else {
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch statistics' };
+    ctx.body = { error: result.error };
   }
 });
 
 // Test delay detection
 router.post('/test-delay', async (ctx) => {
   try {
-    const { trackingNumber, carrierCode } = ctx.request.body;
+    const { trackingNumber, carrierCode } = ctx.request.body as any;
 
     if (!trackingNumber || !carrierCode) {
       ctx.status = 400;
@@ -194,46 +138,41 @@ router.post('/test-delay', async (ctx) => {
   }
 });
 
-// Get recent orders
+// Get recent orders (optimized)
 router.get('/orders', async (ctx) => {
-  try {
-    const shop = ctx.state.shopify.session.shop;
-    const { page = 1, limit = 20 } = ctx.query;
-
-    const offset = (Number(page) - 1) * Number(limit);
-
-    const result = await query(`
-      SELECT 
-        o.*,
-        f.tracking_number,
-        f.carrier_code,
-        f.status as fulfillment_status
-      FROM orders o
-      JOIN shops s ON o.shop_id = s.id
-      LEFT JOIN fulfillments f ON o.id = f.order_id
-      WHERE s.shop_domain = $1
-      ORDER BY o.created_at DESC
-      LIMIT $2 OFFSET $3
-    `, [shop, Number(limit), offset]);
-
-    const countResult = await query(
-      'SELECT COUNT(*) as total FROM orders o JOIN shops s ON o.shop_id = s.id WHERE s.shop_domain = $1',
-      [shop]
-    );
-
-    ctx.body = {
-      orders: result.rows,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: Number(countResult.rows[0].total),
-        pages: Math.ceil(Number(countResult.rows[0].total) / Number(limit))
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching orders:', error);
+  const shop = ctx.state.shopify.session.shop;
+  const page = Number(ctx.query.page) || 1;
+  const limit = Number(ctx.query.limit) || 20;
+  
+  const result = await optimizedApi.getOrders(shop, page, limit);
+  
+  if (result.success) {
+    ctx.body = result.data;
+    if (result.responseTime) {
+      ctx.set('X-Response-Time', `${result.responseTime}ms`);
+    }
+    if (result.cached) {
+      ctx.set('X-Cache', 'HIT');
+    }
+  } else {
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch orders' };
+    ctx.body = { error: result.error };
+  }
+});
+
+// Clear cache
+router.delete('/cache', async (ctx) => {
+  const shop = ctx.state.shopify.session.shop;
+  const result = await optimizedApi.clearCache(shop);
+  
+  if (result.success) {
+    ctx.body = result.data;
+    if (result.responseTime) {
+      ctx.set('X-Response-Time', `${result.responseTime}ms`);
+    }
+  } else {
+    ctx.status = 500;
+    ctx.body = { error: result.error };
   }
 });
 

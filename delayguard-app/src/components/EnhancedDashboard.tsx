@@ -31,6 +31,7 @@ import {
   Toast,
   Frame
 } from '@shopify/polaris';
+import { AnalyticsDashboard } from './AnalyticsDashboard';
 
 interface AppSettings {
   delayThresholdDays: number;
@@ -502,14 +503,7 @@ export function EnhancedDashboard() {
 
             {selectedTab === 4 && (
               <Layout.Section>
-                <Card title="Analytics" sectioned>
-                  <EmptyState
-                    heading="Analytics coming soon"
-                    image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
-                  >
-                    <p>Analytics dashboard will be available in the next update.</p>
-                  </EmptyState>
-                </Card>
+                <AnalyticsDashboard />
               </Layout.Section>
             )}
           </Layout>

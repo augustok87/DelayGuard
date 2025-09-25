@@ -11,17 +11,23 @@
     "build:client": "webpack --mode production",
     "build:server": "tsc",
     "start": "node dist/server.js",
+    "vercel-build": "npm run build:client",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
     "lint": "eslint . --ext .js,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.ts,.tsx --fix",
     "type-check": "tsc --noEmit",
     "db:migrate": "ts-node src/database/migrate.ts",
+    "db:migrate:prod": "NODE_ENV=production ts-node src/database/migrate.ts",
     "load-test": "ts-node scripts/load-test.ts",
     "load-test:basic": "ts-node scripts/load-test.ts basic",
     "load-test:webhook": "ts-node scripts/load-test.ts webhook",
-    "load-test:stress": "ts-node scripts/load-test.ts stress"
+    "load-test:stress": "ts-node scripts/load-test.ts stress",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel",
+    "postinstall": "npm run build:client"
   },
   "dependencies": {
     "@shopify/shopify-api": "^8.0.0",
@@ -80,6 +86,7 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup/test-setup.ts"],
     "collectCoverageFrom": [
       "src/**/*.{ts,tsx}",
       "!src/**/*.d.ts",

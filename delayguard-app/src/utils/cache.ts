@@ -12,9 +12,7 @@ class CacheManager {
   constructor(redisUrl: string, config: CacheConfig) {
     this.redis = new IORedis(redisUrl, {
       maxRetriesPerRequest: 3,
-      retryDelayOnFailover: 100,
-      enableReadyCheck: false,
-      maxLoadingTimeout: 1000,
+      enableReadyCheck: false
     });
     this.config = config;
   }

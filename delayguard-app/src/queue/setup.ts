@@ -15,9 +15,7 @@ export async function setupQueues(): Promise<void> {
     // Initialize Redis connection
     redis = new IORedis(process.env.REDIS_URL!, {
       maxRetriesPerRequest: 3,
-      retryDelayOnFailover: 100,
-      enableReadyCheck: false,
-      maxLoadingTimeout: 1000,
+      enableReadyCheck: false
     });
 
     // Test Redis connection

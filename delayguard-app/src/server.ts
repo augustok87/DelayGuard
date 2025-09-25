@@ -19,9 +19,13 @@ import { setupQueues } from './queue/setup';
 import { webhookRoutes } from './routes/webhooks';
 import { apiRoutes } from './routes/api';
 import { authRoutes } from './routes/auth';
+import { monitoringRoutes } from './routes/monitoring';
+import { PerformanceMonitor } from './services/performance-monitor';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 // Validate required environment variables
 const requiredEnvVars = [
@@ -38,6 +42,11 @@ const requiredEnvVars = [
 
 requiredEnvVars.forEach(envVar => {
   if (!process.env[envVar]) {
+    console.error(`Missing required environment variable: ${envVar}`);
+    // In production, we'll let Vercel handle this gracefully
+    if (process.env.NODE_ENV === 'production') {
+      return;
+    }
     throw new Error(`Missing required environment variable: ${envVar}`);
   }
 });
@@ -73,7 +82,7 @@ const shopify = shopifyApi({
   apiKey: config.shopify.apiKey,
   apiSecretKey: config.shopify.apiSecret,
   scopes: config.shopify.scopes,
-  hostName: process.env.HOST || 'localhost',
+  hostName: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.HOST || 'localhost'),
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
   logger: {
@@ -84,6 +93,9 @@ const shopify = shopifyApi({
 
 // Create Koa app
 const app = new Koa();
+
+// Initialize performance monitor
+const performanceMonitor = new PerformanceMonitor(config);
 
 // Session configuration
 app.keys = [config.shopify.apiSecret];
@@ -126,10 +138,32 @@ router.get('/health', async (ctx) => {
 router.use('/api', apiRoutes.routes());
 router.use('/webhooks', webhookRoutes.routes());
 router.use('/auth', authRoutes.routes());
+router.use('/monitoring', monitoringRoutes.routes());
 
 // Main app route
 router.get('/', verifyRequest(), async (ctx) => {
   ctx.body = 'DelayGuard App - Main Dashboard';
+});
+
+// Performance monitoring middleware
+app.use(async (ctx, next) => {
+  const start = Date.now();
+  let success = true;
+  
+  try {
+    await next();
+  } catch (error) {
+    success = false;
+    throw error;
+  } finally {
+    const duration = Date.now() - start;
+    const operation = `${ctx.method} ${ctx.path}`;
+    await performanceMonitor.trackRequest(operation, duration, success, {
+      status: ctx.status,
+      userAgent: ctx.get('User-Agent'),
+      ip: ctx.ip
+    });
+  }
 });
 
 // Error handling middleware
@@ -138,11 +172,12 @@ app.use(async (ctx, next) => {
     await next();
   } catch (error) {
     console.error('Error:', error);
-    ctx.status = error.status || 500;
+    const statusCode = error instanceof Error && 'status' in error ? (error as any).status : 500;
+    ctx.status = statusCode;
     ctx.body = {
       error: process.env.NODE_ENV === 'production' 
         ? 'Internal server error' 
-        : error.message
+        : error instanceof Error ? error.message : 'Unknown error'
     };
   }
 });
@@ -151,7 +186,7 @@ app.use(async (ctx, next) => {
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-// Initialize database and queues
+// Initialize database and queues (only in development)
 async function initializeApp() {
   try {
     await setupDatabase();
@@ -159,21 +194,32 @@ async function initializeApp() {
     console.log('✅ Database and queues initialized');
   } catch (error) {
     console.error('❌ Failed to initialize app:', error);
-    process.exit(1);
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
 }
 
-// Start server
+// Start server (only in development)
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || 'localhost';
 
-if (require.main === module) {
+if (require.main === module && process.env.NODE_ENV !== 'production') {
   initializeApp().then(() => {
-    app.listen(PORT, HOST, () => {
+    app.listen(Number(PORT), HOST, () => {
       console.log(`🚀 DelayGuard server running on http://${HOST}:${PORT}`);
       console.log(`📱 Shopify app URL: https://${HOST}:${PORT}`);
     });
   });
 }
 
-export { app, config, shopify };
+// For Vercel, initialize on first request
+let isInitialized = false;
+export async function ensureInitialized() {
+  if (!isInitialized) {
+    await initializeApp();
+    isInitialized = true;
+  }
+}
+
+export { app, config, shopify, performanceMonitor };
