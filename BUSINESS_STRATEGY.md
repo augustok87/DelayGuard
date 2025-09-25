@@ -4,6 +4,8 @@
 
 DelayGuard is a proactive shipping delay notification app for Shopify merchants that automatically detects shipping delays via carrier APIs and alerts customers, reducing support tickets by 20-40%. Our target market consists of small to medium-sized e-commerce businesses seeking to improve customer experience and reduce operational overhead.
 
+**Legal & Compliance Status**: ✅ Complete - Comprehensive legal framework established with GDPR compliance, Shopify App Store compliance, and delayed LLC formation strategy (see `/legal/` folder for complete documentation).
+
 **Key Metrics:**
 - Target: 5,000 installs in Year 1
 - Revenue Goal: $200K ARR by end of Year 1

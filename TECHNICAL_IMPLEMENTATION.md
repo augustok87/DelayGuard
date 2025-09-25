@@ -3,6 +3,8 @@
 ## Overview
 DelayGuard is a Shopify app that proactively detects shipping delays via carrier APIs and alerts customers, reducing support tickets by 20-40%. This document covers the complete technical implementation strategy, architecture, and development guidelines.
 
+**Legal Compliance Status**: ✅ Complete - All legal documentation and compliance frameworks are in place (see `/legal/` folder for comprehensive legal documentation).
+
 ## System Architecture
 
 ### High-Level Architecture
