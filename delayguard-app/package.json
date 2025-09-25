@@ -17,7 +17,11 @@
     "lint": "eslint . --ext .js,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.ts,.tsx --fix",
     "type-check": "tsc --noEmit",
-    "db:migrate": "ts-node src/database/migrate.ts"
+    "db:migrate": "ts-node src/database/migrate.ts",
+    "load-test": "ts-node scripts/load-test.ts",
+    "load-test:basic": "ts-node scripts/load-test.ts basic",
+    "load-test:webhook": "ts-node scripts/load-test.ts webhook",
+    "load-test:stress": "ts-node scripts/load-test.ts stress"
   },
   "dependencies": {
     "@shopify/shopify-api": "^8.0.0",
@@ -53,6 +57,7 @@
     "@types/koa-session": "^6.0.0",
     "@types/koa-static": "^4.0.0",
     "@types/pg": "^8.10.0",
+    "@types/supertest": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "concurrently": "^8.2.0",
@@ -63,6 +68,7 @@
     "html-webpack-plugin": "^5.5.0",
     "jest": "^29.6.0",
     "style-loader": "^3.3.0",
+    "supertest": "^6.3.0",
     "ts-jest": "^29.1.0",
     "ts-loader": "^9.4.0",
     "ts-node": "^10.9.0",
