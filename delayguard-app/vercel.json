@@ -1,26 +1,7 @@
 {
-  "version": 2,
-  "name": "delayguard",
-  "builds": [
-    {
-      "src": "api/simple.ts",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/api/simple.ts"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
   "functions": {
     "api/simple.ts": {
       "maxDuration": 30
     }
-  },
-  "regions": ["iad1"],
-  "framework": null
+  }
 }
