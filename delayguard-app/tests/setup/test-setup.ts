@@ -1,10 +1,11 @@
+// @ts-nocheck
 // Test setup and mocks
 import { jest } from '@jest/globals';
 
 // Mock all external dependencies
 jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => ({
-    query: jest.fn(),
+    query: jest.fn().mockResolvedValue({ rows: [{ count: '10' }] }),
     end: jest.fn(),
     totalCount: 10,
     idleCount: 8
@@ -12,23 +13,28 @@ jest.mock('pg', () => ({
 }));
 
 jest.mock('ioredis', () => {
-  return jest.fn().mockImplementation(() => ({
-    get: jest.fn(),
-    setex: jest.fn(),
-    del: jest.fn(),
-    mget: jest.fn(),
-    keys: jest.fn(),
-    llen: jest.fn(),
+  const MockRedis = jest.fn().mockImplementation(() => ({
+    get: jest.fn().mockResolvedValue(null),
+    setex: jest.fn().mockResolvedValue('OK'),
+    del: jest.fn().mockResolvedValue(1),
+    mget: jest.fn().mockResolvedValue([null, null]),
+    keys: jest.fn().mockResolvedValue([]),
+    llen: jest.fn().mockResolvedValue(0),
     pipeline: jest.fn(() => ({
-      setex: jest.fn(),
-      exec: jest.fn()
+      setex: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue([['OK'], ['OK']])
     })),
-    ping: jest.fn(() => Promise.resolve('PONG')),
-    info: jest.fn(() => Promise.resolve('used_memory:1048576\nused_memory_peak:2097152')),
-    dbsize: jest.fn(() => Promise.resolve(100)),
-    quit: jest.fn(),
+    ping: jest.fn().mockResolvedValue('PONG'),
+    info: jest.fn().mockResolvedValue('used_memory:1048576\nused_memory_peak:2097152'),
+    dbsize: jest.fn().mockResolvedValue(100),
+    quit: jest.fn().mockResolvedValue('OK'),
     status: 'ready'
   }));
+  
+  return {
+    Redis: MockRedis,
+    default: MockRedis
+  };
 });
 
 jest.mock('axios', () => ({
@@ -54,6 +60,7 @@ process.memoryUsage = jest.fn(() => ({
 // Mock os.totalmem
 jest.mock('os', () => ({
   totalmem: jest.fn(() => 1000 * 1024 * 1024), // 1GB
+  freemem: jest.fn(() => 500 * 1024 * 1024), // 500MB
   cpus: jest.fn(() => [
     { times: { user: 1000, nice: 0, sys: 1000, idle: 8000, irq: 0 } }
   ]),

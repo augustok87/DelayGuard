@@ -32,7 +32,7 @@ describe('OptimizedCache', () => {
 
   beforeEach(() => {
     // Get the mocked Redis instance
-    const Redis = require('ioredis');
+    const { Redis } = require('ioredis');
     mockRedis = new Redis(mockConfig.redis.url);
     
     cache = new OptimizedCache(mockConfig);

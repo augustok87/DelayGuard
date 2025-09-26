@@ -34,7 +34,7 @@ describe('AnalyticsService', () => {
   beforeEach(() => {
     // Get the mocked instances
     const { Pool } = require('pg');
-    const Redis = require('ioredis');
+    const { Redis } = require('ioredis');
     
     mockDb = new Pool({ connectionString: mockConfig.database.url });
     mockRedis = new Redis(mockConfig.redis.url);

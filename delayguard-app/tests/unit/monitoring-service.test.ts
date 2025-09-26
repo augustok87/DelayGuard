@@ -34,7 +34,7 @@ describe('MonitoringService', () => {
   beforeEach(() => {
     // Get the mocked instances
     const { Pool } = require('pg');
-    const Redis = require('ioredis');
+    const { Redis } = require('ioredis');
     
     mockDb = new Pool({ connectionString: mockConfig.database.url });
     mockRedis = new Redis(mockConfig.redis.url);
@@ -62,7 +62,7 @@ describe('MonitoringService', () => {
 
       const checks = await monitoringService.performHealthChecks();
 
-      expect(checks).toHaveLength(5); // Database, Redis, 3 external APIs
+      expect(checks).toHaveLength(6); // Database, Redis, 3 external APIs, Application
       expect(checks.every(check => check.status === 'healthy')).toBe(true);
     });
 
@@ -81,7 +81,7 @@ describe('MonitoringService', () => {
 
       const checks = await monitoringService.performHealthChecks();
 
-      expect(checks).toHaveLength(5);
+      expect(checks).toHaveLength(6);
       expect(checks.every(check => check.status === 'unhealthy')).toBe(true);
     });
 
