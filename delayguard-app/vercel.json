@@ -5,16 +5,12 @@
     {
       "src": "api/index.ts",
       "use": "@vercel/node"
-    },
-    {
-      "src": "api/root.ts",
-      "use": "@vercel/node"
     }
   ],
   "rewrites": [
     {
       "source": "/",
-      "destination": "/api/root.ts"
+      "destination": "/api/index.ts"
     },
     {
       "source": "/health",
@@ -42,9 +38,6 @@
   },
   "functions": {
     "api/index.ts": {
-      "maxDuration": 30
-    },
-    "api/root.ts": {
       "maxDuration": 30
     }
   },
