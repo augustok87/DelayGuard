@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./",
+    "jsx": "preserve"
+  },
+  "include": [
+    "src/server.ts",
+    "src/routes/**/*",
+    "src/services/**/*",
+    "src/database/**/*",
+    "src/queue/**/*",
+    "src/types/**/*",
+    "src/utils/**/*",
+    "api/**/*"
+  ],
+  "exclude": [
+    "src/components/**/*",
+    "src/index.html",
+    "node_modules",
+    "dist",
+    "tests",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

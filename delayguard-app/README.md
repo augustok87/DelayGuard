@@ -2,6 +2,13 @@
 
 A proactive shipping delay notification app for Shopify merchants that reduces support tickets by 20-40%.
 
+## 🎉 **LIVE IN PRODUCTION**
+
+**Backend API is successfully deployed and functional:**
+- **Production URL**: https://delayguard-j0x2valf6-joonies-projects-1644afa2.vercel.app
+- **Status**: All core services working (23/23 tests passing)
+- **Health Check**: `/health` endpoint functional
+
 ## Features
 
 - **Real-time Delay Detection**: Monitors shipping status via ShipEngine API

@@ -141,7 +141,23 @@ router.use('/auth', authRoutes.routes());
 router.use('/monitoring', monitoringRoutes.routes());
 
 // Main app route
-router.get('/', verifyRequest(), async (ctx) => {
+// Public root route for health check
+router.get('/', async (ctx) => {
+  ctx.body = {
+    status: 'success',
+    message: 'DelayGuard API is running',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      api: '/api',
+      webhooks: '/webhooks',
+      auth: '/auth'
+    }
+  };
+});
+
+// Authenticated dashboard route
+router.get('/dashboard', verifyRequest(), async (ctx) => {
   ctx.body = 'DelayGuard App - Main Dashboard';
 });
 

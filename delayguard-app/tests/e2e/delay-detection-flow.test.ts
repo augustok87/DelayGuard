@@ -149,7 +149,7 @@ describe('DelayGuard End-to-End Flow', () => {
         await carrierService.getTrackingInfo('invalid-tracking', 'ups');
         fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).toContain('not found');
+        expect((error as Error).message).toContain('not found');
       }
     });
 

@@ -9,9 +9,9 @@
     "dev:client": "webpack serve --mode development",
     "build": "npm run build:client && npm run build:server",
     "build:client": "webpack --mode production",
-    "build:server": "tsc",
+    "build:server": "tsc --project tsconfig.server.json",
     "start": "node dist/server.js",
-    "vercel-build": "npm run build:client",
+    "vercel-build": "echo 'Skipping frontend build - backend API only'",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -26,8 +26,7 @@
     "load-test:webhook": "ts-node scripts/load-test.ts webhook",
     "load-test:stress": "ts-node scripts/load-test.ts stress",
     "deploy": "vercel --prod",
-    "deploy:preview": "vercel",
-    "postinstall": "npm run build:client"
+    "deploy:preview": "vercel"
   },
   "dependencies": {
     "@shopify/shopify-api": "^8.0.0",
