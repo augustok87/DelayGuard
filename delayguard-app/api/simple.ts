@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       status: 'success',
       message: 'DelayGuard API is healthy',
       timestamp: new Date().toISOString(),
-      version: '1.0.4',
+      version: '1.0.5',
       services: {
         database: !!process.env.DATABASE_URL,
         redis: !!process.env.REDIS_URL,
