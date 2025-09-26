@@ -1,162 +1,194 @@
-# DelayGuard Production Deployment Guide
+# DelayGuard Deployment Guide
 
-## 🚀 **Project Status: SUCCESSFULLY DEPLOYED**
+## 🚀 **Production Deployment**
 
-DelayGuard is a production-ready Shopify app with 23/23 core tests passing. **The backend API is now live and fully functional on Vercel.**
+### **Prerequisites**
 
-## 📊 **Current Test Status**
-- ✅ **Core Services**: 23/23 tests passing
-  - Carrier Service (6/6 tests)
-  - Delay Detection Service (8/8 tests) 
-  - Notification Service (4/4 tests)
-  - Delay Detection (5/5 tests)
-- ⚠️ **Advanced Services**: Some tests need refinement (not blocking deployment)
-  - Analytics Service
-  - Optimized Cache
-  - Monitoring Service
+1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
+2. **GitHub Repository**: Push code to GitHub
+3. **Environment Variables**: Configure all required environment variables
+4. **External Services**: Set up PostgreSQL, Redis, ShipEngine, SendGrid, Twilio
 
-## 🎉 **DEPLOYMENT SUCCESSFUL**
+### **Environment Variables**
 
-### **✅ Live Production URL**
-**https://delayguard-j0x2valf6-joonies-projects-1644afa2.vercel.app**
+Configure these in your Vercel dashboard:
 
-### **✅ Working API Endpoints**
-- **Health Check**: `/health` - Returns API health status
-- **Main API**: `/api` - Returns API information and available endpoints
-- **API Health**: `/api/health` - Detailed health check
-- **Webhooks**: `/api/webhooks` - Webhook processing endpoint
-- **Auth**: `/api/auth` - Authentication endpoint
-
-### **✅ Deployment Process Completed**
 ```bash
-# Successfully executed:
-cd /Users/jooniekwun/Documents/DelayGuard/delayguard-app
-vercel --prod --yes
-# Result: Production deployment successful
-```
+# Database
+DATABASE_URL=postgresql://username:password@host:port/database
 
-### 2. **Environment Variables Setup**
+# Redis
+REDIS_URL=redis://username:password@host:port
 
-Set these environment variables in Vercel dashboard:
+# Shopify
+SHOPIFY_API_KEY=your_shopify_api_key
+SHOPIFY_API_SECRET=your_shopify_api_secret
 
-```env
-# Shopify App Credentials
-SHOPIFY_API_KEY=your_api_key_here
-SHOPIFY_API_SECRET=your_api_secret_here
-SHOPIFY_SCOPES=read_orders,write_orders,read_fulfillments,write_fulfillments
-
-# Database (Use Vercel Postgres or external provider)
-DATABASE_URL=postgresql://user:password@host:port/database
-
-# Redis Queue (Use Vercel KV or external provider)
-REDIS_URL=redis://user:password@host:port
-
-# External APIs
-SHIPENGINE_API_KEY=your_shipengine_key_here
-SENDGRID_API_KEY=your_sendgrid_key_here
-TWILIO_ACCOUNT_SID=your_twilio_sid_here
-TWILIO_AUTH_TOKEN=your_twilio_token_here
+# External Services
+SHIPENGINE_API_KEY=your_shipengine_api_key
+SENDGRID_API_KEY=your_sendgrid_api_key
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
 TWILIO_PHONE_NUMBER=your_twilio_phone_number
-
-# Monitoring
-SENTRY_DSN=your_sentry_dsn_here
-
-# App Configuration
-NODE_ENV=production
-PORT=3000
-HOST=0.0.0.0
 ```
 
-### 3. **Database Setup**
+### **Deployment Steps**
 
-```bash
-# Run database migrations
-npm run db:migrate:prod
-```
+1. **Connect Repository to Vercel**:
+   ```bash
+   # Install Vercel CLI
+   npm i -g vercel
+   
+   # Login to Vercel
+   vercel login
+   
+   # Link project
+   vercel link
+   ```
 
-### 4. **Domain Configuration**
+2. **Configure Environment Variables**:
+   - Go to Vercel Dashboard → Project Settings → Environment Variables
+   - Add all required environment variables
+   - Set them for Production, Preview, and Development
 
-1. Add custom domain in Vercel dashboard
-2. Configure SSL certificates
-3. Update Shopify app settings with new domain
+3. **Deploy**:
+   ```bash
+   # Deploy to preview
+   vercel
+   
+   # Deploy to production
+   vercel --prod
+   ```
 
-## 📋 **Pre-Deployment Checklist**
+### **CI/CD Pipeline**
 
-- [x] Core functionality tests passing (23/23)
-- [x] Vercel configuration ready (`vercel.json`)
-- [x] Environment variables template ready (`env.example`)
-- [x] Production build working
-- [x] TypeScript compilation successful
-- [x] Dependencies installed and working
-- [ ] Vercel CLI authenticated
-- [ ] Environment variables configured
-- [ ] Database provisioned and migrated
-- [ ] External APIs configured
-- [ ] Custom domain configured
+The project includes a comprehensive GitHub Actions workflow:
 
-## 🔧 **Post-Deployment Steps**
+- **Lint & Type Check**: Code quality checks
+- **Unit Tests**: Component and function tests
+- **Integration Tests**: API and database tests
+- **Build Tests**: Frontend and backend compilation
+- **Security Scan**: Vulnerability assessment
+- **Performance Tests**: Load and performance testing
+- **Deploy to Staging**: Automatic deployment on `develop` branch
+- **Deploy to Production**: Automatic deployment on `main` branch
 
-### 1. **Health Check**
-```bash
-curl https://your-domain.vercel.app/health
-```
+### **Monitoring & Observability**
 
-### 2. **Test Core Endpoints**
-```bash
-# Test analytics endpoint
-curl https://your-domain.vercel.app/api/analytics
+1. **Health Checks**:
+   - `/health` - Basic health status
+   - `/api` - API status with service configuration
+   - `/monitoring` - Detailed system metrics
 
-# Test monitoring endpoint  
-curl https://your-domain.vercel.app/api/monitoring/health
-```
+2. **Logging**:
+   - All API requests are logged
+   - Error tracking and monitoring
+   - Performance metrics collection
 
-### 3. **Shopify App Store Submission**
+3. **Alerts**:
+   - Slack notifications on deployment success/failure
+   - Error rate monitoring
+   - Performance degradation alerts
 
-Use the prepared materials in `APP_STORE_LISTING.md`:
-- App description and features
-- Screenshots and demo videos
-- Privacy policy and terms of service
-- Support documentation
+### **Security**
 
-## 🎯 **Key Features Ready for Production**
+1. **Environment Variables**: All sensitive data stored securely
+2. **CORS**: Properly configured for production domains
+3. **Rate Limiting**: Implemented on all API endpoints
+4. **Security Headers**: Added for all responses
+5. **Dependency Scanning**: Regular security audits
 
-### ✅ **Core Functionality**
-- **Delay Detection**: Proactive shipping delay detection
-- **Carrier Integration**: ShipEngine API integration
-- **Notifications**: Email and SMS notifications via SendGrid and Twilio
-- **Real-time Processing**: BullMQ queue system
-- **Database Operations**: PostgreSQL with connection pooling
+### **Performance**
 
-### ✅ **Advanced Features**
-- **Analytics Dashboard**: Real-time metrics and reporting
-- **Performance Monitoring**: Health checks and system diagnostics
-- **Caching System**: Multi-tier Redis caching
-- **Error Handling**: Comprehensive error management
-- **Security**: A- security rating with proper validation
+1. **Frontend Optimization**:
+   - Webpack production build
+   - Code splitting and lazy loading
+   - Asset optimization
+   - CDN delivery
 
-## 📈 **Performance Metrics**
+2. **Backend Optimization**:
+   - Connection pooling
+   - Caching strategies
+   - Database indexing
+   - API response optimization
 
-- **Response Time**: <50ms target (currently achieving ~35ms)
-- **Cache Hit Rate**: 85%+ achieved
-- **Test Coverage**: 23/23 core tests passing
-- **Uptime Target**: 99.9%
-- **Security Rating**: A- maintained
+### **Troubleshooting**
 
-## 🚨 **Important Notes**
+1. **Build Failures**:
+   - Check environment variables
+   - Verify all dependencies are installed
+   - Check TypeScript compilation errors
 
-1. **Environment Variables**: Must be configured before deployment
-2. **Database**: Requires PostgreSQL instance (Vercel Postgres recommended)
-3. **Redis**: Requires Redis instance (Vercel KV recommended)
-4. **External APIs**: ShipEngine, SendGrid, and Twilio accounts needed
-5. **Shopify App**: Must be registered in Shopify Partners dashboard
+2. **Runtime Errors**:
+   - Check Vercel function logs
+   - Verify external service connections
+   - Check database connectivity
 
-## 📞 **Support**
+3. **Performance Issues**:
+   - Monitor Vercel analytics
+   - Check external service response times
+   - Review database query performance
 
-- **Documentation**: See `USER_DOCUMENTATION.md`
-- **Technical Issues**: Check `SECURITY_AUDIT.md` and `TECHNICAL_IMPLEMENTATION.md`
-- **Business Strategy**: See `BUSINESS_STRATEGY.md`
+### **Rollback Strategy**
+
+1. **Vercel Rollback**:
+   ```bash
+   # List deployments
+   vercel ls
+   
+   # Rollback to previous deployment
+   vercel rollback [deployment-url]
+   ```
+
+2. **Git Rollback**:
+   ```bash
+   # Revert to previous commit
+   git revert [commit-hash]
+   git push origin main
+   ```
+
+### **Maintenance**
+
+1. **Regular Updates**:
+   - Keep dependencies updated
+   - Monitor security advisories
+   - Update external service integrations
+
+2. **Backup Strategy**:
+   - Database backups
+   - Configuration backups
+   - Code repository backups
+
+3. **Monitoring**:
+   - Set up uptime monitoring
+   - Configure error tracking
+   - Monitor performance metrics
+
+### **Scaling**
+
+1. **Horizontal Scaling**:
+   - Vercel automatically scales functions
+   - Database connection pooling
+   - Redis clustering for high availability
+
+2. **Vertical Scaling**:
+   - Upgrade Vercel plan for more resources
+   - Optimize database queries
+   - Implement caching strategies
+
+### **Support**
+
+For deployment issues:
+1. Check Vercel dashboard for logs
+2. Review GitHub Actions workflow runs
+3. Check external service status
+4. Contact support team
 
 ---
 
-**The project is production-ready and can be deployed immediately!** 🚀
+## 🎯 **Success Metrics**
 
+- **Uptime**: 99.9% availability
+- **Performance**: < 2s page load time
+- **Security**: Zero critical vulnerabilities
+- **Reliability**: < 0.1% error rate

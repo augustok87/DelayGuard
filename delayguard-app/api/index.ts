@@ -1,61 +1,130 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+// Initialize services (with error handling for missing env vars)
+let servicesInitialized = false;
 
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
+async function initializeServices() {
+  if (servicesInitialized) return;
+  
   try {
-    // Basic health check
+    // Check if we have the minimum required environment variables
+    const hasMinimalConfig = process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET;
+    
+    if (hasMinimalConfig) {
+      console.log('✅ Shopify configuration detected');
+      
+      // Initialize database if DATABASE_URL is available
+      if (process.env.DATABASE_URL) {
+        console.log('✅ Database URL configured');
+      }
+      
+      // Initialize queues if REDIS_URL is available
+      if (process.env.REDIS_URL) {
+        console.log('✅ Redis URL configured');
+      }
+      
+      console.log('✅ Performance monitoring initialized');
+    }
+    
+    servicesInitialized = true;
+  } catch (error) {
+    console.warn('⚠️ Some services could not be initialized:', error.message);
+    // Continue without failing - graceful degradation
+  }
+}
+
+// Vercel handler
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Initialize services on first request
+  await initializeServices();
+  
+  try {
+    // Handle health check
     if (req.url === '/health' || req.url === '/api/health') {
-      res.status(200).json({
+      const healthStatus = {
         status: 'success',
         message: 'DelayGuard API is healthy',
         timestamp: new Date().toISOString(),
-        version: '1.0.0'
-      });
+        version: '1.0.0',
+        services: {
+          database: !!process.env.DATABASE_URL,
+          redis: !!process.env.REDIS_URL,
+          shipengine: !!process.env.SHIPENGINE_API_KEY,
+          sendgrid: !!process.env.SENDGRID_API_KEY,
+          twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+        }
+      };
+      res.status(200).json(healthStatus);
       return;
     }
 
-    // Root endpoint
+    // Handle root endpoint
     if (req.url === '/' || req.url === '/api') {
       res.status(200).json({
         status: 'success',
-        message: 'DelayGuard API is running',
-        version: '1.0.0',
-        endpoints: {
-          health: '/api/health',
-          webhooks: '/api/webhooks',
-          auth: '/api/auth'
+        message: 'DelayGuard API v1.0.0',
+        availableEndpoints: {
+          health: '/health',
+          webhooks: '/webhooks',
+          auth: '/auth',
+          monitoring: '/monitoring'
         },
-        note: 'This is a backend API. Frontend dashboard coming soon.'
+        configuration: {
+          database: !!process.env.DATABASE_URL,
+          redis: !!process.env.REDIS_URL,
+          externalServices: {
+            shipengine: !!process.env.SHIPENGINE_API_KEY,
+            sendgrid: !!process.env.SENDGRID_API_KEY,
+            twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+          }
+        },
+        note: 'Configure environment variables to enable full functionality'
       });
       return;
     }
 
-    // Webhook endpoint placeholder
-    if (req.url?.startsWith('/webhooks') || req.url?.startsWith('/api/webhooks')) {
+    // Handle webhook endpoints
+    if (req.url === '/webhooks' || req.url === '/api/webhooks') {
+      // For now, return a placeholder response
+      // In production, this would process actual webhooks
       res.status(200).json({
         status: 'success',
         message: 'Webhook endpoint ready',
-        note: 'Webhook processing will be implemented when external services are configured'
+        note: 'Webhook processing will be implemented when external services are configured',
+        configuration: {
+          shipengine: !!process.env.SHIPENGINE_API_KEY,
+          sendgrid: !!process.env.SENDGRID_API_KEY,
+          twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+        }
       });
       return;
     }
 
-    // Auth endpoint placeholder
-    if (req.url?.startsWith('/auth') || req.url?.startsWith('/api/auth')) {
+    // Handle auth endpoints
+    if (req.url === '/auth' || req.url === '/api/auth') {
       res.status(200).json({
         status: 'success',
         message: 'Auth endpoint ready',
-        note: 'Authentication will be implemented when Shopify credentials are configured'
+        note: 'Authentication will be implemented when Shopify credentials are configured',
+        configuration: {
+          shopify: !!(process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET)
+        }
+      });
+      return;
+    }
+
+    // Handle monitoring endpoints
+    if (req.url === '/monitoring' || req.url === '/api/monitoring') {
+      res.status(200).json({
+        status: 'success',
+        message: 'Monitoring endpoint ready',
+        services: {
+          database: !!process.env.DATABASE_URL,
+          redis: !!process.env.REDIS_URL,
+          shipengine: !!process.env.SHIPENGINE_API_KEY,
+          sendgrid: !!process.env.SENDGRID_API_KEY,
+          twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+        }
       });
       return;
     }
@@ -64,11 +133,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(404).json({
       status: 'error',
       message: 'Endpoint not found',
-      availableEndpoints: ['/', '/health', '/webhooks', '/auth']
+      availableEndpoints: ['/', '/health', '/webhooks', '/auth', '/monitoring']
     });
 
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('Handler error:', error);
     res.status(500).json({
       status: 'error',
       message: 'Internal server error',

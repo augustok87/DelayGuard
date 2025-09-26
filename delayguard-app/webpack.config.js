@@ -15,6 +15,7 @@ module.exports = {
           loader: 'ts-loader',
           options: {
             transpileOnly: isProduction,
+            configFile: 'tsconfig.frontend.json',
           },
         },
         exclude: /node_modules/,

@@ -3,9 +3,7 @@ import {
   Page,
   Card,
   Layout,
-  DisplayText,
-  TextStyle,
-  Stack,
+  Text,
   Badge,
   Button,
   Select,
@@ -21,7 +19,9 @@ import {
   ButtonGroup,
   Tabs,
   Frame,
-  Toast
+  Toast,
+  BlockStack,
+  InlineStack
 } from '@shopify/polaris';
 
 interface AnalyticsMetrics {
@@ -126,16 +126,16 @@ export function AnalyticsDashboard() {
   };
 
   const getSeverityBadge = (severity: string, count: number) => {
-    const severityMap: { [key: string]: { status: any; color: string } } = {
-      low: { status: 'info', color: '#007ace' },
-      medium: { status: 'warning', color: '#ffc453' },
-      high: { status: 'attention', color: '#ff9500' },
-      critical: { status: 'critical', color: '#d82c0d' }
+    const severityMap: { [key: string]: { tone: any; color: string } } = {
+      low: { tone: 'info', color: '#007ace' },
+      medium: { tone: 'warning', color: '#ffc453' },
+      high: { tone: 'attention', color: '#ff9500' },
+      critical: { tone: 'critical', color: '#d82c0d' }
     };
     
-    const config = severityMap[severity] || { status: 'info', color: '#007ace' };
+    const config = severityMap[severity] || { tone: 'info', color: '#007ace' };
     return (
-      <Badge status={config.status}>
+      <Badge tone={config.tone}>
         {severity.toUpperCase()}: {count}
       </Badge>
     );
@@ -158,7 +158,7 @@ export function AnalyticsDashboard() {
               <div style={{ padding: '2rem', textAlign: 'center' }}>
                 <Spinner size="large" />
                 <div style={{ marginTop: '1rem' }}>
-                  <TextStyle variation="subdued">Loading analytics data...</TextStyle>
+                  <Text as="p" tone="subdued">Loading analytics data...</Text>
                 </div>
               </div>
             </Card>
@@ -187,7 +187,7 @@ export function AnalyticsDashboard() {
         {error && (
           <Layout>
             <Layout.Section>
-              <Banner status="critical" onDismiss={() => setError(null)}>
+              <Banner tone="critical" onDismiss={() => setError(null)}>
                 {error}
               </Banner>
             </Layout.Section>
@@ -195,43 +195,53 @@ export function AnalyticsDashboard() {
         )}
 
         <Layout>
-          <Layout.Section oneThird>
-            <Card title="Time Range" sectioned>
-              <Select
-                options={[
-                  { label: 'Last 7 days', value: '7d' },
-                  { label: 'Last 30 days', value: '30d' },
-                  { label: 'Last 90 days', value: '90d' },
-                  { label: 'Last year', value: '1y' }
-                ]}
-                value={timeRange}
-                onChange={(value) => setTimeRange(value as any)}
-              />
+          <Layout.Section>
+            <Card>
+              <Card.Section>
+                <Text variant="headingMd" as="h3">Time Range</Text>
+              </Card.Section>
+              <Card.Section>
+                <Select
+                  options={[
+                    { label: 'Last 7 days', value: '7d' },
+                    { label: 'Last 30 days', value: '30d' },
+                    { label: 'Last 90 days', value: '90d' },
+                    { label: 'Last year', value: '1y' }
+                  ]}
+                  value={timeRange}
+                  onChange={(value) => setTimeRange(value as any)}
+                />
+              </Card.Section>
             </Card>
           </Layout.Section>
 
-          <Layout.Section twoThirds>
-            <Card title="Key Metrics" sectioned>
-              {metrics && (
-                <Stack distribution="fill">
-                  <div style={{ textAlign: 'center' }}>
-                    <DisplayText size="medium">{metrics.totalOrders}</DisplayText>
-                    <TextStyle variation="subdued">Total Orders</TextStyle>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <DisplayText size="medium">{metrics.totalAlerts}</DisplayText>
-                    <TextStyle variation="subdued">Delay Alerts</TextStyle>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <DisplayText size="medium">{metrics.averageDelayDays.toFixed(1)}</DisplayText>
-                    <TextStyle variation="subdued">Avg Delay Days</TextStyle>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <DisplayText size="medium">${metrics.revenueImpact.totalValue.toLocaleString()}</DisplayText>
-                    <TextStyle variation="subdued">Total Revenue</TextStyle>
-                  </div>
-                </Stack>
-              )}
+          <Layout.Section>
+            <Card>
+              <Card.Section>
+                <Text variant="headingMd" as="h3">Key Metrics</Text>
+              </Card.Section>
+              <Card.Section>
+                {metrics && (
+                  <InlineStack gap="400" align="space-between">
+                    <div style={{ textAlign: 'center' }}>
+                      <Text variant="headingLg" as="h3">{metrics.totalOrders}</Text>
+                      <Text as="p" tone="subdued">Total Orders</Text>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <Text variant="headingLg" as="h3">{metrics.totalAlerts}</Text>
+                      <Text as="p" tone="subdued">Delay Alerts</Text>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <Text variant="headingLg" as="h3">{metrics.averageDelayDays.toFixed(1)}</Text>
+                      <Text as="p" tone="subdued">Avg Delay Days</Text>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <Text variant="headingLg" as="h3">${metrics.revenueImpact.totalValue.toLocaleString()}</Text>
+                      <Text as="p" tone="subdued">Total Revenue</Text>
+                    </div>
+                  </InlineStack>
+                )}
+              </Card.Section>
             </Card>
           </Layout.Section>
         </Layout>
@@ -242,16 +252,16 @@ export function AnalyticsDashboard() {
               <>
                 <Layout.Section oneHalf>
                   <Card title="Alerts by Severity" sectioned>
-                    <Stack vertical>
+                    <BlockStack gap="200">
                       {Object.entries(metrics.alertsBySeverity).map(([severity, count]) => (
-                        <Stack key={severity} distribution="fill">
-                          <TextStyle variation="strong">{severity.toUpperCase()}</TextStyle>
-                          <Badge status={severity === 'critical' ? 'critical' : severity === 'high' ? 'attention' : severity === 'medium' ? 'warning' : 'info'}>
+                        <InlineStack key={severity} gap="200" align="space-between">
+                          <Text as="span" fontWeight="bold">{severity.toUpperCase()}</Text>
+                          <Badge tone={severity === 'critical' ? 'critical' : severity === 'high' ? 'attention' : severity === 'medium' ? 'warning' : 'info'}>
                             {count}
                           </Badge>
-                        </Stack>
+                        </InlineStack>
                       ))}
-                    </Stack>
+                    </BlockStack>
                   </Card>
                 </Layout.Section>
 
@@ -273,10 +283,10 @@ export function AnalyticsDashboard() {
                         }))}
                         renderItem={(item) => (
                           <ResourceItem id={item.id}>
-                            <Stack distribution="fill">
-                              <TextStyle variation="strong">{item.reason.replace('_', ' ').toLowerCase()}</TextStyle>
+                            <InlineStack gap="200" align="space-between">
+                              <Text as="span" fontWeight="bold">{item.reason.replace('_', ' ').toLowerCase()}</Text>
                               <Badge>{item.count}</Badge>
-                            </Stack>
+                            </InlineStack>
                           </ResourceItem>
                         )}
                       />
@@ -313,20 +323,20 @@ export function AnalyticsDashboard() {
             {selectedTab === 1 && metrics && (
               <Layout.Section>
                 <Card title="Performance Metrics" sectioned>
-                  <Stack distribution="fill">
+                  <InlineStack gap="200" align="space-between">
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">{metrics.performanceMetrics.averageResponseTime.toFixed(0)}ms</DisplayText>
-                      <TextStyle variation="subdued">Avg Response Time</TextStyle>
+                      <Text variant="headingLg" as="h3">{metrics.performanceMetrics.averageResponseTime.toFixed(0)}ms</Text>
+                      <Text as="p" tone="subdued">Avg Response Time</Text>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">{metrics.performanceMetrics.successRate.toFixed(1)}%</DisplayText>
-                      <TextStyle variation="subdued">Success Rate</TextStyle>
+                      <Text variant="headingLg" as="h3">{metrics.performanceMetrics.successRate.toFixed(1)}%</Text>
+                      <Text as="p" tone="subdued">Success Rate</Text>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">{metrics.performanceMetrics.errorRate.toFixed(1)}%</DisplayText>
-                      <TextStyle variation="subdued">Error Rate</TextStyle>
+                      <Text variant="headingLg" as="h3">{metrics.performanceMetrics.errorRate.toFixed(1)}%</Text>
+                      <Text as="p" tone="subdued">Error Rate</Text>
                     </div>
-                  </Stack>
+                  </InlineStack>
                 </Card>
               </Layout.Section>
             )}
@@ -334,20 +344,20 @@ export function AnalyticsDashboard() {
             {selectedTab === 2 && metrics && (
               <Layout.Section>
                 <Card title="Revenue Impact" sectioned>
-                  <Stack distribution="fill">
+                  <InlineStack gap="200" align="space-between">
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">${metrics.revenueImpact.totalValue.toLocaleString()}</DisplayText>
-                      <TextStyle variation="subdued">Total Revenue</TextStyle>
+                      <Text variant="headingLg" as="h3">${metrics.revenueImpact.totalValue.toLocaleString()}</Text>
+                      <Text as="p" tone="subdued">Total Revenue</Text>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">${metrics.revenueImpact.averageOrderValue.toFixed(2)}</DisplayText>
-                      <TextStyle variation="subdued">Avg Order Value</TextStyle>
+                      <Text variant="headingLg" as="h3">${metrics.revenueImpact.averageOrderValue.toFixed(2)}</Text>
+                      <Text as="p" tone="subdued">Avg Order Value</Text>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">${metrics.revenueImpact.potentialLoss.toFixed(2)}</DisplayText>
-                      <TextStyle variation="subdued">Potential Loss</TextStyle>
+                      <Text variant="headingLg" as="h3">${metrics.revenueImpact.potentialLoss.toFixed(2)}</Text>
+                      <Text as="p" tone="subdued">Potential Loss</Text>
                     </div>
-                  </Stack>
+                  </InlineStack>
                 </Card>
               </Layout.Section>
             )}
@@ -355,16 +365,16 @@ export function AnalyticsDashboard() {
             {selectedTab === 3 && metrics && (
               <Layout.Section>
                 <Card title="Notification Performance" sectioned>
-                  <Stack distribution="fill">
+                  <InlineStack gap="200" align="space-between">
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">{metrics.notificationSuccessRate.email.toFixed(1)}%</DisplayText>
-                      <TextStyle variation="subdued">Email Success Rate</TextStyle>
+                      <Text variant="headingLg" as="h3">{metrics.notificationSuccessRate.email.toFixed(1)}%</Text>
+                      <Text as="p" tone="subdued">Email Success Rate</Text>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">{metrics.notificationSuccessRate.sms.toFixed(1)}%</DisplayText>
-                      <TextStyle variation="subdued">SMS Success Rate</TextStyle>
+                      <Text variant="headingLg" as="h3">{metrics.notificationSuccessRate.sms.toFixed(1)}%</Text>
+                      <Text as="p" tone="subdued">SMS Success Rate</Text>
                     </div>
-                  </Stack>
+                  </InlineStack>
                 </Card>
               </Layout.Section>
             )}
@@ -372,24 +382,24 @@ export function AnalyticsDashboard() {
             {selectedTab === 4 && realtimeMetrics && (
               <Layout.Section>
                 <Card title="Real-time Metrics" sectioned>
-                  <Stack distribution="fill">
+                  <InlineStack gap="200" align="space-between">
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">{realtimeMetrics.activeAlerts}</DisplayText>
-                      <TextStyle variation="subdued">Active Alerts</TextStyle>
+                      <Text variant="headingLg" as="h3">{realtimeMetrics.activeAlerts}</Text>
+                      <Text as="p" tone="subdued">Active Alerts</Text>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">{realtimeMetrics.queueSize}</DisplayText>
-                      <TextStyle variation="subdued">Queue Size</TextStyle>
+                      <Text variant="headingLg" as="h3">{realtimeMetrics.queueSize}</Text>
+                      <Text as="p" tone="subdued">Queue Size</Text>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">{realtimeMetrics.processingRate.toFixed(1)}/min</DisplayText>
-                      <TextStyle variation="subdued">Processing Rate</TextStyle>
+                      <Text variant="headingLg" as="h3">{realtimeMetrics.processingRate.toFixed(1)}/min</Text>
+                      <Text as="p" tone="subdued">Processing Rate</Text>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <DisplayText size="medium">{realtimeMetrics.memoryUsage}MB</DisplayText>
-                      <TextStyle variation="subdued">Memory Usage</TextStyle>
+                      <Text variant="headingLg" as="h3">{realtimeMetrics.memoryUsage}MB</Text>
+                      <Text as="p" tone="subdued">Memory Usage</Text>
                     </div>
-                  </Stack>
+                  </InlineStack>
                 </Card>
               </Layout.Section>
             )}
@@ -418,10 +428,10 @@ export function AnalyticsDashboard() {
         >
           <Modal.Section>
             <FormLayout>
-              <TextStyle variation="subdued">
+              <Text as="p" tone="subdued">
                 Choose the format for exporting your analytics data. JSON format includes all detailed metrics, 
                 while CSV format provides a simplified table view suitable for spreadsheet applications.
-              </TextStyle>
+              </Text>
             </FormLayout>
           </Modal.Section>
         </Modal>
