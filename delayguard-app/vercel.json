@@ -5,6 +5,10 @@
     {
       "src": "api/index.ts",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/root.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -29,8 +33,8 @@
       "dest": "/api/index.ts"
     },
     {
-      "src": "/$",
-      "dest": "/api/index.ts"
+      "src": "/",
+      "dest": "/api/root.ts"
     },
     {
       "src": "/(.*)",
