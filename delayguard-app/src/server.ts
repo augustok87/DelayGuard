@@ -6,11 +6,11 @@ import serve from 'koa-static';
 import { join } from 'path';
 import dotenv from 'dotenv';
 
-// Shopify imports
-import { shopifyApi, LATEST_API_VERSION } from '@shopify/shopify-api';
-import { shopifyApp } from '@shopify/shopify-app-koa';
-import { verifyRequest } from '@shopify/koa-shopify-auth';
-import { createShopifyGraphQLClient } from '@shopify/koa-shopify-graphql-proxy';
+// Shopify imports - temporarily commented out for Vercel deployment
+// import { shopifyApi, LATEST_API_VERSION } from '@shopify/shopify-api';
+// import { shopifyApp } from '@shopify/shopify-app-koa';
+// import { verifyRequest } from '@shopify/koa-shopify-auth';
+// import { createShopifyGraphQLClient } from '@shopify/koa-shopify-graphql-proxy';
 
 // Internal imports
 import { AppConfig } from './types';
@@ -77,19 +77,19 @@ const config: AppConfig = {
   }
 };
 
-// Initialize Shopify API
-const shopify = shopifyApi({
-  apiKey: config.shopify.apiKey,
-  apiSecretKey: config.shopify.apiSecret,
-  scopes: config.shopify.scopes,
-  hostName: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.HOST || 'localhost'),
-  apiVersion: LATEST_API_VERSION,
-  isEmbeddedApp: true,
-  logger: {
-    level: process.env.NODE_ENV === 'production' ? 'error' : 'info',
-    httpRequests: process.env.NODE_ENV === 'development'
-  }
-});
+// Initialize Shopify API - temporarily commented out for Vercel deployment
+// const shopify = shopifyApi({
+//   apiKey: config.shopify.apiKey,
+//   apiSecretKey: config.shopify.apiSecret,
+//   scopes: config.shopify.scopes,
+//   hostName: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.HOST || 'localhost'),
+//   apiVersion: LATEST_API_VERSION,
+//   isEmbeddedApp: true,
+//   logger: {
+//     level: process.env.NODE_ENV === 'production' ? 'error' : 'info',
+//     httpRequests: process.env.NODE_ENV === 'development'
+//   }
+// });
 
 // Create Koa app
 const app = new Koa();

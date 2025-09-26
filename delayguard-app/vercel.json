@@ -3,21 +3,21 @@
   "name": "delayguard",
   "builds": [
     {
-      "src": "api/index.ts",
+      "src": "api/simple.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api/index.ts"
+      "dest": "/api/simple.ts"
     }
   ],
   "env": {
     "NODE_ENV": "production"
   },
   "functions": {
-    "api/index.ts": {
+    "api/simple.ts": {
       "maxDuration": 30
     }
   },
