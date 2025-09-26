@@ -7,30 +7,10 @@
       "use": "@vercel/node"
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/",
-      "destination": "/api/index.ts"
-    },
-    {
-      "source": "/health",
-      "destination": "/api/index.ts"
-    },
-    {
-      "source": "/webhooks",
-      "destination": "/api/index.ts"
-    },
-    {
-      "source": "/auth",
-      "destination": "/api/index.ts"
-    },
-    {
-      "source": "/monitoring",
-      "destination": "/api/index.ts"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.ts"
+      "src": "/(.*)",
+      "dest": "/api/index.ts"
     }
   ],
   "env": {
