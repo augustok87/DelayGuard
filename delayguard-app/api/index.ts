@@ -52,6 +52,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           shipengine: !!process.env.SHIPENGINE_API_KEY,
           sendgrid: !!process.env.SENDGRID_API_KEY,
           twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+        },
+        debug: {
+          databaseUrlExists: !!process.env.DATABASE_URL,
+          databaseUrlLength: process.env.DATABASE_URL ? process.env.DATABASE_URL.length : 0,
+          databaseUrlStart: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 20) + '...' : 'undefined'
         }
       };
       res.status(200).json(healthStatus);
