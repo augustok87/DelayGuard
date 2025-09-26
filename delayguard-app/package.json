@@ -11,7 +11,7 @@
     "build:client": "webpack --mode production",
     "build:server": "tsc --project tsconfig.server.json",
     "start": "node dist/server.js",
-    "vercel-build": "echo 'Skipping frontend build - backend API only'",
+    "vercel-build": "tsc --project tsconfig.vercel.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

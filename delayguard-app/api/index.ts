@@ -28,7 +28,7 @@ async function initializeServices() {
     
     servicesInitialized = true;
   } catch (error) {
-    console.warn('⚠️ Some services could not be initialized:', error.message);
+    console.warn('⚠️ Some services could not be initialized:', error instanceof Error ? error.message : 'Unknown error');
     // Continue without failing - graceful degradation
   }
 }
@@ -146,7 +146,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(500).json({
       status: 'error',
       message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+      error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Something went wrong'
     });
   }
 }

@@ -136,23 +136,24 @@ HOST=localhost
 ## 📊 **Current Status**
 
 ### **Production Ready** ✅
-- **Live URL**: https://delayguard-i5a80quf1-joonies-projects-1644afa2.vercel.app
+- **Live URL**: https://delayguard-api.vercel.app
 - **Frontend**: Zero build errors, modern Polaris UI
 - **Backend**: 5 working API endpoints
 - **Testing**: 11/12 tests passing (92% coverage)
 - **CI/CD**: Automated deployment pipeline
+- **Database**: ✅ Connected (Neon PostgreSQL)
 
 ### **API Endpoints**
-- `/health` - Service health monitoring
-- `/api` - API information and status
-- `/webhooks` - Shopify webhook processing
-- `/auth` - Authentication and OAuth
-- `/monitoring` - System monitoring
+- `/api/health` - Service health monitoring with database status
+- `/api/webhooks` - Shopify webhook processing
+- `/api/auth` - Authentication and OAuth
+- `/api/monitoring` - System monitoring and service status
+- `/` - API documentation and endpoint links
 
 ### **Service Configuration Status**
 | Service | Status | Required | Purpose |
 |---------|--------|----------|---------|
-| Database | ❌ Not Configured | ✅ Required | Store app data, orders, analytics |
+| Database | ✅ **CONFIGURED** | ✅ Required | Store app data, orders, analytics |
 | Redis | ❌ Not Configured | ✅ Required | Cache and queue management |
 | ShipEngine | ❌ Not Configured | ✅ Required | Carrier tracking and delay detection |
 | SendGrid | ❌ Not Configured | ✅ Required | Email notifications |
