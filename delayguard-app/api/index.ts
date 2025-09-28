@@ -106,7 +106,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Handle auth endpoints
-    if (req.url === '/auth' || req.url === '/api/auth') {
+    if (req.url?.startsWith('/auth') || req.url?.startsWith('/api/auth')) {
       res.status(200).json({
         status: 'success',
         message: 'Auth endpoint ready',
@@ -119,7 +119,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Handle monitoring endpoints
-    if (req.url === '/monitoring' || req.url === '/api/monitoring') {
+    if (req.url?.startsWith('/monitoring') || req.url?.startsWith('/api/monitoring')) {
       res.status(200).json({
         status: 'success',
         message: 'Monitoring endpoint ready',

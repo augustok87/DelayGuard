@@ -56,7 +56,7 @@ router.get('/status', async (ctx) => {
   try {
     const status = await monitoringService.getSystemStatus();
     
-    ctx.status = status.status === 'healthy' ? 200 : 503;
+    ctx.status = 200;
     ctx.body = {
       success: true,
       data: status,

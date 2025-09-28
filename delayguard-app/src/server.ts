@@ -6,11 +6,10 @@ import serve from 'koa-static';
 import { join } from 'path';
 import dotenv from 'dotenv';
 
-// Shopify imports - temporarily commented out for Vercel deployment
-// import { shopifyApi, LATEST_API_VERSION } from '@shopify/shopify-api';
-// import { shopifyApp } from '@shopify/shopify-app-koa';
-// import { verifyRequest } from '@shopify/koa-shopify-auth';
-// import { createShopifyGraphQLClient } from '@shopify/koa-shopify-graphql-proxy';
+// Shopify imports
+import { shopifyApi, LATEST_API_VERSION, LogSeverity } from '@shopify/shopify-api';
+import { verifyRequest } from '@shopify/koa-shopify-auth';
+import createShopifyGraphQLClient from '@shopify/koa-shopify-graphql-proxy';
 
 // Internal imports
 import { AppConfig } from './types';
@@ -77,19 +76,19 @@ const config: AppConfig = {
   }
 };
 
-// Initialize Shopify API - temporarily commented out for Vercel deployment
-// const shopify = shopifyApi({
-//   apiKey: config.shopify.apiKey,
-//   apiSecretKey: config.shopify.apiSecret,
-//   scopes: config.shopify.scopes,
-//   hostName: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.HOST || 'localhost'),
-//   apiVersion: LATEST_API_VERSION,
-//   isEmbeddedApp: true,
-//   logger: {
-//     level: process.env.NODE_ENV === 'production' ? 'error' : 'info',
-//     httpRequests: process.env.NODE_ENV === 'development'
-//   }
-// });
+// Initialize Shopify API
+const shopify = shopifyApi({
+  apiKey: config.shopify.apiKey,
+  apiSecretKey: config.shopify.apiSecret,
+  scopes: config.shopify.scopes,
+  hostName: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.HOST || 'localhost'),
+  apiVersion: LATEST_API_VERSION,
+  isEmbeddedApp: true,
+  logger: {
+    level: process.env.NODE_ENV === 'production' ? LogSeverity.Error : LogSeverity.Info,
+    httpRequests: process.env.NODE_ENV === 'development'
+  }
+});
 
 // Create Koa app
 const app = new Koa();
@@ -108,20 +107,10 @@ app.use(bodyParser({
   formLimit: '10mb'
 }));
 
-// Initialize Shopify app
-const shopifyAppMiddleware = shopifyApp({
-  api: shopify,
-  auth: {
-    path: '/auth',
-    callbackPath: '/auth/callback'
-  },
-  webhooks: {
-    path: '/webhooks',
-    topics: ['orders/updated', 'fulfillments/updated', 'orders/paid']
-  }
-});
-
-app.use(shopifyAppMiddleware);
+// Initialize Shopify app middleware
+// Note: This would typically be handled by @shopify/shopify-app-koa
+// For now, we'll use the basic auth middleware
+app.use(verifyRequest());
 
 // Static files
 app.use(serve(join(__dirname, '../public')));
