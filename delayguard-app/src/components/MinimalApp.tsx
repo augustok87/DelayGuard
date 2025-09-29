@@ -15,316 +15,430 @@ import {
   BlockStack,
   InlineStack
 } from '@shopify/polaris';
+import styles from '../styles/DelayGuard.module.css';
+
 // App Bridge integration will be added later
 // import { useAppBridge } from '@shopify/app-bridge-react';
 // import { Redirect } from '@shopify/app-bridge/actions';
 
 interface AppSettings {
-  delayThresholdDays: number;
-  emailEnabled: boolean;
-  smsEnabled: boolean;
+  delayThreshold: number;
   notificationTemplate: string;
+  emailNotifications: boolean;
+  smsNotifications: boolean;
 }
 
 interface DelayAlert {
-  id: number;
-  order_number: string;
-  customer_name: string;
-  delay_days: number;
-  delay_reason: string;
-  email_sent: boolean;
-  sms_sent: boolean;
-  created_at: string;
+  id: string;
+  orderId: string;
+  customerName: string;
+  delayDays: number;
+  status: 'active' | 'resolved' | 'dismissed';
+  createdAt: string;
+  resolvedAt?: string;
 }
 
 interface Order {
-  id: number;
-  order_number: string;
-  customer_name: string;
-  customer_email: string;
+  id: string;
+  orderNumber: string;
+  customerName: string;
   status: string;
-  tracking_number: string;
-  carrier_code: string;
-  created_at: string;
+  trackingNumber?: string;
+  carrierCode?: string;
+  createdAt: string;
 }
 
 export function MinimalApp() {
-  // App Bridge integration will be added later
-  // const app = useAppBridge();
-  // const redirect = app ? Redirect.create(app) : null;
-  
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [shop, setShop] = useState<string | null>(null);
   const [settings, setSettings] = useState<AppSettings>({
-    delayThresholdDays: 2,
-    emailEnabled: true,
-    smsEnabled: false,
-    notificationTemplate: 'default'
+    delayThreshold: 2,
+    notificationTemplate: 'default',
+    emailNotifications: true,
+    smsNotifications: false
   });
-
   const [alerts, setAlerts] = useState<DelayAlert[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState(0);
-  const [shop, setShop] = useState<string | null>(null);
+
+  // Mock statistics for the dashboard
+  const [stats, setStats] = useState({
+    totalAlerts: 12,
+    activeAlerts: 3,
+    resolvedAlerts: 9,
+    avgResolutionTime: '2.3 days',
+    customerSatisfaction: '94%',
+    supportTicketReduction: '35%'
+  });
 
   useEffect(() => {
-    // Get shop information from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const shopParam = urlParams.get('shop');
-    if (shopParam) {
-      setShop(shopParam);
-    }
-    
     loadData();
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      // Mock data for now - will connect to real API later
+      // Simulate API calls
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock shop data
+      setShop('my-awesome-store.myshopify.com');
+      
+      // Mock alerts data
       setAlerts([
         {
-          id: 1,
-          order_number: '1001',
-          customer_name: 'John Doe',
-          delay_days: 3,
-          delay_reason: 'Weather delay',
-          email_sent: true,
-          sms_sent: false,
-          created_at: '2024-01-15T10:00:00Z'
+          id: '1',
+          orderId: '1001',
+          customerName: 'John Smith',
+          delayDays: 3,
+          status: 'active',
+          createdAt: '2024-01-15T10:30:00Z'
+        },
+        {
+          id: '2',
+          orderId: '1002',
+          customerName: 'Sarah Johnson',
+          delayDays: 5,
+          status: 'resolved',
+          createdAt: '2024-01-14T14:20:00Z',
+          resolvedAt: '2024-01-16T09:15:00Z'
+        },
+        {
+          id: '3',
+          orderId: '1003',
+          customerName: 'Mike Wilson',
+          delayDays: 2,
+          status: 'active',
+          createdAt: '2024-01-16T08:45:00Z'
         }
       ]);
+      
+      // Mock orders data
       setOrders([
         {
-          id: 1,
-          order_number: '1001',
-          customer_name: 'John Doe',
-          customer_email: 'john@example.com',
+          id: '1',
+          orderNumber: '#1001',
+          customerName: 'John Smith',
           status: 'shipped',
-          tracking_number: '1Z999AA1234567890',
-          carrier_code: 'ups',
-          created_at: '2024-01-15T10:00:00Z'
+          trackingNumber: '1Z999AA1234567890',
+          carrierCode: 'UPS',
+          createdAt: '2024-01-15T10:30:00Z'
+        },
+        {
+          id: '2',
+          orderNumber: '#1002',
+          customerName: 'Sarah Johnson',
+          status: 'delivered',
+          trackingNumber: '1Z999BB9876543210',
+          carrierCode: 'UPS',
+          createdAt: '2024-01-14T14:20:00Z'
+        },
+        {
+          id: '3',
+          orderNumber: '#1003',
+          customerName: 'Mike Wilson',
+          status: 'processing',
+          createdAt: '2024-01-16T08:45:00Z'
         }
       ]);
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
+      setError('Failed to load data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateSettings = async () => {
-    try {
-      // Mock API call
-      console.log('Updating settings:', settings);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update settings');
-    }
+  const handleSaveSettings = () => {
+    // In a real app, this would save to the backend
+    console.log('Saving settings:', settings);
+    setError(null);
   };
 
-  const testDelayDetection = async () => {
-    try {
-      const trackingNumber = prompt('Enter tracking number:');
-      const carrierCode = prompt('Enter carrier code (e.g., ups, fedex, usps):');
-      
-      if (!trackingNumber || !carrierCode) return;
-
-      // Mock API call
-      alert(`Delay Detection Result:\nTracking: ${trackingNumber}\nCarrier: ${carrierCode}\nStatus: Mock response`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to test delay detection');
-    }
+  const handleTestDelayDetection = () => {
+    // In a real app, this would test the delay detection system
+    console.log('Testing delay detection...');
+    setError(null);
   };
 
-  const handleShopifyAuth = () => {
-    // Simple redirect to Shopify OAuth flow
-    const authUrl = `/auth/shopify?shop=${shop || 'your-shop.myshopify.com'}`;
-    window.location.href = authUrl;
+  const handleConnectShopify = () => {
+    // In a real app, this would initiate Shopify OAuth
+    console.log('Connecting to Shopify...');
+    setError(null);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: { [key: string]: { class: string; text: string } } = {
+      'active': { class: styles.badgeDanger, text: 'Active' },
+      'resolved': { class: styles.badgeSuccess, text: 'Resolved' },
+      'dismissed': { class: styles.badgeInfo, text: 'Dismissed' },
+      'shipped': { class: styles.badgeInfo, text: 'Shipped' },
+      'delivered': { class: styles.badgeSuccess, text: 'Delivered' },
+      'processing': { class: styles.badgeWarning, text: 'Processing' }
+    };
+    
+    const statusInfo = statusMap[status] || { class: styles.badgeInfo, text: status };
+    return <span className={`${styles.badge} ${statusInfo.class}`}>{statusInfo.text}</span>;
   };
 
   if (loading) {
     return (
-      <Page title="DelayGuard">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <BlockStack gap="400" align="center">
-                <Spinner size="large" />
-                <Text as="p">Loading DelayGuard...</Text>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-        </Layout>
-      </Page>
+      <div className={styles.app}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <Spinner size="large" />
+        </div>
+      </div>
     );
   }
 
-  const tabs = [
-    {
-      id: 'settings',
-      content: 'Settings',
-      panelID: 'settings-panel',
-    },
-    {
-      id: 'alerts',
-      content: 'Delay Alerts',
-      panelID: 'alerts-panel',
-    },
-    {
-      id: 'orders',
-      content: 'Orders',
-      panelID: 'orders-panel',
-    },
-  ];
-
-  const alertRows = alerts.map(alert => [
-    alert.order_number,
-    alert.customer_name,
-    <Badge tone={alert.delay_days > 3 ? 'critical' : 'warning'}>
-      {`${alert.delay_days} days`}
-    </Badge>,
-    alert.delay_reason,
-    <Badge tone={alert.email_sent ? 'success' : 'info'}>
-      {alert.email_sent ? 'Sent' : 'Pending'}
-    </Badge>,
-    <Badge tone={alert.sms_sent ? 'success' : 'info'}>
-      {alert.sms_sent ? 'Sent' : 'Pending'}
-    </Badge>,
-    new Date(alert.created_at).toLocaleDateString()
-  ]);
-
-  const orderRows = orders.map(order => [
-    order.order_number,
-    order.customer_name,
-    order.customer_email,
-    <Badge tone={order.status === 'shipped' ? 'success' : 'info'}>
-      {order.status}
-    </Badge>,
-    order.tracking_number || 'N/A',
-    order.carrier_code || 'N/A',
-    new Date(order.created_at).toLocaleDateString()
-  ]);
-
   return (
-    <Page title={`DelayGuard - Shipping Delay Detection${shop ? ` (${shop})` : ''}`}>
-      {error && (
-        <Layout>
-          <Layout.Section>
-            <Banner tone="critical" onDismiss={() => setError(null)}>
-              {error}
-            </Banner>
-          </Layout.Section>
-        </Layout>
-      )}
+    <div className={styles.app}>
+      {/* Header */}
+      <div className={styles.header}>
+        <div className={styles.logo}>
+          <div className={styles.icon}>🛡️</div>
+          <div>
+            <h1 className={styles.title}>DelayGuard</h1>
+            <p className={styles.subtitle}>Proactive Shipping Delay Notifications</p>
+          </div>
+        </div>
+        
+        <div className={styles.stats}>
+          <div className={styles.stat}>
+            <div className={styles.statValue}>{stats.totalAlerts}</div>
+            <div className={styles.statLabel}>Total Alerts</div>
+          </div>
+          <div className={styles.stat}>
+            <div className={styles.statValue}>{stats.activeAlerts}</div>
+            <div className={styles.statLabel}>Active</div>
+          </div>
+          <div className={styles.stat}>
+            <div className={styles.statValue}>{stats.resolvedAlerts}</div>
+            <div className={styles.statLabel}>Resolved</div>
+          </div>
+          <div className={styles.stat}>
+            <div className={styles.statValue}>{stats.supportTicketReduction}</div>
+            <div className={styles.statLabel}>Ticket Reduction</div>
+          </div>
+        </div>
+      </div>
 
-      <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
-        <Layout>
-          <Layout.Section>
-                        {selectedTab === 0 && (
-                          <Card>
-                            <BlockStack gap="400">
-                              <Text variant="headingMd" as="h2">App Settings</Text>
-                              
-                              {shop ? (
-                                <Banner tone="success">
-                                  <Text as="p">Connected to Shopify store: <strong>{shop}</strong></Text>
-                                </Banner>
-                              ) : (
-                                <Banner tone="warning">
-                                  <Text as="p">Not connected to Shopify. Click below to authenticate.</Text>
-                                </Banner>
-                              )}
+      <div>
+        {error && (
+          <div className={styles.alert} style={{ marginBottom: '1.5rem' }}>
+            <div className={styles.alertIcon}>⚠️</div>
+            <div>
+              <strong>Error:</strong> {error}
+              <button onClick={() => setError(null)} style={{ marginLeft: '1rem', background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>×</button>
+            </div>
+          </div>
+        )}
 
-                              <TextField
-                                label="Delay Threshold (days)"
-                                type="number"
-                                value={settings.delayThresholdDays.toString()}
-                                onChange={(value) => setSettings({
-                                  ...settings,
-                                  delayThresholdDays: parseInt(value) || 0
-                                })}
-                                min={0}
-                                max={30}
-                                helpText="Minimum delay in days before sending notifications"
-                                autoComplete="off"
-                              />
+        {/* Navigation Tabs */}
+        <div className={styles.tabs}>
+          <div 
+            className={`${styles.tab} ${selectedTab === 0 ? styles.tabActive : ''}`}
+            onClick={() => setSelectedTab(0)}
+          >
+            📊 Dashboard
+          </div>
+          <div 
+            className={`${styles.tab} ${selectedTab === 1 ? styles.tabActive : ''}`}
+            onClick={() => setSelectedTab(1)}
+          >
+            🚨 Delay Alerts
+          </div>
+          <div 
+            className={`${styles.tab} ${selectedTab === 2 ? styles.tabActive : ''}`}
+            onClick={() => setSelectedTab(2)}
+          >
+            📦 Orders
+          </div>
+        </div>
 
-                              <Select
-                                label="Notification Template"
-                                options={[
-                                  { label: 'Default', value: 'default' },
-                                  { label: 'Friendly', value: 'friendly' },
-                                  { label: 'Professional', value: 'professional' }
-                                ]}
-                                value={settings.notificationTemplate}
-                                onChange={(value) => setSettings({
-                                  ...settings,
-                                  notificationTemplate: value
-                                })}
-                              />
-
-                              <InlineStack gap="200">
-                                <Button
-                                  variant="primary"
-                                  onClick={updateSettings}
-                                >
-                                  Save Settings
-                                </Button>
-                                <Button
-                                  onClick={testDelayDetection}
-                                >
-                                  Test Delay Detection
-                                </Button>
-                                {!shop && (
-                                  <Button
-                                    variant="secondary"
-                                    onClick={handleShopifyAuth}
-                                  >
-                                    Connect to Shopify
-                                  </Button>
-                                )}
-                              </InlineStack>
-                            </BlockStack>
-                          </Card>
-                        )}
-
-            {selectedTab === 1 && (
-              <Card>
-                <BlockStack gap="400">
-                  <Text variant="headingMd" as="h2">Delay Alerts</Text>
-                  {alerts.length === 0 ? (
-                    <Text as="p">No delay alerts found.</Text>
-                  ) : (
-                    <DataTable
-                      columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text']}
-                      headings={['Order', 'Customer', 'Delay', 'Reason', 'Email', 'SMS', 'Date']}
-                      rows={alertRows}
-                    />
+        {/* Dashboard Tab */}
+        {selectedTab === 0 && (
+          <div className={styles.grid}>
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h2 className={styles.cardTitle}>App Settings</h2>
+                <p className={styles.cardSubtitle}>Configure your delay detection preferences</p>
+              </div>
+              <div className={styles.cardContent}>
+                {shop ? (
+                  <div className={styles.alert} style={{ background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)', borderColor: '#10b981' }}>
+                    <div className={styles.alertIcon}>✅</div>
+                    <div>
+                      <strong>Connected to Shopify:</strong> {shop}
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.alert}>
+                    <div className={styles.alertIcon}>⚠️</div>
+                    <div>
+                      <strong>Not connected to Shopify.</strong> Click below to authenticate.
+                    </div>
+                  </div>
+                )}
+                
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Delay Threshold (days)
+                  </label>
+                  <input
+                    type="number"
+                    className={styles.input}
+                    value={settings.delayThreshold}
+                    onChange={(e) => setSettings({...settings, delayThreshold: parseInt(e.target.value) || 0})}
+                    min="1"
+                    max="30"
+                  />
+                  <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.5rem 0 0 0' }}>
+                    Minimum delay in days before sending notifications
+                  </p>
+                </div>
+                
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Notification Template
+                  </label>
+                  <select
+                    className={styles.select}
+                    value={settings.notificationTemplate}
+                    onChange={(e) => setSettings({...settings, notificationTemplate: e.target.value})}
+                  >
+                    <option value="default">Default Template</option>
+                    <option value="custom">Custom Template</option>
+                    <option value="minimal">Minimal Template</option>
+                  </select>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <button className={styles.button} onClick={handleSaveSettings}>
+                    Save Settings
+                  </button>
+                  <button className={`${styles.button} ${styles.buttonSecondary}`} onClick={handleTestDelayDetection}>
+                    Test Delay Detection
+                  </button>
+                  {!shop && (
+                    <button className={`${styles.button} ${styles.buttonSecondary}`} onClick={handleConnectShopify}>
+                      Connect to Shopify
+                    </button>
                   )}
-                </BlockStack>
-              </Card>
-            )}
+                </div>
+              </div>
+            </div>
 
-            {selectedTab === 2 && (
-              <Card>
-                <BlockStack gap="400">
-                  <Text variant="headingMd" as="h2">Recent Orders</Text>
-                  {orders.length === 0 ? (
-                    <Text as="p">No orders found.</Text>
-                  ) : (
-                    <DataTable
-                      columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text']}
-                      headings={['Order', 'Customer', 'Email', 'Status', 'Tracking', 'Carrier', 'Date']}
-                      rows={orderRows}
-                    />
-                  )}
-                </BlockStack>
-              </Card>
-            )}
-          </Layout.Section>
-        </Layout>
-      </Tabs>
-    </Page>
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h2 className={styles.cardTitle}>Performance Metrics</h2>
+                <p className={styles.cardSubtitle}>Real-time insights into your delay management</p>
+              </div>
+              <div className={styles.cardContent}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                  <div style={{ textAlign: 'center', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#10b981', marginBottom: '0.5rem' }}>
+                      {stats.customerSatisfaction}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Customer Satisfaction</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2563eb', marginBottom: '0.5rem' }}>
+                      {stats.avgResolutionTime}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Avg Resolution Time</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delay Alerts Tab */}
+        {selectedTab === 1 && (
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>Delay Alerts</h2>
+              <p className={styles.cardSubtitle}>Monitor and manage shipping delay notifications</p>
+            </div>
+            <div className={styles.cardContent}>
+              {alerts.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyStateIcon}>📊</div>
+                  <h3 style={{ margin: '0 0 0.5rem 0', color: '#374151' }}>No delay alerts found</h3>
+                  <p style={{ margin: 0, color: '#6b7280' }}>Alerts will appear here when delays are detected.</p>
+                </div>
+              ) : (
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Customer</th>
+                      <th>Delay Days</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {alerts.map((alert) => (
+                      <tr key={alert.id}>
+                        <td>{alert.orderId}</td>
+                        <td>{alert.customerName}</td>
+                        <td>{alert.delayDays} days</td>
+                        <td>{getStatusBadge(alert.status)}</td>
+                        <td>{new Date(alert.createdAt).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Orders Tab */}
+        {selectedTab === 2 && (
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>Recent Orders</h2>
+              <p className={styles.cardSubtitle}>Track and monitor your order fulfillment</p>
+            </div>
+            <div className={styles.cardContent}>
+              {orders.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyStateIcon}>📦</div>
+                  <h3 style={{ margin: '0 0 0.5rem 0', color: '#374151' }}>No orders found</h3>
+                  <p style={{ margin: 0, color: '#6b7280' }}>Orders will appear here when they are processed.</p>
+                </div>
+              ) : (
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Order #</th>
+                      <th>Customer</th>
+                      <th>Status</th>
+                      <th>Tracking</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map((order) => (
+                      <tr key={order.id}>
+                        <td>{order.orderNumber}</td>
+                        <td>{order.customerName}</td>
+                        <td>{getStatusBadge(order.status)}</td>
+                        <td>{order.trackingNumber || 'N/A'}</td>
+                        <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

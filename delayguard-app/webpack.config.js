@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const isProduction = process.env.NODE_ENV === 'production';
 
 module.exports = {
-  entry: './src/components/App.tsx',
+  entry: './src/index.tsx',
   mode: isProduction ? 'production' : 'development',
   devtool: isProduction ? 'source-map' : 'eval-source-map',
   module: {
@@ -22,7 +22,18 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              modules: {
+                auto: (resourcePath) => resourcePath.endsWith('.module.css'),
+                localIdentName: isProduction ? '[hash:base64:8]' : '[local]--[hash:base64:5]',
+              },
+            },
+          },
+        ],
       },
     ],
   },
