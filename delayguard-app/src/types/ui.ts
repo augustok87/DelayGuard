@@ -8,6 +8,7 @@ export interface ButtonProps {
   disabled?: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  type?: 'button' | 'submit' | 'reset';
   className?: string;
   'aria-label'?: string;
   'aria-describedby'?: string;

@@ -1,6 +1,6 @@
 import React from 'react';
-import { RefactoredApp } from './RefactoredApp';
+import { RefactoredAppOptimized } from './RefactoredApp.optimized';
 
 export function App() {
-  return <RefactoredApp />;
+  return <RefactoredAppOptimized />;
 }
