@@ -1,6 +1,6 @@
 import React from 'react';
-import { MinimalApp } from './MinimalApp';
+import { RefactoredApp } from './RefactoredApp';
 
 export function App() {
-  return <MinimalApp />;
+  return <RefactoredApp />;
 }

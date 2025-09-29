@@ -1,0 +1,168 @@
+.alertCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.alertCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.alertCard.active {
+  border-left: 4px solid #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+}
+
+.alertCard.resolved {
+  border-left: 4px solid #10b981;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.alertCard.dismissed {
+  border-left: 4px solid #6b7280;
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  opacity: 0.8;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.orderInfo {
+  flex: 1;
+}
+
+.orderId {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.customerName {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.status {
+  flex-shrink: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.badgeDanger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.badgeSuccess {
+  background-color: #f0fdf4;
+  color: #10b981;
+  border: 1px solid #bbf7d0;
+}
+
+.badgeInfo {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.delayInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.delayDays {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.createdAt,
+.resolvedAt {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.contactInfo,
+.trackingInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.label {
+  font-weight: 500;
+  color: #6b7280;
+  min-width: 3rem;
+}
+
+.value {
+  color: #374151;
+  font-weight: 500;
+}
+
+.carrier {
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+@media (max-width: 640px) {
+  .alertCard {
+    padding: 1rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  
+  .status {
+    align-self: flex-start;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+  
+  .actions button {
+    width: 100%;
+  }
+}
