@@ -6,22 +6,33 @@ import { LoadingSpinner } from './ui/LoadingSpinner';
 import { DashboardTab } from './tabs/DashboardTab';
 import { AlertsTab } from './tabs/AlertsTab';
 import { OrdersTab } from './tabs/OrdersTab';
+import { 
+  useDelayAlerts, 
+  useOrders, 
+  useSettings, 
+  useTabs, 
+  useAlertActions, 
+  useOrderActions, 
+  useSettingsActions 
+} from '../hooks';
 import { AppSettings, DelayAlert, Order, StatsData } from '../types';
 import styles from './RefactoredApp.module.css';
 
 export function RefactoredApp() {
-  const [selectedTab, setSelectedTab] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Custom hooks for data and state management
+  const { selectedTab, changeTab } = useTabs();
+  const { alerts, loading: alertsLoading, error: alertsError } = useDelayAlerts();
+  const { orders, loading: ordersLoading, error: ordersError } = useOrders();
+  const { settings, loading: settingsLoading, error: settingsError } = useSettings();
+  
+  // Action hooks
+  const { resolveAlert, dismissAlert } = useAlertActions();
+  const { trackOrder, viewOrderDetails } = useOrderActions();
+  const { saveSettings, testDelayDetection, connectToShopify } = useSettingsActions();
+
+  // Local state
   const [shop, setShop] = useState<string | null>(null);
-  const [settings, setSettings] = useState<AppSettings>({
-    delayThreshold: 2,
-    notificationTemplate: 'default',
-    emailNotifications: true,
-    smsNotifications: false
-  });
-  const [alerts, setAlerts] = useState<DelayAlert[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   // Mock statistics for the dashboard
   const [stats, setStats] = useState<StatsData>({
@@ -33,144 +44,49 @@ export function RefactoredApp() {
     supportTicketReduction: '35%'
   });
 
+  // Combined loading state
+  const loading = alertsLoading || ordersLoading || settingsLoading;
+
+  // Initialize shop data
   useEffect(() => {
-    loadData();
+    setShop('my-awesome-store.myshopify.com');
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      // Simulate API calls
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock shop data
-      setShop('my-awesome-store.myshopify.com');
-      
-      // Mock alerts data
-      setAlerts([
-        {
-          id: '1',
-          orderId: '1001',
-          customerName: 'John Smith',
-          delayDays: 3,
-          status: 'active',
-          createdAt: '2024-01-15T10:30:00Z',
-          customerEmail: 'john.smith@email.com',
-          trackingNumber: '1Z999AA1234567890',
-          carrierCode: 'UPS',
-          priority: 'high'
-        },
-        {
-          id: '2',
-          orderId: '1002',
-          customerName: 'Sarah Johnson',
-          delayDays: 5,
-          status: 'resolved',
-          createdAt: '2024-01-14T14:20:00Z',
-          resolvedAt: '2024-01-16T09:15:00Z',
-          customerEmail: 'sarah.johnson@email.com',
-          trackingNumber: '1Z999BB9876543210',
-          carrierCode: 'UPS',
-          priority: 'critical'
-        },
-        {
-          id: '3',
-          orderId: '1003',
-          customerName: 'Mike Wilson',
-          delayDays: 2,
-          status: 'active',
-          createdAt: '2024-01-16T08:45:00Z',
-          customerEmail: 'mike.wilson@email.com',
-          trackingNumber: '1Z999CC1122334455',
-          carrierCode: 'FedEx',
-          priority: 'medium'
-        }
-      ]);
-      
-      // Mock orders data
-      setOrders([
-        {
-          id: '1',
-          orderNumber: '#1001',
-          customerName: 'John Smith',
-          status: 'shipped',
-          trackingNumber: '1Z999AA1234567890',
-          carrierCode: 'UPS',
-          createdAt: '2024-01-15T10:30:00Z',
-          customerEmail: 'john.smith@email.com',
-          totalAmount: 89.99,
-          currency: 'USD'
-        },
-        {
-          id: '2',
-          orderNumber: '#1002',
-          customerName: 'Sarah Johnson',
-          status: 'delivered',
-          trackingNumber: '1Z999BB9876543210',
-          carrierCode: 'UPS',
-          createdAt: '2024-01-14T14:20:00Z',
-          customerEmail: 'sarah.johnson@email.com',
-          totalAmount: 156.50,
-          currency: 'USD'
-        },
-        {
-          id: '3',
-          orderNumber: '#1003',
-          customerName: 'Mike Wilson',
-          status: 'processing',
-          createdAt: '2024-01-16T08:45:00Z',
-          customerEmail: 'mike.wilson@email.com',
-          totalAmount: 45.00,
-          currency: 'USD'
-        }
-      ]);
-      
-    } catch (err) {
-      setError('Failed to load data. Please try again.');
-    } finally {
-      setLoading(false);
+  const handleSaveSettings = async () => {
+    if (settings) {
+      await saveSettings(settings);
     }
   };
 
-  const handleSaveSettings = () => {
-    // In a real app, this would save to the backend
-    console.log('Saving settings:', settings);
-    setError(null);
+  const handleTestDelayDetection = async () => {
+    await testDelayDetection();
   };
 
-  const handleTestDelayDetection = () => {
-    // In a real app, this would test the delay detection system
-    console.log('Testing delay detection...');
-    setError(null);
+  const handleConnectShopify = async () => {
+    const result = await connectToShopify();
+    if (result.success) {
+      setShop('my-awesome-store.myshopify.com');
+    }
   };
 
-  const handleConnectShopify = () => {
-    // In a real app, this would initiate Shopify OAuth
-    console.log('Connecting to Shopify...');
-    setError(null);
+  const handleAlertAction = async (alertId: string, action: 'resolve' | 'dismiss') => {
+    if (action === 'resolve') {
+      await resolveAlert(alertId);
+    } else {
+      await dismissAlert(alertId);
+    }
   };
 
-  const handleAlertAction = (alertId: string, action: 'resolve' | 'dismiss') => {
-    setAlerts(prevAlerts => 
-      prevAlerts.map(alert => 
-        alert.id === alertId 
-          ? { 
-              ...alert, 
-              status: action === 'resolve' ? 'resolved' : 'dismissed',
-              resolvedAt: action === 'resolve' ? new Date().toISOString() : undefined
-            }
-          : alert
-      )
-    );
+  const handleOrderAction = async (orderId: string, action: 'track' | 'view') => {
+    if (action === 'track') {
+      await trackOrder(orderId);
+    } else {
+      await viewOrderDetails(orderId);
+    }
   };
 
-  const handleOrderAction = (orderId: string, action: 'track' | 'view') => {
-    console.log(`Order action: ${action} for order ${orderId}`);
-    // In a real app, this would handle order actions
-  };
-
-  const handleSettingsChange = (newSettings: AppSettings) => {
-    setSettings(newSettings);
+  const handleSettingsChange = async (newSettings: AppSettings) => {
+    await saveSettings(newSettings);
   };
 
   if (loading) {
@@ -196,7 +112,7 @@ export function RefactoredApp() {
 
         <TabNavigation 
           selectedTab={selectedTab}
-          onTabChange={setSelectedTab}
+          onTabChange={changeTab}
           loading={loading}
         />
 

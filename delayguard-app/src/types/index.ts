@@ -99,6 +99,43 @@ export * from './ui';
 export * from './api';
 export * from './store';
 
+// Additional types for hooks
+export interface CreateAlertData {
+  orderId: string;
+  customerName: string;
+  delayDays: number;
+  customerEmail?: string;
+  trackingNumber?: string;
+  carrierCode?: string;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export interface UpdateAlertData {
+  status?: 'active' | 'resolved' | 'dismissed';
+  resolvedAt?: string;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export interface CreateOrderData {
+  orderNumber: string;
+  customerName: string;
+  status: string;
+  trackingNumber?: string;
+  carrierCode?: string;
+  customerEmail?: string;
+  totalAmount?: number;
+  currency?: string;
+}
+
+export interface UpdateOrderData {
+  status?: string;
+  trackingNumber?: string;
+  carrierCode?: string;
+  customerEmail?: string;
+  totalAmount?: number;
+  currency?: string;
+}
+
 // Service interfaces
 export interface DelayDetectionService {
   checkForDelays(trackingInfo: TrackingInfo): Promise<DelayDetectionResult>;
