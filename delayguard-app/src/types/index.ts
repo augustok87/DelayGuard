@@ -43,6 +43,62 @@ export interface DelayDetails {
   delayReason: string;
 }
 
+// Enhanced UI Types
+export interface AppSettings {
+  delayThreshold: number;
+  notificationTemplate: string;
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  autoResolveDays?: number;
+  enableAnalytics?: boolean;
+  theme?: 'light' | 'dark';
+  language?: string;
+}
+
+export interface DelayAlert {
+  id: string;
+  orderId: string;
+  customerName: string;
+  delayDays: number;
+  status: 'active' | 'resolved' | 'dismissed';
+  createdAt: string;
+  resolvedAt?: string;
+  customerEmail?: string;
+  trackingNumber?: string;
+  carrierCode?: string;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  status: string;
+  trackingNumber?: string;
+  carrierCode?: string;
+  createdAt: string;
+  customerEmail?: string;
+  totalAmount?: number;
+  currency?: string;
+}
+
+export interface StatsData {
+  totalAlerts: number;
+  activeAlerts: number;
+  resolvedAlerts: number;
+  avgResolutionTime: string;
+  customerSatisfaction: string;
+  supportTicketReduction: string;
+  totalOrders?: number;
+  delayedOrders?: number;
+  revenueImpact?: number;
+}
+
+// Re-export all types for easy importing
+export * from './ui';
+export * from './api';
+export * from './store';
+
 // Service interfaces
 export interface DelayDetectionService {
   checkForDelays(trackingInfo: TrackingInfo): Promise<DelayDetectionResult>;
