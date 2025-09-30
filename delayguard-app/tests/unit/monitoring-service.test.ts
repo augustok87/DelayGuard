@@ -32,12 +32,16 @@ describe('MonitoringService', () => {
   let mockRedis: any;
 
   beforeEach(() => {
-    // Get the mocked instances
-    const { Pool } = require('pg');
-    const { Redis } = require('ioredis');
+    // Clear all mocks
+    jest.clearAllMocks();
     
-    mockDb = new Pool({ connectionString: mockConfig.database.url });
-    mockRedis = new Redis(mockConfig.redis.url);
+    // Get references to the mocked constructors
+    const { Pool } = require('pg');
+    const Redis = require('ioredis');
+    
+    // Create new instances with mocked methods
+    mockDb = new Pool();
+    mockRedis = new Redis();
     
     monitoringService = new MonitoringService(mockConfig);
   });
@@ -52,7 +56,7 @@ describe('MonitoringService', () => {
       mockDb.query.mockResolvedValue({ rows: [{ health_check: 1 }] });
       
       // Mock Redis health check
-      mockRedis.ping = jest.fn().mockResolvedValue('PONG');
+      mockRedis.ping.mockResolvedValue('PONG');
       
       // Mock external API health checks
       global.fetch = jest.fn()
@@ -71,7 +75,7 @@ describe('MonitoringService', () => {
       mockDb.query.mockRejectedValue(new Error('Connection failed'));
       
       // Mock Redis failure
-      mockRedis.ping = jest.fn().mockRejectedValue(new Error('Connection failed'));
+      mockRedis.ping.mockRejectedValue(new Error('Connection failed'));
       
       // Mock external API failures
       global.fetch = jest.fn()
@@ -92,7 +96,7 @@ describe('MonitoringService', () => {
       );
       
       // Mock Redis with slow response
-      mockRedis.ping = jest.fn().mockImplementation(() => 
+      mockRedis.ping.mockImplementation(() => 
         new Promise(resolve => setTimeout(() => resolve('PONG'), 200))
       );
       
@@ -233,7 +237,7 @@ describe('MonitoringService', () => {
     it('should return overall system status', async () => {
       // Mock healthy checks
       mockDb.query.mockResolvedValue({ rows: [{ health_check: 1 }] });
-      mockRedis.ping = jest.fn().mockResolvedValue('PONG');
+      mockRedis.ping.mockResolvedValue('PONG');
       global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
 
       const status = await monitoringService.getSystemStatus();
@@ -249,7 +253,7 @@ describe('MonitoringService', () => {
     it('should return degraded status when some checks fail', async () => {
       // Mock some healthy, some degraded checks
       mockDb.query.mockResolvedValue({ rows: [{ health_check: 1 }] });
-      mockRedis.ping = jest.fn().mockImplementation(() => 
+      mockRedis.ping.mockImplementation(() => 
         new Promise(resolve => setTimeout(() => resolve('PONG'), 200))
       );
       global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
@@ -262,7 +266,7 @@ describe('MonitoringService', () => {
     it('should return unhealthy status when critical checks fail', async () => {
       // Mock critical failures
       mockDb.query.mockRejectedValue(new Error('Database connection failed'));
-      mockRedis.ping = jest.fn().mockRejectedValue(new Error('Redis connection failed'));
+      mockRedis.ping.mockRejectedValue(new Error('Redis connection failed'));
       global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
 
       const status = await monitoringService.getSystemStatus();
@@ -283,7 +287,7 @@ describe('MonitoringService', () => {
     });
 
     it('should handle Redis errors gracefully', async () => {
-      mockRedis.ping = jest.fn().mockRejectedValue(new Error('Redis error'));
+      mockRedis.ping.mockRejectedValue(new Error('Redis error'));
 
       const checks = await monitoringService.performHealthChecks();
       const redisCheck = checks.find(check => check.name === 'Redis');

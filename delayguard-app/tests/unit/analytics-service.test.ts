@@ -1,3 +1,27 @@
+// Mock the database and Redis modules before importing the service
+const mockQuery = jest.fn();
+const mockGet = jest.fn();
+const mockSetex = jest.fn();
+const mockDel = jest.fn();
+const mockKeys = jest.fn();
+const mockLlen = jest.fn();
+
+jest.mock('pg', () => ({
+  Pool: jest.fn().mockImplementation(() => ({
+    query: mockQuery
+  }))
+}));
+
+jest.mock('ioredis', () => {
+  return jest.fn().mockImplementation(() => ({
+    get: mockGet,
+    setex: mockSetex,
+    del: mockDel,
+    keys: mockKeys,
+    llen: mockLlen
+  }));
+});
+
 import { AnalyticsService } from '../../src/services/analytics-service';
 import { AppConfig } from '../../src/types';
 
@@ -32,12 +56,21 @@ describe('AnalyticsService', () => {
   let mockRedis: any;
 
   beforeEach(() => {
-    // Get the mocked instances
-    const { Pool } = require('pg');
-    const { Redis } = require('ioredis');
+    // Clear all mocks
+    jest.clearAllMocks();
     
-    mockDb = new Pool({ connectionString: mockConfig.database.url });
-    mockRedis = new Redis(mockConfig.redis.url);
+    // Create new instances with mocked methods
+    mockDb = {
+      query: mockQuery
+    };
+    
+    mockRedis = {
+      get: mockGet,
+      setex: mockSetex,
+      del: mockDel,
+      keys: mockKeys,
+      llen: mockLlen
+    };
     
     analyticsService = new AnalyticsService(mockConfig);
   });
@@ -52,7 +85,7 @@ describe('AnalyticsService', () => {
       const timeRange = '30d';
       
       // Mock database responses
-      mockDb.query
+      mockQuery
         .mockResolvedValueOnce({ rows: [{ count: '100' }] }) // totalOrders
         .mockResolvedValueOnce({ rows: [{ count: '10' }] }) // totalAlerts
         .mockResolvedValueOnce({ 
@@ -78,8 +111,8 @@ describe('AnalyticsService', () => {
         }); // timeSeriesData
 
       // Mock Redis responses
-      mockRedis.get.mockResolvedValue(null); // No cache
-      mockRedis.setex.mockResolvedValue('OK');
+      mockGet.mockResolvedValue(null); // No cache
+      mockSetex.mockResolvedValue('OK');
 
       const result = await analyticsService.getAnalyticsMetrics(shopId, timeRange);
 
@@ -140,7 +173,7 @@ describe('AnalyticsService', () => {
         timeSeriesData: []
       };
 
-      mockRedis.get.mockResolvedValue(JSON.stringify(cachedData));
+      mockGet.mockResolvedValue(JSON.stringify(cachedData));
 
       const result = await analyticsService.getAnalyticsMetrics(shopId, timeRange);
 
@@ -152,8 +185,8 @@ describe('AnalyticsService', () => {
       const shopId = 'test-shop';
       const timeRange = '30d';
 
-      mockDb.query.mockRejectedValue(new Error('Database connection failed'));
-      mockRedis.get.mockResolvedValue(null);
+      mockQuery.mockRejectedValue(new Error('Database connection failed'));
+      mockGet.mockResolvedValue(null);
 
       await expect(analyticsService.getAnalyticsMetrics(shopId, timeRange))
         .rejects.toThrow('Database connection failed');
@@ -165,11 +198,11 @@ describe('AnalyticsService', () => {
       const shopId = 'test-shop';
       
       // Mock database responses
-      mockDb.query.mockResolvedValue({ rows: [{ count: '5' }] }); // activeAlerts
+      mockQuery.mockResolvedValue({ rows: [{ count: '5' }] }); // activeAlerts
       
       // Mock Redis responses
-      mockRedis.llen.mockResolvedValue(10); // queueSize
-      mockRedis.get
+      mockLlen.mockResolvedValue(10); // queueSize
+      mockGet
         .mockResolvedValueOnce('25.5') // processingRate
         .mockResolvedValueOnce('1.2') // errorRate
         .mockResolvedValueOnce('45.0'); // responseTime
@@ -197,7 +230,7 @@ describe('AnalyticsService', () => {
         responseTime: 35.0
       };
 
-      mockRedis.get.mockResolvedValue(JSON.stringify(cachedData));
+      mockGet.mockResolvedValue(JSON.stringify(cachedData));
 
       const result = await analyticsService.getRealTimeMetrics(shopId);
 
@@ -209,12 +242,12 @@ describe('AnalyticsService', () => {
     it('should clear all cache entries for a shop', async () => {
       const shopId = 'test-shop';
       
-      mockRedis.keys.mockResolvedValue([
+      mockKeys.mockResolvedValue([
         'analytics:test-shop:30d',
         'realtime:test-shop',
         'metrics:response_time:test-shop'
       ]);
-      mockRedis.del.mockResolvedValue(3);
+      mockDel.mockResolvedValue(3);
 
       await analyticsService.clearCache(shopId);
 

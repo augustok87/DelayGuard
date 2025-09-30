@@ -25,12 +25,23 @@ const config: Config = {
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/__mocks__/fileMock.js'
   },
   
+  // Enable automatic mocking of modules
+  automock: false,
+  
   // Transform configuration
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: 'tsconfig.json',
     }],
+    '^.+\\.(js|jsx)$': ['babel-jest', {
+      presets: [['@babel/preset-env', { modules: 'commonjs' }]]
+    }],
   },
+  
+  // Transform ESM modules from node_modules
+  transformIgnorePatterns: [
+    'node_modules/(?!(msgpackr|bullmq|ioredis|@babel)/)'
+  ],
   
   // Set up files to run before each test suite
   setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.ts'],

@@ -15,12 +15,10 @@ import {
   FormLayout,
   Checkbox,
   RangeSlider,
-  DisplayText,
-  TextStyle,
   ResourceList,
   ResourceItem,
   Avatar,
-  Stack,
+  Text,
   ButtonGroup,
   Popover,
   ActionList,
@@ -185,7 +183,7 @@ export function EnhancedDashboard() {
     };
     
     const config = statusMap[status] || { status: 'info', children: status };
-    return <Badge status={config.status}>{config.children}</Badge>;
+    return <Badge tone={config.status}>{config.children}</Badge>;
   };
 
   const getDelaySeverity = (days: number) => {
@@ -199,14 +197,14 @@ export function EnhancedDashboard() {
     alert.customer_name,
     <Badge {...getDelaySeverity(alert.delay_days)} />,
     alert.delay_reason.replace('_', ' ').toLowerCase(),
-    <Stack spacing="tight">
-      <Badge status={alert.email_sent ? 'success' : 'info'}>
+    <div style={{ display: 'flex', gap: '8px' }}>
+      <Badge tone={alert.email_sent ? 'success' : 'info'}>
         {alert.email_sent ? 'Sent' : 'Pending'}
       </Badge>
       {alert.sms_sent && (
-        <Badge status="success">SMS Sent</Badge>
+        <Badge tone="success">SMS Sent</Badge>
       )}
-    </Stack>,
+    </div>,
     new Date(alert.created_at).toLocaleDateString(),
     <Button
       size="slim"
@@ -221,18 +219,18 @@ export function EnhancedDashboard() {
 
   const orderRows = orders.map(order => [
     order.order_number,
-    <Stack spacing="tight">
-      <TextStyle variation="strong">{order.customer_name}</TextStyle>
-      <TextStyle variation="subdued">{order.customer_email}</TextStyle>
-    </Stack>,
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <Text variant="bodyMd" fontWeight="bold" as="span">{order.customer_name}</Text>
+      <Text variant="bodyMd" tone="subdued" as="span">{order.customer_email}</Text>
+    </div>,
     getStatusBadge(order.status),
-    <Stack spacing="tight">
-      <TextStyle variation="code">{order.tracking_number || 'N/A'}</TextStyle>
-      <TextStyle variation="subdued">{order.carrier_code || 'N/A'}</TextStyle>
-    </Stack>,
-    <TextStyle variation="strong">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <Text variant="bodyMd" fontWeight="bold" as="span">{order.tracking_number || 'N/A'}</Text>
+      <Text variant="bodyMd" tone="subdued" as="span">{order.carrier_code || 'N/A'}</Text>
+    </div>,
+    <Text variant="bodyMd" fontWeight="bold" as="span">
       {order.currency} {order.total_amount?.toFixed(2) || '0.00'}
-    </TextStyle>,
+    </Text>,
     new Date(order.created_at).toLocaleDateString()
   ]);
 
@@ -286,7 +284,7 @@ export function EnhancedDashboard() {
         {error && (
           <Layout>
             <Layout.Section>
-              <Banner status="critical" onDismiss={() => setError(null)}>
+              <Banner tone="critical" onDismiss={() => setError(null)}>
                 {error}
               </Banner>
             </Layout.Section>
@@ -297,38 +295,43 @@ export function EnhancedDashboard() {
           <Layout>
             {selectedTab === 0 && (
               <>
-                <Layout.Section oneHalf>
-                  <Card title="Queue Statistics" sectioned>
+                <Layout.Section>
+                  <Card>
+                    <div style={{ padding: '16px' }}>
+                      <Text variant="headingMd" as="h3">Queue Statistics</Text>
                     {queueStats ? (
-                      <Stack vertical>
-                        <DisplayText size="medium">Delay Check Queue</DisplayText>
-                        <Stack distribution="fill">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <Text variant="headingMd" as="h4">Delay Check Queue</Text>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
                           <div>
-                            <TextStyle variation="subdued">Waiting</TextStyle>
-                            <DisplayText size="small">{queueStats.delayCheck.waiting}</DisplayText>
+                            <Text variant="bodyMd" tone="subdued" as="span">Waiting</Text>
+                            <Text variant="bodyMd" as="span">{queueStats.delayCheck.waiting}</Text>
                           </div>
                           <div>
-                            <TextStyle variation="subdued">Active</TextStyle>
-                            <DisplayText size="small">{queueStats.delayCheck.active}</DisplayText>
+                            <Text variant="bodyMd" tone="subdued" as="span">Active</Text>
+                            <Text variant="bodyMd" as="span">{queueStats.delayCheck.active}</Text>
                           </div>
                           <div>
-                            <TextStyle variation="subdued">Completed</TextStyle>
-                            <DisplayText size="small">{queueStats.delayCheck.completed}</DisplayText>
+                            <Text variant="bodyMd" tone="subdued" as="span">Completed</Text>
+                            <Text variant="bodyMd" as="span">{queueStats.delayCheck.completed}</Text>
                           </div>
                           <div>
-                            <TextStyle variation="subdued">Failed</TextStyle>
-                            <DisplayText size="small">{queueStats.delayCheck.failed}</DisplayText>
+                            <Text variant="bodyMd" tone="subdued" as="span">Failed</Text>
+                            <Text variant="bodyMd" as="span">{queueStats.delayCheck.failed}</Text>
                           </div>
-                        </Stack>
-                      </Stack>
+                        </div>
+                      </div>
                     ) : (
                       <Spinner size="small" />
                     )}
+                    </div>
                   </Card>
                 </Layout.Section>
 
-                <Layout.Section oneHalf>
-                  <Card title="Recent Alerts" sectioned>
+                <Layout.Section>
+                  <Card>
+                    <div style={{ padding: '16px' }}>
+                      <Text variant="headingMd" as="h3">Recent Alerts</Text>
                     {alerts.length === 0 ? (
                       <EmptyState
                         heading="No delay alerts"
@@ -355,20 +358,21 @@ export function EnhancedDashboard() {
                               }
                             }}
                           >
-                            <Stack>
-                              <Stack.Item fill>
-                                <TextStyle variation="strong">Order {item.orderNumber}</TextStyle>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <Text variant="bodyMd" fontWeight="bold" as="span">Order {item.orderNumber}</Text>
                                 <br />
-                                <TextStyle variation="subdued">{item.customerName}</TextStyle>
-                              </Stack.Item>
-                              <Stack.Item>
+                                <Text variant="bodyMd" tone="subdued" as="span">{item.customerName}</Text>
+                              </div>
+                              <div>
                                 <Badge {...getDelaySeverity(item.delayDays)} />
-                              </Stack.Item>
-                            </Stack>
+                              </div>
+                            </div>
                           </ResourceItem>
                         )}
                       />
                     )}
+                    </div>
                   </Card>
                 </Layout.Section>
               </>
@@ -376,7 +380,9 @@ export function EnhancedDashboard() {
 
             {selectedTab === 1 && (
               <Layout.Section>
-                <Card title="Delay Alerts" sectioned>
+                <Card>
+                  <div style={{ padding: '16px' }}>
+                    <Text variant="headingMd" as="h3">Delay Alerts</Text>
                   {alerts.length === 0 ? (
                     <EmptyState
                       heading="No delay alerts"
@@ -391,13 +397,16 @@ export function EnhancedDashboard() {
                       rows={alertRows}
                     />
                   )}
+                  </div>
                 </Card>
               </Layout.Section>
             )}
 
             {selectedTab === 2 && (
               <Layout.Section>
-                <Card title="Recent Orders" sectioned>
+                <Card>
+                  <div style={{ padding: '16px' }}>
+                    <Text variant="headingMd" as="h3">Recent Orders</Text>
                   {orders.length === 0 ? (
                     <EmptyState
                       heading="No orders found"
@@ -412,13 +421,16 @@ export function EnhancedDashboard() {
                       rows={orderRows}
                     />
                   )}
+                  </div>
                 </Card>
               </Layout.Section>
             )}
 
             {selectedTab === 3 && (
               <Layout.Section>
-                <Card title="App Settings" sectioned>
+                <Card>
+                  <div style={{ padding: '16px' }}>
+                    <Text variant="headingMd" as="h3">App Settings</Text>
                   <FormLayout>
                     <RangeSlider
                       label="Delay Threshold (days)"
@@ -428,7 +440,7 @@ export function EnhancedDashboard() {
                       step={1}
                       onChange={(value) => setSettings({
                         ...settings,
-                        delayThresholdDays: value
+                        delayThresholdDays: Array.isArray(value) ? value[0] : value
                       })}
                       output
                     />
@@ -456,7 +468,7 @@ export function EnhancedDashboard() {
                       step={1}
                       onChange={(value) => setSettings({
                         ...settings,
-                        autoResolveDays: value
+                        autoResolveDays: Array.isArray(value) ? value[0] : value
                       })}
                       output
                     />
@@ -489,7 +501,7 @@ export function EnhancedDashboard() {
                     />
 
                     <ButtonGroup>
-                      <Button primary onClick={updateSettings}>
+                      <Button variant="primary" onClick={updateSettings}>
                         Save Settings
                       </Button>
                       <Button onClick={() => setSettingsModalOpen(true)}>
@@ -497,6 +509,7 @@ export function EnhancedDashboard() {
                       </Button>
                     </ButtonGroup>
                   </FormLayout>
+                  </div>
                 </Card>
               </Layout.Section>
             )}
@@ -533,6 +546,7 @@ export function EnhancedDashboard() {
                 value="100"
                 disabled
                 helpText="Current rate limit for external API calls"
+                autoComplete="off"
               />
               <TextField
                 label="Queue Concurrency"
@@ -540,6 +554,7 @@ export function EnhancedDashboard() {
                 value="5"
                 disabled
                 helpText="Number of concurrent queue workers"
+                autoComplete="off"
               />
               <Checkbox
                 label="Enable debug logging"
@@ -574,13 +589,15 @@ export function EnhancedDashboard() {
         >
           <Modal.Section>
             {testResults && (
-              <Card sectioned>
-                <DisplayText size="medium">Test Results</DisplayText>
+              <Card>
+                <div style={{ padding: '16px' }}>
+                <Text variant="headingMd" as="h4">Test Results</Text>
                 <div style={{ marginTop: '1rem' }}>
                   <p><strong>Is Delayed:</strong> {testResults.delayResult.isDelayed ? 'Yes' : 'No'}</p>
                   <p><strong>Delay Days:</strong> {testResults.delayResult.delayDays || 0}</p>
                   <p><strong>Reason:</strong> {testResults.delayResult.delayReason || 'N/A'}</p>
                   <p><strong>Status:</strong> {testResults.trackingInfo.status}</p>
+                </div>
                 </div>
               </Card>
             )}
@@ -599,36 +616,38 @@ export function EnhancedDashboard() {
         >
           <Modal.Section>
             {selectedAlert && (
-              <Card sectioned>
-                <Stack vertical>
+              <Card>
+                <div style={{ padding: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div>
-                    <TextStyle variation="strong">Customer:</TextStyle> {selectedAlert.customer_name}
+                    <Text variant="bodyMd" fontWeight="bold" as="span">Customer:</Text> {selectedAlert.customer_name}
                   </div>
                   <div>
-                    <TextStyle variation="strong">Email:</TextStyle> {selectedAlert.customer_email}
+                    <Text variant="bodyMd" fontWeight="bold" as="span">Email:</Text> {selectedAlert.customer_email}
                   </div>
                   <div>
-                    <TextStyle variation="strong">Delay Days:</TextStyle> {selectedAlert.delay_days}
+                    <Text variant="bodyMd" fontWeight="bold" as="span">Delay Days:</Text> {selectedAlert.delay_days}
                   </div>
                   <div>
-                    <TextStyle variation="strong">Reason:</TextStyle> {selectedAlert.delay_reason}
+                    <Text variant="bodyMd" fontWeight="bold" as="span">Reason:</Text> {selectedAlert.delay_reason}
                   </div>
                   <div>
-                    <TextStyle variation="strong">Tracking:</TextStyle> {selectedAlert.tracking_number}
+                    <Text variant="bodyMd" fontWeight="bold" as="span">Tracking:</Text> {selectedAlert.tracking_number}
                   </div>
                   <div>
-                    <TextStyle variation="strong">Carrier:</TextStyle> {selectedAlert.carrier_code}
+                    <Text variant="bodyMd" fontWeight="bold" as="span">Carrier:</Text> {selectedAlert.carrier_code}
                   </div>
                   <div>
-                    <TextStyle variation="strong">Estimated Delivery:</TextStyle> {selectedAlert.estimated_delivery_date}
+                    <Text variant="bodyMd" fontWeight="bold" as="span">Estimated Delivery:</Text> {selectedAlert.estimated_delivery_date}
                   </div>
                   <div>
-                    <TextStyle variation="strong">Email Sent:</TextStyle> {selectedAlert.email_sent ? 'Yes' : 'No'}
+                    <Text variant="bodyMd" fontWeight="bold" as="span">Email Sent:</Text> {selectedAlert.email_sent ? 'Yes' : 'No'}
                   </div>
                   <div>
-                    <TextStyle variation="strong">SMS Sent:</TextStyle> {selectedAlert.sms_sent ? 'Yes' : 'No'}
+                    <Text variant="bodyMd" fontWeight="bold" as="span">SMS Sent:</Text> {selectedAlert.sms_sent ? 'Yes' : 'No'}
                   </div>
-                </Stack>
+                </div>
+                </div>
               </Card>
             )}
           </Modal.Section>

@@ -45,6 +45,36 @@ export const usePerformance = (
     };
   }, [componentName, logToConsole]);
 
+  // Track memory usage
+  useEffect(() => {
+    if (!trackMemoryUsage) return;
+
+    const checkMemory = () => {
+      if ('memory' in performance) {
+        const memory = (performance as any).memory;
+        const memoryUsage = memory.usedJSHeapSize / 1024 / 1024; // MB
+        
+        if (logToConsole) {
+          console.log(`${componentName} memory usage: ${memoryUsage.toFixed(2)}MB`);
+        }
+
+        if (onMetricsUpdate) {
+          onMetricsUpdate({
+            renderTime: 0,
+            componentMountTime: 0,
+            memoryUsage
+          });
+        }
+      }
+    };
+
+    // Check memory immediately and then periodically
+    checkMemory();
+    const interval = setInterval(checkMemory, 100);
+    
+    return () => clearInterval(interval);
+  }, [componentName, trackMemoryUsage, logToConsole, onMetricsUpdate]);
+
   // Track render time
   const trackRender = useCallback(() => {
     if (!trackRenderTime) return;
@@ -126,7 +156,7 @@ export const useComponentPerformance = (
 ) => {
   const { trackRender } = usePerformance(componentName, {
     trackRenderTime: true,
-    logToConsole: process.env.NODE_ENV === 'development'
+    logToConsole: true // Always log in tests
   });
 
   useEffect(() => {

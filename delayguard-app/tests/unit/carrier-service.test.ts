@@ -53,10 +53,11 @@ describe('CarrierService', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-      mockAxiosInstance.get.mockRejectedValue({
-        response: { status: 404 },
-        message: 'Tracking number not found'
-      });
+      const axiosError = new Error('Tracking number not found');
+      (axiosError as any).response = { status: 404 };
+      (axiosError as any).isAxiosError = true;
+      
+      mockAxiosInstance.get.mockRejectedValue(axiosError);
 
       await expect(
         carrierService.getTrackingInfo('invalid', 'ups')
@@ -64,10 +65,11 @@ describe('CarrierService', () => {
     });
 
     it('should handle rate limit errors', async () => {
-      mockAxiosInstance.get.mockRejectedValue({
-        response: { status: 429 },
-        message: 'Rate limit exceeded'
-      });
+      const axiosError = new Error('Rate limit exceeded');
+      (axiosError as any).response = { status: 429 };
+      (axiosError as any).isAxiosError = true;
+      
+      mockAxiosInstance.get.mockRejectedValue(axiosError);
 
       await expect(
         carrierService.getTrackingInfo('1Z999AA1234567890', 'ups')

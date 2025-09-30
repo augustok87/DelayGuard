@@ -7,7 +7,7 @@
 #### **Free Plan - $0/month**
 ```
 Features:
-- Up to 100 orders/month
+- Up to 50 delay alerts/month
 - Basic delay detection
 - Email notifications only
 - Standard templates
@@ -18,10 +18,10 @@ Features:
 Target: Small stores, testing, evaluation
 ```
 
-#### **Pro Plan - $29/month**
+#### **Pro Plan - $7/month**
 ```
 Features:
-- Up to 1,000 orders/month
+- Unlimited delay alerts
 - Advanced delay detection
 - Email + SMS notifications
 - Custom templates
@@ -33,17 +33,17 @@ Features:
 Target: Growing businesses, established stores
 ```
 
-#### **Enterprise Plan - $99/month**
+#### **Enterprise Plan - $25/month**
 ```
 Features:
-- Unlimited orders
+- Unlimited alerts
 - All Pro features
+- White-label options
 - Custom integrations
 - Dedicated support
 - SLA guarantee
 - Custom reporting
-- White-label options
-- On-premise deployment
+- API access
 
 Target: Large enterprises, high-volume stores
 ```

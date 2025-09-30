@@ -136,7 +136,7 @@ export function AnalyticsDashboard() {
     const config = severityMap[severity] || { tone: 'info', color: '#007ace' };
     return (
       <Badge tone={config.tone}>
-        {severity.toUpperCase()}: {count.toString()}
+        {`${severity.toUpperCase()}: ${count.toString()}`}
       </Badge>
     );
   };

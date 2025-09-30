@@ -9,13 +9,10 @@ import {
   Checkbox,
   Button,
   ButtonGroup,
-  Stack,
   Text,
   Divider,
   Banner,
-  Modal,
-  DisplayText,
-  TextStyle
+  Modal
 } from '@shopify/polaris';
 
 interface ThemeSettings {
@@ -224,48 +221,63 @@ export function ThemeCustomizer() {
 
   return (
     <div style={{ padding: '20px' }}>
-      <DisplayText size="large">Theme Customizer</DisplayText>
-      <TextStyle variation="subdued">
+      <Text variant="headingLg" as="h1">Theme Customizer</Text>
+      <Text variant="bodyMd" tone="subdued" as="p">
         Customize the appearance and behavior of your DelayGuard dashboard
-      </TextStyle>
+      </Text>
 
       <div style={{ marginTop: '20px' }}>
-        <Stack distribution="fill">
-          <Card title="Color Scheme" sectioned>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <Card>
+            <div style={{ padding: '16px' }}>
+              <Text variant="headingMd" as="h3">Color Scheme</Text>
             <FormLayout>
-              <ColorPicker
-                label="Primary Color"
-                color={settings.primaryColor}
-                onChange={(color) => setSettings({ ...settings, primaryColor: color })}
-              />
+              <FormLayout.Group>
+                <Text variant="bodyMd" as="span">Primary Color</Text>
+                <ColorPicker
+                  color={{ hue: 0, saturation: 0, brightness: 0, alpha: 1 }}
+                  onChange={(color) => setSettings({ ...settings, primaryColor: color.toString() })}
+                />
+              </FormLayout.Group>
               
-              <ColorPicker
-                label="Secondary Color"
-                color={settings.secondaryColor}
-                onChange={(color) => setSettings({ ...settings, secondaryColor: color })}
-              />
+              <FormLayout.Group>
+                <Text variant="bodyMd" as="span">Secondary Color</Text>
+                <ColorPicker
+                  color={{ hue: 0, saturation: 0, brightness: 0, alpha: 1 }}
+                  onChange={(color) => setSettings({ ...settings, secondaryColor: color.toString() })}
+                />
+              </FormLayout.Group>
               
-              <ColorPicker
-                label="Accent Color"
-                color={settings.accentColor}
-                onChange={(color) => setSettings({ ...settings, accentColor: color })}
-              />
+              <FormLayout.Group>
+                <Text variant="bodyMd" as="span">Accent Color</Text>
+                <ColorPicker
+                  color={{ hue: 0, saturation: 0, brightness: 0, alpha: 1 }}
+                  onChange={(color) => setSettings({ ...settings, accentColor: color.toString() })}
+                />
+              </FormLayout.Group>
               
-              <ColorPicker
-                label="Background Color"
-                color={settings.backgroundColor}
-                onChange={(color) => setSettings({ ...settings, backgroundColor: color })}
-              />
+              <FormLayout.Group>
+                <Text variant="bodyMd" as="span">Background Color</Text>
+                <ColorPicker
+                  color={{ hue: 0, saturation: 0, brightness: 0, alpha: 1 }}
+                  onChange={(color) => setSettings({ ...settings, backgroundColor: color.toString() })}
+                />
+              </FormLayout.Group>
               
-              <ColorPicker
-                label="Text Color"
-                color={settings.textColor}
-                onChange={(color) => setSettings({ ...settings, textColor: color })}
-              />
+              <FormLayout.Group>
+                <Text variant="bodyMd" as="span">Text Color</Text>
+                <ColorPicker
+                  color={{ hue: 0, saturation: 0, brightness: 0, alpha: 1 }}
+                  onChange={(color) => setSettings({ ...settings, textColor: color.toString() })}
+                />
+              </FormLayout.Group>
             </FormLayout>
+            </div>
           </Card>
 
-          <Card title="Layout & Typography" sectioned>
+          <Card>
+            <div style={{ padding: '16px' }}>
+              <Text variant="headingMd" as="h3">Layout & Typography</Text>
             <FormLayout>
               <RangeSlider
                 label="Border Radius"
@@ -273,7 +285,7 @@ export function ThemeCustomizer() {
                 min={0}
                 max={20}
                 step={1}
-                onChange={(value) => setSettings({ ...settings, borderRadius: value })}
+                onChange={(value) => setSettings({ ...settings, borderRadius: Array.isArray(value) ? value[0] : value })}
                 output
               />
               
@@ -283,7 +295,7 @@ export function ThemeCustomizer() {
                 min={8}
                 max={32}
                 step={4}
-                onChange={(value) => setSettings({ ...settings, spacing: value })}
+                onChange={(value) => setSettings({ ...settings, spacing: Array.isArray(value) ? value[0] : value })}
                 output
               />
               
@@ -293,7 +305,7 @@ export function ThemeCustomizer() {
                 min={12}
                 max={18}
                 step={1}
-                onChange={(value) => setSettings({ ...settings, fontSize: value })}
+                onChange={(value) => setSettings({ ...settings, fontSize: Array.isArray(value) ? value[0] : value })}
                 output
               />
               
@@ -310,11 +322,14 @@ export function ThemeCustomizer() {
                 onChange={(value) => setSettings({ ...settings, fontFamily: value })}
               />
             </FormLayout>
+            </div>
           </Card>
-        </Stack>
+        </div>
 
         <div style={{ marginTop: '20px' }}>
-          <Card title="Preferences" sectioned>
+          <Card>
+            <div style={{ padding: '16px' }}>
+              <Text variant="headingMd" as="h3">Preferences</Text>
             <FormLayout>
               <Checkbox
                 label="Dark Mode"
@@ -340,16 +355,19 @@ export function ThemeCustomizer() {
                 min={100}
                 max={1000}
                 step={50}
-                onChange={(value) => setSettings({ ...settings, animationSpeed: value })}
+                onChange={(value) => setSettings({ ...settings, animationSpeed: Array.isArray(value) ? value[0] : value })}
                 output
                 disabled={!settings.showAnimations}
               />
             </FormLayout>
+            </div>
           </Card>
         </div>
 
         <div style={{ marginTop: '20px' }}>
-          <Card title="Notification Templates" sectioned>
+          <Card>
+            <div style={{ padding: '16px' }}>
+              <Text variant="headingMd" as="h3">Notification Templates</Text>
             <FormLayout>
               <Select
                 label="Template"
@@ -368,6 +386,7 @@ export function ThemeCustomizer() {
                   setTemplates(updatedTemplates);
                 }}
                 multiline
+                autoComplete="off"
               />
               
               <TextField
@@ -380,11 +399,11 @@ export function ThemeCustomizer() {
                   setTemplates(updatedTemplates);
                 }}
                 multiline
-                rows={8}
+                autoComplete="off"
               />
               
               <div>
-                <Text variant="headingMd">Available Variables:</Text>
+                <Text variant="headingMd" as="h4">Available Variables:</Text>
                 <div style={{ marginTop: '8px' }}>
                   {templates.find(t => t.id === selectedTemplate)?.variables.map(variable => (
                     <span key={variable} style={{ 
@@ -402,28 +421,34 @@ export function ThemeCustomizer() {
                 </div>
               </div>
             </FormLayout>
+            </div>
           </Card>
         </div>
 
         <div style={{ marginTop: '20px' }}>
-          <Card title="Custom CSS" sectioned>
+          <Card>
+            <div style={{ padding: '16px' }}>
+              <Text variant="headingMd" as="h3">Custom CSS</Text>
             <FormLayout>
               <TextField
                 label="Custom CSS"
                 value={settings.customCSS}
                 onChange={(value) => setSettings({ ...settings, customCSS: value })}
                 multiline
-                rows={6}
                 helpText="Add custom CSS to further customize the appearance"
+                autoComplete="off"
               />
             </FormLayout>
+            </div>
           </Card>
         </div>
 
         <div style={{ marginTop: '20px' }}>
-          <Card title="Actions" sectioned>
+          <Card>
+            <div style={{ padding: '16px' }}>
+              <Text variant="headingMd" as="h3">Actions</Text>
             <ButtonGroup>
-              <Button primary onClick={saveSettings} loading={saving}>
+              <Button variant="primary" onClick={saveSettings} loading={saving}>
                 Save Changes
               </Button>
               
@@ -439,9 +464,9 @@ export function ThemeCustomizer() {
                 Export Theme
               </Button>
               
-              <Button>
+              <div>
                 <label htmlFor="import-theme" style={{ cursor: 'pointer' }}>
-                  Import Theme
+                  <Button>Import Theme</Button>
                 </label>
                 <input
                   id="import-theme"
@@ -450,8 +475,9 @@ export function ThemeCustomizer() {
                   onChange={importTheme}
                   style={{ display: 'none' }}
                 />
-              </Button>
+              </div>
             </ButtonGroup>
+            </div>
           </Card>
         </div>
       </div>
@@ -461,7 +487,6 @@ export function ThemeCustomizer() {
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         title="Theme Preview"
-        large
       >
         <Modal.Section>
           <div style={{ 
