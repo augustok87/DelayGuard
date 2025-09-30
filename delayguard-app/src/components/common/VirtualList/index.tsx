@@ -74,6 +74,7 @@ export function VirtualList<T>({
       className={`${styles.container} ${className}`}
       style={{ height: containerHeight }}
       onScroll={handleScroll}
+      data-testid="virtual-list-container"
     >
       <div style={{ height: totalHeight, position: 'relative' }}>
         <div

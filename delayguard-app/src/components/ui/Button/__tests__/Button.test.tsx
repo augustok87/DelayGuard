@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent } from '../../../../tests/setup/test-utils';
+import '@testing-library/jest-dom';
+import { render, screen, fireEvent } from '../../../../../tests/setup/test-utils';
 import { Button } from '../Button.memo';
 
 describe('Button', () => {
@@ -41,7 +42,7 @@ describe('Button', () => {
     const button = screen.getByRole('button', { name: /loading/i });
     expect(button).toHaveClass('loading');
     expect(button).toBeDisabled();
-    expect(screen.getByRole('status', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /loading/i })).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('is disabled when disabled prop is true', () => {

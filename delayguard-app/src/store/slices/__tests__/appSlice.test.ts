@@ -1,7 +1,8 @@
 import appReducer, { 
   setShop, 
   setLoading, 
-  clearError 
+  clearError,
+  initializeApp
 } from '../appSlice';
 import { AppState } from '../../../types/store';
 
@@ -62,7 +63,7 @@ describe('appSlice', () => {
     let actual = appReducer(stateWithValues, setShop(null));
     expect(actual.shop).toBeNull();
     
-    actual = appReducer(actual, setError(null));
+    actual = appReducer(actual, clearError());
     expect(actual.error).toBeNull();
   });
 
@@ -78,7 +79,8 @@ describe('appSlice', () => {
     actual = appReducer(actual, setLoading(false));
     expect(actual.loading).toBe(false);
     
-    actual = appReducer(actual, setInitialized(true));
+    // Test that initialized is set to true when initializeApp is fulfilled
+    actual = appReducer(actual, initializeApp.fulfilled('my-awesome-store.myshopify.com', 'test-request-id'));
     expect(actual.initialized).toBe(true);
   });
 });

@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, renderHook, act } from '../../../../tests/setup/test-utils';
+import '@testing-library/jest-dom';
+import { render, screen, fireEvent, renderHook, act } from '../../../../../tests/setup/test-utils';
 import { VirtualList, useVirtualList } from '../index';
 
 // Mock data
@@ -49,7 +50,7 @@ describe('VirtualList', () => {
   it('handles scroll events', () => {
     render(<VirtualList {...defaultProps} />);
     
-    const container = screen.getByRole('generic');
+    const container = screen.getByTestId('virtual-list-container');
     fireEvent.scroll(container, { target: { scrollTop: 1000 } });
     
     // Should still render items (different ones due to scroll)
@@ -73,7 +74,7 @@ describe('VirtualList', () => {
   it('applies custom className', () => {
     render(<VirtualList {...defaultProps} className="custom-list" />);
     
-    const container = screen.getByRole('generic');
+    const container = screen.getByTestId('virtual-list-container');
     expect(container).toHaveClass('custom-list');
   });
 

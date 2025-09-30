@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen } from '../../../../tests/setup/test-utils';
+import '@testing-library/jest-dom';
+import { render, screen } from '../../../../../tests/setup/test-utils';
 import { Card } from '../Card.memo';
 
 describe('Card', () => {

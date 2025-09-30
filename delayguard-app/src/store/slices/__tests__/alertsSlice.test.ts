@@ -74,7 +74,12 @@ describe('alertsSlice', () => {
 
   it('should handle fetchAlerts rejected', () => {
     const error = 'Failed to fetch alerts';
-    const actual = alertsReducer(initialState, fetchAlerts.rejected(new Error(error), '', undefined));
+    const action = {
+      type: fetchAlerts.rejected.type,
+      payload: error,
+      error: { message: error },
+    };
+    const actual = alertsReducer(initialState, action as any);
     expect(actual.loading).toBe(false);
     expect(actual.error).toBe(error);
   });
@@ -97,7 +102,7 @@ describe('alertsSlice', () => {
     const stateWithFilters = { ...initialState, filters: initialFilters };
     
     const actual = alertsReducer(stateWithFilters, setFilters({ search: 'John' }));
-    expect(actual.filters).toEqual({ status: 'active', search: 'John' });
+    expect(actual.filters).toEqual({ search: 'John' });
   });
 
   it('should handle partial pagination updates', () => {

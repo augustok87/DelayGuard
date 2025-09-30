@@ -1,28 +1,24 @@
 import React from 'react';
+import '@testing-library/jest-dom';
 import { renderHook, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { useTabs } from '../useTabs';
 import { RootState } from '../../types/store';
+import uiSlice from '../../store/slices/uiSlice';
 
 // Mock store for testing
 const createMockStore = (initialState?: Partial<RootState>) => {
   return configureStore({
     reducer: {
-      ui: (state = { 
-        selectedTab: 0, 
-        modals: {}, 
-        toasts: { items: [] }, 
-        theme: { mode: 'light', primaryColor: '#2563eb', secondaryColor: '#1d4ed8' }, 
-        sidebar: { isOpen: false } 
-      }) => state,
-    },
+      ui: uiSlice,
+    } as any,
     preloadedState: initialState as any,
   });
 };
 
 const wrapper = ({ children, store }: { children: React.ReactNode; store: any }) => {
-  return React.createElement(Provider, { store }, children);
+  return React.createElement(Provider, { store, children });
 };
 
 describe('useTabs', () => {

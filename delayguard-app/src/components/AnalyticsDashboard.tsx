@@ -136,7 +136,7 @@ export function AnalyticsDashboard() {
     const config = severityMap[severity] || { tone: 'info', color: '#007ace' };
     return (
       <Badge tone={config.tone}>
-        {severity.toUpperCase()}: {count}
+        {severity.toUpperCase()}: {count.toString()}
       </Badge>
     );
   };
@@ -197,11 +197,12 @@ export function AnalyticsDashboard() {
         <Layout>
           <Layout.Section>
             <Card>
-              <Card.Section>
+              <div style={{ padding: '16px' }}>
                 <Text variant="headingMd" as="h3">Time Range</Text>
-              </Card.Section>
-              <Card.Section>
+              </div>
+              <div style={{ padding: '0 16px 16px' }}>
                 <Select
+                  label="Time Range"
                   options={[
                     { label: 'Last 7 days', value: '7d' },
                     { label: 'Last 30 days', value: '30d' },
@@ -211,16 +212,16 @@ export function AnalyticsDashboard() {
                   value={timeRange}
                   onChange={(value) => setTimeRange(value as any)}
                 />
-              </Card.Section>
+              </div>
             </Card>
           </Layout.Section>
 
           <Layout.Section>
             <Card>
-              <Card.Section>
+              <div style={{ padding: '16px' }}>
                 <Text variant="headingMd" as="h3">Key Metrics</Text>
-              </Card.Section>
-              <Card.Section>
+              </div>
+              <div style={{ padding: '0 16px 16px' }}>
                 {metrics && (
                   <InlineStack gap="400" align="space-between">
                     <div style={{ textAlign: 'center' }}>
@@ -241,7 +242,7 @@ export function AnalyticsDashboard() {
                     </div>
                   </InlineStack>
                 )}
-              </Card.Section>
+              </div>
             </Card>
           </Layout.Section>
         </Layout>
@@ -250,14 +251,14 @@ export function AnalyticsDashboard() {
           <Layout>
             {selectedTab === 0 && metrics && (
               <>
-                <Layout.Section oneHalf>
-                  <Card title="Alerts by Severity" sectioned>
+                <Layout.Section>
+                  <Card>
                     <BlockStack gap="200">
                       {Object.entries(metrics.alertsBySeverity).map(([severity, count]) => (
                         <InlineStack key={severity} gap="200" align="space-between">
                           <Text as="span" fontWeight="bold">{severity.toUpperCase()}</Text>
                           <Badge tone={severity === 'critical' ? 'critical' : severity === 'high' ? 'attention' : severity === 'medium' ? 'warning' : 'info'}>
-                            {count}
+                            {count.toString()}
                           </Badge>
                         </InlineStack>
                       ))}
@@ -265,8 +266,8 @@ export function AnalyticsDashboard() {
                   </Card>
                 </Layout.Section>
 
-                <Layout.Section oneHalf>
-                  <Card title="Alerts by Reason" sectioned>
+                <Layout.Section>
+                  <Card>
                     {Object.keys(metrics.alertsByReason).length === 0 ? (
                       <EmptyState
                         heading="No alert reasons"
@@ -282,10 +283,10 @@ export function AnalyticsDashboard() {
                           count
                         }))}
                         renderItem={(item) => (
-                          <ResourceItem id={item.id}>
+                          <ResourceItem id={item.id} onClick={() => {}}>
                             <InlineStack gap="200" align="space-between">
                               <Text as="span" fontWeight="bold">{item.reason.replace('_', ' ').toLowerCase()}</Text>
-                              <Badge>{item.count}</Badge>
+                              <Badge>{item.count.toString()}</Badge>
                             </InlineStack>
                           </ResourceItem>
                         )}
@@ -295,7 +296,7 @@ export function AnalyticsDashboard() {
                 </Layout.Section>
 
                 <Layout.Section>
-                  <Card title="Time Series Data" sectioned>
+                  <Card>
                     {metrics.timeSeriesData.length === 0 ? (
                       <EmptyState
                         heading="No time series data"
@@ -322,7 +323,7 @@ export function AnalyticsDashboard() {
 
             {selectedTab === 1 && metrics && (
               <Layout.Section>
-                <Card title="Performance Metrics" sectioned>
+                <Card>
                   <InlineStack gap="200" align="space-between">
                     <div style={{ textAlign: 'center' }}>
                       <Text variant="headingLg" as="h3">{metrics.performanceMetrics.averageResponseTime.toFixed(0)}ms</Text>
@@ -343,7 +344,7 @@ export function AnalyticsDashboard() {
 
             {selectedTab === 2 && metrics && (
               <Layout.Section>
-                <Card title="Revenue Impact" sectioned>
+                <Card>
                   <InlineStack gap="200" align="space-between">
                     <div style={{ textAlign: 'center' }}>
                       <Text variant="headingLg" as="h3">${metrics.revenueImpact.totalValue.toLocaleString()}</Text>
@@ -364,7 +365,7 @@ export function AnalyticsDashboard() {
 
             {selectedTab === 3 && metrics && (
               <Layout.Section>
-                <Card title="Notification Performance" sectioned>
+                <Card>
                   <InlineStack gap="200" align="space-between">
                     <div style={{ textAlign: 'center' }}>
                       <Text variant="headingLg" as="h3">{metrics.notificationSuccessRate.email.toFixed(1)}%</Text>
@@ -381,7 +382,7 @@ export function AnalyticsDashboard() {
 
             {selectedTab === 4 && realtimeMetrics && (
               <Layout.Section>
-                <Card title="Real-time Metrics" sectioned>
+                <Card>
                   <InlineStack gap="200" align="space-between">
                     <div style={{ textAlign: 'center' }}>
                       <Text variant="headingLg" as="h3">{realtimeMetrics.activeAlerts}</Text>

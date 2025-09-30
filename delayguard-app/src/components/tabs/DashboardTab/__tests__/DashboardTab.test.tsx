@@ -1,10 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../../../tests/setup/test-utils';
+import '@testing-library/jest-dom';
+import { render, screen, fireEvent, waitFor } from '../../../../../tests/setup/test-utils';
 import { DashboardTab } from '../DashboardTab.memo';
-import { createMockSettings, createMockStats } from '../../../../tests/setup/test-utils';
+import { createMockSettings, createMockStats } from '../../../../../tests/setup/test-utils';
 
 // Mock the child components
-jest.mock('../../ui/Card', () => ({
+jest.mock('../../../ui/Card', () => ({
   Card: ({ children, title, subtitle }: any) => (
     <div data-testid="card">
       {title && <h3>{title}</h3>}

@@ -2,6 +2,14 @@
 import { jest } from '@jest/globals';
 import '@testing-library/jest-dom';
 
+// Polyfill for Node.js environment
+import { TextEncoder, TextDecoder } from 'util';
+
+// @ts-ignore
+global.TextEncoder = TextEncoder;
+// @ts-ignore
+global.TextDecoder = TextDecoder;
+
 // Mock environment variables
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/delayguard_test';
