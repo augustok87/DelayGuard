@@ -1,5 +1,6 @@
 // Jest setup file for DelayGuard testing
 import { jest } from '@jest/globals';
+import '@testing-library/jest-dom';
 
 // Mock environment variables
 process.env.NODE_ENV = 'test';
