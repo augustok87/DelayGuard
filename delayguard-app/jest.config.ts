@@ -22,7 +22,9 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/__mocks__/fileMock.js'
+    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/__mocks__/fileMock.js',
+    '^ioredis$': '<rootDir>/__mocks__/ioredis.js',
+    '^pg$': '<rootDir>/__mocks__/pg.js'
   },
   
   // Enable automatic mocking of modules
@@ -31,7 +33,7 @@ const config: Config = {
   // Transform configuration
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.json',
+      tsconfig: 'tsconfig.test.json',
     }],
     '^.+\\.(js|jsx)$': ['babel-jest', {
       presets: [['@babel/preset-env', { modules: 'commonjs' }]]
@@ -40,8 +42,19 @@ const config: Config = {
   
   // Transform ESM modules from node_modules
   transformIgnorePatterns: [
-    'node_modules/(?!(msgpackr|bullmq|ioredis|@babel)/)'
+    'node_modules/(?!(koa-session|uuid|msgpackr|bullmq|ioredis|@babel|@shopify)/)'
   ],
+  
+  // ESM support configuration
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  globals: {
+    'ts-jest': {
+      useESM: true,
+      tsconfig: {
+        module: 'esnext'
+      }
+    }
+  },
   
   // Set up files to run before each test suite
   setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.ts'],
@@ -56,8 +69,6 @@ const config: Config = {
     '!src/database/**/*',
     '!src/queue/**/*',
     '!src/routes/**/*',
-    '!src/services/**/*',
-    '!src/utils/**/*',
     '!src/**/__tests__/**/*',
     '!src/**/*.test.*',
     '!src/**/*.spec.*',
