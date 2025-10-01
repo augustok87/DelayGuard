@@ -7,14 +7,14 @@
 
 > **A production-ready Shopify app that proactively detects shipping delays and alerts customers, reducing support tickets by 20-40%.**
 
-## 🎉 **Current Status: PHASE 5 TESTING 70% COMPLETE, PHASE 6 APP STORE READY** ✅
+## 🎉 **Current Status: PHASE 5 TESTING INFRASTRUCTURE NEEDS FIXES** ⚠️
 
-**Frontend Testing**: 120/170 tests passing (70.6% success rate)  
+**Frontend Testing**: 120/170 tests passing (70.6% success rate) - **11 test suites failing**  
 **Test Coverage**: 17.49% overall (needs improvement to 80%+)  
-**Critical Issues**: ESM module parsing, mock configuration, database testing  
+**Critical Issues**: ESM module parsing errors, mock configuration problems, integration test failures  
 **App Store Assets**: Ready for Shopify App Store submission  
 **Business Strategy**: Aligned with bootstrapped development approach  
-**Ready for**: Phase 6 App Store submission OR complete testing infrastructure fixes  
+**Ready for**: Complete testing infrastructure fixes before Phase 6 App Store submission  
 
 ---
 
@@ -38,8 +38,8 @@ DelayGuard is an intelligent Shopify app that monitors your orders in real-time,
 - **🎨 Theme Customization**: Complete visual customization system for notifications
 - **📈 Performance Monitoring**: Comprehensive health checks and alerting system
 - **🛡️ Enterprise Security**: A- security rating with GDPR and SOC 2 Type II compliance
-- **⚡ Ultra-Fast Performance**: 35ms average response time (30% better than target)
-- **🧪 World-Class Testing**: 80%+ coverage with comprehensive test suite
+- **⚡ Performance Monitoring**: Response time tracking and optimization (metrics unverified due to test issues)
+- **🧪 Testing Infrastructure**: Comprehensive test suite (currently needs ESM fixes)
 
 ## 🏗️ Architecture
 
@@ -154,12 +154,12 @@ HOST=localhost
 
 ## 📊 **Current Status**
 
-### **Production Ready** ✅
+### **Development Ready** ⚠️
 - **Live URL**: https://delayguard-api.vercel.app
 - **Frontend**: Zero build errors, modern Polaris UI
 - **Backend**: 5 working API endpoints
-- **Testing**: 73/73 core tests passing (100% success rate)
-- **Coverage**: 80%+ test coverage achieved
+- **Testing**: 120/170 tests passing (70.6% success rate)
+- **Coverage**: 17.49% test coverage (needs improvement)
 - **CI/CD**: Automated deployment pipeline
 - **Database**: ✅ Connected (Neon PostgreSQL)
 
@@ -199,12 +199,22 @@ npm run load-test:stress
 ```
 
 ### **Test Coverage Status**
-- **Overall Coverage**: 80%+ achieved
-- **Core Tests**: 73/73 tests passing (100% success rate)
+- **Overall Coverage**: 17.49% (needs improvement to 80%+)
+- **Core Tests**: 120/170 tests passing (70.6% success rate)
 - **Performance Tests**: 11/11 tests passing (100% success rate)
-- **Component Tests**: All core components tested
-- **Hook Tests**: All custom hooks tested
-- **Redux Tests**: All store slices tested
+- **Component Tests**: 2/3 test suites passing (66% success rate)
+- **Hook Tests**: 2/16 hooks tested (12.5% coverage)
+- **Redux Tests**: 2/5 slices tested (40% coverage)
+
+### **Known Issues**
+- **ESM Module Parsing**: Jest cannot parse `koa-session` and `uuid` modules
+- **Mock Configuration**: Redis and PostgreSQL mocks failing
+- **Integration Tests**: Cannot run due to ESM issues
+- **Test Coverage**: Critical components and hooks untested
+
+### **Troubleshooting Guides**
+- [ESM Module Troubleshooting Guide](./ESM_TROUBLESHOOTING_GUIDE.md)
+- [Mock Configuration Guide](./MOCK_CONFIGURATION_GUIDE.md)
 
 ## 📁 Project Structure
 
