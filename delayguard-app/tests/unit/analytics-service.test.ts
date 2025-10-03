@@ -22,8 +22,8 @@ jest.mock('ioredis', () => {
   }));
 });
 
-import { AnalyticsService } from '../../src/services/analytics-service';
-import { AppConfig } from '../../src/types';
+import { AnalyticsService } from '../../../src/components/../src/services/analytics-service';
+import { AppConfig } from '../../../src/components/../src/types';
 
 const mockConfig: AppConfig = {
   shopify: {

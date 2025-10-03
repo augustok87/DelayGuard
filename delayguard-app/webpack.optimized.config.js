@@ -48,7 +48,7 @@ module.exports = (env, argv) => {
               },
             },
           ],
-          exclude: /node_modules/,
+          exclude: [/node_modules/, /\.test\.(ts|tsx)$/, /\.spec\.(ts|tsx)$/],
         },
         {
           test: /\.css$/,

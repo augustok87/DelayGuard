@@ -9,8 +9,8 @@ const config: Config = {
   
   // Define patterns to locate test files
   testMatch: [
-    '**/__tests__/**/*.test.ts',
-    '**/__tests__/**/*.test.tsx',
+    '**/tests/**/*.test.ts',
+    '**/tests/**/*.test.tsx',
     '**/?(*.)+(spec|test).ts',
     '**/?(*.)+(spec|test).tsx'
   ],

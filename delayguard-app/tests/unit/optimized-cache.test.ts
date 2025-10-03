@@ -17,8 +17,8 @@ jest.mock('ioredis', () => {
   }));
 });
 
-import { OptimizedCache, CACHE_CONFIGS } from '../../src/services/optimized-cache';
-import { AppConfig } from '../../src/types';
+import { OptimizedCache, CACHE_CONFIGS } from '../../../src/components/../src/services/optimized-cache';
+import { AppConfig } from '../../../src/components/../src/types';
 
 const mockConfig: AppConfig = {
   shopify: {

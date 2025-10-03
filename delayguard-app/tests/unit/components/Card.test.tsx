@@ -1,7 +1,7 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen } from '../../../../../tests/setup/test-utils';
-import { Card } from '../Card.memo';
+import { render, screen } from '../../setup/test-utils';
+import { Card } from '../../../src/components/ui/Card/Card.memo';
 
 describe('Card', () => {
   it('renders with children content', () => {

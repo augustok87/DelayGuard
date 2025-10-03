@@ -3,8 +3,8 @@ import appReducer, {
   setLoading, 
   clearError,
   initializeApp
-} from '../appSlice';
-import { AppState } from '../../../types/store';
+} from '../../../src/components/appSlice';
+import { AppState } from '../../../src/components/../../types/store';
 
 describe('appSlice', () => {
   const initialState: AppState = {

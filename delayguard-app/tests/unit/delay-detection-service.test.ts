@@ -1,5 +1,5 @@
-import { DelayDetectionService } from '../../src/services/delay-detection-service';
-import { TrackingInfo } from '../../src/types';
+import { DelayDetectionService } from '../../../src/components/../src/services/delay-detection-service';
+import { TrackingInfo } from '../../../src/components/../src/types';
 
 describe('DelayDetectionService', () => {
   let delayDetectionService: DelayDetectionService;

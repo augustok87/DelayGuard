@@ -1,10 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../../tests/setup/test-utils';
-import { RefactoredAppOptimized } from '../RefactoredApp.optimized';
-import { createMockAlert, createMockOrder, createMockSettings, createMockStats } from '../../../tests/setup/test-utils';
+import { render, screen, fireEvent, waitFor } from '../../setup/test-utils';
+import { RefactoredAppOptimized } from '../../../src/components/RefactoredApp.optimized';
+import { createMockAlert, createMockOrder, createMockSettings, createMockStats } from '../../setup/test-utils';
 
 // Mock all the hooks
-jest.mock('../../hooks', () => ({
+jest.mock('../../../src/hooks', () => ({
   useDelayAlerts: () => ({
     alerts: [createMockAlert()],
     loading: false,
@@ -40,7 +40,7 @@ jest.mock('../../hooks', () => ({
 }));
 
 // Mock the lazy components
-jest.mock('../tabs/LazyTabs', () => ({
+jest.mock('../../../src/components/tabs/LazyTabs', () => ({
   DashboardTabWithSuspense: ({ onSaveSettings, onTestDelayDetection, onConnectShopify, onSettingsChange }: any) => (
     <div data-testid="dashboard-tab">
       <button onClick={onSaveSettings}>Save Settings</button>
@@ -64,7 +64,7 @@ jest.mock('../tabs/LazyTabs', () => ({
 }));
 
 // Mock other components
-jest.mock('../layout/AppHeader', () => ({
+jest.mock('../../../src/components/layout/AppHeader', () => ({
   AppHeader: ({ stats, loading }: any) => (
     <div data-testid="app-header">
       <div>Stats: {stats.totalAlerts}</div>
@@ -73,7 +73,7 @@ jest.mock('../layout/AppHeader', () => ({
   ),
 }));
 
-jest.mock('../layout/TabNavigation', () => ({
+jest.mock('../../../src/components/layout/TabNavigation', () => ({
   TabNavigation: ({ selectedTab, onTabChange, loading }: any) => (
     <div data-testid="tab-navigation">
       <button onClick={() => onTabChange(0)} className={selectedTab === 0 ? 'active' : ''}>
@@ -90,7 +90,7 @@ jest.mock('../layout/TabNavigation', () => ({
   ),
 }));
 
-jest.mock('../common/ErrorAlert', () => ({
+jest.mock('../../../src/components/common/ErrorAlert', () => ({
   ErrorAlert: ({ error, onDismiss }: any) => 
     error ? (
       <div data-testid="error-alert">
@@ -100,7 +100,7 @@ jest.mock('../common/ErrorAlert', () => ({
     ) : null,
 }));
 
-jest.mock('../ui/LoadingSpinner', () => ({
+jest.mock('../../../src/components/ui/LoadingSpinner', () => ({
   LoadingSpinner: ({ message, overlay }: any) => (
     <div data-testid="loading-spinner" data-overlay={overlay}>
       {message}

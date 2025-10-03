@@ -1,5 +1,5 @@
-import { MonitoringService } from '../../src/services/monitoring-service';
-import { AppConfig } from '../../src/types';
+import { MonitoringService } from '../../../src/components/../src/services/monitoring-service';
+import { AppConfig } from '../../../src/components/../src/types';
 
 const mockConfig: AppConfig = {
   shopify: {

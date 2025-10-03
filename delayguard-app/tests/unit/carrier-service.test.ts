@@ -1,4 +1,4 @@
-import { CarrierService } from '../../src/services/carrier-service';
+import { CarrierService } from '../../../src/components/../src/services/carrier-service';
 
 // Mock axios
 jest.mock('axios');
