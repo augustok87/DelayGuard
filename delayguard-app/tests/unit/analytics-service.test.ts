@@ -201,13 +201,15 @@ describe('AnalyticsService', () => {
       mockQuery.mockResolvedValue({ rows: [{ count: '5' }] }); // activeAlerts
       
       // Mock Redis responses
-      mockLlen
-        .mockResolvedValueOnce(5) // queueSize - waiting
-        .mockResolvedValueOnce(5); // queueSize - active
       mockGet
+        .mockResolvedValueOnce(null) // cache miss
         .mockResolvedValueOnce('25.5') // processingRate
         .mockResolvedValueOnce('1.2') // errorRate
         .mockResolvedValueOnce('45.0'); // responseTime
+      mockLlen
+        .mockResolvedValueOnce(5) // queueSize - waiting
+        .mockResolvedValueOnce(5); // queueSize - active
+      mockSetex.mockResolvedValue('OK');
 
       const result = await analyticsService.getRealTimeMetrics(shopId);
 
