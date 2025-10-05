@@ -1,4 +1,6 @@
-import { OrderInfo, DelayDetails, EmailService, SMSService } from '../types';
+import { OrderInfo, DelayDetails } from '../types';
+import { EmailService } from './email-service';
+import { SMSService } from './sms-service';
 
 export class NotificationService {
   constructor(

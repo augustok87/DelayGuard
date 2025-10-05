@@ -1,5 +1,5 @@
-import { MonitoringService } from '../../../src/components/../src/services/monitoring-service';
-import { AppConfig } from '../../../src/components/../src/types';
+import { MonitoringService } from '@/services/monitoring-service';
+import { AppConfig } from '@/types';
 
 const mockConfig: AppConfig = {
   shopify: {
@@ -37,11 +37,9 @@ describe('MonitoringService', () => {
     
     // Get references to the mocked constructors
     const { Pool } = require('pg');
-    const Redis = require('ioredis');
-    
     // Create new instances with mocked methods
     mockDb = new Pool();
-    mockRedis = new Redis();
+    mockRedis = {} as any; // Mock Redis instance
     
     monitoringService = new MonitoringService(mockConfig);
   });

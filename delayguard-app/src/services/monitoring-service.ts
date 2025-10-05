@@ -1,4 +1,4 @@
-import { Redis } from 'ioredis';
+const Redis = require('ioredis');
 import { Pool } from 'pg';
 import { AppConfig } from '../types';
 
@@ -83,14 +83,14 @@ export interface Alert {
 }
 
 export class MonitoringService {
-  private redis: Redis;
+  private redis: any;
   private db: Pool;
   private alerts: Map<string, Alert> = new Map();
   private metrics: SystemMetrics[] = [];
   private readonly maxMetricsHistory = 1000;
 
   constructor(config: AppConfig) {
-    this.redis = new Redis(config.redis.url);
+    this.redis = new (Redis as any)(config.redis.url);
     this.db = new Pool({ connectionString: config.database.url });
   }
 

@@ -1,6 +1,6 @@
-import { NotificationService } from '../../../src/components/../src/services/notification-service';
-import { EmailService } from '../../../src/components/../src/services/email-service';
-import { SMSService } from '../../../src/components/../src/services/sms-service';
+import { NotificationService } from '@/services/notification-service';
+import { EmailService } from '@/services/email-service';
+import { SMSService } from '@/services/sms-service';
 
 // Mock external services
 jest.mock('../../src/services/email-service');

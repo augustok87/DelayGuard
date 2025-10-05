@@ -1,8 +1,8 @@
-import twilio from 'twilio';
+const twilio = require('twilio');
 import { OrderInfo, DelayDetails } from '../types';
 
 export class SMSService {
-  private client: twilio.Twilio;
+  private client: any;
   private phoneNumber: string;
 
   constructor(accountSid: string, authToken: string, phoneNumber: string) {

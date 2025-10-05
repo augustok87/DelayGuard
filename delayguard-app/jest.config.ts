@@ -34,6 +34,7 @@ const config: Config = {
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: 'tsconfig.test.json',
+      useESM: false,
     }],
     '^.+\\.(js|jsx)$': ['babel-jest', {
       presets: [['@babel/preset-env', { modules: 'commonjs' }]]
@@ -47,14 +48,6 @@ const config: Config = {
   
   // ESM support configuration
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-      tsconfig: {
-        module: 'esnext'
-      }
-    }
-  },
   
   // Set up files to run before each test suite
   setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.ts'],

@@ -1,7 +1,7 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, renderHook, act } from '../../../../../tests/setup/test-utils';
-import { VirtualList, useVirtualList } from '../index';
+import { render, screen, fireEvent, renderHook, act } from '../../setup/test-utils';
+import { VirtualList, useVirtualList } from '../../../src/components/common/VirtualList/index';
 
 // Mock data
 const mockItems = Array.from({ length: 1000 }, (_, i) => ({

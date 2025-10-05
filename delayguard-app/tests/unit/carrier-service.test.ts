@@ -1,4 +1,4 @@
-import { CarrierService } from '../../../src/components/../src/services/carrier-service';
+import { CarrierService } from '@/services/carrier-service';
 
 // Mock axios
 jest.mock('axios');
@@ -61,7 +61,7 @@ describe('CarrierService', () => {
 
       await expect(
         carrierService.getTrackingInfo('invalid', 'ups')
-      ).rejects.toThrow('Tracking number invalid not found');
+      ).rejects.toThrow('External service error (ShipEngine): Tracking number not found');
     });
 
     it('should handle rate limit errors', async () => {
@@ -73,7 +73,7 @@ describe('CarrierService', () => {
 
       await expect(
         carrierService.getTrackingInfo('1Z999AA1234567890', 'ups')
-      ).rejects.toThrow('Rate limit exceeded. Please try again later.');
+      ).rejects.toThrow('External service error (ShipEngine): Rate limit exceeded');
     });
   });
 

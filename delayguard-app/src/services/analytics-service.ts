@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { Redis } from 'ioredis';
+const Redis = require('ioredis');
 import { AppConfig } from '../types';
 
 export interface AnalyticsMetrics {
@@ -48,11 +48,11 @@ export interface RealTimeMetrics {
 
 export class AnalyticsService {
   private db: Pool;
-  private redis: Redis;
+  private redis: any;
 
   constructor(config: AppConfig) {
     this.db = new Pool({ connectionString: config.database.url });
-    this.redis = new Redis(config.redis.url);
+    this.redis = new (Redis as any)(config.redis.url);
   }
 
   async getAnalyticsMetrics(shopId: string, timeRange: '7d' | '30d' | '90d' | '1y' = '30d'): Promise<AnalyticsMetrics> {

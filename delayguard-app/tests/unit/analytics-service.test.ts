@@ -22,8 +22,8 @@ jest.mock('ioredis', () => {
   }));
 });
 
-import { AnalyticsService } from '../../../src/components/../src/services/analytics-service';
-import { AppConfig } from '../../../src/components/../src/types';
+import { AnalyticsService } from '@/services/analytics-service';
+import { AppConfig } from '@/types';
 
 const mockConfig: AppConfig = {
   shopify: {
@@ -201,7 +201,9 @@ describe('AnalyticsService', () => {
       mockQuery.mockResolvedValue({ rows: [{ count: '5' }] }); // activeAlerts
       
       // Mock Redis responses
-      mockLlen.mockResolvedValue(10); // queueSize
+      mockLlen
+        .mockResolvedValueOnce(5) // queueSize - waiting
+        .mockResolvedValueOnce(5); // queueSize - active
       mockGet
         .mockResolvedValueOnce('25.5') // processingRate
         .mockResolvedValueOnce('1.2') // errorRate
