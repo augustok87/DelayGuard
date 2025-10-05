@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { usePerformance, useComponentPerformance, useAsyncPerformance } from '../../../src/components/usePerformance';
+import { usePerformance, useComponentPerformance, useAsyncPerformance } from '../../../src/hooks/usePerformance';
 
 // Mock performance API
 const mockPerformance = {

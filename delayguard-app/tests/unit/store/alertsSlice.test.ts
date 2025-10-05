@@ -5,9 +5,9 @@ import alertsReducer, {
   fetchAlerts,
   updateAlert,
   deleteAlert,
-} from '../../../src/components/alertsSlice';
-import { AlertsState } from '../../../src/components/../../types/store';
-import { DelayAlert } from '../../../src/components/../../types';
+} from '../../../src/store/slices/alertsSlice';
+import { AlertsState } from '../../../src/types/store';
+import { DelayAlert } from '../../../src/types';
 
 const mockAlert: DelayAlert = {
   id: 'alert-1',

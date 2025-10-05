@@ -5,7 +5,7 @@ import { DashboardTab } from '../../../src/components/tabs/DashboardTab/Dashboar
 import { createMockSettings, createMockStats } from '../../setup/test-utils';
 
 // Mock the child components
-jest.mock('../../../ui/Card', () => ({
+jest.mock('../../../src/components/ui/Card', () => ({
   Card: ({ children, title, subtitle }: any) => (
     <div data-testid="card">
       {title && <h3>{title}</h3>}
@@ -15,7 +15,7 @@ jest.mock('../../../ui/Card', () => ({
   ),
 }));
 
-jest.mock('../SettingsCard', () => ({
+jest.mock('../../../src/components/tabs/DashboardTab/SettingsCard', () => ({
   SettingsCard: ({ onSave, onTest, onConnect, onSettingsChange }: any) => (
     <div data-testid="settings-card">
       <button onClick={onSave}>Save Settings</button>
@@ -28,7 +28,7 @@ jest.mock('../SettingsCard', () => ({
   ),
 }));
 
-jest.mock('../StatsCard', () => ({
+jest.mock('../../../src/components/tabs/DashboardTab/StatsCard', () => ({
   StatsCard: ({ stats }: any) => (
     <div data-testid="stats-card">
       <div>Total Alerts: {stats.totalAlerts}</div>

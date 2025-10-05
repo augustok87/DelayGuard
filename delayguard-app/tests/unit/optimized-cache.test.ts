@@ -1,24 +1,20 @@
-// Mock the Redis module before importing the service
-const mockGet = jest.fn();
-const mockSetex = jest.fn();
-const mockDel = jest.fn();
-const mockMget = jest.fn();
-const mockPipeline = jest.fn();
-const mockKeys = jest.fn();
+// Mock ioredis at the module level
+const mockRedisInstance = {
+  get: jest.fn(),
+  setex: jest.fn(),
+  del: jest.fn(),
+  mget: jest.fn(),
+  mset: jest.fn(),
+  keys: jest.fn(),
+  pipeline: jest.fn()
+};
 
-jest.mock('ioredis', () => {
-  return jest.fn().mockImplementation(() => ({
-    get: mockGet,
-    setex: mockSetex,
-    del: mockDel,
-    mget: mockMget,
-    pipeline: mockPipeline,
-    keys: mockKeys
-  }));
-});
+jest.mock('ioredis', () => ({
+  Redis: jest.fn().mockImplementation(() => mockRedisInstance)
+}));
 
-import { OptimizedCache, CACHE_CONFIGS } from '../../../src/components/../src/services/optimized-cache';
-import { AppConfig } from '../../../src/components/../src/types';
+import { OptimizedCache, CACHE_CONFIGS } from '@/services/optimized-cache';
+import { AppConfig } from '@/types';
 
 const mockConfig: AppConfig = {
   shopify: {
@@ -47,21 +43,10 @@ const mockConfig: AppConfig = {
 
 describe('OptimizedCache', () => {
   let cache: OptimizedCache;
-  let mockRedis: any;
 
   beforeEach(() => {
     // Clear all mocks
     jest.clearAllMocks();
-    
-    // Create new instance with mocked methods
-    mockRedis = {
-      get: mockGet,
-      setex: mockSetex,
-      del: mockDel,
-      mget: mockMget,
-      pipeline: mockPipeline,
-      keys: mockKeys
-    };
     
     cache = new OptimizedCache(mockConfig);
   });
@@ -85,7 +70,7 @@ describe('OptimizedCache', () => {
       const result = await cache.get(key, config);
 
       expect(result).toEqual(value);
-      expect(mockRedis.get).not.toHaveBeenCalled();
+      expect(mockRedisInstance.get).not.toHaveBeenCalled();
     });
 
     it('should return cached value from Redis when local cache miss', async () => {
@@ -93,19 +78,19 @@ describe('OptimizedCache', () => {
       const value = { data: 'test' };
       const config = CACHE_CONFIGS.settings;
 
-      mockGet.mockResolvedValue(JSON.stringify(value));
+      mockRedisInstance.get.mockResolvedValue(JSON.stringify(value));
 
       const result = await cache.get(key, config);
 
       expect(result).toEqual(value);
-      expect(mockRedis.get).toHaveBeenCalledWith('settings:test-key');
+      expect(mockRedisInstance.get).toHaveBeenCalledWith('settings:test-key');
     });
 
     it('should return null when no cached value exists', async () => {
       const key = 'test-key';
       const config = CACHE_CONFIGS.settings;
 
-      mockGet.mockResolvedValue(null);
+      mockRedisInstance.get.mockResolvedValue(null);
 
       const result = await cache.get(key, config);
 
@@ -116,7 +101,7 @@ describe('OptimizedCache', () => {
       const key = 'test-key';
       const config = CACHE_CONFIGS.settings;
 
-      mockGet.mockRejectedValue(new Error('Redis connection failed'));
+      mockRedisInstance.get.mockRejectedValue(new Error('Redis connection failed'));
 
       const result = await cache.get(key, config);
 
@@ -130,11 +115,11 @@ describe('OptimizedCache', () => {
       const value = { data: 'test' };
       const config = CACHE_CONFIGS.settings;
 
-      mockSetex.mockResolvedValue('OK');
+      mockRedisInstance.setex.mockResolvedValue('OK');
 
       await cache.set(key, value, config);
 
-      expect(mockRedis.setex).toHaveBeenCalledWith(
+      expect(mockRedisInstance.setex).toHaveBeenCalledWith(
         'settings:test-key',
         config.ttl,
         JSON.stringify(value)
@@ -151,7 +136,7 @@ describe('OptimizedCache', () => {
       const value = { data: 'test' };
       const config = CACHE_CONFIGS.settings;
 
-      mockSetex.mockRejectedValue(new Error('Redis connection failed'));
+      mockRedisInstance.setex.mockRejectedValue(new Error('Redis connection failed'));
 
       await expect(cache.set(key, value, config)).resolves.not.toThrow();
     });
@@ -162,11 +147,11 @@ describe('OptimizedCache', () => {
       const key = 'test-key';
       const config = CACHE_CONFIGS.settings;
 
-      mockDel.mockResolvedValue(1);
+      mockRedisInstance.del.mockResolvedValue(1);
 
       await cache.del(key, config);
 
-      expect(mockRedis.del).toHaveBeenCalledWith('settings:test-key');
+      expect(mockRedisInstance.del).toHaveBeenCalledWith('settings:test-key');
       expect((cache as any).localCache.has('settings:test-key')).toBe(false);
     });
   });
@@ -181,7 +166,7 @@ describe('OptimizedCache', () => {
         null
       ];
 
-      mockMget.mockResolvedValue([
+      mockRedisInstance.mget.mockResolvedValue([
         JSON.stringify(values[0]),
         JSON.stringify(values[1]),
         null
@@ -190,7 +175,7 @@ describe('OptimizedCache', () => {
       const result = await cache.mget(keys, config);
 
       expect(result).toEqual(values);
-      expect(mockRedis.mget).toHaveBeenCalledWith(
+      expect(mockRedisInstance.mget).toHaveBeenCalledWith(
         'settings:key1',
         'settings:key2',
         'settings:key3'
@@ -207,9 +192,8 @@ describe('OptimizedCache', () => {
         expiry: Date.now() + 10000
       });
 
-      // Mock Redis response for key2
-      mockMget.mockResolvedValue([
-        null, // key1 not in Redis
+      // Mock Redis response for key2 only (since key1 is in local cache)
+      mockRedisInstance.mget.mockResolvedValue([
         JSON.stringify({ data: 'redis-value' }) // key2 in Redis
       ]);
 
@@ -230,17 +214,17 @@ describe('OptimizedCache', () => {
       ];
       const config = CACHE_CONFIGS.settings;
 
-      const mockPipelineInstance = {
-        setex: jest.fn(),
+      const pipelineInstance = {
+        setex: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue([['OK'], ['OK']])
       };
-      mockPipeline.mockReturnValue(mockPipelineInstance);
+      mockRedisInstance.pipeline.mockReturnValue(pipelineInstance);
 
       await cache.mset(keyValuePairs, config);
 
-      expect(mockPipeline).toHaveBeenCalled();
-      expect(mockPipelineInstance.setex).toHaveBeenCalledTimes(2);
-      expect(mockPipelineInstance.exec).toHaveBeenCalled();
+      expect(mockRedisInstance.pipeline).toHaveBeenCalled();
+      expect(pipelineInstance.setex).toHaveBeenCalledTimes(2);
+      expect(pipelineInstance.exec).toHaveBeenCalled();
     });
   });
 
@@ -249,16 +233,16 @@ describe('OptimizedCache', () => {
       const pattern = 'test-*';
       const config = CACHE_CONFIGS.settings;
 
-      mockKeys.mockResolvedValue([
+      mockRedisInstance.keys.mockResolvedValue([
         'settings:test-key1',
         'settings:test-key2'
       ]);
-      mockDel.mockResolvedValue(2);
+      mockRedisInstance.del.mockResolvedValue(2);
 
       await cache.invalidatePattern(pattern, config);
 
-      expect(mockRedis.keys).toHaveBeenCalledWith('settings:test-*');
-      expect(mockRedis.del).toHaveBeenCalledWith(
+      expect(mockRedisInstance.keys).toHaveBeenCalledWith('settings:test-*');
+      expect(mockRedisInstance.del).toHaveBeenCalledWith(
         'settings:test-key1',
         'settings:test-key2'
       );

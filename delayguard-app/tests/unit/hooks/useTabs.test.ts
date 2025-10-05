@@ -3,9 +3,9 @@ import '@testing-library/jest-dom';
 import { renderHook, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { useTabs } from '../../../src/components/useTabs';
-import { RootState } from '../../../src/components/../types/store';
-import uiSlice from '../../../src/components/../store/slices/uiSlice';
+import { useTabs } from '../../../src/hooks/useTabs';
+import { RootState } from '../../../src/types/store';
+import uiSlice from '../../../src/store/slices/uiSlice';
 
 // Mock store for testing
 const createMockStore = (initialState?: Partial<RootState>) => {
