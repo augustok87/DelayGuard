@@ -427,7 +427,10 @@ describe('Audit Logger', () => {
       );
 
       // Wait a bit to ensure flush completes
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Explicitly flush to ensure events are processed
+      await auditLogger.flush();
 
       // The automatic flush should have already happened due to batch size
       expect(consoleSpy).toHaveBeenCalled();

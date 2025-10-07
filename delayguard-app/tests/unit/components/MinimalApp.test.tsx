@@ -87,6 +87,15 @@ jest.mock('../../../src/services/analytics-service', () => ({
 }));
 
 describe('MinimalApp', () => {
+  // Mock setTimeout to make tests faster
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   const mockSettings = {
     delayThreshold: 3,
     notificationTemplate: 'default',
@@ -147,14 +156,21 @@ describe('MinimalApp', () => {
   it('should render minimal app with all main components', async () => {
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
+    // Wait for loading to complete
     await waitFor(() => {
-      expect(screen.getByText('DelayGuard')).toBeInTheDocument();
+      expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
     });
 
+    // Then check for the main content
+    expect(screen.getByText('DelayGuard')).toBeInTheDocument();
+
     // Check if main components are rendered
-    expect(screen.getByTestId('page')).toBeInTheDocument();
-    expect(screen.getByTestId('layout')).toBeInTheDocument();
-    expect(screen.getByTestId('tabs')).toBeInTheDocument();
+    expect(screen.getByText('Proactive Shipping Delay Notifications')).toBeInTheDocument();
+    expect(screen.getByText('Total Alerts')).toBeInTheDocument();
+    expect(screen.getByText('Active')).toBeInTheDocument();
   });
 
   it('should display loading state initially', () => {
@@ -167,6 +183,9 @@ describe('MinimalApp', () => {
 
   it('should handle tab switching between alerts and orders', async () => {
     render(<MinimalApp />);
+
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
@@ -184,6 +203,9 @@ describe('MinimalApp', () => {
   it('should display alerts in the alerts tab', async () => {
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
     });
@@ -195,6 +217,9 @@ describe('MinimalApp', () => {
 
   it('should display orders in the orders tab', async () => {
     render(<MinimalApp />);
+
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
@@ -213,6 +238,9 @@ describe('MinimalApp', () => {
   it('should filter alerts by status', async () => {
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
     });
@@ -229,6 +257,9 @@ describe('MinimalApp', () => {
 
   it('should search alerts by customer name', async () => {
     render(<MinimalApp />);
+
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
@@ -247,6 +278,9 @@ describe('MinimalApp', () => {
   it('should handle alert actions', async () => {
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
     });
@@ -262,6 +296,9 @@ describe('MinimalApp', () => {
 
   it('should handle order actions', async () => {
     render(<MinimalApp />);
+
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
@@ -299,6 +336,9 @@ describe('MinimalApp', () => {
     
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
     });
@@ -325,6 +365,9 @@ describe('MinimalApp', () => {
   it('should refresh data when refresh button is clicked', async () => {
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
     });
@@ -339,6 +382,9 @@ describe('MinimalApp', () => {
 
   it('should handle settings updates', async () => {
     render(<MinimalApp />);
+
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
@@ -371,6 +417,9 @@ describe('MinimalApp', () => {
 
   it('should handle notification settings', async () => {
     render(<MinimalApp />);
+
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
@@ -418,6 +467,9 @@ describe('MinimalApp', () => {
   it('should handle keyboard navigation', async () => {
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
     });
@@ -432,6 +484,9 @@ describe('MinimalApp', () => {
   it('should display alert statistics', async () => {
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
     });
@@ -444,6 +499,9 @@ describe('MinimalApp', () => {
 
   it('should handle bulk actions on alerts', async () => {
     render(<MinimalApp />);
+
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
@@ -466,6 +524,9 @@ describe('MinimalApp', () => {
   it('should handle date range filtering', async () => {
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
     });
@@ -485,6 +546,9 @@ describe('MinimalApp', () => {
 
   it('should handle real-time updates', async () => {
     render(<MinimalApp />);
+
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
@@ -513,6 +577,9 @@ describe('MinimalApp', () => {
   it('should handle export functionality', async () => {
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
     });
@@ -528,6 +595,9 @@ describe('MinimalApp', () => {
 
   it('should handle test delay detection', async () => {
     render(<MinimalApp />);
+
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
@@ -565,6 +635,9 @@ describe('MinimalApp', () => {
 
     render(<MinimalApp />);
 
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
+
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
     });
@@ -576,6 +649,9 @@ describe('MinimalApp', () => {
 
   it('should handle accessibility features', async () => {
     render(<MinimalApp />);
+
+    // Advance timers to complete the setTimeout
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();

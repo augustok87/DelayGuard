@@ -460,7 +460,7 @@ describe('useDebouncedCallback', () => {
 
     // Wait a bit for the promise rejection to be handled
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 10));
+      jest.advanceTimersByTime(10);
     });
 
     expect(callback).toHaveBeenCalledTimes(1);
