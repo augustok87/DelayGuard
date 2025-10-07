@@ -68,7 +68,7 @@ interface RealTimeMetrics {
   responseTime: number;
 }
 
-export function AnalyticsDashboard() {
+function AnalyticsDashboard() {
   const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
   const [realtimeMetrics, setRealtimeMetrics] = useState<RealTimeMetrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -448,3 +448,5 @@ export function AnalyticsDashboard() {
     </Frame>
   );
 }
+
+export default AnalyticsDashboard;

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Page,
   Card,
@@ -29,7 +30,7 @@ import {
   Toast,
   Frame
 } from '@shopify/polaris';
-import { AnalyticsDashboard } from './AnalyticsDashboard';
+import AnalyticsDashboard from './AnalyticsDashboard';
 
 interface AppSettings {
   delayThresholdDays: number;
@@ -83,7 +84,7 @@ interface QueueStats {
   };
 }
 
-export function EnhancedDashboard() {
+function EnhancedDashboard() {
   const [settings, setSettings] = useState<AppSettings>({
     delayThresholdDays: 2,
     emailEnabled: true,
@@ -664,3 +665,5 @@ export function EnhancedDashboard() {
     </Frame>
   );
 }
+
+export default EnhancedDashboard;

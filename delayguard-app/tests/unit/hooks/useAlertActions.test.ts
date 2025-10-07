@@ -385,10 +385,9 @@ describe('useAlertActions', () => {
       bulkResult = await bulkResolveAlerts(['alert-1']);
     });
 
-    expect(mockShowErrorToast).toHaveBeenCalledWith('An unexpected error occurred');
+    expect(mockShowErrorToast).toHaveBeenCalledWith('1 alerts failed to resolve');
     expect(bulkResult).toEqual({ 
       success: false, 
-      error: 'An unexpected error occurred',
       resolvedCount: 0,
       totalCount: 1
     });

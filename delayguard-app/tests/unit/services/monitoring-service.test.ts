@@ -19,10 +19,18 @@ describe('MonitoringService', () => {
 
     mockRedis = {
       status: 'ready',
-      setex: jest.fn().mockResolvedValue('OK'),
-      get: jest.fn().mockResolvedValue(null),
-      info: jest.fn().mockResolvedValue('connected_clients:1\nused_memory:1024\n'),
-      ping: jest.fn().mockResolvedValue('PONG'),
+      setex: jest.fn().mockImplementation(() => 
+        new Promise(resolve => setTimeout(() => resolve('OK'), 5))
+      ),
+      get: jest.fn().mockImplementation(() => 
+        new Promise(resolve => setTimeout(() => resolve(null), 5))
+      ),
+      info: jest.fn().mockImplementation(() => 
+        new Promise(resolve => setTimeout(() => resolve('connected_clients:1\nused_memory:1024\n'), 5))
+      ),
+      ping: jest.fn().mockImplementation(() => 
+        new Promise(resolve => setTimeout(() => resolve('PONG'), 5))
+      ),
       quit: jest.fn().mockResolvedValue('OK'),
       disconnect: jest.fn()
     };
@@ -31,9 +39,13 @@ describe('MonitoringService', () => {
       totalCount: 10,
       idleCount: 5,
       waitingCount: 0,
-      query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+      query: jest.fn().mockImplementation(() => 
+        new Promise(resolve => setTimeout(() => resolve({ rows: [], rowCount: 0 }), 10))
+      ),
       connect: jest.fn().mockResolvedValue({
-        query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+        query: jest.fn().mockImplementation(() => 
+          new Promise(resolve => setTimeout(() => resolve({ rows: [], rowCount: 0 }), 10))
+        ),
         release: jest.fn()
       }),
       end: jest.fn().mockResolvedValue(undefined)
@@ -54,7 +66,7 @@ describe('MonitoringService', () => {
     it('should perform all health checks', async () => {
       const healthChecks = await monitoringService.performHealthChecks();
       
-      expect(healthChecks).toHaveLength(4); // Database, Redis, External APIs, Application
+      expect(healthChecks).toHaveLength(6); // Database, Redis, 3 External APIs, Application
       expect(healthChecks.every(check => 
         check.name && 
         ['healthy', 'degraded', 'unhealthy'].includes(check.status) &&
@@ -84,10 +96,11 @@ describe('MonitoringService', () => {
     it('should check external APIs health', async () => {
       const healthChecks = await monitoringService.performHealthChecks();
       const apiChecks = healthChecks.filter(check => 
-        check.name.includes('API') || check.name.includes('External')
+        ['ShipEngine', 'SendGrid', 'Twilio'].includes(check.name)
       );
       
-      expect(apiChecks.length).toBeGreaterThan(0);
+      expect(apiChecks).toHaveLength(3);
+      expect(apiChecks.every(check => check.status === 'healthy')).toBe(true);
     });
 
     it('should check application health', async () => {
@@ -128,7 +141,7 @@ describe('MonitoringService', () => {
         timestamp: expect.any(Date),
         cpu: {
           usage: expect.any(Number),
-          loadAverage: expect.any(Array)
+          loadAverage: expect.arrayContaining([expect.any(Number)])
         },
         memory: {
           used: expect.any(Number),
@@ -425,7 +438,10 @@ describe('MonitoringService', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      mockPool.query.mockRejectedValueOnce(new Error('Database error'));
+      // Mock pool properties to throw an error
+      Object.defineProperty(mockPool, 'totalCount', {
+        get: () => { throw new Error('Database error'); }
+      });
       
       const stats = await (monitoringService as any).getDatabaseStats();
       

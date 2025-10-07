@@ -55,7 +55,7 @@ export const useAsync = <T>(
         setState({
           data: null,
           loading: false,
-          error: error instanceof Error ? error : new Error('An unknown error occurred')
+          error: error instanceof Error ? error : new Error(String(error))
         });
       }
       

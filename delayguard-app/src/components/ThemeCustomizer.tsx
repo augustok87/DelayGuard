@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   FormLayout,
@@ -41,7 +42,7 @@ interface NotificationTemplate {
   variables: string[];
 }
 
-export function ThemeCustomizer() {
+function ThemeCustomizer() {
   const [settings, setSettings] = useState<ThemeSettings>({
     primaryColor: '#007ace',
     secondaryColor: '#f6f6f7',
@@ -526,3 +527,5 @@ export function ThemeCustomizer() {
     </div>
   );
 }
+
+export default ThemeCustomizer;

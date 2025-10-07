@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { AnalyticsDashboard } from '../../../src/components/AnalyticsDashboard';
+import AnalyticsDashboard from '../../../src/components/AnalyticsDashboard';
 
 // Mock Shopify Polaris components
 jest.mock('@shopify/polaris', () => ({

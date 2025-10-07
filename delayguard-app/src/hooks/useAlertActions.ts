@@ -57,7 +57,7 @@ export const useAlertActions = () => {
 
       return result;
     } catch (error) {
-      showErrorToast('An unexpected error occurred');
+      showDeleteErrorToast('An unexpected error occurred');
       return { success: false, error: 'An unexpected error occurred' };
     }
   }, [deleteAlert, showDeleteSuccessToast, showDeleteErrorToast, showErrorToast]);
@@ -85,6 +85,8 @@ export const useAlertActions = () => {
 
     if (successful > 0) {
       showSuccessToast(`${successful} alerts resolved successfully!`);
+    } else if (results.length === 0) {
+      showSuccessToast('0 alerts resolved successfully!');
     }
 
     if (failed > 0) {

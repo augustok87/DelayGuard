@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { RefactoredApp } from '../../../src/components/RefactoredApp';
+import RefactoredApp from '../../../src/components/RefactoredApp';
+import * as hooks from '../../../src/hooks';
 
 // Mock the layout components
 jest.mock('../../../src/components/layout/AppHeader', () => ({
@@ -57,9 +58,10 @@ jest.mock('../../../src/components/ui/LoadingSpinner', () => ({
 
 // Mock the tab components
 jest.mock('../../../src/components/tabs/DashboardTab', () => ({
-  DashboardTab: ({ stats, settings, onSaveSettings, onTestDelayDetection }: any) => (
+  DashboardTab: ({ shop, stats, settings, onSaveSettings, onTestDelayDetection }: any) => (
     <div data-testid="dashboard-tab">
       <span>Dashboard Tab</span>
+      {shop && <span>Shop: {shop}</span>}
       <span>Total Alerts: {stats.totalAlerts}</span>
       <button onClick={onSaveSettings}>Save Settings</button>
       <button onClick={onTestDelayDetection}>Test Delay Detection</button>
@@ -91,7 +93,7 @@ jest.mock('../../../src/components/tabs/OrdersTab', () => ({
 
 // Mock the custom hooks
 const mockUseTabs = {
-  selectedTab: 'dashboard',
+  selectedTab: 0, // Dashboard tab
   changeTab: jest.fn()
 };
 
@@ -140,13 +142,13 @@ const mockUseSettingsActions = {
 };
 
 jest.mock('../../../src/hooks', () => ({
-  useTabs: () => mockUseTabs,
-  useDelayAlerts: () => mockUseDelayAlerts,
-  useOrders: () => mockUseOrders,
-  useSettings: () => mockUseSettings,
-  useAlertActions: () => mockUseAlertActions,
-  useOrderActions: () => mockUseOrderActions,
-  useSettingsActions: () => mockUseSettingsActions
+  useTabs: jest.fn(() => mockUseTabs),
+  useDelayAlerts: jest.fn(() => mockUseDelayAlerts),
+  useOrders: jest.fn(() => mockUseOrders),
+  useSettings: jest.fn(() => mockUseSettings),
+  useAlertActions: jest.fn(() => mockUseAlertActions),
+  useOrderActions: jest.fn(() => mockUseOrderActions),
+  useSettingsActions: jest.fn(() => mockUseSettingsActions)
 }));
 
 // Mock CSS modules
@@ -174,7 +176,7 @@ describe('RefactoredApp', () => {
 
   it('should display loading state when data is loading', () => {
     // Mock loading state
-    jest.mocked(require('../../../src/hooks')).useDelayAlerts.mockReturnValue({
+    (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
       loading: true
     });
@@ -186,7 +188,7 @@ describe('RefactoredApp', () => {
 
   it('should display error state when there is an error', () => {
     // Mock error state
-    jest.mocked(require('../../../src/hooks')).useDelayAlerts.mockReturnValue({
+    (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
       error: 'Failed to load alerts'
     });
@@ -216,7 +218,7 @@ describe('RefactoredApp', () => {
 
   it('should display alerts tab when selected', () => {
     // Mock selected tab
-    jest.mocked(require('../../../src/hooks')).useTabs.mockReturnValue({
+    (hooks.useTabs as jest.Mock).mockReturnValue({
       ...mockUseTabs,
       selectedTab: 'alerts'
     });
@@ -229,9 +231,9 @@ describe('RefactoredApp', () => {
 
   it('should display orders tab when selected', () => {
     // Mock selected tab
-    jest.mocked(require('../../../src/hooks')).useTabs.mockReturnValue({
+    (hooks.useTabs as jest.Mock).mockReturnValue({
       ...mockUseTabs,
-      selectedTab: 'orders'
+      selectedTab: 2 // Orders tab
     });
 
     render(<RefactoredApp />);
@@ -241,11 +243,13 @@ describe('RefactoredApp', () => {
   });
 
   it('should handle alert actions', () => {
-    render(<RefactoredApp />);
+    // Mock alerts tab selection
+    (hooks.useTabs as jest.Mock).mockReturnValue({
+      ...mockUseTabs,
+      selectedTab: 1 // Alerts tab
+    });
 
-    // Switch to alerts tab
-    const alertsTab = screen.getByTestId('tab-alerts');
-    fireEvent.click(alertsTab);
+    render(<RefactoredApp />);
 
     // Resolve alert
     const resolveButton = screen.getByText('Resolve Alert');
@@ -261,11 +265,13 @@ describe('RefactoredApp', () => {
   });
 
   it('should handle order actions', () => {
-    render(<RefactoredApp />);
+    // Mock orders tab selection
+    (hooks.useTabs as jest.Mock).mockReturnValue({
+      ...mockUseTabs,
+      selectedTab: 2 // Orders tab
+    });
 
-    // Switch to orders tab
-    const ordersTab = screen.getByTestId('tab-orders');
-    fireEvent.click(ordersTab);
+    render(<RefactoredApp />);
 
     // Track order
     const trackButton = screen.getByText('Track Order');
@@ -306,18 +312,32 @@ describe('RefactoredApp', () => {
   });
 
   it('should display shop information when connected', () => {
-    // Mock shop state
-    const { useState } = require('react');
-    useState.mockReturnValue(['test-shop.myshopify.com', jest.fn()]);
+    // Mock useState to return shop state
+    const mockSetShop = jest.fn();
+    const mockUseState = jest.spyOn(React, 'useState');
+    mockUseState
+      .mockReturnValueOnce(['test-shop.myshopify.com', mockSetShop]) // shop state
+      .mockReturnValueOnce([null, jest.fn()]) // error state
+      .mockReturnValueOnce([{ // stats state
+        totalAlerts: 12,
+        activeAlerts: 3,
+        resolvedAlerts: 9,
+        avgResolutionTime: '2.3 days',
+        customerSatisfaction: '94%',
+        supportTicketReduction: '35%'
+      }, jest.fn()]);
 
     render(<RefactoredApp />);
 
     expect(screen.getByText('Shop: test-shop.myshopify.com')).toBeInTheDocument();
+    
+    // Restore useState
+    mockUseState.mockRestore();
   });
 
   it('should handle error dismissal', () => {
     // Mock error state
-    jest.mocked(require('../../../src/hooks')).useDelayAlerts.mockReturnValue({
+    (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
       error: 'Failed to load alerts'
     });
@@ -363,7 +383,7 @@ describe('RefactoredApp', () => {
 
   it('should handle empty data states', () => {
     // Mock empty data
-    jest.mocked(require('../../../src/hooks')).useDelayAlerts.mockReturnValue({
+    (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
       alerts: []
     });
@@ -384,7 +404,7 @@ describe('RefactoredApp', () => {
 
   it('should handle multiple errors', () => {
     // Mock multiple errors
-    jest.mocked(require('../../../src/hooks')).useDelayAlerts.mockReturnValue({
+    (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
       error: 'Failed to load alerts'
     });
@@ -427,7 +447,7 @@ describe('RefactoredApp', () => {
       status: 'active'
     };
 
-    jest.mocked(require('../../../src/hooks')).useDelayAlerts.mockReturnValue({
+    (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
       alerts: [...mockUseDelayAlerts.alerts, newAlert]
     });
@@ -456,7 +476,7 @@ describe('RefactoredApp', () => {
     const { rerender } = render(<RefactoredApp />);
 
     // Re-render with different data
-    jest.mocked(require('../../../src/hooks')).useDelayAlerts.mockReturnValue({
+    (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
       alerts: [
         { id: '1', orderId: 'ORD-001', customerName: 'John Doe', delayDays: 3, status: 'active' }

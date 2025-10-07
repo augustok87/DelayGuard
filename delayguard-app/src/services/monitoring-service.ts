@@ -174,11 +174,16 @@ export class MonitoringService {
     }
 
     // Store in Redis for persistence
-    await this.redis.setex(
-      `metrics:system:${timestamp.getTime()}`,
-      3600, // 1 hour TTL
-      JSON.stringify(metrics)
-    );
+    try {
+      await this.redis.setex(
+        `metrics:system:${timestamp.getTime()}`,
+        3600, // 1 hour TTL
+        JSON.stringify(metrics)
+      );
+    } catch (error) {
+      // Log error but don't fail the metrics collection
+      console.warn('Failed to store metrics in Redis:', error);
+    }
 
     return metrics;
   }
@@ -191,7 +196,7 @@ export class MonitoringService {
       if (!rule.enabled) continue;
 
       const value = await this.getMetricValue(rule.metric);
-      if (value === null) continue;
+      if (value === null || typeof value !== 'number') continue;
 
       const shouldAlert = this.evaluateAlertRule(rule, value);
       if (shouldAlert) {
@@ -444,45 +449,52 @@ export class MonitoringService {
   }
 
   private async getAlertRules(): Promise<AlertRule[]> {
-    // Default alert rules
-    return [
-      {
-        id: 'high_memory_usage',
-        name: 'High Memory Usage',
-        metric: 'memory.percentage',
-        operator: 'gt',
-        threshold: 80,
-        duration: 300, // 5 minutes
-        severity: 'high',
-        enabled: true,
-        channels: ['email', 'slack']
-      },
-      {
-        id: 'slow_database_query',
-        name: 'Slow Database Query',
-        metric: 'database.queryTime',
-        operator: 'gt',
-        threshold: 1000, // 1 second
-        duration: 60, // 1 minute
-        severity: 'medium',
-        enabled: true,
-        channels: ['email']
-      },
-      {
-        id: 'high_error_rate',
-        name: 'High Error Rate',
-        metric: 'application.requests.successRate',
-        operator: 'lt',
-        threshold: 95, // 95%
-        duration: 300, // 5 minutes
-        severity: 'critical',
-        enabled: true,
-        channels: ['email', 'slack', 'sms']
-      }
-    ];
+    try {
+      const result = await this.db.query(
+        'SELECT * FROM alert_rules WHERE enabled = true ORDER BY severity DESC'
+      );
+      return result.rows;
+    } catch (error) {
+      // Return default rules if database query fails
+      return [
+        {
+          id: 'high_memory_usage',
+          name: 'High Memory Usage',
+          metric: 'memory.percentage',
+          operator: 'gt',
+          threshold: 80,
+          duration: 300, // 5 minutes
+          severity: 'high',
+          enabled: true,
+          channels: ['email', 'slack']
+        },
+        {
+          id: 'slow_database_query',
+          name: 'Slow Database Query',
+          metric: 'database.queryTime',
+          operator: 'gt',
+          threshold: 1000, // 1 second
+          duration: 60, // 1 minute
+          severity: 'medium',
+          enabled: true,
+          channels: ['email']
+        },
+        {
+          id: 'high_error_rate',
+          name: 'High Error Rate',
+          metric: 'application.requests.successRate',
+          operator: 'lt',
+          threshold: 95, // 95%
+          duration: 300, // 5 minutes
+          severity: 'critical',
+          enabled: true,
+          channels: ['email', 'slack', 'sms']
+        }
+      ];
+    }
   }
 
-  private async getMetricValue(metric: string): Promise<number | null> {
+  private async getMetricValue(metric: string): Promise<number | boolean | null> {
     const latestMetrics = this.metrics[this.metrics.length - 1];
     if (!latestMetrics) return null;
 
@@ -497,7 +509,7 @@ export class MonitoringService {
       }
     }
 
-    return typeof value === 'number' ? value : null;
+    return (typeof value === 'number' || typeof value === 'boolean') ? value : null;
   }
 
   private evaluateAlertRule(rule: AlertRule, value: number): boolean {
@@ -536,9 +548,14 @@ export class MonitoringService {
   }
 
   async close(): Promise<void> {
-    await Promise.all([
-      this.redis.quit(),
-      this.db.end()
-    ]);
+    try {
+      await Promise.all([
+        this.redis.quit(),
+        this.db.end()
+      ]);
+    } catch (error) {
+      // Log error but don't throw
+      console.warn('Error closing monitoring service:', error);
+    }
   }
 }

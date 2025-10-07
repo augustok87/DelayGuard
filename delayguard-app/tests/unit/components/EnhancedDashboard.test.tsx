@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { EnhancedDashboard } from '../../../src/components/EnhancedDashboard';
+import EnhancedDashboard from '../../../src/components/EnhancedDashboard';
 
 // Mock Shopify Polaris components
 jest.mock('@shopify/polaris', () => ({

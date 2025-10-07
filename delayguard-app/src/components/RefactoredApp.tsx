@@ -151,3 +151,5 @@ export function RefactoredApp() {
     </div>
   );
 }
+
+export default RefactoredApp;

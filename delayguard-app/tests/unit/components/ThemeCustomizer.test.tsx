@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ThemeCustomizer } from '../../../src/components/ThemeCustomizer';
+import ThemeCustomizer from '../../../src/components/ThemeCustomizer';
 
 // Mock Shopify Polaris components
 jest.mock('@shopify/polaris', () => ({
