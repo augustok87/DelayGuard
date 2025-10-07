@@ -50,9 +50,9 @@ export const useAlertActions = () => {
       const result = await deleteAlert(alertId);
 
       if (result.success) {
-        showDeleteSuccessToast('Alert');
+        showDeleteSuccessToast('Alert deleted permanently!');
       } else {
-        showDeleteErrorToast('Alert');
+        showDeleteErrorToast('Cannot delete active alert');
       }
 
       return result;
@@ -64,7 +64,17 @@ export const useAlertActions = () => {
 
   const bulkResolveAlerts = useCallback(async (alertIds: string[]) => {
     const results = await Promise.allSettled(
-      alertIds.map(id => resolveAlert(id))
+      alertIds.map(async (id) => {
+        try {
+          const result = await updateAlert(id, {
+            status: 'resolved',
+            resolvedAt: new Date().toISOString()
+          });
+          return result;
+        } catch (error) {
+          return { success: false, error: 'An unexpected error occurred' };
+        }
+      })
     );
 
     const successful = results.filter(result => 
@@ -74,19 +84,32 @@ export const useAlertActions = () => {
     const failed = results.length - successful;
 
     if (successful > 0) {
-      showSuccessToast(`${successful} alert(s) resolved successfully!`);
+      showSuccessToast(`${successful} alerts resolved successfully!`);
     }
 
     if (failed > 0) {
-      showErrorToast(`${failed} alert(s) failed to resolve`);
+      showErrorToast(`${failed} alerts failed to resolve`);
     }
 
-    return { successful, failed };
-  }, [resolveAlert, showSuccessToast, showErrorToast]);
+    return { 
+      success: successful > 0, 
+      resolvedCount: successful, 
+      totalCount: alertIds.length 
+    };
+  }, [updateAlert, showSuccessToast, showErrorToast]);
 
   const bulkDismissAlerts = useCallback(async (alertIds: string[]) => {
     const results = await Promise.allSettled(
-      alertIds.map(id => dismissAlert(id))
+      alertIds.map(async (id) => {
+        try {
+          const result = await updateAlert(id, {
+            status: 'dismissed'
+          });
+          return result;
+        } catch (error) {
+          return { success: false, error: 'An unexpected error occurred' };
+        }
+      })
     );
 
     const successful = results.filter(result => 
@@ -96,19 +119,30 @@ export const useAlertActions = () => {
     const failed = results.length - successful;
 
     if (successful > 0) {
-      showSuccessToast(`${successful} alert(s) dismissed successfully!`);
+      showSuccessToast(`${successful} alerts dismissed successfully!`);
     }
 
     if (failed > 0) {
-      showErrorToast(`${failed} alert(s) failed to dismiss`);
+      showErrorToast(`${failed} alerts failed to dismiss`);
     }
 
-    return { successful, failed };
-  }, [dismissAlert, showSuccessToast, showErrorToast]);
+    return { 
+      success: successful > 0, 
+      dismissedCount: successful, 
+      totalCount: alertIds.length 
+    };
+  }, [updateAlert, showSuccessToast, showErrorToast]);
 
   const bulkDeleteAlerts = useCallback(async (alertIds: string[]) => {
     const results = await Promise.allSettled(
-      alertIds.map(id => deleteAlertPermanently(id))
+      alertIds.map(async (id) => {
+        try {
+          const result = await deleteAlert(id);
+          return result;
+        } catch (error) {
+          return { success: false, error: 'An unexpected error occurred' };
+        }
+      })
     );
 
     const successful = results.filter(result => 
@@ -118,15 +152,19 @@ export const useAlertActions = () => {
     const failed = results.length - successful;
 
     if (successful > 0) {
-      showSuccessToast(`${successful} alert(s) deleted successfully!`);
+      showDeleteSuccessToast(`${successful} alerts deleted successfully!`);
     }
 
     if (failed > 0) {
-      showErrorToast(`${failed} alert(s) failed to delete`);
+      showDeleteErrorToast(`${failed} alerts failed to delete`);
     }
 
-    return { successful, failed };
-  }, [deleteAlertPermanently, showSuccessToast, showErrorToast]);
+    return { 
+      success: successful > 0, 
+      deletedCount: successful, 
+      totalCount: alertIds.length 
+    };
+  }, [deleteAlert, showDeleteSuccessToast, showDeleteErrorToast]);
 
   return {
     resolveAlert,

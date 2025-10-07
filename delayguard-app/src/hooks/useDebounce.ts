@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export const useDebounce = <T>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -20,27 +20,35 @@ export const useDebouncedCallback = <T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): T => {
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const debouncedCallback = ((...args: Parameters<T>) => {
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
+  const debouncedCallback = useCallback((...args: Parameters<T>) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
 
-    const timer = setTimeout(() => {
-      callback(...args);
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const result = callback(...args);
+        // Handle promises
+        if (result && typeof result.catch === 'function') {
+          result.catch((error: any) => {
+            console.error('Debounced callback promise rejection:', error);
+          });
+        }
+      } catch (error) {
+        console.error('Debounced callback error:', error);
+      }
     }, delay);
-
-    setDebounceTimer(timer);
-  }) as T;
+  }, [callback, delay]);
 
   useEffect(() => {
     return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [debounceTimer]);
+  }, []);
 
-  return debouncedCallback;
+  return debouncedCallback as T;
 };

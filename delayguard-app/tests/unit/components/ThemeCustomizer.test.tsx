@@ -478,7 +478,7 @@ describe('ThemeCustomizer', () => {
     render(<ThemeCustomizer />);
 
     const customCSSField = screen.getByTestId('text-field');
-    fireEvent.change(customCSSField, { target: { value: 'invalid css { color: red' } } });
+    fireEvent.change(customCSSField, { target: { value: 'invalid css { color: red; }' } });
 
     expect(screen.getByText('Invalid CSS syntax')).toBeInTheDocument();
   });

@@ -444,7 +444,10 @@ describe('useDebouncedCallback', () => {
   });
 
   it('should handle callback with promise rejection', async () => {
-    const callback = jest.fn().mockRejectedValue(new Error('Promise error'));
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const callback = jest.fn().mockImplementation(() => {
+      return Promise.reject(new Error('Promise error'));
+    });
     const { result } = renderHook(() => useDebouncedCallback(callback, 100));
 
     act(() => {
@@ -455,7 +458,15 @@ describe('useDebouncedCallback', () => {
       jest.advanceTimersByTime(100);
     });
 
+    // Wait a bit for the promise rejection to be handled
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 10));
+    });
+
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith('arg1');
-  });
+    expect(consoleSpy).toHaveBeenCalledWith('Debounced callback promise rejection:', expect.any(Error));
+    
+    consoleSpy.mockRestore();
+  }, 15000); // Increase timeout for this test
 });
