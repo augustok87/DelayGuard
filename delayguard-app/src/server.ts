@@ -21,6 +21,12 @@ import { authRoutes } from './routes/auth';
 import { monitoringRoutes } from './routes/monitoring';
 import { PerformanceMonitor } from './services/performance-monitor';
 
+// Security middleware imports
+import { securityHeaders } from './middleware/security-headers';
+import { RateLimitingMiddleware, RateLimitPresets } from './middleware/rate-limiting';
+import { CSRFProtectionMiddleware } from './middleware/csrf-protection';
+import { InputSanitizationMiddleware, SanitizationPresets } from './middleware/input-sanitization';
+
 // Load environment variables (only in development)
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config();
@@ -95,6 +101,29 @@ const app = new Koa();
 
 // Initialize performance monitor
 const performanceMonitor = new PerformanceMonitor(config);
+
+// ===== SECURITY MIDDLEWARE SETUP =====
+
+// 1. Security Headers (First - applies to all responses)
+app.use(securityHeaders);
+
+// 2. Input Sanitization (Early - sanitizes all input)
+app.use(InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT));
+
+// 3. Rate Limiting (Before authentication)
+// Note: In production, you'd initialize Redis here
+// For now, we'll skip rate limiting in development
+if (process.env.NODE_ENV === 'production') {
+  // const redis = new IORedis(process.env.REDIS_URL!);
+  // app.use(RateLimitingMiddleware.create(redis, RateLimitPresets.GENERAL));
+}
+
+// 4. CSRF Protection (Before state-changing operations)
+app.use(CSRFProtectionMiddleware.create({
+  secret: config.shopify.apiSecret,
+  cookieName: '_csrf',
+  headerName: 'x-csrf-token'
+}));
 
 // Session configuration
 app.keys = [config.shopify.apiSecret];

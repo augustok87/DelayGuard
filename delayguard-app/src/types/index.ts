@@ -198,11 +198,12 @@ export class AppError extends Error {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, field?: string) {
-    super(message, 400, 'VALIDATION_ERROR');
+  public field?: string;
+
+  constructor(message: string, code: string = 'VALIDATION_ERROR', field?: string) {
+    super(message, 400, code);
     this.field = field;
   }
-  field?: string;
 }
 
 export class NotFoundError extends AppError {
