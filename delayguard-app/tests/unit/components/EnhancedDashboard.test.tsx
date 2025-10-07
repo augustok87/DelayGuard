@@ -132,7 +132,8 @@ jest.mock('@shopify/polaris', () => ({
 
 // Mock AnalyticsDashboard
 jest.mock('../../../src/components/AnalyticsDashboard', () => ({
-  AnalyticsDashboard: () => <div data-testid="analytics-dashboard">Analytics Dashboard</div>
+  __esModule: true,
+  default: () => <div data-testid="analytics-dashboard">Analytics Dashboard</div>
 }));
 
 // Mock the analytics API

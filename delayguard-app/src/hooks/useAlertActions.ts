@@ -94,7 +94,7 @@ export const useAlertActions = () => {
     }
 
     return { 
-      success: successful > 0, 
+      success: successful > 0 || alertIds.length === 0, 
       resolvedCount: successful, 
       totalCount: alertIds.length 
     };
@@ -129,7 +129,7 @@ export const useAlertActions = () => {
     }
 
     return { 
-      success: successful > 0, 
+      success: successful > 0 || alertIds.length === 0, 
       dismissedCount: successful, 
       totalCount: alertIds.length 
     };
@@ -162,7 +162,7 @@ export const useAlertActions = () => {
     }
 
     return { 
-      success: successful > 0, 
+      success: successful > 0 || alertIds.length === 0, 
       deletedCount: successful, 
       totalCount: alertIds.length 
     };

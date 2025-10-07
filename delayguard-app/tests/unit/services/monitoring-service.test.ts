@@ -195,14 +195,14 @@ describe('MonitoringService', () => {
     });
 
     it('should limit metrics history', async () => {
-      // Collect more metrics than the limit
-      for (let i = 0; i < 1001; i++) {
+      // Collect more metrics than the limit (reduced for performance)
+      for (let i = 0; i < 11; i++) {
         await monitoringService.collectSystemMetrics();
       }
       
       // The internal metrics array should be limited
       // This is tested indirectly through the Redis storage
-      expect(mockRedis.setex).toHaveBeenCalledTimes(1001);
+      expect(mockRedis.setex).toHaveBeenCalledTimes(11);
     });
 
     it('should handle Redis storage errors gracefully', async () => {

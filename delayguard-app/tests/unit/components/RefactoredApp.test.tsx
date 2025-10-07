@@ -70,23 +70,23 @@ jest.mock('../../../src/components/tabs/DashboardTab', () => ({
 }));
 
 jest.mock('../../../src/components/tabs/AlertsTab', () => ({
-  AlertsTab: ({ alerts, onResolveAlert, onDismissAlert }: any) => (
+  AlertsTab: ({ alerts, onAlertAction }: any) => (
     <div data-testid="alerts-tab">
       <span>Alerts Tab</span>
       <span>Alerts Count: {alerts.length}</span>
-      <button onClick={() => onResolveAlert('1')}>Resolve Alert</button>
-      <button onClick={() => onDismissAlert('1')}>Dismiss Alert</button>
+      <button onClick={() => onAlertAction('1', 'resolve')}>Resolve Alert</button>
+      <button onClick={() => onAlertAction('1', 'dismiss')}>Dismiss Alert</button>
     </div>
   )
 }));
 
 jest.mock('../../../src/components/tabs/OrdersTab', () => ({
-  OrdersTab: ({ orders, onTrackOrder, onViewOrderDetails }: any) => (
+  OrdersTab: ({ orders, onOrderAction }: any) => (
     <div data-testid="orders-tab">
       <span>Orders Tab</span>
       <span>Orders Count: {orders.length}</span>
-      <button onClick={() => onTrackOrder('1')}>Track Order</button>
-      <button onClick={() => onViewOrderDetails('1')}>View Details</button>
+      <button onClick={() => onOrderAction('1', 'track')}>Track Order</button>
+      <button onClick={() => onOrderAction('1', 'view')}>View Details</button>
     </div>
   )
 }));
