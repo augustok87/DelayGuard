@@ -23,6 +23,7 @@ const initialState: UIState = {
 // Slice
 const uiSlice = createSlice({
   name: 'ui',
+  initialState,
   reducers: {
     setSelectedTab: (state, action: PayloadAction<number>) => {
       state.selectedTab = action.payload;
@@ -77,7 +78,6 @@ const uiSlice = createSlice({
       state.sidebar.width = action.payload;
     },
   },
-  initialState,
 });
 
 export const {

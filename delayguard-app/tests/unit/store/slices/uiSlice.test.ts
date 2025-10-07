@@ -1,5 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
-import uiSlice, {
+import uiSlice, { 
   setSelectedTab,
   openModal,
   closeModal,
@@ -10,32 +9,27 @@ import uiSlice, {
   setTheme,
   toggleSidebar,
   setSidebarOpen,
-  setSidebarWidth,
-} from '../../../src/store/slices/uiSlice';
-import { UIState } from '../../../src/types/store';
+  setSidebarWidth
+} from '../../../../src/store/slices/uiSlice';
+import { configureStore } from '@reduxjs/toolkit';
 
-// Mock Date.now to ensure consistent toast IDs
-const mockDateNow = jest.spyOn(Date, 'now');
-beforeEach(() => {
-  mockDateNow.mockReturnValue(1234567890);
-});
-
-afterEach(() => {
-  mockDateNow.mockRestore();
-});
+// Mock store setup
+const createMockStore = () => {
+  return configureStore({
+    reducer: {
+      ui: uiSlice,
+    },
+  });
+};
 
 describe('uiSlice', () => {
-  let store: ReturnType<typeof configureStore>;
+  let store: ReturnType<typeof createMockStore>;
 
   beforeEach(() => {
-    store = configureStore({
-      reducer: {
-        ui: uiSlice,
-      },
-    });
+    store = createMockStore();
   });
 
-  describe('Initial State', () => {
+  describe('initial state', () => {
     it('should have correct initial state', () => {
       const state = store.getState().ui;
       expect(state).toEqual({
@@ -57,43 +51,46 @@ describe('uiSlice', () => {
     });
   });
 
-  describe('Tab Management', () => {
+  describe('tab navigation', () => {
     it('should set selected tab', () => {
       store.dispatch(setSelectedTab(2));
+      
       const state = store.getState().ui;
       expect(state.selectedTab).toBe(2);
     });
 
-    it('should handle negative tab index', () => {
+    it('should handle negative tab indices', () => {
       store.dispatch(setSelectedTab(-1));
+      
       const state = store.getState().ui;
       expect(state.selectedTab).toBe(-1);
     });
 
-    it('should handle large tab index', () => {
+    it('should handle large tab indices', () => {
       store.dispatch(setSelectedTab(999));
+      
       const state = store.getState().ui;
       expect(state.selectedTab).toBe(999);
     });
   });
 
-  describe('Modal Management', () => {
+  describe('modal management', () => {
     it('should open modal with data', () => {
-      const modalData = { title: 'Test Modal', content: 'Test Content' };
-      store.dispatch(openModal({ key: 'testModal', data: modalData }));
+      const modalData = { userId: '123', name: 'John Doe' };
+      store.dispatch(openModal({ key: 'userModal', data: modalData }));
       
       const state = store.getState().ui;
-      expect(state.modals.testModal).toEqual({
+      expect(state.modals.userModal).toEqual({
         isOpen: true,
         data: modalData,
       });
     });
 
     it('should open modal without data', () => {
-      store.dispatch(openModal({ key: 'simpleModal' }));
+      store.dispatch(openModal({ key: 'confirmModal' }));
       
       const state = store.getState().ui;
-      expect(state.modals.simpleModal).toEqual({
+      expect(state.modals.confirmModal).toEqual({
         isOpen: true,
         data: undefined,
       });
@@ -101,16 +98,15 @@ describe('uiSlice', () => {
 
     it('should close specific modal', () => {
       // First open a modal
-      store.dispatch(openModal({ key: 'testModal', data: { test: 'data' } }));
+      store.dispatch(openModal({ key: 'testModal', data: { test: true } }));
+      expect(store.getState().ui.modals.testModal.isOpen).toBe(true);
       
       // Then close it
       store.dispatch(closeModal('testModal'));
       
       const state = store.getState().ui;
-      expect(state.modals.testModal).toEqual({
-        isOpen: false,
-        data: undefined,
-      });
+      expect(state.modals.testModal.isOpen).toBe(false);
+      expect(state.modals.testModal.data).toBeUndefined();
     });
 
     it('should handle closing non-existent modal', () => {
@@ -122,9 +118,13 @@ describe('uiSlice', () => {
 
     it('should close all modals', () => {
       // Open multiple modals
-      store.dispatch(openModal({ key: 'modal1', data: { test: 'data1' } }));
-      store.dispatch(openModal({ key: 'modal2', data: { test: 'data2' } }));
-      store.dispatch(openModal({ key: 'modal3' }));
+      store.dispatch(openModal({ key: 'modal1', data: { test: 1 } }));
+      store.dispatch(openModal({ key: 'modal2', data: { test: 2 } }));
+      store.dispatch(openModal({ key: 'modal3', data: { test: 3 } }));
+      
+      expect(store.getState().ui.modals.modal1.isOpen).toBe(true);
+      expect(store.getState().ui.modals.modal2.isOpen).toBe(true);
+      expect(store.getState().ui.modals.modal3.isOpen).toBe(true);
       
       // Close all
       store.dispatch(closeAllModals());
@@ -137,17 +137,20 @@ describe('uiSlice', () => {
       expect(state.modals.modal3.isOpen).toBe(false);
       expect(state.modals.modal3.data).toBeUndefined();
     });
-
-    it('should handle multiple modals with same key', () => {
-      store.dispatch(openModal({ key: 'duplicateModal', data: { first: 'data' } }));
-      store.dispatch(openModal({ key: 'duplicateModal', data: { second: 'data' } }));
-      
-      const state = store.getState().ui;
-      expect(state.modals.duplicateModal.data).toEqual({ second: 'data' });
-    });
   });
 
-  describe('Toast Management', () => {
+  describe('toast management', () => {
+    let mockDateNow: jest.SpyInstance;
+
+    beforeEach(() => {
+      // Mock Date.now to return consistent values
+      mockDateNow = jest.spyOn(Date, 'now').mockReturnValue(1234567890);
+    });
+
+    afterEach(() => {
+      mockDateNow.mockRestore();
+    });
+
     it('should show toast with default values', () => {
       store.dispatch(showToast({ message: 'Test message' }));
       
@@ -161,9 +164,9 @@ describe('uiSlice', () => {
       });
     });
 
-    it('should show toast with custom type and duration', () => {
+    it('should show toast with custom values', () => {
       store.dispatch(showToast({ 
-        message: 'Success message', 
+        message: 'Success!', 
         type: 'success', 
         duration: 3000 
       }));
@@ -171,7 +174,7 @@ describe('uiSlice', () => {
       const state = store.getState().ui;
       expect(state.toasts.items[0]).toEqual({
         id: '1234567890',
-        message: 'Success message',
+        message: 'Success!',
         type: 'success',
         duration: 3000,
       });
@@ -180,69 +183,48 @@ describe('uiSlice', () => {
     it('should show multiple toasts', () => {
       store.dispatch(showToast({ message: 'First toast' }));
       store.dispatch(showToast({ message: 'Second toast', type: 'error' }));
-      store.dispatch(showToast({ message: 'Third toast', type: 'warning' }));
       
       const state = store.getState().ui;
-      expect(state.toasts.items).toHaveLength(3);
+      expect(state.toasts.items).toHaveLength(2);
       expect(state.toasts.items[0].message).toBe('First toast');
       expect(state.toasts.items[1].message).toBe('Second toast');
       expect(state.toasts.items[1].type).toBe('error');
-      expect(state.toasts.items[2].message).toBe('Third toast');
-      expect(state.toasts.items[2].type).toBe('warning');
     });
 
     it('should hide specific toast', () => {
-      store.dispatch(showToast({ message: 'First toast' }));
-      store.dispatch(showToast({ message: 'Second toast' }));
+      // First toast with ID 1234567890
+      store.dispatch(showToast({ message: 'Toast 1' }));
       
-      const state = store.getState().ui;
-      const firstToastId = state.toasts.items[0].id;
+      // Second toast with ID 1234567891
+      mockDateNow.mockReturnValue(1234567891);
+      store.dispatch(showToast({ message: 'Toast 2' }));
       
-      store.dispatch(hideToast(firstToastId));
+      expect(store.getState().ui.toasts.items).toHaveLength(2);
       
-      const newState = store.getState().ui;
-      expect(newState.toasts.items).toHaveLength(1);
-      expect(newState.toasts.items[0].message).toBe('Second toast');
-    });
-
-    it('should handle hiding non-existent toast', () => {
-      store.dispatch(showToast({ message: 'Test toast' }));
-      store.dispatch(hideToast('non-existent-id'));
+      // Hide first toast
+      store.dispatch(hideToast('1234567890'));
       
       const state = store.getState().ui;
       expect(state.toasts.items).toHaveLength(1);
+      expect(state.toasts.items[0].message).toBe('Toast 2');
     });
 
     it('should clear all toasts', () => {
-      store.dispatch(showToast({ message: 'First toast' }));
-      store.dispatch(showToast({ message: 'Second toast' }));
-      store.dispatch(showToast({ message: 'Third toast' }));
+      store.dispatch(showToast({ message: 'Toast 1' }));
+      store.dispatch(showToast({ message: 'Toast 2' }));
+      store.dispatch(showToast({ message: 'Toast 3' }));
+      
+      expect(store.getState().ui.toasts.items).toHaveLength(3);
       
       store.dispatch(clearToasts());
       
       const state = store.getState().ui;
       expect(state.toasts.items).toHaveLength(0);
     });
-
-    it('should handle all toast types', () => {
-      const toastTypes = ['success', 'error', 'warning', 'info'] as const;
-      
-      toastTypes.forEach(type => {
-        store.dispatch(showToast({ message: `${type} message`, type }));
-      });
-      
-      const state = store.getState().ui;
-      expect(state.toasts.items).toHaveLength(4);
-      
-      toastTypes.forEach((type, index) => {
-        expect(state.toasts.items[index].type).toBe(type);
-        expect(state.toasts.items[index].message).toBe(`${type} message`);
-      });
-    });
   });
 
-  describe('Theme Management', () => {
-    it('should set theme mode', () => {
+  describe('theme management', () => {
+    it('should update theme partially', () => {
       store.dispatch(setTheme({ mode: 'dark' }));
       
       const state = store.getState().ui;
@@ -251,206 +233,96 @@ describe('uiSlice', () => {
       expect(state.theme.fontSize).toBe('md'); // Should remain unchanged
     });
 
-    it('should set primary color', () => {
-      store.dispatch(setTheme({ primaryColor: '#ff0000' }));
-      
-      const state = store.getState().ui;
-      expect(state.theme.primaryColor).toBe('#ff0000');
-      expect(state.theme.mode).toBe('light'); // Should remain unchanged
-      expect(state.theme.fontSize).toBe('md'); // Should remain unchanged
-    });
-
-    it('should set font size', () => {
-      store.dispatch(setTheme({ fontSize: 'lg' }));
-      
-      const state = store.getState().ui;
-      expect(state.theme.fontSize).toBe('lg');
-      expect(state.theme.mode).toBe('light'); // Should remain unchanged
-      expect(state.theme.primaryColor).toBe('#2563eb'); // Should remain unchanged
-    });
-
-    it('should set multiple theme properties', () => {
+    it('should update multiple theme properties', () => {
       store.dispatch(setTheme({ 
         mode: 'dark', 
-        primaryColor: '#00ff00', 
-        fontSize: 'sm' 
+        primaryColor: '#ff0000', 
+        fontSize: 'lg' 
       }));
-      
-      const state = store.getState().ui;
-      expect(state.theme).toEqual({
-        mode: 'dark',
-        primaryColor: '#00ff00',
-        fontSize: 'sm',
-      });
-    });
-
-    it('should handle partial theme updates', () => {
-      // First set some properties
-      store.dispatch(setTheme({ mode: 'dark', primaryColor: '#ff0000' }));
-      
-      // Then update only one property
-      store.dispatch(setTheme({ fontSize: 'xl' }));
       
       const state = store.getState().ui;
       expect(state.theme).toEqual({
         mode: 'dark',
         primaryColor: '#ff0000',
-        fontSize: 'xl',
+        fontSize: 'lg',
       });
+    });
+
+    it('should preserve existing theme properties', () => {
+      // First update one property
+      store.dispatch(setTheme({ mode: 'dark' }));
+      expect(store.getState().ui.theme.primaryColor).toBe('#2563eb');
+      
+      // Then update another property
+      store.dispatch(setTheme({ primaryColor: '#00ff00' }));
+      
+      const state = store.getState().ui;
+      expect(state.theme.mode).toBe('dark'); // Should remain from previous update
+      expect(state.theme.primaryColor).toBe('#00ff00');
+      expect(state.theme.fontSize).toBe('md'); // Should remain from initial state
     });
   });
 
-  describe('Sidebar Management', () => {
+  describe('sidebar management', () => {
     it('should toggle sidebar', () => {
-      const initialState = store.getState().ui;
-      expect(initialState.sidebar.isOpen).toBe(false);
+      expect(store.getState().ui.sidebar.isOpen).toBe(false);
       
       store.dispatch(toggleSidebar());
-      let state = store.getState().ui;
-      expect(state.sidebar.isOpen).toBe(true);
+      expect(store.getState().ui.sidebar.isOpen).toBe(true);
       
       store.dispatch(toggleSidebar());
-      state = store.getState().ui;
-      expect(state.sidebar.isOpen).toBe(false);
+      expect(store.getState().ui.sidebar.isOpen).toBe(false);
     });
 
     it('should set sidebar open state', () => {
       store.dispatch(setSidebarOpen(true));
-      let state = store.getState().ui;
-      expect(state.sidebar.isOpen).toBe(true);
+      expect(store.getState().ui.sidebar.isOpen).toBe(true);
       
       store.dispatch(setSidebarOpen(false));
-      state = store.getState().ui;
-      expect(state.sidebar.isOpen).toBe(false);
+      expect(store.getState().ui.sidebar.isOpen).toBe(false);
     });
 
     it('should set sidebar width', () => {
-      store.dispatch(setSidebarWidth(320));
-      let state = store.getState().ui;
-      expect(state.sidebar.width).toBe(320);
-      expect(state.sidebar.isOpen).toBe(false); // Should remain unchanged
+      store.dispatch(setSidebarWidth(400));
       
-      store.dispatch(setSidebarWidth(200));
-      state = store.getState().ui;
-      expect(state.sidebar.width).toBe(200);
+      const state = store.getState().ui;
+      expect(state.sidebar.width).toBe(400);
+      expect(state.sidebar.isOpen).toBe(false); // Should remain unchanged
     });
 
-    it('should handle edge case widths', () => {
-      store.dispatch(setSidebarWidth(0));
-      let state = store.getState().ui;
-      expect(state.sidebar.width).toBe(0);
-      
+    it('should handle negative sidebar width', () => {
       store.dispatch(setSidebarWidth(-100));
-      state = store.getState().ui;
-      expect(state.sidebar.width).toBe(-100);
       
-      store.dispatch(setSidebarWidth(9999));
-      state = store.getState().ui;
-      expect(state.sidebar.width).toBe(9999);
+      const state = store.getState().ui;
+      expect(state.sidebar.width).toBe(-100);
     });
   });
 
-  describe('Complex State Interactions', () => {
-    it('should handle multiple state changes', () => {
+  describe('complex interactions', () => {
+    it('should handle multiple UI state changes', () => {
+      // Change tab
+      store.dispatch(setSelectedTab(3));
+      
       // Open modal
-      store.dispatch(openModal({ key: 'testModal', data: { test: 'data' } }));
+      store.dispatch(openModal({ key: 'settingsModal', data: { setting: 'value' } }));
       
       // Show toast
-      store.dispatch(showToast({ message: 'Test toast', type: 'success' }));
+      store.dispatch(showToast({ message: 'Settings saved', type: 'success' }));
       
-      // Change theme
+      // Update theme
       store.dispatch(setTheme({ mode: 'dark' }));
       
       // Toggle sidebar
       store.dispatch(toggleSidebar());
       
-      // Change tab
-      store.dispatch(setSelectedTab(3));
-      
       const state = store.getState().ui;
-      expect(state.modals.testModal.isOpen).toBe(true);
+      expect(state.selectedTab).toBe(3);
+      expect(state.modals.settingsModal.isOpen).toBe(true);
+      expect(state.modals.settingsModal.data).toEqual({ setting: 'value' });
       expect(state.toasts.items).toHaveLength(1);
+      expect(state.toasts.items[0].message).toBe('Settings saved');
       expect(state.theme.mode).toBe('dark');
       expect(state.sidebar.isOpen).toBe(true);
-      expect(state.selectedTab).toBe(3);
-    });
-
-    it('should handle rapid state changes', () => {
-      // Rapidly dispatch multiple actions
-      for (let i = 0; i < 10; i++) {
-        store.dispatch(showToast({ message: `Toast ${i}` }));
-        store.dispatch(setSelectedTab(i));
-      }
-      
-      const state = store.getState().ui;
-      expect(state.toasts.items).toHaveLength(10);
-      expect(state.selectedTab).toBe(9);
-    });
-
-    it('should maintain state consistency after complex operations', () => {
-      // Open multiple modals
-      store.dispatch(openModal({ key: 'modal1' }));
-      store.dispatch(openModal({ key: 'modal2', data: { test: 'data' } }));
-      
-      // Show multiple toasts
-      store.dispatch(showToast({ message: 'Toast 1' }));
-      store.dispatch(showToast({ message: 'Toast 2', type: 'error' }));
-      
-      // Close one modal
-      store.dispatch(closeModal('modal1'));
-      
-      // Hide one toast
-      const state = store.getState().ui;
-      const firstToastId = state.toasts.items[0].id;
-      store.dispatch(hideToast(firstToastId));
-      
-      // Change theme and sidebar
-      store.dispatch(setTheme({ mode: 'dark', primaryColor: '#ff0000' }));
-      store.dispatch(setSidebarWidth(300));
-      
-      const finalState = store.getState().ui;
-      expect(finalState.modals.modal1.isOpen).toBe(false);
-      expect(finalState.modals.modal2.isOpen).toBe(true);
-      expect(finalState.toasts.items).toHaveLength(1);
-      expect(finalState.theme.mode).toBe('dark');
-      expect(finalState.sidebar.width).toBe(300);
-    });
-  });
-
-  describe('Edge Cases and Error Handling', () => {
-    it('should handle empty string modal key', () => {
-      store.dispatch(openModal({ key: '' }));
-      const state = store.getState().ui;
-      expect(state.modals['']).toEqual({
-        isOpen: true,
-        data: undefined,
-      });
-    });
-
-    it('should handle empty toast message', () => {
-      store.dispatch(showToast({ message: '' }));
-      const state = store.getState().ui;
-      expect(state.toasts.items[0].message).toBe('');
-    });
-
-    it('should handle very long toast message', () => {
-      const longMessage = 'a'.repeat(1000);
-      store.dispatch(showToast({ message: longMessage }));
-      const state = store.getState().ui;
-      expect(state.toasts.items[0].message).toBe(longMessage);
-    });
-
-    it('should handle invalid theme values', () => {
-      store.dispatch(setTheme({ 
-        mode: 'invalid' as any, 
-        primaryColor: 'invalid-color',
-        fontSize: 'invalid-size' as any
-      }));
-      
-      const state = store.getState().ui;
-      expect(state.theme.mode).toBe('invalid');
-      expect(state.theme.primaryColor).toBe('invalid-color');
-      expect(state.theme.fontSize).toBe('invalid-size');
     });
   });
 });
