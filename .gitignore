@@ -129,3 +129,6 @@ Thumbs.db
 
 # Yarn Integrity file
 .yarn-integrity
+
+# Generated documentation
+delayguard-app/docs/
