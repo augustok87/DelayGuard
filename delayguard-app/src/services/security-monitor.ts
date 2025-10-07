@@ -79,17 +79,67 @@ export interface SecurityMetrics {
 
 /**
  * World-Class Security Monitor
- * Real-time threat detection and response system
+ * 
+ * A comprehensive real-time threat detection and response system that provides
+ * enterprise-grade security monitoring for the DelayGuard application. This
+ * system implements advanced threat detection algorithms, real-time event
+ * processing, and automated response mechanisms.
+ * 
+ * @class SecurityMonitor
+ * @extends EventEmitter
+ * @since 1.0.0
+ * @version 1.0.0
+ * 
+ * @example
+ * ```typescript
+ * const securityMonitor = new SecurityMonitor();
+ * securityMonitor.startMonitoring();
+ * 
+ * // Listen for security alerts
+ * securityMonitor.on('threatDetected', (alert) => {
+ *   console.log('Security threat detected:', alert);
+ * });
+ * ```
+ * 
+ * @see {@link SecurityEvent} for event structure
+ * @see {@link ThreatDetectionRule} for rule configuration
+ * @see {@link SecurityAlert} for alert structure
  */
 export class SecurityMonitor extends EventEmitter {
+  /** Map of active threat detection rules */
   private rules: Map<string, ThreatDetectionRule> = new Map();
+  
+  /** Map of active security alerts */
   private alerts: Map<string, SecurityAlert> = new Map();
+  
+  /** Current security metrics and statistics */
   private metrics: SecurityMetrics;
+  
+  /** Historical security events for pattern analysis */
   private eventHistory: SecurityEvent[] = [];
+  
+  /** Set of blocked IP addresses */
   private blockedIPs: Set<string> = new Set();
+  
+  /** Rate limit overrides for specific IPs */
   private rateLimitOverrides: Map<string, number> = new Map();
+  
+  /** Whether monitoring is currently active */
   private isMonitoring: boolean = false;
 
+  /**
+   * Creates a new SecurityMonitor instance
+   * 
+   * Initializes the security monitoring system with default threat detection
+   * rules and metrics collection. The monitor starts in a stopped state and
+   * must be explicitly started using {@link SecurityMonitor#startMonitoring}.
+   * 
+   * @constructor
+   * @example
+   * ```typescript
+   * const monitor = new SecurityMonitor();
+   * ```
+   */
   constructor() {
     super();
     this.metrics = this.initializeMetrics();
@@ -97,7 +147,24 @@ export class SecurityMonitor extends EventEmitter {
   }
 
   /**
-   * Start security monitoring
+   * Starts the security monitoring system
+   * 
+   * Activates real-time threat detection and begins processing security events.
+   * Once started, the monitor will evaluate all incoming security events against
+   * configured threat detection rules and trigger appropriate responses.
+   * 
+   * @method startMonitoring
+   * @public
+   * @since 1.0.0
+   * 
+   * @example
+   * ```typescript
+   * const monitor = new SecurityMonitor();
+   * monitor.startMonitoring();
+   * ```
+   * 
+   * @fires SecurityMonitor#monitoringStarted
+   * @returns {void}
    */
   startMonitoring(): void {
     this.isMonitoring = true;
@@ -106,7 +173,22 @@ export class SecurityMonitor extends EventEmitter {
   }
 
   /**
-   * Stop security monitoring
+   * Stops the security monitoring system
+   * 
+   * Deactivates threat detection and stops processing new security events.
+   * Existing alerts remain active until manually resolved.
+   * 
+   * @method stopMonitoring
+   * @public
+   * @since 1.0.0
+   * 
+   * @example
+   * ```typescript
+   * monitor.stopMonitoring();
+   * ```
+   * 
+   * @fires SecurityMonitor#monitoringStopped
+   * @returns {void}
    */
   stopMonitoring(): void {
     this.isMonitoring = false;
@@ -115,31 +197,101 @@ export class SecurityMonitor extends EventEmitter {
   }
 
   /**
-   * Process security event for threat detection
+   * Processes a security event for threat detection
+   * 
+   * Analyzes the provided security event against all configured threat detection
+   * rules. If a threat is detected, appropriate alerts are generated and response
+   * actions are triggered.
+   * 
+   * @method processSecurityEvent
+   * @public
+   * @async
+   * @since 1.0.0
+   * 
+   * @param {SecurityEvent} event - The security event to process
+   * 
+   * @example
+   * ```typescript
+   * const event: SecurityEvent = {
+   *   type: SecurityEventType.AUTHENTICATION_FAILURE,
+   *   ip: '192.168.1.100',
+   *   userAgent: 'Mozilla/5.0...',
+   *   timestamp: new Date(),
+   *   riskScore: 75
+   * };
+   * 
+   * await monitor.processSecurityEvent(event);
+   * ```
+   * 
+   * @fires SecurityMonitor#threatDetected When a threat is identified
+   * @fires SecurityMonitor#eventProcessed When an event is processed
+   * 
+   * @returns {Promise<void>} Resolves when event processing is complete
+   * 
+   * @throws {Error} If event processing fails
    */
   async processSecurityEvent(event: SecurityEvent): Promise<void> {
     if (!this.isMonitoring) return;
 
-    // Add to event history
-    this.eventHistory.push(event);
-    this.updateMetrics(event);
+    try {
+      // Add to event history
+      this.eventHistory.push(event);
+      this.updateMetrics(event);
 
-    // Check against all rules
-    for (const rule of this.rules.values()) {
-      if (this.shouldEvaluateRule(rule, event)) {
-        const isTriggered = await this.evaluateRule(rule, event);
-        if (isTriggered) {
-          await this.triggerRule(rule, event);
+      // Check against all rules
+      for (const rule of this.rules.values()) {
+        if (this.shouldEvaluateRule(rule, event)) {
+          const isTriggered = await this.evaluateRule(rule, event);
+          if (isTriggered) {
+            await this.triggerRule(rule, event);
+          }
         }
       }
-    }
 
-    // Cleanup old events
-    this.cleanupEventHistory();
+      // Cleanup old events
+      this.cleanupEventHistory();
+      
+      this.emit('eventProcessed', event);
+    } catch (error) {
+      console.error('Error processing security event:', error);
+      throw error;
+    }
   }
 
   /**
-   * Add custom threat detection rule
+   * Adds a custom threat detection rule
+   * 
+   * Registers a new threat detection rule that will be evaluated against all
+   * incoming security events. Rules define conditions that, when met, trigger
+   * security alerts and response actions.
+   * 
+   * @method addRule
+   * @public
+   * @since 1.0.0
+   * 
+   * @param {ThreatDetectionRule} rule - The threat detection rule to add
+   * 
+   * @example
+   * ```typescript
+   * const rule: ThreatDetectionRule = {
+   *   id: 'custom_rule_1',
+   *   name: 'Custom Threat Detection',
+   *   description: 'Detects custom threat patterns',
+   *   enabled: true,
+   *   severity: SecuritySeverity.HIGH,
+   *   conditions: [
+   *     { field: 'type', operator: 'equals', value: SecurityEventType.SUSPICIOUS_ACTIVITY }
+   *   ],
+   *   actions: [
+   *     { type: 'alert', config: { title: 'Custom threat detected' } }
+   *   ]
+   * };
+   * 
+   * monitor.addRule(rule);
+   * ```
+   * 
+   * @fires SecurityMonitor#ruleAdded When a rule is successfully added
+   * @returns {void}
    */
   addRule(rule: ThreatDetectionRule): void {
     this.rules.set(rule.id, rule);
