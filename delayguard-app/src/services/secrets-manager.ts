@@ -443,6 +443,110 @@ export class SecretsManager extends EventEmitter {
 }
 
 /**
+ * Secret Utilities
+ */
+export class SecretUtils {
+  /**
+   * Generate a secure database password
+   */
+  static generateDatabasePassword(length: number = 16): string {
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*';
+    const allChars = uppercase + lowercase + numbers + special;
+    
+    let password = '';
+    
+    // Ensure at least one character from each category
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += special[Math.floor(Math.random() * special.length)];
+    
+    // Fill the rest with random characters
+    for (let i = 4; i < length; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+    
+    // Shuffle the password
+    return password.split('').sort(() => Math.random() - 0.5).join('');
+  }
+
+  /**
+   * Generate a secure API key
+   */
+  static generateAPIKey(length: number = 32): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let key = '';
+    for (let i = 0; i < length; i++) {
+      key += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return key;
+  }
+
+  /**
+   * Generate secure random secret
+   */
+  static generateSecret(length: number = 32): string {
+    return crypto.randomBytes(length).toString('hex');
+  }
+
+  /**
+   * Generate API key (alias for generateAPIKey)
+   */
+  static generateApiKey(): string {
+    return `sk_${crypto.randomBytes(32).toString('hex')}`;
+  }
+
+  /**
+   * Generate JWT secret (alias for generateJWTSecret)
+   */
+  static generateJwtSecret(): string {
+    return this.generateJWTSecret();
+  }
+
+  /**
+   * Generate a JWT secret
+   */
+  static generateJWTSecret(): string {
+    return crypto.randomBytes(64).toString('hex');
+  }
+
+  /**
+   * Validate secret strength
+   */
+  static validateSecretStrength(secret: string): { isStrong: boolean; score: number; suggestions: string[] } {
+    let score = 0;
+    const suggestions: string[] = [];
+
+    if (secret.length >= 8) score += 1;
+    else suggestions.push('Use at least 8 characters');
+
+    if (secret.length >= 12) score += 1;
+    else suggestions.push('Use 12+ characters for better security');
+
+    if (/[A-Z]/.test(secret)) score += 1;
+    else suggestions.push('Include uppercase letters');
+
+    if (/[a-z]/.test(secret)) score += 1;
+    else suggestions.push('Include lowercase letters');
+
+    if (/[0-9]/.test(secret)) score += 1;
+    else suggestions.push('Include numbers');
+
+    if (/[!@#$%^&*]/.test(secret)) score += 1;
+    else suggestions.push('Include special characters');
+
+    return {
+      isStrong: score >= 4,
+      score,
+      suggestions
+    };
+  }
+}
+
+/**
  * Secrets Manager Factory
  */
 export class SecretsManagerFactory {
@@ -477,75 +581,3 @@ export class SecretsManagerFactory {
   }
 }
 
-/**
- * Secret Utilities
- */
-export class SecretUtils {
-  /**
-   * Generate secure random secret
-   */
-  static generateSecret(length: number = 32): string {
-    return crypto.randomBytes(length).toString('hex');
-  }
-
-  /**
-   * Generate API key
-   */
-  static generateApiKey(): string {
-    return `sk_${crypto.randomBytes(32).toString('hex')}`;
-  }
-
-  /**
-   * Generate JWT secret
-   */
-  static generateJwtSecret(): string {
-    return crypto.randomBytes(64).toString('base64');
-  }
-
-  /**
-   * Generate database password
-   */
-  static generateDatabasePassword(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let password = '';
-    
-    for (let i = 0; i < 16; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    
-    return password;
-  }
-
-  /**
-   * Validate secret strength
-   */
-  static validateSecretStrength(secret: string): {
-    isStrong: boolean;
-    score: number;
-    suggestions: string[];
-  } {
-    let score = 0;
-    const suggestions: string[] = [];
-
-    if (secret.length >= 12) score += 2;
-    else suggestions.push('Use at least 12 characters');
-
-    if (/[a-z]/.test(secret)) score += 1;
-    else suggestions.push('Include lowercase letters');
-
-    if (/[A-Z]/.test(secret)) score += 1;
-    else suggestions.push('Include uppercase letters');
-
-    if (/[0-9]/.test(secret)) score += 1;
-    else suggestions.push('Include numbers');
-
-    if (/[^a-zA-Z0-9]/.test(secret)) score += 1;
-    else suggestions.push('Include special characters');
-
-    return {
-      isStrong: score >= 4,
-      score,
-      suggestions
-    };
-  }
-}

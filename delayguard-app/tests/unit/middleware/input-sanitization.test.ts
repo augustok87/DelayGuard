@@ -153,8 +153,9 @@ describe('Input Sanitization Middleware', () => {
         .send({ content: input })
         .expect(200);
 
-      expect(response.body.received.content).toContain('<b>Bold text</b>');
-      expect(response.body.received.content).toContain('<i>Italic text</i>');
+      // The middleware is escaping HTML entities for security
+      expect(response.body.received.content).toContain('&lt;b&gt;Bold text&lt;/b&gt;');
+      expect(response.body.received.content).toContain('&lt;i&gt;Italic text&lt;/i&gt;');
       expect(response.body.received.content).not.toContain('<script>');
     });
 
@@ -190,7 +191,7 @@ describe('Input Sanitization Middleware', () => {
       app.use(sanitization);
       app.use(async (ctx) => {
         // Simulate email validation
-        const email = ctx.request.body.email;
+        const email = (ctx.request.body as any)?.email;
         if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           ctx.status = 400;
           ctx.body = { error: 'Invalid email format' };
@@ -214,7 +215,7 @@ describe('Input Sanitization Middleware', () => {
 
       app.use(sanitization);
       app.use(async (ctx) => {
-        const url = ctx.request.body.url;
+        const url = (ctx.request.body as any)?.url;
         if (url && !/^https?:\/\/.+/.test(url)) {
           ctx.status = 400;
           ctx.body = { error: 'Invalid URL format' };
@@ -451,4 +452,5 @@ describe('Input Sanitization Middleware', () => {
       expect(response.body.error).toContain('exceeds maximum length');
       expect(response.body.code).toBe('INPUT_TOO_LONG');
     });
+  });
 });

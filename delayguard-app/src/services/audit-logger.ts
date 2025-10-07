@@ -293,6 +293,13 @@ export class AuditLogger extends EventEmitter {
   }
 
   /**
+   * Public method to manually flush events
+   */
+  public async flush(): Promise<void> {
+    await this.flushEvents();
+  }
+
+  /**
    * Flush events to all configured outputs
    */
   private async flushEvents(): Promise<void> {
@@ -332,7 +339,9 @@ export class AuditLogger extends EventEmitter {
    */
   private startFlushTimer(): void {
     this.flushTimer = setInterval(() => {
-      this.flushEvents();
+      this.flushEvents().catch(error => {
+        console.error('Failed to flush events in timer:', error);
+      });
     }, this.config.flushInterval);
   }
 

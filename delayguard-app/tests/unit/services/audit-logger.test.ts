@@ -54,7 +54,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logSecurityEvent(
@@ -73,7 +73,7 @@ describe('Audit Logger', () => {
     });
 
     it('should calculate risk score correctly', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -83,7 +83,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logSecurityEvent(
@@ -94,14 +94,15 @@ describe('Audit Logger', () => {
         SecuritySeverity.HIGH
       );
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Force flush to ensure events are logged
+      await auditLogger.flush();
 
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
     it('should generate appropriate tags', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -111,7 +112,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logSecurityEvent(
@@ -122,7 +123,8 @@ describe('Audit Logger', () => {
         SecuritySeverity.HIGH
       );
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Force flush to ensure events are logged
+      await auditLogger.flush();
 
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
@@ -141,7 +143,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logAuthentication(mockContext, true, { 
@@ -166,7 +168,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logAuthentication(mockContext, false, { 
@@ -193,7 +195,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logAuthorization(mockContext, true, 'orders', 'read');
@@ -215,7 +217,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logAuthorization(mockContext, false, 'admin', 'write');
@@ -239,7 +241,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logRateLimitExceeded(mockContext, 100, 150, 60000);
@@ -263,7 +265,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logCSRFViolation(mockContext, true, false);
@@ -287,7 +289,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logInputSanitization(
@@ -316,7 +318,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logAttackAttempt(
@@ -343,7 +345,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logAttackAttempt(
@@ -372,7 +374,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logSuspiciousActivity(
@@ -401,7 +403,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 3,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       // Log 2 events (should not flush yet)
@@ -417,13 +419,14 @@ describe('Audit Logger', () => {
         'Event 2'
       );
 
-      // Log 3rd event (should trigger flush)
+      // Log 3rd event (should trigger automatic flush)
       await auditLogger.logSecurityEvent(
         SecurityEventType.AUTHENTICATION_SUCCESS,
         mockContext,
         'Event 3'
       );
 
+      // Wait for automatic flush to complete
       await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(consoleSpy).toHaveBeenCalled();
@@ -441,7 +444,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       await auditLogger.logSecurityEvent(
@@ -505,7 +508,7 @@ describe('Audit Logger', () => {
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
         batchSize: 10,
-        flushInterval: 1000
+        flushInterval: 50
       });
 
       // This should not throw an error

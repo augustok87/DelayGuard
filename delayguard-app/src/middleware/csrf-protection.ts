@@ -48,17 +48,17 @@ export class CSRFProtectionMiddleware {
    * Apply CSRF protection middleware
    */
   async apply(ctx: Context, next: Next): Promise<void> {
-    // Skip CSRF check for excluded methods and paths
-    if (this.shouldSkipCSRFCheck(ctx)) {
-      await next();
-      return;
-    }
-
     // Generate and set CSRF token for GET requests
     if (ctx.method === 'GET') {
       const token = this.generateToken();
       this.setCSRFCookie(ctx, token);
       ctx.state.csrfToken = token;
+      await next();
+      return;
+    }
+
+    // Skip CSRF check for excluded methods and paths
+    if (this.shouldSkipCSRFCheck(ctx)) {
       await next();
       return;
     }
@@ -103,7 +103,7 @@ export class CSRFProtectionMiddleware {
   private validateToken(ctx: Context): boolean {
     const cookieToken = ctx.cookies.get(this.config.cookieName!);
     const headerToken = ctx.get(this.config.headerName!);
-    const bodyToken = (ctx.request.body as any)?.csrfToken;
+    const bodyToken = (ctx.request as any).body?.csrfToken;
 
     // Token can be in header or body
     const providedToken = headerToken || bodyToken;
@@ -113,6 +113,11 @@ export class CSRFProtectionMiddleware {
     }
 
     // Use constant-time comparison to prevent timing attacks
+    // Ensure both tokens are the same length to avoid timing attacks
+    if (cookieToken.length !== providedToken.length) {
+      return false;
+    }
+    
     return crypto.timingSafeEqual(
       Buffer.from(cookieToken, 'utf8'),
       Buffer.from(providedToken, 'utf8')
@@ -123,8 +128,8 @@ export class CSRFProtectionMiddleware {
    * Check if CSRF check should be skipped
    */
   private shouldSkipCSRFCheck(ctx: Context): boolean {
-    // Skip for excluded methods
-    if (this.config.excludedMethods!.includes(ctx.method)) {
+    // Skip for excluded methods (but not GET - GET needs token generation)
+    if (this.config.excludedMethods!.includes(ctx.method) && ctx.method !== 'GET') {
       return true;
     }
 

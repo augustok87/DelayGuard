@@ -1,25 +1,33 @@
-// Mock Pool class properly
+// Mock Pool class with proper Jest mock implementation
 class MockPool {
   constructor(config) {
     this.config = config;
     this.connected = false;
+    this.clients = [];
   }
 
   async connect() {
     this.connected = true;
-    return {
-      query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
-      release: jest.fn(),
-      end: jest.fn()
-    };
+    const client = new MockClient(this.config);
+    this.clients.push(client);
+    return client;
   }
 
   async query(text, params) {
-    return { rows: [], rowCount: 0 };
+    // Mock query execution
+    return { 
+      rows: [], 
+      rowCount: 0,
+      command: 'SELECT',
+      oid: null,
+      fields: []
+    };
   }
 
   async end() {
     this.connected = false;
+    this.clients.forEach(client => client.end());
+    this.clients = [];
     return Promise.resolve();
   }
 
@@ -37,6 +45,7 @@ class MockClient {
   constructor(config) {
     this.config = config;
     this.connected = false;
+    this.queries = [];
   }
 
   async connect() {
@@ -45,7 +54,61 @@ class MockClient {
   }
 
   async query(text, params) {
-    return { rows: [], rowCount: 0 };
+    this.queries.push({ text, params });
+    
+    // Mock different query responses based on text
+    if (text.includes('SELECT COUNT(*)')) {
+      return { 
+        rows: [{ count: '0' }], 
+        rowCount: 1,
+        command: 'SELECT',
+        oid: null,
+        fields: []
+      };
+    }
+    
+    if (text.includes('INSERT')) {
+      return { 
+        rows: [], 
+        rowCount: 1,
+        command: 'INSERT',
+        oid: null,
+        fields: []
+      };
+    }
+    
+    if (text.includes('UPDATE')) {
+      return { 
+        rows: [], 
+        rowCount: 1,
+        command: 'UPDATE',
+        oid: null,
+        fields: []
+      };
+    }
+    
+    if (text.includes('DELETE')) {
+      return { 
+        rows: [], 
+        rowCount: 1,
+        command: 'DELETE',
+        oid: null,
+        fields: []
+      };
+    }
+    
+    return { 
+      rows: [], 
+      rowCount: 0,
+      command: 'SELECT',
+      oid: null,
+      fields: []
+    };
+  }
+
+  async release() {
+    this.connected = false;
+    return Promise.resolve();
   }
 
   async end() {
@@ -62,11 +125,19 @@ class MockClient {
   }
 }
 
-module.exports = {
-  Pool: MockPool,
-  Client: MockClient,
-  default: {
-    Pool: MockPool,
-    Client: MockClient
-  }
+// Create Jest mock constructors
+const MockPoolConstructor = jest.fn().mockImplementation((config) => {
+  return new MockPool(config);
+});
+
+const MockClientConstructor = jest.fn().mockImplementation((config) => {
+  return new MockClient(config);
+});
+
+module.exports = MockPoolConstructor;
+module.exports.Pool = MockPoolConstructor;
+module.exports.Client = MockClientConstructor;
+module.exports.default = {
+  Pool: MockPoolConstructor,
+  Client: MockClientConstructor
 };

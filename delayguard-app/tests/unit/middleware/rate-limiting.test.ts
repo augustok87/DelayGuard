@@ -9,7 +9,7 @@ const MockedIORedis = IORedis as jest.MockedClass<typeof IORedis>;
 
 describe('Rate Limiting Middleware', () => {
   let app: Koa;
-  let mockRedis: jest.Mocked<IORedis>;
+  let mockRedis: any;
   let pipeline: any;
 
   beforeEach(() => {
@@ -22,15 +22,24 @@ describe('Rate Limiting Middleware', () => {
       zcard: jest.fn().mockReturnThis(),
       zadd: jest.fn().mockReturnThis(),
       expire: jest.fn().mockReturnThis(),
-      exec: jest.fn()
+      exec: jest.fn().mockResolvedValue([
+        [null, 0], // zremrangebyscore result
+        [null, 0], // zcard result
+        [null, 1], // zadd result
+        [null, 1]  // expire result
+      ])
     };
 
     mockRedis = {
       pipeline: jest.fn().mockReturnValue(pipeline),
-      zrem: jest.fn()
-    } as any;
+      zrem: jest.fn().mockResolvedValue(1),
+      zadd: jest.fn().mockResolvedValue(1),
+      zcard: jest.fn().mockResolvedValue(0),
+      expire: jest.fn().mockResolvedValue(1)
+    };
 
-    (MockedIORedis as any).mockImplementation(() => mockRedis);
+    // Mock the constructor to return our mock instance
+    MockedIORedis.mockImplementation(() => mockRedis);
   });
 
   describe('Basic Rate Limiting', () => {
