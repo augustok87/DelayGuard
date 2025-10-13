@@ -2,6 +2,9 @@
 import { jest } from '@jest/globals';
 import '@testing-library/jest-dom';
 
+// Import Web Components setup (disabled for now)
+// import './globalWebComponents';
+
 // Polyfill for Node.js environment
 import { TextEncoder, TextDecoder } from 'util';
 
