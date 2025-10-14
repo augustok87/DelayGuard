@@ -19,6 +19,13 @@ beforeAll(() => {
       this.setAttribute('role', 'button');
       this.setAttribute('tabindex', '0');
     }
+    
+    setAttribute(name: string, value: string) {
+      super.setAttribute(name, value);
+      if (name === 'class') {
+        this.className = value;
+      }
+    }
   }
   
   if (typeof window !== 'undefined' && typeof customElements !== 'undefined') {
