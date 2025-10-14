@@ -4,33 +4,32 @@
  */
 
 module.exports = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'DelayGuard API',
-      version: '1.0.0',
-      description: 'Proactive shipping delay notification API for Shopify merchants',
-      contact: {
-        name: 'DelayGuard Support',
-        email: 'support@delayguard.com',
-        url: 'https://delayguard.com'
-      },
-      license: {
-        name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT'
-      }
+  openapi: '3.0.0',
+  info: {
+    title: 'DelayGuard API',
+    version: '1.0.0',
+    description: 'Proactive shipping delay notification API for Shopify merchants',
+    contact: {
+      name: 'DelayGuard Support',
+      email: 'support@delayguard.com',
+      url: 'https://delayguard.com'
     },
-    servers: [
-      {
-        url: 'https://delayguard-api.vercel.app',
-        description: 'Production server'
-      },
-      {
-        url: 'http://localhost:3000',
-        description: 'Development server'
-      }
-    ],
-    components: {
+    license: {
+      name: 'MIT',
+      url: 'https://opensource.org/licenses/MIT'
+    }
+  },
+  servers: [
+    {
+      url: 'https://delayguard-api.vercel.app',
+      description: 'Production server'
+    },
+    {
+      url: 'http://localhost:3000',
+      description: 'Development server'
+    }
+  ],
+  components: {
       securitySchemes: {
         ShopifyAuth: {
           type: 'oauth2',
@@ -259,11 +258,10 @@ module.exports = {
         }
       }
     },
-    security: [
-      {
-        ShopifyAuth: ['read_orders', 'write_orders', 'read_fulfillments', 'write_fulfillments']
-      }
-    ]
-  },
+  security: [
+    {
+      ShopifyAuth: ['read_orders', 'write_orders', 'read_fulfillments', 'write_fulfillments']
+    }
+  ],
   apis: ['./src/routes/*.ts', './src/server.ts']
 };

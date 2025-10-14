@@ -72,7 +72,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           health: '/health',
           webhooks: '/webhooks',
           auth: '/auth',
-          monitoring: '/monitoring'
+          monitoring: '/monitoring',
+          docs: '/docs',
+          swagger: '/api/swagger.json'
         },
         configuration: {
           database: !!process.env.DATABASE_URL,
@@ -134,11 +136,80 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
+    // Handle Swagger UI endpoint
+    if (req.url === '/docs') {
+      const swaggerHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DelayGuard API Documentation</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    body {
+      margin:0;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      const ui = SwaggerUIBundle({
+        url: '/api/swagger.json',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout"
+      });
+    };
+  </script>
+</body>
+</html>`;
+      res.setHeader('Content-Type', 'text/html');
+      res.status(200).send(swaggerHtml);
+      return;
+    }
+
+    // Handle Swagger JSON endpoint
+    if (req.url === '/api/swagger.json') {
+      const fs = require('fs');
+      const path = require('path');
+      const swaggerPath = path.join(__dirname, '../docs/api/swagger.json');
+      
+      try {
+        const swaggerData = fs.readFileSync(swaggerPath, 'utf8');
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200).send(swaggerData);
+      } catch (error) {
+        res.status(404).json({ error: 'Swagger documentation not found' });
+      }
+      return;
+    }
+
     // 404 for unknown routes
     res.status(404).json({
       status: 'error',
       message: 'Endpoint not found',
-      availableEndpoints: ['/', '/health', '/webhooks', '/auth', '/monitoring']
+      availableEndpoints: ['/', '/health', '/webhooks', '/auth', '/monitoring', '/docs', '/api/swagger.json']
     });
 
   } catch (error) {

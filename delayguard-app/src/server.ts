@@ -158,6 +158,74 @@ router.use('/webhooks', webhookRoutes.routes());
 router.use('/auth', authRoutes.routes());
 router.use('/monitoring', monitoringRoutes.routes());
 
+// Swagger UI route
+router.get('/docs', async (ctx) => {
+  const swaggerHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DelayGuard API Documentation</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    body {
+      margin:0;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      const ui = SwaggerUIBundle({
+        url: '/api/swagger.json',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout"
+      });
+    };
+  </script>
+</body>
+</html>`;
+  ctx.type = 'html';
+  ctx.body = swaggerHtml;
+});
+
+// Swagger JSON route
+router.get('/api/swagger.json', async (ctx) => {
+  const fs = require('fs');
+  const path = require('path');
+  const swaggerPath = path.join(__dirname, '../docs/api/swagger.json');
+  
+  try {
+    const swaggerData = fs.readFileSync(swaggerPath, 'utf8');
+    ctx.type = 'json';
+    ctx.body = swaggerData;
+  } catch (error) {
+    ctx.status = 404;
+    ctx.body = { error: 'Swagger documentation not found' };
+  }
+});
+
 // Main app route
 // Public root route for health check
 router.get('/', async (ctx) => {
@@ -169,7 +237,9 @@ router.get('/', async (ctx) => {
       health: '/health',
       api: '/api',
       webhooks: '/webhooks',
-      auth: '/auth'
+      auth: '/auth',
+      docs: '/docs',
+      swagger: '/api/swagger.json'
     }
   };
 });
