@@ -33,6 +33,22 @@ beforeAll(() => {
       }
       return super.getAttribute(name);
     }
+
+    // Override to ensure proper button behavior
+    get role() {
+      return 'button';
+    }
+
+    get disabled() {
+      return this.hasAttribute('disabled') || this.getAttribute('aria-disabled') === 'true';
+    }
+
+    click() {
+      if (!this.disabled) {
+        const event = new CustomEvent('click', { bubbles: true });
+        this.dispatchEvent(event);
+      }
+    }
   }
   
   if (typeof window !== 'undefined' && typeof customElements !== 'undefined') {
