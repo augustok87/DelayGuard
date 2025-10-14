@@ -4,10 +4,10 @@ import { AppProvider } from './components/AppProvider';
 import { App } from './components/App';
 
 /**
- * Main entry point for DelayGuard with Web Components
+ * Main entry point for DelayGuard
  * 
- * This version removes the @shopify/polaris dependency and uses
- * our custom Web Components instead.
+ * This version uses our custom Web Components instead of @shopify/polaris
+ * for better performance and reduced bundle size.
  */
 
 const container = document.getElementById('root');

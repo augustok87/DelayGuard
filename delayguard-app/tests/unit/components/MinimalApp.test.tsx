@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MinimalApp } from '../../../src/components/MinimalApp';
 
-// Mock Shopify Polaris components
-jest.mock('@shopify/polaris', () => ({
-  Page: ({ children, title, ...props }: any) => <div data-testid="page" data-title={title} {...props}>{children}</div>,
+// Mock Web Components
+jest.mock('../../../src/components', () => ({
+  Button: ({ children, onClick, ...props }: any) => <button data-testid="button" onClick={onClick} {...props}>{children}</button>,
   Card: ({ children, title, ...props }: any) => <div data-testid="card" data-title={title} {...props}>{children}</div>,
   DataTable: ({ headings, rows, ...props }: any) => (
     <table data-testid="data-table" {...props}>
@@ -26,21 +26,8 @@ jest.mock('@shopify/polaris', () => ({
       </tbody>
     </table>
   ),
-  Button: ({ children, onClick, ...props }: any) => <button data-testid="button" onClick={onClick} {...props}>{children}</button>,
   Badge: ({ children, status, ...props }: any) => <span data-testid="badge" data-status={status} {...props}>{children}</span>,
-  TextField: ({ label, value, onChange, ...props }: any) => (
-    <div>
-      <label>{label}</label>
-      <input data-testid="text-field" value={value} onChange={(e) => onChange(e.target.value)} {...props} />
-    </div>
-  ),
-  Select: ({ options, value, onChange, ...props }: any) => (
-    <select data-testid="select" value={value} onChange={(e) => onChange(e.target.value)} {...props}>
-      {options?.map((option: any) => (
-        <option key={option.value} value={option.value}>{option.label}</option>
-      ))}
-    </select>
-  ),
+  Text: ({ children, ...props }: any) => <span data-testid="text" {...props}>{children}</span>,
   Tabs: ({ tabs, selected, onSelect, ...props }: any) => (
     <div data-testid="tabs" {...props}>
       {tabs?.map((tab: any, index: number) => (
@@ -55,12 +42,16 @@ jest.mock('@shopify/polaris', () => ({
       ))}
     </div>
   ),
-  Layout: ({ children, ...props }: any) => <div data-testid="layout" {...props}>{children}</div>,
-  Banner: ({ children, status, ...props }: any) => <div data-testid="banner" data-status={status} {...props}>{children}</div>,
+  Modal: ({ children, open, onClose, ...props }: any) => 
+    open ? <div data-testid="modal" {...props}>{children}</div> : null,
+  ResourceList: ({ children, ...props }: any) => <div data-testid="resource-list" {...props}>{children}</div>,
+  ResourceItem: ({ children, ...props }: any) => <div data-testid="resource-item" {...props}>{children}</div>,
+  Toast: ({ children, ...props }: any) => <div data-testid="toast" {...props}>{children}</div>,
   Spinner: ({ ...props }: any) => <div data-testid="spinner" {...props}>Loading...</div>,
-  Text: ({ children, ...props }: any) => <span data-testid="text" {...props}>{children}</span>,
-  BlockStack: ({ children, ...props }: any) => <div data-testid="block-stack" {...props}>{children}</div>,
-  InlineStack: ({ children, ...props }: any) => <div data-testid="inline-stack" {...props}>{children}</div>
+  EmptyState: ({ children, ...props }: any) => <div data-testid="empty-state" {...props}>{children}</div>,
+  Divider: ({ ...props }: any) => <hr data-testid="divider" {...props} />,
+  Icon: ({ source, ...props }: any) => <span data-testid="icon" data-source={source} {...props}>📦</span>,
+  Section: ({ children, ...props }: any) => <div data-testid="section" {...props}>{children}</div>
 }));
 
 // Mock CSS modules

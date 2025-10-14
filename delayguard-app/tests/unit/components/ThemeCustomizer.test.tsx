@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ThemeCustomizer from '../../../src/components/ThemeCustomizer';
 
 // Mock Shopify Polaris components
-jest.mock('@shopify/polaris', () => ({
+jest.mock('../../../src/components', () => ({
   Card: ({ children, title, ...props }: any) => <div data-testid="card" data-title={title} {...props}>{children}</div>,
   FormLayout: ({ children, ...props }: any) => <div data-testid="form-layout" {...props}>{children}</div>,
   Select: ({ options, value, onChange, ...props }: any) => (

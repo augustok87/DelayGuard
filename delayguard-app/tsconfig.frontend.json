@@ -35,13 +35,12 @@
     "src/middleware/**/*",
     "src/utils/monitoring.ts",
     "src/utils/cache.ts",
-    "src/components/AnalyticsDashboard.tsx",
-    "src/components/EnhancedDashboard.tsx",
-    "src/components/ThemeCustomizer.tsx",
     "src/components/__tests__/**/*",
     "tests/**/*",
     "node_modules",
     "dist",
-    "coverage"
+    "coverage",
+    "**/*.polaris.tsx",
+    "**/*.polaris.ts"
   ]
 }

@@ -18,7 +18,7 @@ module.exports = {
             configFile: 'tsconfig.frontend.json',
           },
         },
-        exclude: [/node_modules/, /\.test\.(ts|tsx)$/, /\.spec\.(ts|tsx)$/],
+        exclude: [/node_modules/, /\.test\.(ts|tsx)$/, /\.spec\.(ts|tsx)$/, /\.polaris\.(ts|tsx)$/],
       },
       {
         test: /\.css$/,

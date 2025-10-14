@@ -1,20 +1,14 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import {
-  Card,
-  FormLayout,
-  Select,
-  TextField,
-  ColorPicker,
-  RangeSlider,
-  Checkbox,
+  // Web Components
   Button,
-  ButtonGroup,
   Text,
+  Card,
   Divider,
-  Banner,
-  Modal
-} from '@shopify/polaris';
+  Modal,
+  Toast,
+} from './index';
 
 interface ThemeSettings {
   primaryColor: string;
@@ -28,502 +22,251 @@ interface ThemeSettings {
   fontFamily: string;
   animationSpeed: number;
   darkMode: boolean;
-  compactMode: boolean;
-  showAnimations: boolean;
-  customCSS: string;
 }
 
-interface NotificationTemplate {
-  id: string;
-  name: string;
-  subject: string;
-  body: string;
-  isDefault: boolean;
-  variables: string[];
+interface ThemeCustomizerProps {
+  onThemeChange?: (theme: ThemeSettings) => void;
+  initialTheme?: ThemeSettings;
 }
 
-function ThemeCustomizer() {
-  const [settings, setSettings] = useState<ThemeSettings>({
-    primaryColor: '#007ace',
-    secondaryColor: '#f6f6f7',
-    accentColor: '#00a047',
-    backgroundColor: '#ffffff',
-    textColor: '#202223',
-    borderRadius: 8,
-    spacing: 16,
-    fontSize: 14,
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-    animationSpeed: 300,
-    darkMode: false,
-    compactMode: false,
-    showAnimations: true,
-    customCSS: ''
-  });
+const defaultTheme: ThemeSettings = {
+  primaryColor: '#008060',
+  secondaryColor: '#6B7280',
+  accentColor: '#F59E0B',
+  backgroundColor: '#FFFFFF',
+  textColor: '#1F2937',
+  borderRadius: 8,
+  spacing: 16,
+  fontSize: 14,
+  fontFamily: 'Inter, system-ui, sans-serif',
+  animationSpeed: 200,
+  darkMode: false,
+};
 
-  const [templates, setTemplates] = useState<NotificationTemplate[]>([
-    {
-      id: 'default',
-      name: 'Default Template',
-      subject: 'Update on Your Order #{order_number}',
-      body: 'Hi {customer_name},\n\nWe wanted to let you know that your order #{order_number} is experiencing a delay in shipping.\n\nExpected delivery: {estimated_delivery_date}\nTracking number: {tracking_number}\n\nWe apologize for any inconvenience and appreciate your patience.\n\nBest regards,\n{store_name}',
-      isDefault: true,
-      variables: ['order_number', 'customer_name', 'estimated_delivery_date', 'tracking_number', 'store_name']
-    },
-    {
-      id: 'friendly',
-      name: 'Friendly Template',
-      subject: 'Hey {customer_name}! Quick update on your order 🚚',
-      body: 'Hi {customer_name}!\n\nWe hope you\'re doing well! We wanted to give you a heads up that your order #{order_number} is taking a bit longer than expected to ship.\n\nDon\'t worry though - it\'s on its way! Expected delivery: {estimated_delivery_date}\n\nYou can track it here: {tracking_url}\n\nThanks for your patience! 😊\n\n{store_name} Team',
-      isDefault: false,
-      variables: ['order_number', 'customer_name', 'estimated_delivery_date', 'tracking_url', 'store_name']
-    },
-    {
-      id: 'professional',
-      name: 'Professional Template',
-      subject: 'Order #{order_number} - Shipping Delay Notification',
-      body: 'Dear {customer_name},\n\nWe are writing to inform you that your order #{order_number} is experiencing a shipping delay.\n\nOrder Details:\n- Order Number: {order_number}\n- Expected Delivery: {estimated_delivery_date}\n- Tracking Number: {tracking_number}\n- Carrier: {carrier_name}\n\nWe apologize for any inconvenience this may cause. Our team is working diligently to resolve this matter.\n\nIf you have any questions, please don\'t hesitate to contact us.\n\nBest regards,\n{store_name} Customer Service',
-      isDefault: false,
-      variables: ['order_number', 'customer_name', 'estimated_delivery_date', 'tracking_number', 'carrier_name', 'store_name']
-    }
-  ]);
-
-  const [selectedTemplate, setSelectedTemplate] = useState('default');
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
+function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCustomizerProps) {
+  const [theme, setTheme] = useState<ThemeSettings>(initialTheme);
+  const [showModal, setShowModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    try {
-      const response = await fetch('/api/theme-settings');
-      const data = await response.json();
-      if (data.success) {
-        setSettings(data.settings);
-      }
-    } catch (error) {
-      console.error('Failed to load theme settings:', error);
+    if (onThemeChange) {
+      onThemeChange(theme);
     }
+  }, [theme, onThemeChange]);
+
+  const handleColorChange = (colorType: keyof ThemeSettings, value: string) => {
+    setTheme(prev => ({ ...prev, [colorType]: value }));
   };
 
-  const saveSettings = async () => {
-    setSaving(true);
-    try {
-      const response = await fetch('/api/theme-settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
-      });
-      
-      if (response.ok) {
-        // Apply theme changes immediately
-        applyTheme(settings);
-      }
-    } catch (error) {
-      console.error('Failed to save theme settings:', error);
-    } finally {
-      setSaving(false);
-    }
+  const handleNumberChange = (property: keyof ThemeSettings, value: number) => {
+    setTheme(prev => ({ ...prev, [property]: value }));
   };
 
-  const applyTheme = (themeSettings: ThemeSettings) => {
-    const root = document.documentElement;
-    
-    root.style.setProperty('--primary-color', themeSettings.primaryColor);
-    root.style.setProperty('--secondary-color', themeSettings.secondaryColor);
-    root.style.setProperty('--accent-color', themeSettings.accentColor);
-    root.style.setProperty('--background-color', themeSettings.backgroundColor);
-    root.style.setProperty('--text-color', themeSettings.textColor);
-    root.style.setProperty('--border-radius', `${themeSettings.borderRadius}px`);
-    root.style.setProperty('--spacing', `${themeSettings.spacing}px`);
-    root.style.setProperty('--font-size', `${themeSettings.fontSize}px`);
-    root.style.setProperty('--font-family', themeSettings.fontFamily);
-    root.style.setProperty('--animation-speed', `${themeSettings.animationSpeed}ms`);
-    
-    if (themeSettings.darkMode) {
-      root.classList.add('dark-mode');
-    } else {
-      root.classList.remove('dark-mode');
-    }
-    
-    if (themeSettings.compactMode) {
-      root.classList.add('compact-mode');
-    } else {
-      root.classList.remove('compact-mode');
-    }
-    
-    if (!themeSettings.showAnimations) {
-      root.classList.add('no-animations');
-    } else {
-      root.classList.remove('no-animations');
-    }
+  const handleBooleanChange = (property: keyof ThemeSettings, value: boolean) => {
+    setTheme(prev => ({ ...prev, [property]: value }));
   };
 
-  const resetToDefault = () => {
-    const defaultSettings: ThemeSettings = {
-      primaryColor: '#007ace',
-      secondaryColor: '#f6f6f7',
-      accentColor: '#00a047',
-      backgroundColor: '#ffffff',
-      textColor: '#202223',
-      borderRadius: 8,
-      spacing: 16,
-      fontSize: 14,
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-      animationSpeed: 300,
-      darkMode: false,
-      compactMode: false,
-      showAnimations: true,
-      customCSS: ''
-    };
-    
-    setSettings(defaultSettings);
-    applyTheme(defaultSettings);
+  const handleReset = () => {
+    setTheme(defaultTheme);
+    setToastMessage('Theme reset to defaults!');
+    setShowToast(true);
   };
 
-  const exportTheme = () => {
-    const themeData = {
-      settings,
-      templates,
-      exportedAt: new Date().toISOString(),
-      version: '1.0.0'
-    };
-    
-    const blob = new Blob([JSON.stringify(themeData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'delayguard-theme.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleSave = () => {
+    setShowModal(false);
+    setToastMessage('Theme saved successfully!');
+    setShowToast(true);
   };
 
-  const importTheme = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const themeData = JSON.parse(e.target?.result as string);
-          if (themeData.settings) {
-            setSettings(themeData.settings);
-            applyTheme(themeData.settings);
-          }
-        } catch (error) {
-          console.error('Failed to import theme:', error);
-        }
-      };
-      reader.readAsText(file);
-    }
+  const handleCloseToast = () => {
+    setShowToast(false);
   };
+
+  const renderColorPicker = (label: string, colorType: keyof ThemeSettings, value: string) => (
+    <div style={{ marginBottom: '16px' }}>
+      <Text variant="bodyMd" as="div" style={{ marginBottom: '8px' }}>{label}</Text>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => handleColorChange(colorType, e.target.value)}
+          style={{ width: '40px', height: '40px', border: 'none', borderRadius: '4px' }}
+        />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => handleColorChange(colorType, e.target.value)}
+          style={{ flex: 1, padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+        />
+      </div>
+    </div>
+  );
+
+  const renderNumberInput = (label: string, property: keyof ThemeSettings, value: number, min = 0, max = 100) => (
+    <div style={{ marginBottom: '16px' }}>
+      <Text variant="bodyMd" as="div" style={{ marginBottom: '8px' }}>{label}</Text>
+      <input
+        type="number"
+        value={value}
+        min={min}
+        max={max}
+        onChange={(e) => handleNumberChange(property, parseInt(e.target.value))}
+        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+      />
+    </div>
+  );
+
+  const renderSelect = (label: string, property: keyof ThemeSettings, value: string, options: string[]) => (
+    <div style={{ marginBottom: '16px' }}>
+      <Text variant="bodyMd" as="div" style={{ marginBottom: '8px' }}>{label}</Text>
+      <select
+        value={value}
+        onChange={(e) => setTheme(prev => ({ ...prev, [property]: e.target.value }))}
+        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+      >
+        {options.map(option => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const renderCheckbox = (label: string, property: keyof ThemeSettings, value: boolean) => (
+    <div style={{ marginBottom: '16px' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input
+          type="checkbox"
+          checked={value}
+          onChange={(e) => handleBooleanChange(property, e.target.checked)}
+        />
+        <Text variant="bodyMd" as="span">{label}</Text>
+      </label>
+    </div>
+  );
+
+  const renderModal = () => (
+    <Modal
+      open={showModal}
+      title="Theme Customizer"
+      primaryAction={{
+        content: 'Save',
+        onAction: handleSave,
+      }}
+      secondaryActions={[
+        {
+          content: 'Reset',
+          onAction: handleReset,
+        },
+        {
+          content: 'Cancel',
+          onAction: () => setShowModal(false),
+        },
+      ]}
+      onClose={() => setShowModal(false)}
+    >
+      <Modal.Section>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <Text variant="headingMd" as="h3">Colors</Text>
+          {renderColorPicker('Primary Color', 'primaryColor', theme.primaryColor)}
+          {renderColorPicker('Secondary Color', 'secondaryColor', theme.secondaryColor)}
+          {renderColorPicker('Accent Color', 'accentColor', theme.accentColor)}
+          {renderColorPicker('Background Color', 'backgroundColor', theme.backgroundColor)}
+          {renderColorPicker('Text Color', 'textColor', theme.textColor)}
+          
+          <Divider />
+          
+          <Text variant="headingMd" as="h3">Layout</Text>
+          {renderNumberInput('Border Radius (px)', 'borderRadius', theme.borderRadius, 0, 20)}
+          {renderNumberInput('Spacing (px)', 'spacing', theme.spacing, 8, 32)}
+          {renderNumberInput('Font Size (px)', 'fontSize', theme.fontSize, 12, 20)}
+          {renderSelect('Font Family', 'fontFamily', theme.fontFamily, [
+            'Inter, system-ui, sans-serif',
+            'Helvetica, Arial, sans-serif',
+            'Georgia, serif',
+            'Monaco, monospace'
+          ])}
+          {renderNumberInput('Animation Speed (ms)', 'animationSpeed', theme.animationSpeed, 100, 500)}
+          
+          <Divider />
+          
+          <Text variant="headingMd" as="h3">Preferences</Text>
+          {renderCheckbox('Dark Mode', 'darkMode', theme.darkMode)}
+        </div>
+      </Modal.Section>
+    </Modal>
+  );
 
   return (
-    <div style={{ padding: '20px' }}>
-      <Text variant="headingLg" as="h1">Theme Customizer</Text>
-      <Text variant="bodyMd" tone="subdued" as="p">
-        Customize the appearance and behavior of your DelayGuard dashboard
-      </Text>
-
-      <div style={{ marginTop: '20px' }}>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <Card>
-            <div style={{ padding: '16px' }}>
-              <Text variant="headingMd" as="h3">Color Scheme</Text>
-            <FormLayout>
-              <FormLayout.Group>
-                <Text variant="bodyMd" as="span">Primary Color</Text>
-                <ColorPicker
-                  color={{ hue: 0, saturation: 0, brightness: 0, alpha: 1 }}
-                  onChange={(color) => setSettings({ ...settings, primaryColor: color.toString() })}
-                />
-              </FormLayout.Group>
-              
-              <FormLayout.Group>
-                <Text variant="bodyMd" as="span">Secondary Color</Text>
-                <ColorPicker
-                  color={{ hue: 0, saturation: 0, brightness: 0, alpha: 1 }}
-                  onChange={(color) => setSettings({ ...settings, secondaryColor: color.toString() })}
-                />
-              </FormLayout.Group>
-              
-              <FormLayout.Group>
-                <Text variant="bodyMd" as="span">Accent Color</Text>
-                <ColorPicker
-                  color={{ hue: 0, saturation: 0, brightness: 0, alpha: 1 }}
-                  onChange={(color) => setSettings({ ...settings, accentColor: color.toString() })}
-                />
-              </FormLayout.Group>
-              
-              <FormLayout.Group>
-                <Text variant="bodyMd" as="span">Background Color</Text>
-                <ColorPicker
-                  color={{ hue: 0, saturation: 0, brightness: 0, alpha: 1 }}
-                  onChange={(color) => setSettings({ ...settings, backgroundColor: color.toString() })}
-                />
-              </FormLayout.Group>
-              
-              <FormLayout.Group>
-                <Text variant="bodyMd" as="span">Text Color</Text>
-                <ColorPicker
-                  color={{ hue: 0, saturation: 0, brightness: 0, alpha: 1 }}
-                  onChange={(color) => setSettings({ ...settings, textColor: color.toString() })}
-                />
-              </FormLayout.Group>
-            </FormLayout>
+    <div>
+      <Card>
+        <div style={{ padding: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <Text variant="headingMd" as="h3">Theme Customizer</Text>
+            <Button onClick={() => setShowModal(true)}>
+              Customize
+            </Button>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+            <div>
+              <Text variant="bodySm" tone="subdued" as="div">Primary Color</Text>
+              <div style={{ 
+                width: '100%', 
+                height: '40px', 
+                backgroundColor: theme.primaryColor, 
+                borderRadius: '4px',
+                border: '1px solid #d1d5db'
+              }} />
             </div>
-          </Card>
-
-          <Card>
-            <div style={{ padding: '16px' }}>
-              <Text variant="headingMd" as="h3">Layout & Typography</Text>
-            <FormLayout>
-              <RangeSlider
-                label="Border Radius"
-                value={settings.borderRadius}
-                min={0}
-                max={20}
-                step={1}
-                onChange={(value) => setSettings({ ...settings, borderRadius: Array.isArray(value) ? value[0] : value })}
-                output
-              />
-              
-              <RangeSlider
-                label="Spacing"
-                value={settings.spacing}
-                min={8}
-                max={32}
-                step={4}
-                onChange={(value) => setSettings({ ...settings, spacing: Array.isArray(value) ? value[0] : value })}
-                output
-              />
-              
-              <RangeSlider
-                label="Font Size"
-                value={settings.fontSize}
-                min={12}
-                max={18}
-                step={1}
-                onChange={(value) => setSettings({ ...settings, fontSize: Array.isArray(value) ? value[0] : value })}
-                output
-              />
-              
-              <Select
-                label="Font Family"
-                options={[
-                  { label: 'Inter', value: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' },
-                  { label: 'Roboto', value: 'Roboto, sans-serif' },
-                  { label: 'Open Sans', value: 'Open Sans, sans-serif' },
-                  { label: 'Lato', value: 'Lato, sans-serif' },
-                  { label: 'Montserrat', value: 'Montserrat, sans-serif' }
-                ]}
-                value={settings.fontFamily}
-                onChange={(value) => setSettings({ ...settings, fontFamily: value })}
-              />
-            </FormLayout>
+            <div>
+              <Text variant="bodySm" tone="subdued" as="div">Secondary Color</Text>
+              <div style={{ 
+                width: '100%', 
+                height: '40px', 
+                backgroundColor: theme.secondaryColor, 
+                borderRadius: '4px',
+                border: '1px solid #d1d5db'
+              }} />
             </div>
-          </Card>
-        </div>
-
-        <div style={{ marginTop: '20px' }}>
-          <Card>
-            <div style={{ padding: '16px' }}>
-              <Text variant="headingMd" as="h3">Preferences</Text>
-            <FormLayout>
-              <Checkbox
-                label="Dark Mode"
-                checked={settings.darkMode}
-                onChange={(checked) => setSettings({ ...settings, darkMode: checked })}
-              />
-              
-              <Checkbox
-                label="Compact Mode"
-                checked={settings.compactMode}
-                onChange={(checked) => setSettings({ ...settings, compactMode: checked })}
-              />
-              
-              <Checkbox
-                label="Show Animations"
-                checked={settings.showAnimations}
-                onChange={(checked) => setSettings({ ...settings, showAnimations: checked })}
-              />
-              
-              <RangeSlider
-                label="Animation Speed"
-                value={settings.animationSpeed}
-                min={100}
-                max={1000}
-                step={50}
-                onChange={(value) => setSettings({ ...settings, animationSpeed: Array.isArray(value) ? value[0] : value })}
-                output
-                disabled={!settings.showAnimations}
-              />
-            </FormLayout>
+            <div>
+              <Text variant="bodySm" tone="subdued" as="div">Accent Color</Text>
+              <div style={{ 
+                width: '100%', 
+                height: '40px', 
+                backgroundColor: theme.accentColor, 
+                borderRadius: '4px',
+                border: '1px solid #d1d5db'
+              }} />
             </div>
-          </Card>
-        </div>
-
-        <div style={{ marginTop: '20px' }}>
-          <Card>
-            <div style={{ padding: '16px' }}>
-              <Text variant="headingMd" as="h3">Notification Templates</Text>
-            <FormLayout>
-              <Select
-                label="Template"
-                options={templates.map(t => ({ label: t.name, value: t.id }))}
-                value={selectedTemplate}
-                onChange={setSelectedTemplate}
-              />
-              
-              <TextField
-                label="Subject"
-                value={templates.find(t => t.id === selectedTemplate)?.subject || ''}
-                onChange={(value) => {
-                  const updatedTemplates = templates.map(t => 
-                    t.id === selectedTemplate ? { ...t, subject: value } : t
-                  );
-                  setTemplates(updatedTemplates);
-                }}
-                multiline
-                autoComplete="off"
-              />
-              
-              <TextField
-                label="Body"
-                value={templates.find(t => t.id === selectedTemplate)?.body || ''}
-                onChange={(value) => {
-                  const updatedTemplates = templates.map(t => 
-                    t.id === selectedTemplate ? { ...t, body: value } : t
-                  );
-                  setTemplates(updatedTemplates);
-                }}
-                multiline
-                autoComplete="off"
-              />
-              
-              <div>
-                <Text variant="headingMd" as="h4">Available Variables:</Text>
-                <div style={{ marginTop: '8px' }}>
-                  {templates.find(t => t.id === selectedTemplate)?.variables.map(variable => (
-                    <span key={variable} style={{ 
-                      display: 'inline-block', 
-                      margin: '2px', 
-                      padding: '4px 8px', 
-                      backgroundColor: '#f6f6f7', 
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontFamily: 'monospace'
-                    }}>
-                      {`{${variable}}`}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </FormLayout>
-            </div>
-          </Card>
-        </div>
-
-        <div style={{ marginTop: '20px' }}>
-          <Card>
-            <div style={{ padding: '16px' }}>
-              <Text variant="headingMd" as="h3">Custom CSS</Text>
-            <FormLayout>
-              <TextField
-                label="Custom CSS"
-                value={settings.customCSS}
-                onChange={(value) => setSettings({ ...settings, customCSS: value })}
-                multiline
-                helpText="Add custom CSS to further customize the appearance"
-                autoComplete="off"
-              />
-            </FormLayout>
-            </div>
-          </Card>
-        </div>
-
-        <div style={{ marginTop: '20px' }}>
-          <Card>
-            <div style={{ padding: '16px' }}>
-              <Text variant="headingMd" as="h3">Actions</Text>
-            <ButtonGroup>
-              <Button variant="primary" onClick={saveSettings} loading={saving}>
-                Save Changes
-              </Button>
-              
-              <Button onClick={() => setPreviewOpen(true)}>
-                Preview
-              </Button>
-              
-              <Button onClick={resetToDefault}>
-                Reset to Default
-              </Button>
-              
-              <Button onClick={exportTheme}>
-                Export Theme
-              </Button>
-              
-              <div>
-                <label htmlFor="import-theme" style={{ cursor: 'pointer' }}>
-                  <Button>Import Theme</Button>
-                </label>
-                <input
-                  id="import-theme"
-                  type="file"
-                  accept=".json"
-                  onChange={importTheme}
-                  style={{ display: 'none' }}
-                />
-              </div>
-            </ButtonGroup>
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* Preview Modal */}
-      <Modal
-        open={previewOpen}
-        onClose={() => setPreviewOpen(false)}
-        title="Theme Preview"
-      >
-        <Modal.Section>
-          <div style={{ 
-            padding: '20px',
-            backgroundColor: settings.backgroundColor,
-            color: settings.textColor,
-            borderRadius: `${settings.borderRadius}px`,
-            fontFamily: settings.fontFamily,
-            fontSize: `${settings.fontSize}px`
-          }}>
-            <h2 style={{ color: settings.primaryColor }}>DelayGuard Dashboard</h2>
-            <p>This is a preview of how your dashboard will look with the current theme settings.</p>
-            
-            <div style={{ 
-              marginTop: '20px',
-              padding: '16px',
-              backgroundColor: settings.secondaryColor,
-              borderRadius: `${settings.borderRadius}px`,
-              border: `1px solid ${settings.accentColor}`
-            }}>
-              <h3 style={{ color: settings.accentColor }}>Sample Alert</h3>
-              <p>Order #12345 is experiencing a delay</p>
-              <button style={{
-                backgroundColor: settings.primaryColor,
-                color: 'white',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: `${settings.borderRadius}px`,
-                cursor: 'pointer'
-              }}>
-                View Details
-              </button>
+            <div>
+              <Text variant="bodySm" tone="subdued" as="div">Background</Text>
+              <div style={{ 
+                width: '100%', 
+                height: '40px', 
+                backgroundColor: theme.backgroundColor, 
+                borderRadius: '4px',
+                border: '1px solid #d1d5db'
+              }} />
             </div>
           </div>
-        </Modal.Section>
-      </Modal>
+          
+          <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+            <Button size="small" onClick={handleReset}>
+              Reset
+            </Button>
+            <Button size="small" variant="secondary" onClick={() => setShowModal(true)}>
+              Advanced
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {renderModal()}
+
+      {showToast && (
+        <Toast content={toastMessage} onDismiss={handleCloseToast} />
+      )}
     </div>
   );
 }

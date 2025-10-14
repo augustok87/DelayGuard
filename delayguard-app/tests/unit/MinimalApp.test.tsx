@@ -1,14 +1,13 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { AppProvider } from '@shopify/polaris';
-import { MinimalApp } from '../../src/components/MinimalApp';
+import MinimalApp from '../../src/components/MinimalApp';
 
 // Test wrapper component
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <AppProvider i18n={{}}>
+  <div data-testid="app-provider">
     {children}
-  </AppProvider>
+  </div>
 );
 
 // Mock the API calls

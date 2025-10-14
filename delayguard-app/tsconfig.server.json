@@ -22,6 +22,8 @@
     "dist",
     "tests",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "**/*.polaris.tsx",
+    "**/*.polaris.ts"
   ]
 }

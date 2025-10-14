@@ -2,8 +2,8 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import EnhancedDashboard from '../../../src/components/EnhancedDashboard';
 
-// Mock Shopify Polaris components
-jest.mock('@shopify/polaris', () => ({
+// Mock Web Components
+jest.mock('../../../src/components', () => ({
   Page: ({ children, title, ...props }: any) => <div data-testid="page" data-title={title} {...props}>{children}</div>,
   Card: ({ children, title, ...props }: any) => <div data-testid="card" data-title={title} {...props}>{children}</div>,
   DataTable: ({ headings, rows, ...props }: any) => (

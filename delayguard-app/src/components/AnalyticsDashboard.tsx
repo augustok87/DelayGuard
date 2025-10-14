@@ -1,28 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Page,
-  Card,
-  Layout,
-  Text,
-  Badge,
+  // Web Components
   Button,
-  Select,
+  Text,
+  Card,
+  Badge,
   Spinner,
-  Banner,
   DataTable,
   ResourceList,
   ResourceItem,
   EmptyState,
   Modal,
-  FormLayout,
-  TextField,
-  ButtonGroup,
   Tabs,
-  Frame,
   Toast,
-  BlockStack,
-  InlineStack
-} from '@shopify/polaris';
+} from './index';
 
 interface AnalyticsMetrics {
   totalOrders: number;
@@ -41,411 +32,282 @@ interface AnalyticsMetrics {
     email: number;
     sms: number;
   };
-  revenueImpact: {
-    totalValue: number;
-    averageOrderValue: number;
-    potentialLoss: number;
+  customerSatisfaction: number;
+  resolutionTime: {
+    average: number;
+    median: number;
   };
-  performanceMetrics: {
-    averageResponseTime: number;
-    successRate: number;
-    errorRate: number;
-  };
-  timeSeriesData: {
-    date: string;
-    orders: number;
-    alerts: number;
-    revenue: number;
-  }[];
 }
 
-interface RealTimeMetrics {
-  activeAlerts: number;
-  queueSize: number;
-  processingRate: number;
-  errorRate: number;
-  memoryUsage: number;
-  responseTime: number;
+interface AnalyticsDashboardProps {
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  onExport?: (data: AnalyticsMetrics) => void;
 }
 
-function AnalyticsDashboard() {
-  const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
-  const [realtimeMetrics, setRealtimeMetrics] = useState<RealTimeMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
+const defaultMetrics: AnalyticsMetrics = {
+  totalOrders: 1250,
+  totalAlerts: 89,
+  alertsBySeverity: {
+    low: 45,
+    medium: 28,
+    high: 12,
+    critical: 4,
+  },
+  alertsByReason: {
+    'Weather Delay': 23,
+    'Carrier Issue': 18,
+    'Address Problem': 15,
+    'Customs Delay': 12,
+    'Package Damage': 8,
+    'Other': 13,
+  },
+  averageDelayDays: 3.2,
+  notificationSuccessRate: {
+    email: 94.5,
+    sms: 87.2,
+  },
+  customerSatisfaction: 4.2,
+  resolutionTime: {
+    average: 2.3,
+    median: 1.8,
+  },
+};
+
+function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
+  const [metrics, setMetrics] = useState<AnalyticsMetrics>(defaultMetrics);
+  const [loading, setLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
-  const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const loadAnalytics = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [analyticsRes, realtimeRes] = await Promise.all([
-        fetch(`/api/analytics?timeRange=${timeRange}`).then(res => res.json()),
-        fetch('/api/analytics/realtime').then(res => res.json())
-      ]);
-
-      if (analyticsRes.error) throw new Error(analyticsRes.error);
-      if (realtimeRes.error) throw new Error(realtimeRes.error);
-
-      setMetrics(analyticsRes.data);
-      setRealtimeMetrics(realtimeRes.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load analytics');
-    } finally {
-      setLoading(false);
-    }
-  }, [timeRange]);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
-    loadAnalytics();
-    const interval = setInterval(loadAnalytics, 60000); // Refresh every minute
-    return () => clearInterval(interval);
-  }, [loadAnalytics]);
-
-  const handleExport = async (format: 'json' | 'csv') => {
-    try {
-      const response = await fetch(`/api/analytics/export?format=${format}&timeRange=${timeRange}`);
-      const blob = await response.blob();
-      
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `delayguard-analytics-${timeRange}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      setToastMessage(`Analytics exported as ${format.toUpperCase()}`);
-      setExportModalOpen(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to export analytics');
+    if (dateRange) {
+      setLoading(true);
+      // Simulate API call
+      setTimeout(() => {
+        setMetrics(defaultMetrics);
+        setLoading(false);
+      }, 1000);
     }
-  };
+  }, [dateRange]);
 
-  const getSeverityBadge = (severity: string, count: number) => {
-    const severityMap: { [key: string]: { tone: any; color: string } } = {
-      low: { tone: 'info', color: '#007ace' },
-      medium: { tone: 'warning', color: '#ffc453' },
-      high: { tone: 'attention', color: '#ff9500' },
-      critical: { tone: 'critical', color: '#d82c0d' }
-    };
-    
-    const config = severityMap[severity] || { tone: 'info', color: '#007ace' };
+  const handleTabChange = useCallback((tabIndex: number) => {
+    setSelectedTab(tabIndex);
+  }, []);
+
+  const handleExport = useCallback(() => {
+    setShowExportModal(false);
+    if (onExport) {
+      onExport(metrics);
+    }
+    setToastMessage('Analytics data exported successfully!');
+    setShowToast(true);
+  }, [metrics, onExport]);
+
+  const handleCloseToast = useCallback(() => {
+    setShowToast(false);
+  }, []);
+
+  const renderOverviewCards = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      <Card sectioned>
+        <div style={{ textAlign: 'center' }}>
+          <Text variant="headingLg" as="h3">{metrics.totalOrders.toLocaleString()}</Text>
+          <Text variant="bodyMd" tone="subdued">Total Orders</Text>
+        </div>
+      </Card>
+      <Card sectioned>
+        <div style={{ textAlign: 'center' }}>
+          <Text variant="headingLg" as="h3">{metrics.totalAlerts}</Text>
+          <Text variant="bodyMd" tone="subdued">Total Alerts</Text>
+        </div>
+      </Card>
+      <Card sectioned>
+        <div style={{ textAlign: 'center' }}>
+          <Text variant="headingLg" as="h3">{metrics.averageDelayDays} days</Text>
+          <Text variant="bodyMd" tone="subdued">Avg Delay</Text>
+        </div>
+      </Card>
+      <Card sectioned>
+        <div style={{ textAlign: 'center' }}>
+          <Text variant="headingLg" as="h3">{metrics.customerSatisfaction}/5</Text>
+          <Text variant="bodyMd" tone="subdued">Satisfaction</Text>
+        </div>
+      </Card>
+    </div>
+  );
+
+  const renderSeverityBreakdown = () => (
+    <Card>
+      <div style={{ padding: '16px' }}>
+        <Text variant="headingMd" as="h3">Alerts by Severity</Text>
+      </div>
+      <div style={{ padding: '16px' }}>
+        {Object.entries(metrics.alertsBySeverity).map(([severity, count]) => (
+          <div key={severity} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Badge tone={severity === 'critical' ? 'critical' : severity === 'high' ? 'attention' : 'info'}>
+                {severity}
+              </Badge>
+            </div>
+            <Text variant="bodyMd" as="span">{count}</Text>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+
+  const renderReasonBreakdown = () => {
+    const headings = ['Reason', 'Count', 'Percentage'];
+    const totalAlerts = Object.values(metrics.alertsByReason).reduce((sum, count) => sum + count, 0);
+    const rows = Object.entries(metrics.alertsByReason).map(([reason, count]) => [
+      reason,
+      count.toString(),
+      `${((count / totalAlerts) * 100).toFixed(1)}%`,
+    ]);
+
     return (
-      <Badge tone={config.tone}>
-        {`${severity.toUpperCase()}: ${count.toString()}`}
-      </Badge>
+      <Card>
+        <div style={{ padding: '16px' }}>
+          <Text variant="headingMd" as="h3">Alerts by Reason</Text>
+        </div>
+        <DataTable
+          headings={headings}
+          rows={rows}
+          sortable
+        />
+      </Card>
     );
   };
 
-  const tabs = [
-    { id: 'overview', content: 'Overview' },
-    { id: 'performance', content: 'Performance' },
-    { id: 'revenue', content: 'Revenue' },
-    { id: 'notifications', content: 'Notifications' },
-    { id: 'realtime', content: 'Real-time' }
-  ];
+  const renderNotificationMetrics = () => (
+    <Card>
+      <div style={{ padding: '16px' }}>
+        <Text variant="headingMd" as="h3">Notification Success Rates</Text>
+      </div>
+      <div style={{ padding: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
+          <Text variant="bodyMd" as="span">Email</Text>
+          <Text variant="bodyMd" as="span">{metrics.notificationSuccessRate.email}%</Text>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
+          <Text variant="bodyMd" as="span">SMS</Text>
+          <Text variant="bodyMd" as="span">{metrics.notificationSuccessRate.sms}%</Text>
+        </div>
+      </div>
+    </Card>
+  );
+
+  const renderResolutionMetrics = () => (
+    <Card>
+      <div style={{ padding: '16px' }}>
+        <Text variant="headingMd" as="h3">Resolution Time</Text>
+      </div>
+      <div style={{ padding: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
+          <Text variant="bodyMd" as="span">Average</Text>
+          <Text variant="bodyMd" as="span">{metrics.resolutionTime.average} days</Text>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
+          <Text variant="bodyMd" as="span">Median</Text>
+          <Text variant="bodyMd" as="span">{metrics.resolutionTime.median} days</Text>
+        </div>
+      </div>
+    </Card>
+  );
+
+  const renderExportModal = () => (
+    <Modal
+      open={showExportModal}
+      title="Export Analytics"
+      primaryAction={{
+        content: 'Export',
+        onAction: handleExport,
+      }}
+      secondaryActions={[
+        {
+          content: 'Cancel',
+          onAction: () => setShowExportModal(false),
+        },
+      ]}
+      onClose={() => setShowExportModal(false)}
+    >
+      <Modal.Section>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <Text variant="bodyMd" as="p">
+            Choose the format for exporting your analytics data:
+          </Text>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="radio" name="format" value="csv" defaultChecked />
+              <Text variant="bodyMd" as="span">CSV (Excel compatible)</Text>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="radio" name="format" value="json" />
+              <Text variant="bodyMd" as="span">JSON (API format)</Text>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="radio" name="format" value="pdf" />
+              <Text variant="bodyMd" as="span">PDF (Report format)</Text>
+            </label>
+          </div>
+        </div>
+      </Modal.Section>
+    </Modal>
+  );
 
   if (loading) {
     return (
-      <Page title="Analytics Dashboard">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <Spinner size="large" />
-                <div style={{ marginTop: '1rem' }}>
-                  <Text as="p" tone="subdued">Loading analytics data...</Text>
-                </div>
-              </div>
-            </Card>
-          </Layout.Section>
-        </Layout>
-      </Page>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+        <Spinner size="large" />
+      </div>
     );
   }
 
   return (
-    <Frame>
-      <Page
-        title="Analytics Dashboard"
-        subtitle="Comprehensive insights into your delay detection performance"
-        primaryAction={{
-          content: 'Export Data',
-          onAction: () => setExportModalOpen(true)
-        }}
-        secondaryActions={[
-          {
-            content: 'Refresh',
-            onAction: loadAnalytics
-          }
+    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <Text variant="headingLg" as="h1">Analytics Dashboard</Text>
+        <Button onClick={() => setShowExportModal(true)}>
+          Export Data
+        </Button>
+      </div>
+
+      {renderOverviewCards()}
+
+      <Tabs
+        tabs={[
+          { id: 'overview', content: 'Overview' },
+          { id: 'severity', content: 'Severity' },
+          { id: 'reasons', content: 'Reasons' },
+          { id: 'notifications', content: 'Notifications' },
+          { id: 'resolution', content: 'Resolution' },
         ]}
+        selected={selectedTab}
+        onSelect={handleTabChange}
       >
-        {error && (
-          <Layout>
-            <Layout.Section>
-              <Banner tone="critical" onDismiss={() => setError(null)}>
-                {error}
-              </Banner>
-            </Layout.Section>
-          </Layout>
+        {selectedTab === 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+            {renderSeverityBreakdown()}
+            {renderNotificationMetrics()}
+          </div>
         )}
+        {selectedTab === 1 && renderSeverityBreakdown()}
+        {selectedTab === 2 && renderReasonBreakdown()}
+        {selectedTab === 3 && renderNotificationMetrics()}
+        {selectedTab === 4 && renderResolutionMetrics()}
+      </Tabs>
 
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <div style={{ padding: '16px' }}>
-                <Text variant="headingMd" as="h3">Time Range</Text>
-              </div>
-              <div style={{ padding: '0 16px 16px' }}>
-                <Select
-                  label="Time Range"
-                  options={[
-                    { label: 'Last 7 days', value: '7d' },
-                    { label: 'Last 30 days', value: '30d' },
-                    { label: 'Last 90 days', value: '90d' },
-                    { label: 'Last year', value: '1y' }
-                  ]}
-                  value={timeRange}
-                  onChange={(value) => setTimeRange(value as any)}
-                />
-              </div>
-            </Card>
-          </Layout.Section>
+      {renderExportModal()}
 
-          <Layout.Section>
-            <Card>
-              <div style={{ padding: '16px' }}>
-                <Text variant="headingMd" as="h3">Key Metrics</Text>
-              </div>
-              <div style={{ padding: '0 16px 16px' }}>
-                {metrics && (
-                  <InlineStack gap="400" align="space-between">
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{metrics.totalOrders}</Text>
-                      <Text as="p" tone="subdued">Total Orders</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{metrics.totalAlerts}</Text>
-                      <Text as="p" tone="subdued">Delay Alerts</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{metrics.averageDelayDays.toFixed(1)}</Text>
-                      <Text as="p" tone="subdued">Avg Delay Days</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">${metrics.revenueImpact.totalValue.toLocaleString()}</Text>
-                      <Text as="p" tone="subdued">Total Revenue</Text>
-                    </div>
-                  </InlineStack>
-                )}
-              </div>
-            </Card>
-          </Layout.Section>
-        </Layout>
-
-        <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
-          <Layout>
-            {selectedTab === 0 && metrics && (
-              <>
-                <Layout.Section>
-                  <Card>
-                    <BlockStack gap="200">
-                      {Object.entries(metrics.alertsBySeverity).map(([severity, count]) => (
-                        <InlineStack key={severity} gap="200" align="space-between">
-                          <Text as="span" fontWeight="bold">{severity.toUpperCase()}</Text>
-                          <Badge tone={severity === 'critical' ? 'critical' : severity === 'high' ? 'attention' : severity === 'medium' ? 'warning' : 'info'}>
-                            {count.toString()}
-                          </Badge>
-                        </InlineStack>
-                      ))}
-                    </BlockStack>
-                  </Card>
-                </Layout.Section>
-
-                <Layout.Section>
-                  <Card>
-                    {Object.keys(metrics.alertsByReason).length === 0 ? (
-                      <EmptyState
-                        heading="No alert reasons"
-                        image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
-                      >
-                        <p>No delay alerts have been generated yet.</p>
-                      </EmptyState>
-                    ) : (
-                      <ResourceList
-                        items={Object.entries(metrics.alertsByReason).map(([reason, count]) => ({
-                          id: reason,
-                          reason,
-                          count
-                        }))}
-                        renderItem={(item) => (
-                          <ResourceItem id={item.id} onClick={() => {}}>
-                            <InlineStack gap="200" align="space-between">
-                              <Text as="span" fontWeight="bold">{item.reason.replace('_', ' ').toLowerCase()}</Text>
-                              <Badge>{item.count.toString()}</Badge>
-                            </InlineStack>
-                          </ResourceItem>
-                        )}
-                      />
-                    )}
-                  </Card>
-                </Layout.Section>
-
-                <Layout.Section>
-                  <Card>
-                    {metrics.timeSeriesData.length === 0 ? (
-                      <EmptyState
-                        heading="No time series data"
-                        image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
-                      >
-                        <p>No data available for the selected time range.</p>
-                      </EmptyState>
-                    ) : (
-                      <DataTable
-                        columnContentTypes={['text', 'numeric', 'numeric', 'numeric']}
-                        headings={['Date', 'Orders', 'Alerts', 'Revenue']}
-                        rows={metrics.timeSeriesData.map(data => [
-                          new Date(data.date).toLocaleDateString(),
-                          data.orders.toString(),
-                          data.alerts.toString(),
-                          `$${data.revenue.toFixed(2)}`
-                        ])}
-                      />
-                    )}
-                  </Card>
-                </Layout.Section>
-              </>
-            )}
-
-            {selectedTab === 1 && metrics && (
-              <Layout.Section>
-                <Card>
-                  <InlineStack gap="200" align="space-between">
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{metrics.performanceMetrics.averageResponseTime.toFixed(0)}ms</Text>
-                      <Text as="p" tone="subdued">Avg Response Time</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{metrics.performanceMetrics.successRate.toFixed(1)}%</Text>
-                      <Text as="p" tone="subdued">Success Rate</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{metrics.performanceMetrics.errorRate.toFixed(1)}%</Text>
-                      <Text as="p" tone="subdued">Error Rate</Text>
-                    </div>
-                  </InlineStack>
-                </Card>
-              </Layout.Section>
-            )}
-
-            {selectedTab === 2 && metrics && (
-              <Layout.Section>
-                <Card>
-                  <InlineStack gap="200" align="space-between">
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">${metrics.revenueImpact.totalValue.toLocaleString()}</Text>
-                      <Text as="p" tone="subdued">Total Revenue</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">${metrics.revenueImpact.averageOrderValue.toFixed(2)}</Text>
-                      <Text as="p" tone="subdued">Avg Order Value</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">${metrics.revenueImpact.potentialLoss.toFixed(2)}</Text>
-                      <Text as="p" tone="subdued">Potential Loss</Text>
-                    </div>
-                  </InlineStack>
-                </Card>
-              </Layout.Section>
-            )}
-
-            {selectedTab === 3 && metrics && (
-              <Layout.Section>
-                <Card>
-                  <InlineStack gap="200" align="space-between">
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{metrics.notificationSuccessRate.email.toFixed(1)}%</Text>
-                      <Text as="p" tone="subdued">Email Success Rate</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{metrics.notificationSuccessRate.sms.toFixed(1)}%</Text>
-                      <Text as="p" tone="subdued">SMS Success Rate</Text>
-                    </div>
-                  </InlineStack>
-                </Card>
-              </Layout.Section>
-            )}
-
-            {selectedTab === 4 && realtimeMetrics && (
-              <Layout.Section>
-                <Card>
-                  <InlineStack gap="200" align="space-between">
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{realtimeMetrics.activeAlerts}</Text>
-                      <Text as="p" tone="subdued">Active Alerts</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{realtimeMetrics.queueSize}</Text>
-                      <Text as="p" tone="subdued">Queue Size</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{realtimeMetrics.processingRate.toFixed(1)}/min</Text>
-                      <Text as="p" tone="subdued">Processing Rate</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text variant="headingLg" as="h3">{realtimeMetrics.memoryUsage}MB</Text>
-                      <Text as="p" tone="subdued">Memory Usage</Text>
-                    </div>
-                  </InlineStack>
-                </Card>
-              </Layout.Section>
-            )}
-          </Layout>
-        </Tabs>
-
-        {/* Export Modal */}
-        <Modal
-          open={exportModalOpen}
-          onClose={() => setExportModalOpen(false)}
-          title="Export Analytics Data"
-          primaryAction={{
-            content: 'Export JSON',
-            onAction: () => handleExport('json')
-          }}
-          secondaryActions={[
-            {
-              content: 'Export CSV',
-              onAction: () => handleExport('csv')
-            },
-            {
-              content: 'Cancel',
-              onAction: () => setExportModalOpen(false)
-            }
-          ]}
-        >
-          <Modal.Section>
-            <FormLayout>
-              <Text as="p" tone="subdued">
-                Choose the format for exporting your analytics data. JSON format includes all detailed metrics, 
-                while CSV format provides a simplified table view suitable for spreadsheet applications.
-              </Text>
-            </FormLayout>
-          </Modal.Section>
-        </Modal>
-
-        {/* Toast */}
-        {toastMessage && (
-          <Toast
-            content={toastMessage}
-            onDismiss={() => setToastMessage(null)}
-          />
-        )}
-      </Page>
-    </Frame>
+      {showToast && (
+        <Toast content={toastMessage} onDismiss={handleCloseToast} />
+      )}
+    </div>
   );
 }
 

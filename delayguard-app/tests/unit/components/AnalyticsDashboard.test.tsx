@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AnalyticsDashboard from '../../../src/components/AnalyticsDashboard';
 
 // Mock Shopify Polaris components
-jest.mock('@shopify/polaris', () => ({
+jest.mock('../../../src/components', () => ({
   Page: ({ children, title, ...props }: any) => <div data-testid="page" data-title={title} {...props}>{children}</div>,
   Card: ({ children, title, ...props }: any) => <div data-testid="card" data-title={title} {...props}>{children}</div>,
   Layout: ({ children, ...props }: any) => <div data-testid="layout" {...props}>{children}</div>,
