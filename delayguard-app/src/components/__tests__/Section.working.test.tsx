@@ -26,6 +26,13 @@ beforeAll(() => {
         this.className = value;
       }
     }
+
+    getAttribute(name: string) {
+      if (name === 'class') {
+        return this.className || null;
+      }
+      return super.getAttribute(name);
+    }
   }
   
   if (typeof window !== 'undefined' && typeof customElements !== 'undefined') {

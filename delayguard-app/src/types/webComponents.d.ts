@@ -114,7 +114,7 @@ declare namespace JSX {
     };
     
     's-tabs': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-      tabs?: any[];
+      tabs?: string;
       selected?: number;
       'data-testid'?: string;
     };

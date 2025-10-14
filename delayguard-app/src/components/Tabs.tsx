@@ -79,7 +79,7 @@ export const Tabs = React.forwardRef<HTMLElement, TabsProps>(
 
     // Convert React props to Web Component attributes
     const webComponentProps = React.useMemo(() => ({
-      ...(tabs && { tabs }),
+      ...(tabs !== undefined && { tabs: JSON.stringify(tabs) }),
       selected,
       ...props,
     }), [tabs, selected, props]);

@@ -94,7 +94,7 @@ const ModalComponent = React.forwardRef<HTMLElement, ModalProps>(
       open,
       ...(title && { title }),
       ...(primaryAction && { primaryAction: JSON.stringify(primaryAction) }),
-      ...(secondaryActions.length > 0 && { secondaryActions: JSON.stringify(secondaryActions) }),
+      ...(secondaryActions !== undefined && { secondaryActions: JSON.stringify(secondaryActions) }),
       ...props,
     }), [open, title, primaryAction, secondaryActions, props]);
 
