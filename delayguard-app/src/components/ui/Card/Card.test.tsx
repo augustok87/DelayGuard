@@ -18,7 +18,7 @@ describe('Card Component', () => {
       
       const card = screen.getByText('Card content');
       expect(card).toBeInTheDocument();
-      expect(card).toHaveClass('card');
+      expect(card).toHaveClass('cardContent');
     });
 
     it('should render with title', () => {
@@ -46,25 +46,35 @@ describe('Card Component', () => {
       render(<Card className="custom-card">Card content</Card>);
       
       const card = screen.getByText('Card content');
-      expect(card).toHaveClass('card custom-card');
+      expect(card).toHaveClass('cardContent');
+      // Check that the parent card element has the custom class
+      const cardElement = card.closest('.card');
+      expect(cardElement).toHaveClass('card custom-card');
     });
 
     it('should render with loading state', () => {
       render(<Card loading>Card content</Card>);
       
-      const card = screen.getByText('Card content');
-      expect(card).toHaveClass('card loading');
+      // When loading, content is replaced with skeleton lines
+      expect(screen.queryByText('Card content')).not.toBeInTheDocument();
+      const cardElement = document.querySelector('.card.loading');
+      expect(cardElement).toBeInTheDocument();
+      expect(cardElement).toHaveClass('card loading');
+      expect(document.querySelectorAll('.skeletonLine')).toHaveLength(3); // skeleton lines
     });
 
     it('should render with different loading states', () => {
       const { rerender } = render(<Card>Normal card</Card>);
       
       let card = screen.getByText('Normal card');
-      expect(card).not.toHaveClass('loading');
+      expect(card).toHaveClass('cardContent');
       
       rerender(<Card loading>Loading card</Card>);
-      card = screen.getByText('Loading card');
-      expect(card).toHaveClass('loading');
+      // When loading, content is replaced with skeleton lines
+      expect(screen.queryByText('Loading card')).not.toBeInTheDocument();
+      const cardElement = document.querySelector('.card.loading');
+      expect(cardElement).toBeInTheDocument();
+      expect(cardElement).toHaveClass('loading');
     });
   });
 
@@ -80,7 +90,7 @@ describe('Card Component', () => {
       
       const heading = screen.getByRole('heading', { name: /card title/i });
       expect(heading).toBeInTheDocument();
-      expect(heading.tagName).toBe('H3');
+      expect(heading.tagName).toBe('H2'); // Card component uses H2, not H3
     });
 
     it('should support subtitle', () => {

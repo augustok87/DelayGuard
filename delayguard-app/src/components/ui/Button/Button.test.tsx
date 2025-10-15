@@ -53,7 +53,9 @@ describe('Button Component', () => {
       const button = screen.getByRole('button', { name: /loading/i });
       expect(button).toBeDisabled();
       expect(button).toHaveClass('loading');
-      expect(screen.getByRole('button')).toHaveAttribute('aria-hidden', 'true');
+      // The spinner element should have aria-hidden="true", not the button
+      const spinner = button.querySelector('.spinner');
+      expect(spinner).toHaveAttribute('aria-hidden', 'true');
     });
   });
 
