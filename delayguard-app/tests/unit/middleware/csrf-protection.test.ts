@@ -13,8 +13,8 @@ describe('CSRF Protection Middleware', () => {
       httpOnly: false,
       secure: false, // Set to false for testing
       sameSite: 'lax' as const,
-      maxAge: 24 * 60 * 60 * 1000
-    }
+      maxAge: 24 * 60 * 60 * 1000,
+    },
   };
 
   describe('Basic CSRF Protection', () => {
@@ -23,13 +23,13 @@ describe('CSRF Protection Middleware', () => {
       app.use(bodyParser());
     });
 
-    it('should generate and set CSRF token for GET requests', async () => {
+    it('should generate and set CSRF token for GET requests', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create(csrfConfig);
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { 
           message: 'success',
-          csrfToken: ctx.state.csrfToken 
+          csrfToken: ctx.state.csrfToken, 
         };
       });
 
@@ -44,13 +44,13 @@ describe('CSRF Protection Middleware', () => {
       expect(response.headers['set-cookie'][0]).toContain('_csrf=');
     });
 
-    it('should accept valid CSRF token for POST requests', async () => {
+    it('should accept valid CSRF token for POST requests', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create(csrfConfig);
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { 
           message: 'success',
-          csrfToken: ctx.state.csrfToken 
+          csrfToken: ctx.state.csrfToken, 
         };
       });
 
@@ -77,10 +77,10 @@ describe('CSRF Protection Middleware', () => {
       expect(postResponse.body.message).toBe('success');
     });
 
-    it('should reject requests without CSRF token', async () => {
+    it('should reject requests without CSRF token', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create(csrfConfig);
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -93,10 +93,10 @@ describe('CSRF Protection Middleware', () => {
       expect(response.body.code).toBe('CSRF_TOKEN_INVALID');
     });
 
-    it('should reject requests with invalid CSRF token', async () => {
+    it('should reject requests with invalid CSRF token', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create(csrfConfig);
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -111,13 +111,13 @@ describe('CSRF Protection Middleware', () => {
       expect(response.body.code).toBe('CSRF_TOKEN_INVALID');
     });
 
-    it('should accept CSRF token in request body', async () => {
+    it('should accept CSRF token in request body', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create(csrfConfig);
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { 
           message: 'success',
-          csrfToken: ctx.state.csrfToken 
+          csrfToken: ctx.state.csrfToken, 
         };
       });
 
@@ -135,7 +135,7 @@ describe('CSRF Protection Middleware', () => {
         .set('Cookie', cookie[0]) // Use the first cookie string
         .send({ 
           data: 'test',
-          csrfToken: csrfToken 
+          csrfToken, 
         })
         .expect(200);
 
@@ -149,10 +149,10 @@ describe('CSRF Protection Middleware', () => {
       app.use(bodyParser());
     });
 
-    it('should skip CSRF check for GET requests', async () => {
+    it('should skip CSRF check for GET requests', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create(csrfConfig);
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -163,10 +163,10 @@ describe('CSRF Protection Middleware', () => {
       expect(response.body.message).toBe('success');
     });
 
-    it('should skip CSRF check for HEAD requests', async () => {
+    it('should skip CSRF check for HEAD requests', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create(csrfConfig);
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -177,10 +177,10 @@ describe('CSRF Protection Middleware', () => {
       expect(response.body).toEqual({}); // HEAD requests don't have body
     });
 
-    it('should skip CSRF check for OPTIONS requests', async () => {
+    it('should skip CSRF check for OPTIONS requests', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create(csrfConfig);
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -191,13 +191,13 @@ describe('CSRF Protection Middleware', () => {
       expect(response.body.message).toBe('success');
     });
 
-    it('should skip CSRF check for excluded paths', async () => {
+    it('should skip CSRF check for excluded paths', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create({
         ...csrfConfig,
-        excludedPaths: ['/health', '/api/health']
+        excludedPaths: ['/health', '/api/health'],
       });
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -246,10 +246,10 @@ describe('CSRF Protection Middleware', () => {
       app.use(bodyParser());
     });
 
-    it('should allow GET requests without CSRF token', async () => {
+    it('should allow GET requests without CSRF token', async() => {
       const apiCsrfProtection = APICSRFProtection.create(csrfConfig);
       app.use(apiCsrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -260,10 +260,10 @@ describe('CSRF Protection Middleware', () => {
       expect(response.body.message).toBe('success');
     });
 
-    it('should require CSRF token for POST requests', async () => {
+    it('should require CSRF token for POST requests', async() => {
       const apiCsrfProtection = APICSRFProtection.create(csrfConfig);
       app.use(apiCsrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -276,10 +276,10 @@ describe('CSRF Protection Middleware', () => {
       expect(response.body.code).toBe('CSRF_TOKEN_REQUIRED');
     });
 
-    it('should accept valid CSRF token for POST requests', async () => {
+    it('should accept valid CSRF token for POST requests', async() => {
       const apiCsrfProtection = APICSRFProtection.create(csrfConfig);
       app.use(apiCsrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -292,10 +292,10 @@ describe('CSRF Protection Middleware', () => {
       expect(response.body.message).toBe('success');
     });
 
-    it('should reject invalid CSRF token format', async () => {
+    it('should reject invalid CSRF token format', async() => {
       const apiCsrfProtection = APICSRFProtection.create(csrfConfig);
       app.use(apiCsrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -316,18 +316,18 @@ describe('CSRF Protection Middleware', () => {
       app.use(bodyParser());
     });
 
-    it('should set CSRF cookie with correct options', async () => {
+    it('should set CSRF cookie with correct options', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create({
         ...csrfConfig,
         cookieOptions: {
           httpOnly: false,
           secure: false, // Set to false for testing
           sameSite: 'strict' as const,
-          maxAge: 3600000 // 1 hour
-        }
+          maxAge: 3600000, // 1 hour
+        },
       });
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -350,10 +350,10 @@ describe('CSRF Protection Middleware', () => {
       app.use(bodyParser());
     });
 
-    it('should use constant-time comparison', async () => {
+    it('should use constant-time comparison', async() => {
       const csrfProtection = CSRFProtectionMiddleware.create(csrfConfig);
       app.use(csrfProtection);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -362,7 +362,7 @@ describe('CSRF Protection Middleware', () => {
       const response = await request(app.callback())
         .post('/')
         .set('x-csrf-token', 'a'.repeat(64))
-        .set('Cookie', '_csrf=' + 'b'.repeat(64))
+        .set('Cookie', `_csrf=${'b'.repeat(64)}`)
         .send({ data: 'test' })
         .expect(403);
 

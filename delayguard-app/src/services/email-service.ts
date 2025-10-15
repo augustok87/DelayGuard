@@ -21,8 +21,8 @@ export class EmailService {
         trackingNumber: delayDetails.trackingNumber,
         trackingUrl: delayDetails.trackingUrl,
         delayDays: delayDetails.delayDays,
-        delayReason: delayDetails.delayReason
-      }
+        delayReason: delayDetails.delayReason,
+      },
     };
 
     try {

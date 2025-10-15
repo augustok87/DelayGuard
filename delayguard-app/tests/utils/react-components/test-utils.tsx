@@ -29,7 +29,7 @@ const customRender = (
     preloadedState = {},
     store = createTestStore(preloadedState),
     ...renderOptions
-  }: CustomRenderOptions = {}
+  }: CustomRenderOptions = {},
 ) => {
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Provider store={store}>
@@ -44,7 +44,7 @@ const customRender = (
 };
 
 // Accessibility testing helper (simplified)
-export const testAccessibility = async (container: HTMLElement) => {
+export const testAccessibility = async(container: HTMLElement) => {
   // Basic accessibility checks
   const buttons = container.querySelectorAll('button');
   const inputs = container.querySelectorAll('input');

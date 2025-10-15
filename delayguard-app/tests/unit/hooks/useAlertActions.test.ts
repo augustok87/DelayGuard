@@ -3,11 +3,11 @@ import { useAlertActions } from '../../../src/hooks/useAlertActions';
 
 // Mock the dependencies
 jest.mock('../../../src/hooks/useDelayAlerts', () => ({
-  useDelayAlerts: jest.fn()
+  useDelayAlerts: jest.fn(),
 }));
 
 jest.mock('../../../src/hooks/useToasts', () => ({
-  useToasts: jest.fn()
+  useToasts: jest.fn(),
 }));
 
 describe('useAlertActions', () => {
@@ -24,7 +24,7 @@ describe('useAlertActions', () => {
     // Mock useDelayAlerts
     require('../../../src/hooks/useDelayAlerts').useDelayAlerts.mockReturnValue({
       updateAlert: mockUpdateAlert,
-      deleteAlert: mockDeleteAlert
+      deleteAlert: mockDeleteAlert,
     });
 
     // Mock useToasts
@@ -32,140 +32,140 @@ describe('useAlertActions', () => {
       showSuccessToast: mockShowSuccessToast,
       showErrorToast: mockShowErrorToast,
       showDeleteSuccessToast: mockShowDeleteSuccessToast,
-      showDeleteErrorToast: mockShowDeleteErrorToast
+      showDeleteErrorToast: mockShowDeleteErrorToast,
     });
   });
 
-  it('should resolve alert successfully', async () => {
+  it('should resolve alert successfully', async() => {
     mockUpdateAlert.mockResolvedValue({ success: true });
 
     const { result } = renderHook(() => useAlertActions());
     const { resolveAlert } = result.current;
 
     let resolveResult;
-    await act(async () => {
+    await act(async() => {
       resolveResult = await resolveAlert('alert-1');
     });
 
     expect(mockUpdateAlert).toHaveBeenCalledWith('alert-1', {
       status: 'resolved',
-      resolvedAt: expect.any(String)
+      resolvedAt: expect.any(String),
     });
     expect(mockShowSuccessToast).toHaveBeenCalledWith('Alert resolved successfully!');
     expect(resolveResult).toEqual({ success: true });
   });
 
-  it('should handle resolve alert failure', async () => {
+  it('should handle resolve alert failure', async() => {
     mockUpdateAlert.mockResolvedValue({ 
       success: false, 
-      error: 'Database connection failed' 
+      error: 'Database connection failed', 
     });
 
     const { result } = renderHook(() => useAlertActions());
     const { resolveAlert } = result.current;
 
     let resolveResult;
-    await act(async () => {
+    await act(async() => {
       resolveResult = await resolveAlert('alert-1');
     });
 
     expect(mockUpdateAlert).toHaveBeenCalledWith('alert-1', {
       status: 'resolved',
-      resolvedAt: expect.any(String)
+      resolvedAt: expect.any(String),
     });
     expect(mockShowErrorToast).toHaveBeenCalledWith('Database connection failed');
     expect(resolveResult).toEqual({ 
       success: false, 
-      error: 'Database connection failed' 
+      error: 'Database connection failed', 
     });
   });
 
-  it('should handle resolve alert exception', async () => {
+  it('should handle resolve alert exception', async() => {
     mockUpdateAlert.mockRejectedValue(new Error('Network error'));
 
     const { result } = renderHook(() => useAlertActions());
     const { resolveAlert } = result.current;
 
     let resolveResult;
-    await act(async () => {
+    await act(async() => {
       resolveResult = await resolveAlert('alert-1');
     });
 
     expect(mockShowErrorToast).toHaveBeenCalledWith('An unexpected error occurred');
     expect(resolveResult).toEqual({ 
       success: false, 
-      error: 'An unexpected error occurred' 
+      error: 'An unexpected error occurred', 
     });
   });
 
-  it('should dismiss alert successfully', async () => {
+  it('should dismiss alert successfully', async() => {
     mockUpdateAlert.mockResolvedValue({ success: true });
 
     const { result } = renderHook(() => useAlertActions());
     const { dismissAlert } = result.current;
 
     let dismissResult;
-    await act(async () => {
+    await act(async() => {
       dismissResult = await dismissAlert('alert-1');
     });
 
     expect(mockUpdateAlert).toHaveBeenCalledWith('alert-1', {
-      status: 'dismissed'
+      status: 'dismissed',
     });
     expect(mockShowSuccessToast).toHaveBeenCalledWith('Alert dismissed successfully!');
     expect(dismissResult).toEqual({ success: true });
   });
 
-  it('should handle dismiss alert failure', async () => {
+  it('should handle dismiss alert failure', async() => {
     mockUpdateAlert.mockResolvedValue({ 
       success: false, 
-      error: 'Permission denied' 
+      error: 'Permission denied', 
     });
 
     const { result } = renderHook(() => useAlertActions());
     const { dismissAlert } = result.current;
 
     let dismissResult;
-    await act(async () => {
+    await act(async() => {
       dismissResult = await dismissAlert('alert-1');
     });
 
     expect(mockUpdateAlert).toHaveBeenCalledWith('alert-1', {
-      status: 'dismissed'
+      status: 'dismissed',
     });
     expect(mockShowErrorToast).toHaveBeenCalledWith('Permission denied');
     expect(dismissResult).toEqual({ 
       success: false, 
-      error: 'Permission denied' 
+      error: 'Permission denied', 
     });
   });
 
-  it('should handle dismiss alert exception', async () => {
+  it('should handle dismiss alert exception', async() => {
     mockUpdateAlert.mockRejectedValue(new Error('Server error'));
 
     const { result } = renderHook(() => useAlertActions());
     const { dismissAlert } = result.current;
 
     let dismissResult;
-    await act(async () => {
+    await act(async() => {
       dismissResult = await dismissAlert('alert-1');
     });
 
     expect(mockShowErrorToast).toHaveBeenCalledWith('An unexpected error occurred');
     expect(dismissResult).toEqual({ 
       success: false, 
-      error: 'An unexpected error occurred' 
+      error: 'An unexpected error occurred', 
     });
   });
 
-  it('should delete alert permanently successfully', async () => {
+  it('should delete alert permanently successfully', async() => {
     mockDeleteAlert.mockResolvedValue({ success: true });
 
     const { result } = renderHook(() => useAlertActions());
     const { deleteAlert } = result.current;
 
     let deleteResult;
-    await act(async () => {
+    await act(async() => {
       deleteResult = await deleteAlert('alert-1');
     });
 
@@ -174,17 +174,17 @@ describe('useAlertActions', () => {
     expect(deleteResult).toEqual({ success: true });
   });
 
-  it('should handle delete alert failure', async () => {
+  it('should handle delete alert failure', async() => {
     mockDeleteAlert.mockResolvedValue({ 
       success: false, 
-      error: 'Cannot delete active alert' 
+      error: 'Cannot delete active alert', 
     });
 
     const { result } = renderHook(() => useAlertActions());
     const { deleteAlert } = result.current;
 
     let deleteResult;
-    await act(async () => {
+    await act(async() => {
       deleteResult = await deleteAlert('alert-1');
     });
 
@@ -192,57 +192,57 @@ describe('useAlertActions', () => {
     expect(mockShowDeleteErrorToast).toHaveBeenCalledWith('Cannot delete active alert');
     expect(deleteResult).toEqual({ 
       success: false, 
-      error: 'Cannot delete active alert' 
+      error: 'Cannot delete active alert', 
     });
   });
 
-  it('should handle delete alert exception', async () => {
+  it('should handle delete alert exception', async() => {
     mockDeleteAlert.mockRejectedValue(new Error('Database error'));
 
     const { result } = renderHook(() => useAlertActions());
     const { deleteAlert } = result.current;
 
     let deleteResult;
-    await act(async () => {
+    await act(async() => {
       deleteResult = await deleteAlert('alert-1');
     });
 
     expect(mockShowDeleteErrorToast).toHaveBeenCalledWith('An unexpected error occurred');
     expect(deleteResult).toEqual({ 
       success: false, 
-      error: 'An unexpected error occurred' 
+      error: 'An unexpected error occurred', 
     });
   });
 
-  it('should bulk resolve alerts successfully', async () => {
+  it('should bulk resolve alerts successfully', async() => {
     mockUpdateAlert.mockResolvedValue({ success: true });
 
     const { result } = renderHook(() => useAlertActions());
     const { bulkResolveAlerts } = result.current;
 
     let bulkResult;
-    await act(async () => {
+    await act(async() => {
       bulkResult = await bulkResolveAlerts(['alert-1', 'alert-2']);
     });
 
     expect(mockUpdateAlert).toHaveBeenCalledTimes(2);
     expect(mockUpdateAlert).toHaveBeenCalledWith('alert-1', {
       status: 'resolved',
-      resolvedAt: expect.any(String)
+      resolvedAt: expect.any(String),
     });
     expect(mockUpdateAlert).toHaveBeenCalledWith('alert-2', {
       status: 'resolved',
-      resolvedAt: expect.any(String)
+      resolvedAt: expect.any(String),
     });
     expect(mockShowSuccessToast).toHaveBeenCalledWith('2 alerts resolved successfully!');
     expect(bulkResult).toEqual({ 
       success: true, 
       resolvedCount: 2,
-      totalCount: 2
+      totalCount: 2,
     });
   });
 
-  it('should handle bulk resolve alerts with partial failures', async () => {
+  it('should handle bulk resolve alerts with partial failures', async() => {
     mockUpdateAlert
       .mockResolvedValueOnce({ success: true })
       .mockResolvedValueOnce({ success: false, error: 'Permission denied' });
@@ -251,7 +251,7 @@ describe('useAlertActions', () => {
     const { bulkResolveAlerts } = result.current;
 
     let bulkResult;
-    await act(async () => {
+    await act(async() => {
       bulkResult = await bulkResolveAlerts(['alert-1', 'alert-2']);
     });
 
@@ -260,37 +260,37 @@ describe('useAlertActions', () => {
     expect(bulkResult).toEqual({ 
       success: true, 
       resolvedCount: 1,
-      totalCount: 2
+      totalCount: 2,
     });
   });
 
-  it('should bulk dismiss alerts successfully', async () => {
+  it('should bulk dismiss alerts successfully', async() => {
     mockUpdateAlert.mockResolvedValue({ success: true });
 
     const { result } = renderHook(() => useAlertActions());
     const { bulkDismissAlerts } = result.current;
 
     let bulkResult;
-    await act(async () => {
+    await act(async() => {
       bulkResult = await bulkDismissAlerts(['alert-1', 'alert-2']);
     });
 
     expect(mockUpdateAlert).toHaveBeenCalledTimes(2);
     expect(mockUpdateAlert).toHaveBeenCalledWith('alert-1', {
-      status: 'dismissed'
+      status: 'dismissed',
     });
     expect(mockUpdateAlert).toHaveBeenCalledWith('alert-2', {
-      status: 'dismissed'
+      status: 'dismissed',
     });
     expect(mockShowSuccessToast).toHaveBeenCalledWith('2 alerts dismissed successfully!');
     expect(bulkResult).toEqual({ 
       success: true, 
       dismissedCount: 2,
-      totalCount: 2
+      totalCount: 2,
     });
   });
 
-  it('should handle bulk dismiss alerts with partial failures', async () => {
+  it('should handle bulk dismiss alerts with partial failures', async() => {
     mockUpdateAlert
       .mockResolvedValueOnce({ success: true })
       .mockResolvedValueOnce({ success: false, error: 'Network timeout' });
@@ -299,7 +299,7 @@ describe('useAlertActions', () => {
     const { bulkDismissAlerts } = result.current;
 
     let bulkResult;
-    await act(async () => {
+    await act(async() => {
       bulkResult = await bulkDismissAlerts(['alert-1', 'alert-2']);
     });
 
@@ -308,18 +308,18 @@ describe('useAlertActions', () => {
     expect(bulkResult).toEqual({ 
       success: true, 
       dismissedCount: 1,
-      totalCount: 2
+      totalCount: 2,
     });
   });
 
-  it('should bulk delete alerts successfully', async () => {
+  it('should bulk delete alerts successfully', async() => {
     mockDeleteAlert.mockResolvedValue({ success: true });
 
     const { result } = renderHook(() => useAlertActions());
     const { bulkDeleteAlerts } = result.current;
 
     let bulkResult;
-    await act(async () => {
+    await act(async() => {
       bulkResult = await bulkDeleteAlerts(['alert-1', 'alert-2']);
     });
 
@@ -330,11 +330,11 @@ describe('useAlertActions', () => {
     expect(bulkResult).toEqual({ 
       success: true, 
       deletedCount: 2,
-      totalCount: 2
+      totalCount: 2,
     });
   });
 
-  it('should handle bulk delete alerts with partial failures', async () => {
+  it('should handle bulk delete alerts with partial failures', async() => {
     mockDeleteAlert
       .mockResolvedValueOnce({ success: true })
       .mockResolvedValueOnce({ success: false, error: 'Cannot delete active alert' });
@@ -343,7 +343,7 @@ describe('useAlertActions', () => {
     const { bulkDeleteAlerts } = result.current;
 
     let bulkResult;
-    await act(async () => {
+    await act(async() => {
       bulkResult = await bulkDeleteAlerts(['alert-1', 'alert-2']);
     });
 
@@ -352,16 +352,16 @@ describe('useAlertActions', () => {
     expect(bulkResult).toEqual({ 
       success: true, 
       deletedCount: 1,
-      totalCount: 2
+      totalCount: 2,
     });
   });
 
-  it('should handle empty bulk operations', async () => {
+  it('should handle empty bulk operations', async() => {
     const { result } = renderHook(() => useAlertActions());
     const { bulkResolveAlerts } = result.current;
 
     let bulkResult;
-    await act(async () => {
+    await act(async() => {
       bulkResult = await bulkResolveAlerts([]);
     });
 
@@ -370,18 +370,18 @@ describe('useAlertActions', () => {
     expect(bulkResult).toEqual({ 
       success: true, 
       resolvedCount: 0,
-      totalCount: 0
+      totalCount: 0,
     });
   });
 
-  it('should handle bulk operations with exceptions', async () => {
+  it('should handle bulk operations with exceptions', async() => {
     mockUpdateAlert.mockRejectedValue(new Error('Network error'));
 
     const { result } = renderHook(() => useAlertActions());
     const { bulkResolveAlerts } = result.current;
 
     let bulkResult;
-    await act(async () => {
+    await act(async() => {
       bulkResult = await bulkResolveAlerts(['alert-1']);
     });
 
@@ -389,7 +389,7 @@ describe('useAlertActions', () => {
     expect(bulkResult).toEqual({ 
       success: false, 
       resolvedCount: 0,
-      totalCount: 1
+      totalCount: 1,
     });
   });
 

@@ -83,6 +83,6 @@ export const useToasts = () => {
     showConnectionSuccessToast,
     showConnectionErrorToast,
     showTestSuccessToast,
-    showTestErrorToast
+    showTestErrorToast,
   };
 };

@@ -17,7 +17,7 @@ export class SMSService {
       await this.client.messages.create({
         body: message,
         from: this.phoneNumber,
-        to: phone
+        to: phone,
       });
     } catch (error) {
       throw new Error(`Failed to send SMS: ${error}`);

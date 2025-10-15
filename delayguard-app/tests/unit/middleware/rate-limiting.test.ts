@@ -26,8 +26,8 @@ describe('Rate Limiting Middleware', () => {
         [null, 0], // zremrangebyscore result
         [null, 0], // zcard result
         [null, 1], // zadd result
-        [null, 1]  // expire result
-      ])
+        [null, 1],  // expire result
+      ]),
     };
 
     mockRedis = {
@@ -35,7 +35,7 @@ describe('Rate Limiting Middleware', () => {
       zrem: jest.fn().mockResolvedValue(1),
       zadd: jest.fn().mockResolvedValue(1),
       zcard: jest.fn().mockResolvedValue(0),
-      expire: jest.fn().mockResolvedValue(1)
+      expire: jest.fn().mockResolvedValue(1),
     };
 
     // Mock the constructor to return our mock instance
@@ -47,22 +47,22 @@ describe('Rate Limiting Middleware', () => {
       app = new Koa();
     });
 
-    it('should allow requests within limit', async () => {
+    it('should allow requests within limit', async() => {
       // Mock successful Redis operations
       pipeline.exec.mockResolvedValue([
         [null, 0], // zremrangebyscore result
         [null, 5], // zcard result (5 requests)
         [null, 1], // zadd result
-        [null, 1]  // expire result
+        [null, 1],  // expire result
       ]);
 
       const rateLimit = RateLimitingMiddleware.create(mockRedis, {
         windowMs: 60000, // 1 minute
-        maxRequests: 10
+        maxRequests: 10,
       });
 
       app.use(rateLimit);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -75,22 +75,22 @@ describe('Rate Limiting Middleware', () => {
       expect(response.headers['x-ratelimit-remaining']).toBe('5');
     });
 
-    it('should block requests exceeding limit', async () => {
+    it('should block requests exceeding limit', async() => {
       // Mock Redis operations showing limit exceeded
       pipeline.exec.mockResolvedValue([
         [null, 0], // zremrangebyscore result
         [null, 15], // zcard result (15 requests, exceeds limit)
         [null, 1], // zadd result
-        [null, 1]  // expire result
+        [null, 1],  // expire result
       ]);
 
       const rateLimit = RateLimitingMiddleware.create(mockRedis, {
         windowMs: 60000,
-        maxRequests: 10
+        maxRequests: 10,
       });
 
       app.use(rateLimit);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -107,17 +107,17 @@ describe('Rate Limiting Middleware', () => {
       expect(response.headers['x-ratelimit-remaining']).toBe('0');
     });
 
-    it('should handle Redis errors gracefully', async () => {
+    it('should handle Redis errors gracefully', async() => {
       // Mock Redis error
       pipeline.exec.mockRejectedValue(new Error('Redis connection failed'));
 
       const rateLimit = RateLimitingMiddleware.create(mockRedis, {
         windowMs: 60000,
-        maxRequests: 10
+        maxRequests: 10,
       });
 
       app.use(rateLimit);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -170,7 +170,7 @@ describe('Rate Limiting Middleware', () => {
       advancedRateLimit = new AdvancedRateLimiting(mockRedis);
     });
 
-    it('should apply tiered rate limiting for premium users', async () => {
+    it('should apply tiered rate limiting for premium users', async() => {
       app = new Koa();
       
       // Mock user tier detection
@@ -181,11 +181,11 @@ describe('Rate Limiting Middleware', () => {
         [null, 0],
         [null, 100], // Within premium limit
         [null, 1],
-        [null, 1]
+        [null, 1],
       ]);
 
       app.use(advancedRateLimit.applyTieredRateLimit.bind(advancedRateLimit));
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -196,7 +196,7 @@ describe('Rate Limiting Middleware', () => {
       expect(response.body.message).toBe('success');
     });
 
-    it('should apply tiered rate limiting for free users', async () => {
+    it('should apply tiered rate limiting for free users', async() => {
       app = new Koa();
       
       // Mock user tier detection
@@ -207,11 +207,11 @@ describe('Rate Limiting Middleware', () => {
         [null, 0],
         [null, 60], // Exceeds free limit (50)
         [null, 1],
-        [null, 1]
+        [null, 1],
       ]);
 
       app.use(advancedRateLimit.applyTieredRateLimit.bind(advancedRateLimit));
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -224,22 +224,22 @@ describe('Rate Limiting Middleware', () => {
   });
 
   describe('Rate Limit Headers', () => {
-    it('should set correct rate limit headers', async () => {
+    it('should set correct rate limit headers', async() => {
       pipeline.exec.mockResolvedValue([
         [null, 0],
         [null, 3], // 3 requests made
         [null, 1],
-        [null, 1]
+        [null, 1],
       ]);
 
       const rateLimit = RateLimitingMiddleware.create(mockRedis, {
         windowMs: 60000,
-        maxRequests: 10
+        maxRequests: 10,
       });
 
       app = new Koa();
       app.use(rateLimit);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -254,18 +254,18 @@ describe('Rate Limiting Middleware', () => {
   });
 
   describe('Custom Key Generator', () => {
-    it('should use custom key generator', async () => {
+    it('should use custom key generator', async() => {
       const customKeyGenerator = jest.fn().mockReturnValue('custom:key:123');
       
       const rateLimit = RateLimitingMiddleware.create(mockRedis, {
         windowMs: 60000,
         maxRequests: 10,
-        keyGenerator: customKeyGenerator
+        keyGenerator: customKeyGenerator,
       });
 
       app = new Koa();
       app.use(rateLimit);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { message: 'success' };
       });
 
@@ -273,7 +273,7 @@ describe('Rate Limiting Middleware', () => {
         [null, 0],
         [null, 5],
         [null, 1],
-        [null, 1]
+        [null, 1],
       ]);
 
       await request(app.callback())
@@ -285,16 +285,16 @@ describe('Rate Limiting Middleware', () => {
   });
 
   describe('Skip Options', () => {
-    it('should skip successful requests when configured', async () => {
+    it('should skip successful requests when configured', async() => {
       const rateLimit = RateLimitingMiddleware.create(mockRedis, {
         windowMs: 60000,
         maxRequests: 10,
-        skipSuccessfulRequests: true
+        skipSuccessfulRequests: true,
       });
 
       app = new Koa();
       app.use(rateLimit);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.status = 200;
         ctx.body = { message: 'success' };
       });
@@ -303,7 +303,7 @@ describe('Rate Limiting Middleware', () => {
         [null, 0],
         [null, 5],
         [null, 1],
-        [null, 1]
+        [null, 1],
       ]);
 
       await request(app.callback())

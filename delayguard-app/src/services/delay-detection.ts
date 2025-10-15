@@ -9,7 +9,7 @@ export function checkForDelays(trackingInfo: TrackingInfo): DelayDetectionResult
       isDelayed: true,
       delayReason: 'DELAYED_STATUS',
       estimatedDelivery: trackingInfo.estimatedDeliveryDate,
-      originalDelivery: trackingInfo.originalEstimatedDeliveryDate
+      originalDelivery: trackingInfo.originalEstimatedDeliveryDate,
     };
   }
 
@@ -18,7 +18,7 @@ export function checkForDelays(trackingInfo: TrackingInfo): DelayDetectionResult
       isDelayed: true,
       delayReason: 'EXCEPTION_STATUS',
       estimatedDelivery: trackingInfo.estimatedDeliveryDate,
-      originalDelivery: trackingInfo.originalEstimatedDeliveryDate
+      originalDelivery: trackingInfo.originalEstimatedDeliveryDate,
     };
   }
 
@@ -34,7 +34,7 @@ export function checkForDelays(trackingInfo: TrackingInfo): DelayDetectionResult
         delayDays,
         delayReason: 'DATE_DELAY',
         estimatedDelivery: trackingInfo.estimatedDeliveryDate,
-        originalDelivery: trackingInfo.originalEstimatedDeliveryDate
+        originalDelivery: trackingInfo.originalEstimatedDeliveryDate,
       };
     }
   }
@@ -43,12 +43,12 @@ export function checkForDelays(trackingInfo: TrackingInfo): DelayDetectionResult
   if (!trackingInfo.estimatedDeliveryDate || !trackingInfo.originalEstimatedDeliveryDate) {
     return {
       isDelayed: false,
-      error: 'Missing delivery date information'
+      error: 'Missing delivery date information',
     };
   }
 
   return {
     isDelayed: false,
-    delayDays: 0
+    delayDays: 0,
   };
 }

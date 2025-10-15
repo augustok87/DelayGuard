@@ -16,7 +16,7 @@ describe('Modal Component', () => {
     isOpen: true,
     onClose: jest.fn(),
     title: 'Test Modal',
-    children: 'Modal content'
+    children: 'Modal content',
   };
 
   beforeEach(() => {
@@ -50,7 +50,7 @@ describe('Modal Component', () => {
       
       sizes.forEach(size => {
         const { unmount } = render(
-          <Modal {...defaultProps} size={size} />
+          <Modal {...defaultProps} size={size} />,
         );
         
         const modal = screen.getByRole('dialog');
@@ -69,7 +69,7 @@ describe('Modal Component', () => {
   });
 
   describe('Interactions', () => {
-    it('should close when close button is clicked', async () => {
+    it('should close when close button is clicked', async() => {
       const user = userEvent.setup();
       const onClose = jest.fn();
       
@@ -81,7 +81,7 @@ describe('Modal Component', () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    it('should close when escape key is pressed', async () => {
+    it('should close when escape key is pressed', async() => {
       const user = userEvent.setup();
       const onClose = jest.fn();
       
@@ -92,7 +92,7 @@ describe('Modal Component', () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    it('should close when backdrop is clicked', async () => {
+    it('should close when backdrop is clicked', async() => {
       const user = userEvent.setup();
       const onClose = jest.fn();
       
@@ -104,7 +104,7 @@ describe('Modal Component', () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    it('should not close when modal content is clicked', async () => {
+    it('should not close when modal content is clicked', async() => {
       const user = userEvent.setup();
       const onClose = jest.fn();
       
@@ -116,7 +116,7 @@ describe('Modal Component', () => {
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    it('should handle backdrop click', async () => {
+    it('should handle backdrop click', async() => {
       const user = userEvent.setup();
       const onClose = jest.fn();
       
@@ -124,7 +124,7 @@ describe('Modal Component', () => {
         <Modal 
           {...defaultProps} 
           onClose={onClose}
-        />
+        />,
       );
       
       const backdrop = screen.getByTestId('modal-backdrop');
@@ -133,7 +133,7 @@ describe('Modal Component', () => {
       expect(onClose).toHaveBeenCalled();
     });
 
-    it('should handle escape key', async () => {
+    it('should handle escape key', async() => {
       const user = userEvent.setup();
       const onClose = jest.fn();
       
@@ -141,7 +141,7 @@ describe('Modal Component', () => {
         <Modal 
           {...defaultProps} 
           onClose={onClose}
-        />
+        />,
       );
       
       await user.keyboard('{Escape}');
@@ -151,7 +151,7 @@ describe('Modal Component', () => {
   });
 
   describe('Accessibility', () => {
-    it('should be accessible', async () => {
+    it('should be accessible', async() => {
       const { container } = render(<Modal {...defaultProps} />);
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -165,7 +165,7 @@ describe('Modal Component', () => {
       expect(modal).toHaveAttribute('aria-labelledby');
     });
 
-    it('should focus the modal when opened', async () => {
+    it('should focus the modal when opened', async() => {
       render(<Modal {...defaultProps} />);
       
       const modal = screen.getByRole('dialog');
@@ -174,7 +174,7 @@ describe('Modal Component', () => {
       });
     });
 
-    it('should restore focus when closed', async () => {
+    it('should restore focus when closed', async() => {
       const user = userEvent.setup();
       const onClose = jest.fn();
       
@@ -183,7 +183,7 @@ describe('Modal Component', () => {
         <div>
           <button>Focus me</button>
           <Modal {...defaultProps} onClose={onClose} />
-        </div>
+        </div>,
       );
       
       const button = screen.getByText('Focus me');
@@ -197,7 +197,7 @@ describe('Modal Component', () => {
       });
     });
 
-    it('should trap focus within modal', async () => {
+    it('should trap focus within modal', async() => {
       const user = userEvent.setup();
       
       render(
@@ -205,7 +205,7 @@ describe('Modal Component', () => {
           <button>First</button>
           <button>Second</button>
           <button>Third</button>
-        </Modal>
+        </Modal>,
       );
       
       const firstButton = screen.getByText('First');
@@ -262,7 +262,7 @@ describe('Modal Component', () => {
             <p>Content</p>
             <button>Action</button>
           </div>
-        </Modal>
+        </Modal>,
       );
       
       expect(screen.getByText('Complex')).toBeInTheDocument();
@@ -275,7 +275,7 @@ describe('Modal Component', () => {
         <div>
           <Modal {...defaultProps} title="Modal 1" />
           <Modal {...defaultProps} title="Modal 2" isOpen={false} />
-        </div>
+        </div>,
       );
       
       expect(screen.getByText('Modal 1')).toBeInTheDocument();

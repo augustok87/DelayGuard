@@ -36,7 +36,7 @@ class MonitoringService {
       errorRate: 10, // 10 errors per minute
       responseTime: 5000, // 5 seconds
       queueSize: 100, // 100 pending jobs
-      memoryUsage: 80 // 80% memory usage
+      memoryUsage: 80, // 80% memory usage
     };
   }
 
@@ -50,7 +50,7 @@ class MonitoringService {
       context,
       severity,
       shopDomain: context?.shopDomain,
-      userId: context?.userId
+      userId: context?.userId,
     };
 
     // Log to console with appropriate level
@@ -70,7 +70,7 @@ class MonitoringService {
       operation,
       duration,
       success,
-      shopDomain: context?.shopDomain
+      shopDomain: context?.shopDomain,
     };
 
     this.performanceMetrics.push(metrics);
@@ -86,10 +86,10 @@ class MonitoringService {
 
   // Performance decorator
   static trackPerformance(operation: string) {
-    return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+    return function(target: any, propertyName: string, descriptor: PropertyDescriptor) {
       const method = descriptor.value;
 
-      descriptor.value = async function (...args: any[]) {
+      descriptor.value = async function(...args: any[]) {
         const start = Date.now();
         let success = true;
         let error: Error | null = null;
@@ -107,7 +107,7 @@ class MonitoringService {
           await monitoring.trackPerformance(operation, duration, success, {
             method: propertyName,
             className: target.constructor.name,
-            error: error?.message
+            error: error?.message,
           });
         }
       };
@@ -134,7 +134,7 @@ class MonitoringService {
       database: await this.checkDatabase(),
       redis: await this.checkRedis(),
       externalAPIs: await this.checkExternalAPIs(),
-      queue: await this.checkQueue()
+      queue: await this.checkQueue(),
     };
 
     const metrics = await this.getCurrentMetrics();
@@ -144,7 +144,7 @@ class MonitoringService {
     return {
       status,
       checks,
-      metrics
+      metrics,
     };
   }
 
@@ -160,7 +160,7 @@ class MonitoringService {
         errorType: error.errorType,
         count: currentCount + 1,
         shopDomain: error.shopDomain,
-        threshold: this.alertThresholds.errorRate
+        threshold: this.alertThresholds.errorRate,
       });
     }
 
@@ -170,7 +170,7 @@ class MonitoringService {
         errorType: error.errorType,
         message: error.errorMessage,
         shopDomain: error.shopDomain,
-        stackTrace: error.stackTrace
+        stackTrace: error.stackTrace,
       });
     }
   }
@@ -182,7 +182,7 @@ class MonitoringService {
         operation: metrics.operation,
         duration: metrics.duration,
         threshold: this.alertThresholds.responseTime,
-        shopDomain: metrics.shopDomain
+        shopDomain: metrics.shopDomain,
       });
     }
 
@@ -194,7 +194,7 @@ class MonitoringService {
       await this.sendAlert('low_success_rate', {
         successRate,
         operation: metrics.operation,
-        shopDomain: metrics.shopDomain
+        shopDomain: metrics.shopDomain,
       });
     }
   }
@@ -234,7 +234,7 @@ class MonitoringService {
         JSON.stringify(error.context),
         error.severity,
         error.shopDomain,
-        error.userId
+        error.userId,
       ]);
     } catch (err) {
       console.error('Failed to store error in database:', err);
@@ -318,13 +318,13 @@ class MonitoringService {
       errorRate,
       averageResponseTime,
       queueSize,
-      memoryUsage
+      memoryUsage,
     };
   }
 
   private determineHealthStatus(
     checks: { database: boolean; redis: boolean; externalAPIs: boolean; queue: boolean },
-    metrics: { errorRate: number; averageResponseTime: number; queueSize: number; memoryUsage: number }
+    metrics: { errorRate: number; averageResponseTime: number; queueSize: number; memoryUsage: number },
   ): 'healthy' | 'degraded' | 'unhealthy' {
     const criticalChecks = [checks.database, checks.redis];
     const allChecks = Object.values(checks);

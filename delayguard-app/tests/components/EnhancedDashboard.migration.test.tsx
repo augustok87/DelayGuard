@@ -57,7 +57,7 @@ describe('EnhancedDashboard Migration', () => {
   });
 
   describe('Functionality', () => {
-  it('should maintain all existing functionality', async () => {
+  it('should maintain all existing functionality', async() => {
     render(<EnhancedDashboard {...defaultProps} />);
     
     // Test settings modal functionality
@@ -93,7 +93,7 @@ describe('EnhancedDashboard Migration', () => {
     expect(mockFunctions.onSettingsChange).toHaveBeenCalledWith(
       expect.objectContaining({
         delayThreshold: 5,
-      })
+      }),
     );
   });
 
@@ -111,7 +111,7 @@ describe('EnhancedDashboard Migration', () => {
   });
 
   describe('Accessibility', () => {
-    it('should maintain WCAG 2.1 AA compliance', async () => {
+    it('should maintain WCAG 2.1 AA compliance', async() => {
       const { container } = render(<EnhancedDashboard {...defaultProps} />);
       await testAccessibility(container);
     });

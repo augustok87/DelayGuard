@@ -18,7 +18,7 @@ export const useDebounce = <T>(value: T, delay: number): T => {
 
 export const useDebouncedCallback = <T extends (...args: any[]) => any>(
   callback: T,
-  delay: number
+  delay: number,
 ): T => {
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -27,7 +27,7 @@ export const useDebouncedCallback = <T extends (...args: any[]) => any>(
       clearTimeout(debounceTimerRef.current);
     }
 
-    debounceTimerRef.current = setTimeout(async () => {
+    debounceTimerRef.current = setTimeout(async() => {
       try {
         const result = callback(...args);
         // Handle promises

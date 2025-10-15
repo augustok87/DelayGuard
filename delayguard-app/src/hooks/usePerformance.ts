@@ -17,14 +17,14 @@ interface UsePerformanceOptions {
 
 export const usePerformance = (
   componentName: string,
-  options: UsePerformanceOptions = {}
+  options: UsePerformanceOptions = {},
 ) => {
   const {
     trackRenderTime = true,
     trackMemoryUsage = false,
     trackFPS = false,
     logToConsole = false,
-    onMetricsUpdate
+    onMetricsUpdate,
   } = options;
 
   const mountTimeRef = useRef<number>(0);
@@ -62,7 +62,7 @@ export const usePerformance = (
           onMetricsUpdate({
             renderTime: 0,
             componentMountTime: 0,
-            memoryUsage
+            memoryUsage,
           });
         }
       }
@@ -86,7 +86,7 @@ export const usePerformance = (
       
       const metrics: PerformanceMetrics = {
         renderTime,
-        componentMountTime: performance.now() - mountTimeRef.current
+        componentMountTime: performance.now() - mountTimeRef.current,
       };
 
       if (trackMemoryUsage && 'memory' in performance) {
@@ -123,7 +123,7 @@ export const usePerformance = (
           onMetricsUpdate({
             renderTime: 0,
             componentMountTime: 0,
-            fps
+            fps,
           });
         }
 
@@ -145,18 +145,18 @@ export const usePerformance = (
   }, [componentName, trackFPS, logToConsole, onMetricsUpdate]);
 
   return {
-    trackRender: () => trackRender()
+    trackRender: () => trackRender(),
   };
 };
 
 // Hook for measuring component performance
 export const useComponentPerformance = (
   componentName: string,
-  dependencies: any[] = []
+  dependencies: any[] = [],
 ) => {
   const { trackRender } = usePerformance(componentName, {
     trackRenderTime: true,
-    logToConsole: true // Always log in tests
+    logToConsole: true, // Always log in tests
   });
 
   useEffect(() => {
@@ -171,7 +171,7 @@ export const useComponentPerformance = (
 export const useAsyncPerformance = () => {
   const measureAsync = useCallback(async <T>(
     operation: () => Promise<T>,
-    operationName: string
+    operationName: string,
   ): Promise<T> => {
     const startTime = performance.now();
     

@@ -18,7 +18,7 @@ describe('Button', () => {
     render(
       <Button variant="danger" size="lg" onClick={jest.fn()}>
         Delete
-      </Button>
+      </Button>,
     );
     
     const button = screen.getByRole('button', { name: /delete/i });
@@ -64,7 +64,7 @@ describe('Button', () => {
     render(
       <Button className="custom-class" onClick={jest.fn()}>
         Custom
-      </Button>
+      </Button>,
     );
     
     const button = screen.getByRole('button', { name: /custom/i });
@@ -75,7 +75,7 @@ describe('Button', () => {
     render(
       <Button type="submit" onClick={jest.fn()}>
         Submit
-      </Button>
+      </Button>,
     );
     
     const button = screen.getByRole('button', { name: /submit/i });
@@ -90,7 +90,7 @@ describe('Button', () => {
         aria-describedby="close-description"
       >
         ×
-      </Button>
+      </Button>,
     );
     
     const button = screen.getByRole('button', { name: /close dialog/i });
@@ -103,7 +103,7 @@ describe('Button', () => {
     const { rerender } = render(
       <Button variant="primary" onClick={handleClick}>
         Memo Test
-      </Button>
+      </Button>,
     );
     
     const button = screen.getByRole('button', { name: /memo test/i });
@@ -113,7 +113,7 @@ describe('Button', () => {
     rerender(
       <Button variant="primary" onClick={handleClick}>
         Memo Test
-      </Button>
+      </Button>,
     );
     
     // Should not re-render due to memoization
@@ -125,14 +125,14 @@ describe('Button', () => {
     const { rerender } = render(
       <Button variant="primary" onClick={handleClick}>
         Memo Test
-      </Button>
+      </Button>,
     );
     
     // Change variant
     rerender(
       <Button variant="danger" onClick={handleClick}>
         Memo Test
-      </Button>
+      </Button>,
     );
     
     const button = screen.getByRole('button', { name: /memo test/i });

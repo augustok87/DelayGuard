@@ -102,7 +102,7 @@ export class DelayDetectionService implements IDelayDetectionService {
             isDelayed: false,
             delayDays: 0,
             estimatedDelivery: result.estimatedDelivery,
-            originalDelivery: result.originalDelivery
+            originalDelivery: result.originalDelivery,
           };
         }
       }
@@ -116,14 +116,14 @@ export class DelayDetectionService implements IDelayDetectionService {
       console.error('Error in delay detection:', error);
       return {
         isDelayed: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
   private async enhanceDelayDetection(
     trackingInfo: TrackingInfo, 
-    baseResult: DelayDetectionResult
+    baseResult: DelayDetectionResult,
   ): Promise<DelayDetectionResult> {
     // If already detected as delayed, return the result
     if (baseResult.isDelayed) {
@@ -159,13 +159,13 @@ export class DelayDetectionService implements IDelayDetectionService {
       const status = event.status.toLowerCase();
       
       if (delayKeywords.some(keyword => 
-        description.includes(keyword) || status.includes(keyword)
+        description.includes(keyword) || status.includes(keyword),
       )) {
         return {
           isDelayed: true,
           delayReason: 'EVENT_DELAY',
           estimatedDelivery: trackingInfo.estimatedDeliveryDate,
-          originalDelivery: trackingInfo.originalEstimatedDeliveryDate
+          originalDelivery: trackingInfo.originalEstimatedDeliveryDate,
         };
       }
     }
@@ -192,7 +192,7 @@ export class DelayDetectionService implements IDelayDetectionService {
         delayDays,
         delayReason: 'ETA_EXCEEDED',
         estimatedDelivery: trackingInfo.estimatedDeliveryDate,
-        originalDelivery: trackingInfo.originalEstimatedDeliveryDate
+        originalDelivery: trackingInfo.originalEstimatedDeliveryDate,
       };
     }
 

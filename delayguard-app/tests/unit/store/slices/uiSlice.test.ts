@@ -9,7 +9,7 @@ import uiSlice, {
   setTheme,
   toggleSidebar,
   setSidebarOpen,
-  setSidebarWidth
+  setSidebarWidth,
 } from '../../../../src/store/slices/uiSlice';
 import { configureStore } from '@reduxjs/toolkit';
 
@@ -168,7 +168,7 @@ describe('uiSlice', () => {
       store.dispatch(showToast({ 
         message: 'Success!', 
         type: 'success', 
-        duration: 3000 
+        duration: 3000, 
       }));
       
       const state = store.getState().ui;
@@ -237,7 +237,7 @@ describe('uiSlice', () => {
       store.dispatch(setTheme({ 
         mode: 'dark', 
         primaryColor: '#ff0000', 
-        fontSize: 'lg' 
+        fontSize: 'lg', 
       }));
       
       const state = store.getState().ui;

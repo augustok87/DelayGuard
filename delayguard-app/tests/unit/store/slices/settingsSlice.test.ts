@@ -4,7 +4,7 @@ import settingsSlice, {
   testDelayDetection,
   updateSettings,
   resetSettings,
-  clearError
+  clearError,
 } from '../../../../src/store/slices/settingsSlice';
 import { configureStore } from '@reduxjs/toolkit';
 import { AppSettings } from '../../../../src/types';
@@ -51,7 +51,7 @@ describe('settingsSlice', () => {
       const updates: Partial<AppSettings> = {
         delayThreshold: 3,
         emailNotifications: false,
-        theme: 'dark'
+        theme: 'dark',
       };
       
       store.dispatch(updateSettings(updates));
@@ -122,7 +122,7 @@ describe('settingsSlice', () => {
 
       store.dispatch({ 
         type: fetchSettings.fulfilled.type, 
-        payload: mockSettings 
+        payload: mockSettings, 
       });
       
       const state = store.getState().settings;
@@ -134,7 +134,7 @@ describe('settingsSlice', () => {
       const errorMessage = 'Failed to fetch settings';
       store.dispatch({ 
         type: fetchSettings.rejected.type, 
-        payload: errorMessage 
+        payload: errorMessage, 
       });
       
       const state = store.getState().settings;
@@ -169,7 +169,7 @@ describe('settingsSlice', () => {
 
       store.dispatch({ 
         type: saveSettings.fulfilled.type, 
-        payload: mockSettings 
+        payload: mockSettings, 
       });
       
       const state = store.getState().settings;
@@ -182,7 +182,7 @@ describe('settingsSlice', () => {
       const errorMessage = 'Failed to save settings';
       store.dispatch({ 
         type: saveSettings.rejected.type, 
-        payload: errorMessage 
+        payload: errorMessage, 
       });
       
       const state = store.getState().settings;
@@ -203,7 +203,7 @@ describe('settingsSlice', () => {
     it('should handle testDelayDetection.fulfilled', () => {
       store.dispatch({ 
         type: testDelayDetection.fulfilled.type, 
-        payload: { success: true, message: 'Test completed' }
+        payload: { success: true, message: 'Test completed' },
       });
       
       const state = store.getState().settings;
@@ -214,7 +214,7 @@ describe('settingsSlice', () => {
       const errorMessage = 'Failed to test delay detection';
       store.dispatch({ 
         type: testDelayDetection.rejected.type, 
-        payload: errorMessage 
+        payload: errorMessage, 
       });
       
       const state = store.getState().settings;
@@ -240,7 +240,7 @@ describe('settingsSlice', () => {
         emailNotifications: false,
         smsNotifications: true,
         theme: 'dark',
-        language: 'es'
+        language: 'es',
       };
       
       store.dispatch(updateSettings(updates));

@@ -17,7 +17,7 @@ export class SecurityHeadersMiddleware {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "upgrade-insecure-requests"
+    "upgrade-insecure-requests",
   ].join('; ');
 
   private static readonly HSTS_MAX_AGE = 31536000; // 1 year
@@ -42,9 +42,9 @@ export class SecurityHeadersMiddleware {
     
     // Strict-Transport-Security
     if (ctx.secure || ctx.get('x-forwarded-proto') === 'https') {
-      const hstsValue = `max-age=${SecurityHeadersMiddleware.HSTS_MAX_AGE}` +
-        (SecurityHeadersMiddleware.HSTS_INCLUDE_SUBDOMAINS ? '; includeSubDomains' : '') +
-        (SecurityHeadersMiddleware.HSTS_PRELOAD ? '; preload' : '');
+      const hstsValue = `max-age=${SecurityHeadersMiddleware.HSTS_MAX_AGE}${ 
+        SecurityHeadersMiddleware.HSTS_INCLUDE_SUBDOMAINS ? '; includeSubDomains' : '' 
+        }${SecurityHeadersMiddleware.HSTS_PRELOAD ? '; preload' : ''}`;
       ctx.set('Strict-Transport-Security', hstsValue);
     }
     
@@ -60,7 +60,7 @@ export class SecurityHeadersMiddleware {
       'usb=()',
       'magnetometer=()',
       'gyroscope=()',
-      'accelerometer=()'
+      'accelerometer=()',
     ].join(', '));
     
     // Cross-Origin Policies
@@ -91,8 +91,8 @@ export class SecurityHeadersMiddleware {
       hsts: {
         maxAge: SecurityHeadersMiddleware.HSTS_MAX_AGE,
         includeSubdomains: SecurityHeadersMiddleware.HSTS_INCLUDE_SUBDOMAINS,
-        preload: SecurityHeadersMiddleware.HSTS_PRELOAD
-      }
+        preload: SecurityHeadersMiddleware.HSTS_PRELOAD,
+      },
     };
   }
 }

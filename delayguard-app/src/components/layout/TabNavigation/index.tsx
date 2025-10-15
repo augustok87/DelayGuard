@@ -10,7 +10,7 @@ interface TabNavigationProps {
 const tabs = [
   { id: 0, label: 'Dashboard', icon: '📊' },
   { id: 1, label: 'Delay Alerts', icon: '🚨' },
-  { id: 2, label: 'Orders', icon: '📦' }
+  { id: 2, label: 'Orders', icon: '📦' },
 ];
 
 export function TabNavigation({ selectedTab, onTabChange, loading = false }: TabNavigationProps) {

@@ -42,7 +42,7 @@ const requiredEnvVars = [
   'SENDGRID_API_KEY',
   'TWILIO_ACCOUNT_SID',
   'TWILIO_AUTH_TOKEN',
-  'TWILIO_PHONE_NUMBER'
+  'TWILIO_PHONE_NUMBER',
 ];
 
 requiredEnvVars.forEach(envVar => {
@@ -61,25 +61,25 @@ const config: AppConfig = {
   shopify: {
     apiKey: process.env.SHOPIFY_API_KEY!,
     apiSecret: process.env.SHOPIFY_API_SECRET!,
-    scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_orders', 'write_orders', 'read_fulfillments', 'write_fulfillments']
+    scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_orders', 'write_orders', 'read_fulfillments', 'write_fulfillments'],
   },
   database: {
-    url: process.env.DATABASE_URL!
+    url: process.env.DATABASE_URL!,
   },
   redis: {
-    url: process.env.REDIS_URL!
+    url: process.env.REDIS_URL!,
   },
   shipengine: {
-    apiKey: process.env.SHIPENGINE_API_KEY!
+    apiKey: process.env.SHIPENGINE_API_KEY!,
   },
   sendgrid: {
-    apiKey: process.env.SENDGRID_API_KEY!
+    apiKey: process.env.SENDGRID_API_KEY!,
   },
   twilio: {
     accountSid: process.env.TWILIO_ACCOUNT_SID!,
     authToken: process.env.TWILIO_AUTH_TOKEN!,
-    phoneNumber: process.env.TWILIO_PHONE_NUMBER!
-  }
+    phoneNumber: process.env.TWILIO_PHONE_NUMBER!,
+  },
 };
 
 // Initialize Shopify API
@@ -92,8 +92,8 @@ const shopify = shopifyApi({
   isEmbeddedApp: true,
   logger: {
     level: process.env.NODE_ENV === 'production' ? LogSeverity.Error : LogSeverity.Info,
-    httpRequests: process.env.NODE_ENV === 'development'
-  }
+    httpRequests: process.env.NODE_ENV === 'development',
+  },
 });
 
 // Create Koa app
@@ -122,7 +122,7 @@ if (process.env.NODE_ENV === 'production') {
 app.use(CSRFProtectionMiddleware.create({
   secret: config.shopify.apiSecret,
   cookieName: '_csrf',
-  headerName: 'x-csrf-token'
+  headerName: 'x-csrf-token',
 }));
 
 // Session configuration
@@ -133,7 +133,7 @@ app.use(session(app));
 app.use(bodyParser({
   jsonLimit: '10mb',
   textLimit: '10mb',
-  formLimit: '10mb'
+  formLimit: '10mb',
 }));
 
 // Initialize Shopify app middleware
@@ -148,7 +148,7 @@ app.use(serve(join(__dirname, '../public')));
 const router = new Router();
 
 // Health check
-router.get('/health', async (ctx) => {
+router.get('/health', async(ctx) => {
   ctx.body = { status: 'ok', timestamp: new Date().toISOString() };
 });
 
@@ -159,7 +159,7 @@ router.use('/auth', authRoutes.routes());
 router.use('/monitoring', monitoringRoutes.routes());
 
 // Swagger UI route
-router.get('/docs', async (ctx) => {
+router.get('/docs', async(ctx) => {
   const swaggerHtml = `
 <!DOCTYPE html>
 <html lang="en">
@@ -211,7 +211,7 @@ router.get('/docs', async (ctx) => {
 });
 
 // Swagger JSON route
-router.get('/api/swagger.json', async (ctx) => {
+router.get('/api/swagger.json', async(ctx) => {
   const fs = require('fs');
   const path = require('path');
   const swaggerPath = path.join(__dirname, '../docs/api/swagger.json');
@@ -228,7 +228,7 @@ router.get('/api/swagger.json', async (ctx) => {
 
 // Main app route
 // Public root route for health check
-router.get('/', async (ctx) => {
+router.get('/', async(ctx) => {
   ctx.body = {
     status: 'success',
     message: 'DelayGuard API is running',
@@ -239,18 +239,18 @@ router.get('/', async (ctx) => {
       webhooks: '/webhooks',
       auth: '/auth',
       docs: '/docs',
-      swagger: '/api/swagger.json'
-    }
+      swagger: '/api/swagger.json',
+    },
   };
 });
 
 // Authenticated dashboard route
-router.get('/dashboard', verifyRequest(), async (ctx) => {
+router.get('/dashboard', verifyRequest(), async(ctx) => {
   ctx.body = 'DelayGuard App - Main Dashboard';
 });
 
 // Performance monitoring middleware
-app.use(async (ctx, next) => {
+app.use(async(ctx, next) => {
   const start = Date.now();
   let success = true;
   
@@ -265,13 +265,13 @@ app.use(async (ctx, next) => {
     await performanceMonitor.trackRequest(operation, duration, success, {
       status: ctx.status,
       userAgent: ctx.get('User-Agent'),
-      ip: ctx.ip
+      ip: ctx.ip,
     });
   }
 });
 
 // Error handling middleware
-app.use(async (ctx, next) => {
+app.use(async(ctx, next) => {
   try {
     await next();
   } catch (error) {
@@ -281,7 +281,7 @@ app.use(async (ctx, next) => {
     ctx.body = {
       error: process.env.NODE_ENV === 'production' 
         ? 'Internal server error' 
-        : error instanceof Error ? error.message : 'Unknown error'
+        : error instanceof Error ? error.message : 'Unknown error',
     };
   }
 });

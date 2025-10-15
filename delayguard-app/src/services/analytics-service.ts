@@ -77,7 +77,7 @@ export class AnalyticsService {
       notificationSuccessRate,
       revenueImpact,
       performanceMetrics,
-      timeSeriesData
+      timeSeriesData,
     ] = await Promise.all([
       this.getTotalOrders(shopId, startDate),
       this.getTotalAlerts(shopId, startDate),
@@ -87,7 +87,7 @@ export class AnalyticsService {
       this.getNotificationSuccessRate(shopId, startDate),
       this.getRevenueImpact(shopId, startDate),
       this.getPerformanceMetrics(shopId, startDate),
-      this.getTimeSeriesData(shopId, startDate, days)
+      this.getTimeSeriesData(shopId, startDate, days),
     ]);
 
     const metrics: AnalyticsMetrics = {
@@ -99,7 +99,7 @@ export class AnalyticsService {
       notificationSuccessRate,
       revenueImpact,
       performanceMetrics,
-      timeSeriesData
+      timeSeriesData,
     };
 
     // Cache for 5 minutes
@@ -123,14 +123,14 @@ export class AnalyticsService {
       processingRate,
       errorRate,
       memoryUsage,
-      responseTime
+      responseTime,
     ] = await Promise.all([
       this.getActiveAlerts(shopId),
       this.getQueueSize(),
       this.getProcessingRate(shopId),
       this.getErrorRate(shopId),
       this.getMemoryUsage(),
-      this.getResponseTime(shopId)
+      this.getResponseTime(shopId),
     ]);
 
     const metrics: RealTimeMetrics = {
@@ -139,7 +139,7 @@ export class AnalyticsService {
       processingRate,
       errorRate,
       memoryUsage,
-      responseTime
+      responseTime,
     };
 
     // Cache for 1 minute
@@ -161,7 +161,7 @@ export class AnalyticsService {
   private async getTotalOrders(shopId: string, startDate: Date): Promise<number> {
     const result = await this.db.query(
       'SELECT COUNT(*) as count FROM orders WHERE shop_id = $1 AND created_at >= $2',
-      [shopId, startDate]
+      [shopId, startDate],
     );
     return parseInt(result.rows[0].count);
   }
@@ -169,7 +169,7 @@ export class AnalyticsService {
   private async getTotalAlerts(shopId: string, startDate: Date): Promise<number> {
     const result = await this.db.query(
       'SELECT COUNT(*) as count FROM delay_alerts WHERE shop_id = $1 AND created_at >= $2',
-      [shopId, startDate]
+      [shopId, startDate],
     );
     return parseInt(result.rows[0].count);
   }
@@ -190,7 +190,7 @@ export class AnalyticsService {
       low: parseInt(row.low) || 0,
       medium: parseInt(row.medium) || 0,
       high: parseInt(row.high) || 0,
-      critical: parseInt(row.critical) || 0
+      critical: parseInt(row.critical) || 0,
     };
   }
 
@@ -232,7 +232,7 @@ export class AnalyticsService {
     const row = result.rows[0];
     return {
       email: parseFloat(row.email_rate) * 100 || 0,
-      sms: parseFloat(row.sms_rate) * 100 || 0
+      sms: parseFloat(row.sms_rate) * 100 || 0,
     };
   }
 
@@ -251,7 +251,7 @@ export class AnalyticsService {
     return {
       totalValue: parseFloat(row.total_value) || 0,
       averageOrderValue: parseFloat(row.avg_order_value) || 0,
-      potentialLoss: parseFloat(row.potential_loss) || 0
+      potentialLoss: parseFloat(row.potential_loss) || 0,
     };
   }
 
@@ -264,7 +264,7 @@ export class AnalyticsService {
     return {
       averageResponseTime: parseFloat(responseTime),
       successRate: parseFloat(successRate),
-      errorRate: parseFloat(errorRate)
+      errorRate: parseFloat(errorRate),
     };
   }
 
@@ -286,7 +286,7 @@ export class AnalyticsService {
       date: row.date,
       orders: parseInt(row.orders),
       alerts: parseInt(row.alerts),
-      revenue: parseFloat(row.revenue)
+      revenue: parseFloat(row.revenue),
     }));
   }
 
@@ -329,7 +329,7 @@ export class AnalyticsService {
     const patterns = [
       `analytics:${shopId}:*`,
       `realtime:${shopId}`,
-      `metrics:*:${shopId}`
+      `metrics:*:${shopId}`,
     ];
 
     for (const pattern of patterns) {

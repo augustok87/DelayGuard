@@ -30,7 +30,7 @@ export class PerformanceMonitor {
       duration: duration.toString(),
       success: success.toString(),
       timestamp: timestamp.toString(),
-      context: context ? JSON.stringify(context) : ''
+      context: context ? JSON.stringify(context) : '',
     });
     
     // Set TTL to 1 hour
@@ -59,7 +59,7 @@ export class PerformanceMonitor {
       // Get overall metrics
       const allOperations = await this.getAllOperations();
       const allMetrics = await Promise.all(
-        allOperations.map(op => this.getOperationMetrics(op))
+        allOperations.map(op => this.getOperationMetrics(op)),
       );
       
       responseTime = allMetrics.reduce((sum, m) => sum + m.averageResponseTime, 0) / allMetrics.length;
@@ -79,7 +79,7 @@ export class PerformanceMonitor {
       cpuUsage: await this.getCpuUsage(),
       queueSize,
       processingRate,
-      timestamp: now
+      timestamp: now,
     };
   }
 
@@ -99,7 +99,7 @@ export class PerformanceMonitor {
       processingRate: metrics.processingRate,
       errorRate: metrics.errorRate,
       memoryUsage: metrics.memoryUsage,
-      responseTime: metrics.responseTime
+      responseTime: metrics.responseTime,
     };
   }
 
@@ -222,7 +222,7 @@ export class PerformanceMonitor {
           timestamp: new Date(timestamp),
           responseTime: duration,
           successRate: success ? 100 : 0,
-          errorRate: success ? 0 : 100
+          errorRate: success ? 0 : 100,
         });
       }
     }
@@ -232,10 +232,10 @@ export class PerformanceMonitor {
 
   // Decorator function for automatic performance tracking
   static trackPerformance(operation: string) {
-    return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+    return function(target: any, propertyName: string, descriptor: PropertyDescriptor) {
       const method = descriptor.value;
       
-      descriptor.value = async function (this: any, ...args: any[]) {
+      descriptor.value = async function(this: any, ...args: any[]) {
         const start = Date.now();
         let success = true;
         

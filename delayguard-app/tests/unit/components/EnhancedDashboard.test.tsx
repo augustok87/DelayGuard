@@ -127,13 +127,13 @@ jest.mock('../../../src/components', () => ({
       <button data-testid="toast-dismiss" onClick={onDismiss}>Dismiss</button>
     </div>
   ),
-  Frame: ({ children, ...props }: any) => <div data-testid="frame" {...props}>{children}</div>
+  Frame: ({ children, ...props }: any) => <div data-testid="frame" {...props}>{children}</div>,
 }));
 
 // Mock AnalyticsDashboard
 jest.mock('../../../src/components/AnalyticsDashboard', () => ({
   __esModule: true,
-  default: () => <div data-testid="analytics-dashboard">Analytics Dashboard</div>
+  default: () => <div data-testid="analytics-dashboard">Analytics Dashboard</div>,
 }));
 
 // Mock the analytics API
@@ -142,11 +142,11 @@ const mockAnalyticsAPI = {
   getAlerts: jest.fn(),
   getOrders: jest.fn(),
   updateSettings: jest.fn(),
-  testDelayDetection: jest.fn()
+  testDelayDetection: jest.fn(),
 };
 
 jest.mock('../../../src/services/analytics-service', () => ({
-  AnalyticsService: jest.fn().mockImplementation(() => mockAnalyticsAPI)
+  AnalyticsService: jest.fn().mockImplementation(() => mockAnalyticsAPI),
 }));
 
 describe('EnhancedDashboard', () => {
@@ -156,7 +156,7 @@ describe('EnhancedDashboard', () => {
     smsEnabled: false,
     notificationTemplate: 'default',
     autoResolveDays: 7,
-    enableAnalytics: true
+    enableAnalytics: true,
   };
 
   const mockAlerts = [
@@ -169,7 +169,7 @@ describe('EnhancedDashboard', () => {
       delay_reason: 'Weather Delay',
       severity: 'high',
       created_at: '2024-01-15T10:00:00Z',
-      status: 'active'
+      status: 'active',
     },
     {
       id: 2,
@@ -180,8 +180,8 @@ describe('EnhancedDashboard', () => {
       delay_reason: 'Carrier Issue',
       severity: 'medium',
       created_at: '2024-01-15T11:00:00Z',
-      status: 'resolved'
-    }
+      status: 'resolved',
+    },
   ];
 
   const mockOrders = [
@@ -191,7 +191,7 @@ describe('EnhancedDashboard', () => {
       customer_name: 'John Doe',
       total_value: 299.99,
       created_at: '2024-01-10T10:00:00Z',
-      status: 'shipped'
+      status: 'shipped',
     },
     {
       id: 2,
@@ -199,8 +199,8 @@ describe('EnhancedDashboard', () => {
       customer_name: 'Jane Smith',
       total_value: 149.99,
       created_at: '2024-01-12T14:00:00Z',
-      status: 'delivered'
-    }
+      status: 'delivered',
+    },
   ];
 
   beforeEach(() => {
@@ -212,7 +212,7 @@ describe('EnhancedDashboard', () => {
     mockAnalyticsAPI.testDelayDetection.mockResolvedValue({ success: true });
   });
 
-  it('should render enhanced dashboard with all components', async () => {
+  it('should render enhanced dashboard with all components', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -232,7 +232,7 @@ describe('EnhancedDashboard', () => {
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
 
-  it('should handle tab switching between alerts and orders', async () => {
+  it('should handle tab switching between alerts and orders', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -248,7 +248,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should filter alerts by severity', async () => {
+  it('should filter alerts by severity', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -265,7 +265,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should search alerts by order number', async () => {
+  it('should search alerts by order number', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -282,7 +282,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should open settings modal when settings button is clicked', async () => {
+  it('should open settings modal when settings button is clicked', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -298,7 +298,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should update settings when form is submitted', async () => {
+  it('should update settings when form is submitted', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -324,13 +324,13 @@ describe('EnhancedDashboard', () => {
     await waitFor(() => {
       expect(mockAnalyticsAPI.updateSettings).toHaveBeenCalledWith(
         expect.objectContaining({
-          delayThresholdDays: 5
-        })
+          delayThresholdDays: 5,
+        }),
       );
     });
   });
 
-  it('should test delay detection when test button is clicked', async () => {
+  it('should test delay detection when test button is clicked', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -354,7 +354,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should handle bulk actions on alerts', async () => {
+  it('should handle bulk actions on alerts', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -375,7 +375,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should display empty state when no alerts', async () => {
+  it('should display empty state when no alerts', async() => {
     mockAnalyticsAPI.getAlerts.mockResolvedValue([]);
     
     render(<EnhancedDashboard />);
@@ -385,7 +385,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should handle error state when API fails', async () => {
+  it('should handle error state when API fails', async() => {
     mockAnalyticsAPI.getAlerts.mockRejectedValue(new Error('API Error'));
     
     render(<EnhancedDashboard />);
@@ -395,7 +395,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should refresh data when refresh button is clicked', async () => {
+  it('should refresh data when refresh button is clicked', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -410,7 +410,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should handle date range filtering', async () => {
+  it('should handle date range filtering', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -424,13 +424,13 @@ describe('EnhancedDashboard', () => {
     await waitFor(() => {
       expect(mockAnalyticsAPI.getAlerts).toHaveBeenCalledWith(
         expect.objectContaining({
-          startDate: '2024-01-01'
-        })
+          startDate: '2024-01-01',
+        }),
       );
     });
   });
 
-  it('should display alert statistics', async () => {
+  it('should display alert statistics', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -448,7 +448,7 @@ describe('EnhancedDashboard', () => {
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
       configurable: true,
-      value: 768
+      value: 768,
     });
 
     render(<EnhancedDashboard />);
@@ -457,7 +457,7 @@ describe('EnhancedDashboard', () => {
     expect(screen.getByTestId('layout')).toBeInTheDocument();
   });
 
-  it('should handle keyboard navigation', async () => {
+  it('should handle keyboard navigation', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -471,7 +471,7 @@ describe('EnhancedDashboard', () => {
     expect(document.activeElement).toBe(firstButton);
   });
 
-  it('should display order details when order is clicked', async () => {
+  it('should display order details when order is clicked', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -495,7 +495,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should handle export functionality', async () => {
+  it('should handle export functionality', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -511,7 +511,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should handle real-time updates', async () => {
+  it('should handle real-time updates', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -528,7 +528,7 @@ describe('EnhancedDashboard', () => {
       delay_reason: 'Customs Hold',
       severity: 'medium',
       created_at: '2024-01-15T12:00:00Z',
-      status: 'active'
+      status: 'active',
     };
 
     mockAnalyticsAPI.getAlerts.mockResolvedValue([...mockAlerts, newAlert]);
@@ -541,7 +541,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should handle settings validation', async () => {
+  it('should handle settings validation', async() => {
     render(<EnhancedDashboard />);
 
     await waitFor(() => {
@@ -569,7 +569,7 @@ describe('EnhancedDashboard', () => {
     });
   });
 
-  it('should handle pagination', async () => {
+  it('should handle pagination', async() => {
     // Mock large dataset
     const largeAlerts = Array.from({ length: 50 }, (_, i) => ({
       id: i + 1,
@@ -580,7 +580,7 @@ describe('EnhancedDashboard', () => {
       delay_reason: 'Test Delay',
       severity: 'medium',
       created_at: '2024-01-15T10:00:00Z',
-      status: 'active'
+      status: 'active',
     }));
 
     mockAnalyticsAPI.getAlerts.mockResolvedValue(largeAlerts);

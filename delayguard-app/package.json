@@ -39,7 +39,10 @@
     "docs:api": "swagger-jsdoc -d swagger-config.js src/routes/*.ts -o docs/api/swagger.json",
     "docs:api:serve": "npx swagger-ui-serve docs/api/swagger.json",
     "docs:validate": "node scripts/validate-docs.js",
-    "docs:clean": "rm -rf docs/*"
+    "docs:clean": "rm -rf docs/*",
+    "quality-gates": "node scripts/quality-gates.js",
+    "validate": "node scripts/validate-codebase.js",
+    "pre-commit": "npm run quality-gates && npm run validate"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.0",

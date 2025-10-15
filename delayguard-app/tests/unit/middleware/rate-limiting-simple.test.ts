@@ -9,9 +9,9 @@ const mockRedis = {
     zcard: jest.fn().mockReturnThis(),
     zadd: jest.fn().mockReturnThis(),
     expire: jest.fn().mockReturnThis(),
-    exec: jest.fn()
+    exec: jest.fn(),
   }),
-  zrem: jest.fn()
+  zrem: jest.fn(),
 };
 
 jest.mock('ioredis', () => {
@@ -53,53 +53,53 @@ describe('Rate Limiting Middleware - Simplified Tests', () => {
   });
 
   describe('Rate Limiting Logic', () => {
-    it('should handle successful Redis operations', async () => {
+    it('should handle successful Redis operations', async() => {
       // Mock successful Redis pipeline execution
       mockRedis.pipeline().exec.mockResolvedValue([
         [null, 0], // zremrangebyscore result
         [null, 5], // zcard result (5 requests)
         [null, 1], // zadd result
-        [null, 1]  // expire result
+        [null, 1],  // expire result
       ]);
 
       // Test that the middleware can be created without errors
       const { RateLimitingMiddleware } = require('../../../src/middleware/rate-limiting');
       const middleware = RateLimitingMiddleware.create(mockRedis, {
         windowMs: 60000,
-        maxRequests: 10
+        maxRequests: 10,
       });
 
       expect(middleware).toBeDefined();
       expect(typeof middleware).toBe('function');
     });
 
-    it('should handle Redis errors gracefully', async () => {
+    it('should handle Redis errors gracefully', async() => {
       // Mock Redis error
       mockRedis.pipeline().exec.mockRejectedValue(new Error('Redis connection failed'));
 
       const { RateLimitingMiddleware } = require('../../../src/middleware/rate-limiting');
       const middleware = RateLimitingMiddleware.create(mockRedis, {
         windowMs: 60000,
-        maxRequests: 10
+        maxRequests: 10,
       });
 
       expect(middleware).toBeDefined();
       expect(typeof middleware).toBe('function');
     });
 
-    it('should handle rate limit exceeded scenario', async () => {
+    it('should handle rate limit exceeded scenario', async() => {
       // Mock Redis operations showing limit exceeded
       mockRedis.pipeline().exec.mockResolvedValue([
         [null, 0], // zremrangebyscore result
         [null, 15], // zcard result (15 requests, exceeds limit)
         [null, 1], // zadd result
-        [null, 1]  // expire result
+        [null, 1],  // expire result
       ]);
 
       const { RateLimitingMiddleware } = require('../../../src/middleware/rate-limiting');
       const middleware = RateLimitingMiddleware.create(mockRedis, {
         windowMs: 60000,
-        maxRequests: 10
+        maxRequests: 10,
       });
 
       expect(middleware).toBeDefined();
@@ -134,7 +134,7 @@ describe('Rate Limiting Middleware - Simplified Tests', () => {
         windowMs: 30000, // 30 seconds
         maxRequests: 50,
         keyGenerator: (ctx: any) => `custom:${ctx.ip}`,
-        message: 'Custom rate limit message'
+        message: 'Custom rate limit message',
       };
 
       const middleware = RateLimitingMiddleware.create(mockRedis, customConfig);
@@ -149,7 +149,7 @@ describe('Rate Limiting Middleware - Simplified Tests', () => {
         windowMs: 60000,
         maxRequests: 10,
         skipSuccessfulRequests: true,
-        skipFailedRequests: false
+        skipFailedRequests: false,
       };
 
       const middleware = RateLimitingMiddleware.create(mockRedis, skipConfig);
@@ -164,7 +164,7 @@ describe('Rate Limiting Middleware - Simplified Tests', () => {
       const headers = {
         'X-RateLimit-Limit': '10',
         'X-RateLimit-Remaining': '5',
-        'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+        'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString(),
       };
 
       expect(headers['X-RateLimit-Limit']).toBe('10');
@@ -177,7 +177,7 @@ describe('Rate Limiting Middleware - Simplified Tests', () => {
         'Retry-After': '60',
         'X-RateLimit-Limit': '10',
         'X-RateLimit-Remaining': '0',
-        'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+        'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString(),
       };
 
       expect(headers['Retry-After']).toBe('60');
@@ -192,7 +192,7 @@ describe('Rate Limiting Middleware - Simplified Tests', () => {
       // Test with invalid configuration
       const invalidConfig = {
         windowMs: -1, // Invalid
-        maxRequests: 0 // Invalid
+        maxRequests: 0, // Invalid
       };
 
       // Should still create middleware (validation would be in production)
@@ -206,7 +206,7 @@ describe('Rate Limiting Middleware - Simplified Tests', () => {
       // Test with null Redis (should handle gracefully)
       const middleware = RateLimitingMiddleware.create(null as any, {
         windowMs: 60000,
-        maxRequests: 10
+        maxRequests: 10,
       });
 
       expect(middleware).toBeDefined();

@@ -6,7 +6,7 @@ export const useOrderActions = () => {
   const { updateOrder, deleteOrder } = useOrders();
   const { showSuccessToast, showErrorToast, showInfoToast } = useToasts();
 
-  const trackOrder = useCallback(async (orderId: string) => {
+  const trackOrder = useCallback(async(orderId: string) => {
     try {
       // In a real app, this would open tracking in a new window or modal
       showInfoToast('Opening tracking information...');
@@ -22,7 +22,7 @@ export const useOrderActions = () => {
     }
   }, [showInfoToast, showSuccessToast, showErrorToast]);
 
-  const viewOrderDetails = useCallback(async (orderId: string) => {
+  const viewOrderDetails = useCallback(async(orderId: string) => {
     try {
       // In a real app, this would open order details in a modal or new page
       showInfoToast('Loading order details...');
@@ -38,7 +38,7 @@ export const useOrderActions = () => {
     }
   }, [showInfoToast, showSuccessToast, showErrorToast]);
 
-  const updateOrderStatus = useCallback(async (orderId: string, status: string) => {
+  const updateOrderStatus = useCallback(async(orderId: string, status: string) => {
     try {
       const result = await updateOrder(orderId, { status });
 
@@ -55,11 +55,11 @@ export const useOrderActions = () => {
     }
   }, [updateOrder, showSuccessToast, showErrorToast]);
 
-  const addTrackingNumber = useCallback(async (orderId: string, trackingNumber: string, carrierCode?: string) => {
+  const addTrackingNumber = useCallback(async(orderId: string, trackingNumber: string, carrierCode?: string) => {
     try {
       const result = await updateOrder(orderId, { 
         trackingNumber, 
-        carrierCode: carrierCode || 'Unknown' 
+        carrierCode: carrierCode || 'Unknown', 
       });
 
       if (result.success) {
@@ -75,7 +75,7 @@ export const useOrderActions = () => {
     }
   }, [updateOrder, showSuccessToast, showErrorToast]);
 
-  const deleteOrderPermanently = useCallback(async (orderId: string) => {
+  const deleteOrderPermanently = useCallback(async(orderId: string) => {
     try {
       const result = await deleteOrder(orderId);
 
@@ -92,13 +92,13 @@ export const useOrderActions = () => {
     }
   }, [deleteOrder, showSuccessToast, showErrorToast]);
 
-  const bulkUpdateOrderStatus = useCallback(async (orderIds: string[], status: string) => {
+  const bulkUpdateOrderStatus = useCallback(async(orderIds: string[], status: string) => {
     const results = await Promise.allSettled(
-      orderIds.map(id => updateOrderStatus(id, status))
+      orderIds.map(id => updateOrderStatus(id, status)),
     );
 
     const successful = results.filter(result => 
-      result.status === 'fulfilled' && result.value.success
+      result.status === 'fulfilled' && result.value.success,
     ).length;
 
     const failed = results.length - successful;
@@ -114,7 +114,7 @@ export const useOrderActions = () => {
     return { successful, failed };
   }, [updateOrderStatus, showSuccessToast, showErrorToast]);
 
-  const exportOrders = useCallback(async (orderIds?: string[]) => {
+  const exportOrders = useCallback(async(orderIds?: string[]) => {
     try {
       showInfoToast('Preparing order export...');
       
@@ -136,6 +136,6 @@ export const useOrderActions = () => {
     addTrackingNumber,
     deleteOrder: deleteOrderPermanently,
     bulkUpdateOrderStatus,
-    exportOrders
+    exportOrders,
   };
 };

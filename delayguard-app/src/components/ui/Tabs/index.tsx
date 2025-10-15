@@ -12,7 +12,7 @@ export const Tabs: React.FC<TabsProps> = ({
   ...props
 }) => {
   const [internalActiveTab, setInternalActiveTab] = useState(
-    activeTab || defaultActiveTab || tabs[0]?.id || ''
+    activeTab || defaultActiveTab || tabs[0]?.id || '',
   );
 
   const currentActiveTab = activeTab !== undefined ? activeTab : internalActiveTab;

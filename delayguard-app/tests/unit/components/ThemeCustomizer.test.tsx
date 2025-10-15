@@ -67,7 +67,7 @@ jest.mock('../../../src/components', () => ({
         <button data-testid="modal-close" onClick={onClose}>Close</button>
         {children}
       </div>
-    ) : null
+    ) : null,
 }));
 
 // Mock localStorage
@@ -75,11 +75,11 @@ const mockLocalStorage = {
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
-  clear: jest.fn()
+  clear: jest.fn(),
 };
 
 Object.defineProperty(window, 'localStorage', {
-  value: mockLocalStorage
+  value: mockLocalStorage,
 });
 
 describe('ThemeCustomizer', () => {
@@ -97,7 +97,7 @@ describe('ThemeCustomizer', () => {
     darkMode: false,
     compactMode: false,
     showAnimations: true,
-    customCSS: ''
+    customCSS: '',
   };
 
   beforeEach(() => {
@@ -119,7 +119,7 @@ describe('ThemeCustomizer', () => {
     const customSettings = {
       ...defaultSettings,
       primaryColor: '#ff0000',
-      darkMode: true
+      darkMode: true,
     };
     
     mockLocalStorage.getItem.mockReturnValue(JSON.stringify(customSettings));
@@ -281,7 +281,7 @@ describe('ThemeCustomizer', () => {
 
     expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
       'themeSettings',
-      expect.stringContaining('"primaryColor":"#007ace"')
+      expect.stringContaining('"primaryColor":"#007ace"'),
     );
   });
 
@@ -373,7 +373,7 @@ describe('ThemeCustomizer', () => {
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
       configurable: true,
-      value: 768
+      value: 768,
     });
 
     render(<ThemeCustomizer />);

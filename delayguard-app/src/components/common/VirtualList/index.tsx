@@ -16,7 +16,7 @@ export function VirtualList<T>({
   containerHeight,
   renderItem,
   overscan = 5,
-  className = ''
+  className = '',
 }: VirtualListProps<T>) {
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -26,7 +26,7 @@ export function VirtualList<T>({
     const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
     const endIndex = Math.min(
       items.length - 1,
-      Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan
+      Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan,
     );
     
     return { startIndex, endIndex };
@@ -37,7 +37,7 @@ export function VirtualList<T>({
     const { startIndex, endIndex } = visibleRange;
     return items.slice(startIndex, endIndex + 1).map((item, index) => ({
       item,
-      index: startIndex + index
+      index: startIndex + index,
     }));
   }, [items, visibleRange]);
 
@@ -83,7 +83,7 @@ export function VirtualList<T>({
             position: 'absolute',
             top: 0,
             left: 0,
-            right: 0
+            right: 0,
           }}
         >
           {visibleItems.map(({ item, index }) => (
@@ -106,7 +106,7 @@ export function useVirtualList<T>(
   items: T[],
   itemHeight: number,
   containerHeight: number,
-  overscan = 5
+  overscan = 5,
 ) {
   const [scrollTop, setScrollTop] = useState(0);
 
@@ -114,7 +114,7 @@ export function useVirtualList<T>(
     const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
     const endIndex = Math.min(
       items.length - 1,
-      Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan
+      Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan,
     );
     
     return { startIndex, endIndex };
@@ -124,7 +124,7 @@ export function useVirtualList<T>(
     const { startIndex, endIndex } = visibleRange;
     return items.slice(startIndex, endIndex + 1).map((item, index) => ({
       item,
-      index: startIndex + index
+      index: startIndex + index,
     }));
   }, [items, visibleRange]);
 
@@ -135,6 +135,6 @@ export function useVirtualList<T>(
     visibleItems,
     totalHeight,
     offsetY,
-    setScrollTop
+    setScrollTop,
   };
 }

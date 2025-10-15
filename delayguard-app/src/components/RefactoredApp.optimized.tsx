@@ -11,7 +11,7 @@ import {
   useTabs, 
   useAlertActions, 
   useOrderActions, 
-  useSettingsActions 
+  useSettingsActions, 
 } from '../hooks';
 import { AppSettings, DelayAlert, Order, StatsData } from '../types';
 import styles from './RefactoredApp.module.css';
@@ -39,19 +39,19 @@ export function RefactoredAppOptimized() {
     resolvedAlerts: 9,
     avgResolutionTime: '2.3 days',
     customerSatisfaction: '94%',
-    supportTicketReduction: '35%'
+    supportTicketReduction: '35%',
   }), []);
 
   // Combined loading state
   const loading = useMemo(() => 
     alertsLoading || ordersLoading || settingsLoading,
-    [alertsLoading, ordersLoading, settingsLoading]
+    [alertsLoading, ordersLoading, settingsLoading],
   );
 
   // Combined error state
   const combinedError = useMemo(() => 
     error || alertsError || ordersError || settingsError,
-    [error, alertsError, ordersError, settingsError]
+    [error, alertsError, ordersError, settingsError],
   );
 
   // Initialize shop data
@@ -60,24 +60,24 @@ export function RefactoredAppOptimized() {
   }, []);
 
   // Memoized handler functions
-  const handleSaveSettings = useCallback(async () => {
+  const handleSaveSettings = useCallback(async() => {
     if (settings) {
       await saveSettings(settings);
     }
   }, [settings, saveSettings]);
 
-  const handleTestDelayDetection = useCallback(async () => {
+  const handleTestDelayDetection = useCallback(async() => {
     await testDelayDetection();
   }, [testDelayDetection]);
 
-  const handleConnectShopify = useCallback(async () => {
+  const handleConnectShopify = useCallback(async() => {
     const result = await connectToShopify();
     if (result.success) {
       setShop('my-awesome-store.myshopify.com');
     }
   }, [connectToShopify]);
 
-  const handleAlertAction = useCallback(async (alertId: string, action: 'resolve' | 'dismiss') => {
+  const handleAlertAction = useCallback(async(alertId: string, action: 'resolve' | 'dismiss') => {
     if (action === 'resolve') {
       await resolveAlert(alertId);
     } else {
@@ -85,7 +85,7 @@ export function RefactoredAppOptimized() {
     }
   }, [resolveAlert, dismissAlert]);
 
-  const handleOrderAction = useCallback(async (orderId: string, action: 'track' | 'view') => {
+  const handleOrderAction = useCallback(async(orderId: string, action: 'track' | 'view') => {
     if (action === 'track') {
       await trackOrder(orderId);
     } else {
@@ -93,7 +93,7 @@ export function RefactoredAppOptimized() {
     }
   }, [trackOrder, viewOrderDetails]);
 
-  const handleSettingsChange = useCallback(async (newSettings: AppSettings) => {
+  const handleSettingsChange = useCallback(async(newSettings: AppSettings) => {
     await saveSettings(newSettings);
   }, [saveSettings]);
 
@@ -149,7 +149,7 @@ export function RefactoredAppOptimized() {
     handleConnectShopify,
     handleSettingsChange,
     handleAlertAction,
-    handleOrderAction
+    handleOrderAction,
   ]);
 
   if (loading) {

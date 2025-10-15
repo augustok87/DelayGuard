@@ -23,13 +23,13 @@ const DashboardTabComponent: React.FC<DashboardTabProps> = ({
   onSaveSettings,
   onTestDelayDetection,
   onConnectShopify,
-  onSettingsChange
+  onSettingsChange,
 }) => {
   // Memoize the grid style to prevent recalculation
   const gridStyle = useMemo(() => ({
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-    gap: '1.5rem'
+    gap: '1.5rem',
   }), []);
 
   return (

@@ -97,7 +97,7 @@ export class BackupService {
     try {
       const tracer = getTracer('backup');
       const span = tracer.startSpan(`backup.${config.type}`);
-      return await withSpan(span, async () => {
+      return await withSpan(span, async() => {
         span.setAttributes({
           'backup.id': backupId,
           'backup.type': config.type,
@@ -186,7 +186,7 @@ export class BackupService {
     try {
       const tracer = getTracer('backup');
       const span = tracer.startSpan(`restore.${restoreConfig.backupId}`);
-      return await withSpan(span, async () => {
+      return await withSpan(span, async() => {
         span.setAttributes({
           'restore.id': restoreId,
           'restore.backup_id': restoreConfig.backupId,

@@ -15,7 +15,7 @@ export async function setupQueues(): Promise<void> {
     // Initialize Redis connection
     redis = new IORedis(process.env.REDIS_URL!, {
       maxRetriesPerRequest: 3,
-      enableReadyCheck: false
+      enableReadyCheck: false,
     });
 
     // Test Redis connection
@@ -33,7 +33,7 @@ export async function setupQueues(): Promise<void> {
           type: 'exponential',
           delay: 2000,
         },
-      }
+      },
     });
 
     notificationQueue = new Queue('notifications', { 
@@ -46,7 +46,7 @@ export async function setupQueues(): Promise<void> {
           type: 'exponential',
           delay: 2000,
         },
-      }
+      },
     });
 
     // Create workers
@@ -56,7 +56,7 @@ export async function setupQueues(): Promise<void> {
       limiter: {
         max: 100,
         duration: 60000, // 100 jobs per minute
-      }
+      },
     });
 
     notificationWorker = new Worker('notifications', processNotification, {
@@ -65,7 +65,7 @@ export async function setupQueues(): Promise<void> {
       limiter: {
         max: 200,
         duration: 60000, // 200 jobs per minute
-      }
+      },
     });
 
     // Set up event listeners
@@ -119,7 +119,7 @@ export async function addDelayCheckJob(data: {
 
   await delayCheckQueue.add('check-delay', data, {
     delay: 5000, // 5 second delay to allow for order processing
-    jobId: `delay-check-${data.orderId}-${Date.now()}`
+    jobId: `delay-check-${data.orderId}-${Date.now()}`,
   });
 }
 
@@ -133,7 +133,7 @@ export async function addNotificationJob(data: {
   }
 
   await notificationQueue.add('send-notification', data, {
-    jobId: `notification-${data.orderId}-${Date.now()}`
+    jobId: `notification-${data.orderId}-${Date.now()}`,
   });
 }
 
@@ -153,14 +153,14 @@ export async function getQueueStats(): Promise<{
       waiting: delayCheckStats.waiting,
       active: delayCheckStats.active,
       completed: delayCheckStats.completed,
-      failed: delayCheckStats.failed
+      failed: delayCheckStats.failed,
     },
     notifications: {
       waiting: notificationStats.waiting,
       active: notificationStats.active,
       completed: notificationStats.completed,
-      failed: notificationStats.failed
-    }
+      failed: notificationStats.failed,
+    },
   };
 }
 

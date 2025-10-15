@@ -25,7 +25,7 @@ const initialState: SettingsState = {
 // Async thunks
 export const fetchSettings = createAsyncThunk(
   'settings/fetchSettings',
-  async (_, { rejectWithValue }) => {
+  async(_, { rejectWithValue }) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -33,12 +33,12 @@ export const fetchSettings = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to fetch settings');
     }
-  }
+  },
 );
 
 export const saveSettings = createAsyncThunk(
   'settings/saveSettings',
-  async (settings: AppSettings, { rejectWithValue }) => {
+  async(settings: AppSettings, { rejectWithValue }) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -46,12 +46,12 @@ export const saveSettings = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to save settings');
     }
-  }
+  },
 );
 
 export const testDelayDetection = createAsyncThunk(
   'settings/testDelayDetection',
-  async (_, { rejectWithValue }) => {
+  async(_, { rejectWithValue }) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -59,7 +59,7 @@ export const testDelayDetection = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to test delay detection');
     }
-  }
+  },
 );
 
 // Slice

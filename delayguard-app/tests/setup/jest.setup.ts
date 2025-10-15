@@ -87,7 +87,7 @@ global.fetch = jest.fn(() =>
     arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
     blob: () => Promise.resolve(new Blob()),
     formData: () => Promise.resolve(new FormData()),
-  } as Response)
+  } as Response),
 ) as jest.MockedFunction<typeof fetch>;
 
 // Test utilities

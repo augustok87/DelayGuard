@@ -7,7 +7,7 @@ import {
   AlertsTable, 
   OrdersList, 
   SettingsModal, 
-  Toast 
+  Toast, 
 } from './components';
 import AnalyticsDashboard from '../AnalyticsDashboard';
 import { EnhancedDashboardProps } from '../../types';
@@ -111,7 +111,7 @@ function EnhancedDashboard({
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        marginBottom: '24px'
+        marginBottom: '24px',
       }}>
         <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 'bold' }}>
           DelayGuard Dashboard

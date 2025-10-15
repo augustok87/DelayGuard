@@ -13,7 +13,7 @@ export const useSettings = () => {
   }, [dispatch]);
 
   // Settings actions
-  const updateAppSettings = useCallback(async (newSettings: Partial<AppSettings>) => {
+  const updateAppSettings = useCallback(async(newSettings: Partial<AppSettings>) => {
     try {
       dispatch(updateSettings(newSettings));
       return { success: true };
@@ -22,7 +22,7 @@ export const useSettings = () => {
     }
   }, [dispatch]);
 
-  const resetToDefaults = useCallback(async () => {
+  const resetToDefaults = useCallback(async() => {
     try {
       dispatch(resetSettings());
       return { success: true };
@@ -32,35 +32,35 @@ export const useSettings = () => {
   }, [dispatch]);
 
   // Individual setting updates
-  const updateDelayThreshold = useCallback(async (threshold: number) => {
+  const updateDelayThreshold = useCallback(async(threshold: number) => {
     return updateAppSettings({ delayThreshold: threshold });
   }, [updateAppSettings]);
 
-  const updateNotificationTemplate = useCallback(async (template: string) => {
+  const updateNotificationTemplate = useCallback(async(template: string) => {
     return updateAppSettings({ notificationTemplate: template });
   }, [updateAppSettings]);
 
-  const toggleEmailNotifications = useCallback(async () => {
+  const toggleEmailNotifications = useCallback(async() => {
     return updateAppSettings({ emailNotifications: !settings.emailNotifications });
   }, [updateAppSettings, settings.emailNotifications]);
 
-  const toggleSmsNotifications = useCallback(async () => {
+  const toggleSmsNotifications = useCallback(async() => {
     return updateAppSettings({ smsNotifications: !settings.smsNotifications });
   }, [updateAppSettings, settings.smsNotifications]);
 
-  const updateTheme = useCallback(async (theme: 'light' | 'dark') => {
+  const updateTheme = useCallback(async(theme: 'light' | 'dark') => {
     return updateAppSettings({ theme });
   }, [updateAppSettings]);
 
-  const updateLanguage = useCallback(async (language: string) => {
+  const updateLanguage = useCallback(async(language: string) => {
     return updateAppSettings({ language });
   }, [updateAppSettings]);
 
-  const updateAutoResolveDays = useCallback(async (days: number) => {
+  const updateAutoResolveDays = useCallback(async(days: number) => {
     return updateAppSettings({ autoResolveDays: days });
   }, [updateAppSettings]);
 
-  const toggleAnalytics = useCallback(async () => {
+  const toggleAnalytics = useCallback(async() => {
     return updateAppSettings({ enableAnalytics: !settings.enableAnalytics });
   }, [updateAppSettings, settings.enableAnalytics]);
 
@@ -86,34 +86,34 @@ export const useSettings = () => {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }, []);
 
   // Settings presets
-  const applyPreset = useCallback(async (preset: 'conservative' | 'balanced' | 'aggressive') => {
+  const applyPreset = useCallback(async(preset: 'conservative' | 'balanced' | 'aggressive') => {
     const presets: Record<string, Partial<AppSettings>> = {
       conservative: {
         delayThreshold: 5,
         notificationTemplate: 'default',
         emailNotifications: true,
         smsNotifications: false,
-        autoResolveDays: 14
+        autoResolveDays: 14,
       },
       balanced: {
         delayThreshold: 3,
         notificationTemplate: 'default',
         emailNotifications: true,
         smsNotifications: true,
-        autoResolveDays: 7
+        autoResolveDays: 7,
       },
       aggressive: {
         delayThreshold: 1,
         notificationTemplate: 'minimal',
         emailNotifications: true,
         smsNotifications: true,
-        autoResolveDays: 3
-      }
+        autoResolveDays: 3,
+      },
     };
 
     return updateAppSettings(presets[preset]);
@@ -131,7 +131,7 @@ export const useSettings = () => {
     URL.revokeObjectURL(url);
   }, [settings]);
 
-  const importSettings = useCallback(async (file: File) => {
+  const importSettings = useCallback(async(file: File) => {
     try {
       const text = await file.text();
       const importedSettings = JSON.parse(text) as AppSettings;
@@ -172,6 +172,6 @@ export const useSettings = () => {
     validateSettings,
     applyPreset,
     exportSettings,
-    importSettings
+    importSettings,
   };
 };

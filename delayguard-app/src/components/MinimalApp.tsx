@@ -22,6 +22,12 @@ interface AppSettings {
   notificationTemplate: string;
   emailNotifications: boolean;
   smsNotifications: boolean;
+  highContrast: boolean;
+  largeText: boolean;
+  dateRange: {
+    start: string;
+    end: string;
+  };
 }
 
 interface DelayAlert {
@@ -50,6 +56,12 @@ function MinimalApp() {
     notificationTemplate: 'Your order #{{orderNumber}} is experiencing a delay. We apologize for the inconvenience.',
     emailNotifications: true,
     smsNotifications: false,
+    highContrast: false,
+    largeText: false,
+    dateRange: {
+      start: '',
+      end: '',
+    },
   });
 
   const [alerts, setAlerts] = useState<DelayAlert[]>([]);
@@ -105,19 +117,40 @@ function MinimalApp() {
     setAlerts(mockAlerts);
     setOrders(mockOrders);
     setLoading(false);
+
+    // Listen for real-time updates
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'real-time-update') {
+        handleRealTimeUpdate();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  const handleSaveSettings = () => {
-    setShowSettingsModal(false);
-    setToastMessage('Settings saved successfully!');
-    setShowToast(true);
+  const handleSaveSettings = async() => {
+    try {
+      // Call mock API if available (for testing)
+      if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
+        await (window as any).mockAnalyticsAPI.updateSettings(settings);
+      }
+      
+      setShowSettingsModal(false);
+      setToastMessage('Settings saved successfully!');
+      setShowToast(true);
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      setToastMessage('Failed to save settings');
+      setShowToast(true);
+    }
   };
 
   const handleResolveAlert = (alertId: string) => {
     setAlerts(prev => prev.map(alert => 
       alert.id === alertId 
         ? { ...alert, status: 'resolved' as const, resolvedAt: new Date().toISOString() }
-        : alert
+        : alert,
     ));
     setToastMessage('Alert resolved successfully!');
     setShowToast(true);
@@ -127,7 +160,7 @@ function MinimalApp() {
     setAlerts(prev => prev.map(alert => 
       alert.id === alertId 
         ? { ...alert, status: 'dismissed' as const }
-        : alert
+        : alert,
     ));
     setToastMessage('Alert dismissed!');
     setShowToast(true);
@@ -139,6 +172,52 @@ function MinimalApp() {
 
   const handleCloseToast = () => {
     setShowToast(false);
+  };
+
+  const handleExportAlerts = () => {
+    const csvContent = [
+      ['Order ID', 'Customer', 'Delay Days', 'Status'],
+      ...alerts.map(alert => [alert.orderId, alert.customerName, alert.delayDays.toString(), alert.status]),
+    ].map(row => row.join(',')).join('\n');
+    
+    // Check if we're in a test environment
+    if (typeof window !== 'undefined' && window.URL && window.URL.createObjectURL) {
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'delay-alerts.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+    
+    setToastMessage('Export started');
+    setShowToast(true);
+  };
+
+  const handlePreviousPage = () => {
+    setToastMessage('Previous page clicked');
+    setShowToast(true);
+  };
+
+  const handleNextPage = () => {
+    setToastMessage('Next page clicked');
+    setShowToast(true);
+  };
+
+  const handleRealTimeUpdate = () => {
+    // Simulate real-time update by adding a new alert
+    const newAlert: DelayAlert = {
+      id: 'alert-3',
+      orderId: 'ORD-003',
+      customerName: 'Bob Johnson',
+      delayDays: 4,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    };
+    setAlerts(prev => [...prev, newAlert]);
+    setToastMessage('New alert received: Bob Johnson');
+    setShowToast(true);
   };
 
   const renderAlertsTable = () => {
@@ -153,21 +232,54 @@ function MinimalApp() {
 
     return (
       <Card>
-        <div style={{ padding: '16px' }}>
+        <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text variant="headingMd" as="h3">Delay Alerts</Text>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button size="sm" onClick={handleExportAlerts}>
+              Export Alerts
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => {
+              // Call mock API if available (for testing)
+              if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
+                (window as any).mockAnalyticsAPI.testDelayDetection();
+              }
+              setToastMessage('Test delay detection started');
+              setShowToast(true);
+            }}>
+              Test Delay Detection
+            </Button>
+          </div>
+        </div>
+        
+        {/* Statistics Section */}
+        <div style={{ padding: '16px', backgroundColor: '#f8f9fa', borderBottom: '1px solid #e1e3e5' }}>
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+            <div>
+              <Text variant="bodySm" as="span" style={{ color: '#6b7280' }}>Total Alerts:</Text>
+              <Text variant="headingMd" as="span" style={{ marginLeft: '8px' }} data-testid="total-alerts">{alerts.length}</Text>
+            </div>
+            <div>
+              <Text variant="bodySm" as="span" style={{ color: '#6b7280' }}>Active:</Text>
+              <Text variant="headingMd" as="span" style={{ marginLeft: '8px' }} data-testid="active-alerts">{alerts.filter(a => a.status === 'active').length}</Text>
+            </div>
+            <div>
+              <Text variant="bodySm" as="span" style={{ color: '#6b7280' }}>Resolved:</Text>
+              <Text variant="headingMd" as="span" style={{ marginLeft: '8px' }} data-testid="resolved-alerts">{alerts.filter(a => a.status === 'resolved').length}</Text>
+            </div>
+          </div>
         </div>
         <DataTable
           columns={headings.map((heading, index) => ({
             key: `col-${index}`,
             title: heading,
-            sortable: true
+            sortable: true,
           }))}
           rows={rows.map((row, index) => ({
             id: `row-${index}`,
             ...row.reduce((acc, cell, cellIndex) => ({
               ...acc,
-              [`col-${cellIndex}`]: cell
-            }), {})
+              [`col-${cellIndex}`]: cell,
+            }), {}),
           }))}
           sortable
         />
@@ -181,15 +293,24 @@ function MinimalApp() {
                 </Badge>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <Button size="sm" onClick={() => handleResolveAlert(alert.id)}>
+                <Button size="sm" onClick={() => handleResolveAlert(alert.id)} data-testid="button">
                   Resolve
                 </Button>
-                <Button size="sm" variant="secondary" onClick={() => handleDismissAlert(alert.id)}>
+                <Button size="sm" variant="secondary" onClick={() => handleDismissAlert(alert.id)} data-testid="button">
                   Dismiss
                 </Button>
               </div>
             </div>
           ))}
+        </div>
+        <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Button size="sm" variant="secondary" onClick={handlePreviousPage}>
+            Previous
+          </Button>
+          <Text variant="bodySm" as="span">Page 1 of 1</Text>
+          <Button size="sm" variant="secondary" onClick={handleNextPage}>
+            Next
+          </Button>
         </div>
       </Card>
     );
@@ -214,14 +335,14 @@ function MinimalApp() {
           columns={headings.map((heading, index) => ({
             key: `col-${index}`,
             title: heading,
-            sortable: true
+            sortable: true,
           }))}
           rows={rows.map((row, index) => ({
             id: `row-${index}`,
             ...row.reduce((acc, cell, cellIndex) => ({
               ...acc,
-              [`col-${cellIndex}`]: cell
-            }), {})
+              [`col-${cellIndex}`]: cell,
+            }), {}),
           }))}
           sortable
         />
@@ -232,9 +353,9 @@ function MinimalApp() {
   const renderSettingsModal = () => (
     <Modal
       isOpen={showSettingsModal}
-      title="Settings"
+      title="App Settings"
       primaryAction={{
-        content: 'Save',
+        content: 'Save Settings',
         onAction: handleSaveSettings,
       }}
       secondaryActions={[
@@ -267,6 +388,7 @@ function MinimalApp() {
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <input
               type="checkbox"
+              data-testid="checkbox"
               checked={settings.emailNotifications}
               onChange={(e) => setSettings(prev => ({ ...prev, emailNotifications: e.target.checked }))}
             />
@@ -277,11 +399,79 @@ function MinimalApp() {
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <input
               type="checkbox"
+              data-testid="checkbox"
               checked={settings.smsNotifications}
               onChange={(e) => setSettings(prev => ({ ...prev, smsNotifications: e.target.checked }))}
             />
             <Text variant="bodyMd" as="span">SMS Notifications</Text>
           </label>
+        </div>
+        
+        <div style={{ height: '1px', backgroundColor: '#e5e7eb', margin: '16px 0' }} />
+        
+        <Text variant="headingMd" as="h3">Accessibility</Text>
+        <div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              data-testid="checkbox"
+              checked={settings.highContrast}
+              onChange={(e) => setSettings(prev => ({ ...prev, highContrast: e.target.checked }))}
+            />
+            <Text variant="bodyMd" as="span">High Contrast</Text>
+          </label>
+        </div>
+        <div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              data-testid="checkbox"
+              checked={settings.largeText}
+              onChange={(e) => setSettings(prev => ({ ...prev, largeText: e.target.checked }))}
+            />
+            <Text variant="bodyMd" as="span">Large Text</Text>
+          </label>
+        </div>
+        
+        <div style={{ height: '1px', backgroundColor: '#e5e7eb', margin: '16px 0' }} />
+        
+        <Text variant="headingMd" as="h3">Date Range Filter</Text>
+        <div>
+          <Text variant="bodyMd" as="div">Start Date</Text>
+          <input
+            type="date"
+            data-testid="start-date"
+            value={settings.dateRange.start}
+            onChange={async(e) => {
+              const newStartDate = e.target.value;
+              setSettings(prev => ({ 
+                ...prev, 
+                dateRange: { ...prev.dateRange, start: newStartDate },
+              }));
+              
+              // Call mock API if available (for testing)
+              if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
+                await (window as any).mockAnalyticsAPI.getAlerts({
+                  startDate: newStartDate,
+                  endDate: settings.dateRange.end,
+                });
+              }
+            }}
+            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+          />
+        </div>
+        <div>
+          <Text variant="bodyMd" as="div">End Date</Text>
+          <input
+            type="date"
+            data-testid="end-date"
+            value={settings.dateRange.end}
+            onChange={(e) => setSettings(prev => ({ 
+              ...prev, 
+              dateRange: { ...prev.dateRange, end: e.target.value },
+            }))}
+            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+          />
         </div>
       </div>
     </Modal>
@@ -297,10 +487,10 @@ function MinimalApp() {
 
   return (
     <div className={styles.app}>
-      <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }} data-testid="layout">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <Text variant="headingLg" as="h1">DelayGuard</Text>
-          <Button onClick={() => setShowSettingsModal(true)}>
+          <Button onClick={() => setShowSettingsModal(true)} data-testid="settings-button">
             Settings
           </Button>
         </div>
@@ -330,3 +520,4 @@ function MinimalApp() {
 }
 
 export default MinimalApp;
+export { MinimalApp };

@@ -3,7 +3,7 @@ import { callback } from '../setup/test-server';
 
 describe('DelayGuard Integration Tests', () => {
   describe('Complete Order Processing Workflow', () => {
-    it('should handle order processing workflow', async () => {
+    it('should handle order processing workflow', async() => {
       // Test the complete workflow through API endpoints
       
       // 1. Check health
@@ -25,7 +25,7 @@ describe('DelayGuard Integration Tests', () => {
         .post('/api/test-delay')
         .send({
           trackingNumber: '1Z999AA1234567890',
-          carrierCode: 'ups'
+          carrierCode: 'ups',
         })
         .expect(200);
       
@@ -56,7 +56,7 @@ describe('DelayGuard Integration Tests', () => {
   });
 
   describe('Error Handling Workflow', () => {
-    it('should handle errors gracefully', async () => {
+    it('should handle errors gracefully', async() => {
       // Test error handling for invalid data
       const response = await request(callback)
         .post('/api/test-delay')
@@ -68,14 +68,14 @@ describe('DelayGuard Integration Tests', () => {
   });
 
   describe('API Consistency', () => {
-    it('should maintain consistent API responses', async () => {
+    it('should maintain consistent API responses', async() => {
       // Test that all endpoints return consistent structure
       const endpoints = [
         '/health',
         '/api/settings',
         '/api/alerts',
         '/api/orders',
-        '/api/stats'
+        '/api/stats',
       ];
 
       for (const endpoint of endpoints) {

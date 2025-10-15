@@ -57,7 +57,7 @@ const mockOrders: Order[] = [
 // Async thunks
 export const fetchOrders = createAsyncThunk(
   'orders/fetchOrders',
-  async (_, { rejectWithValue }) => {
+  async(_, { rejectWithValue }) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -65,12 +65,12 @@ export const fetchOrders = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to fetch orders');
     }
-  }
+  },
 );
 
 export const updateOrder = createAsyncThunk(
   'orders/updateOrder',
-  async ({ id, updates }: { id: string; updates: Partial<Order> }, { rejectWithValue }) => {
+  async({ id, updates }: { id: string; updates: Partial<Order> }, { rejectWithValue }) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -78,12 +78,12 @@ export const updateOrder = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to update order');
     }
-  }
+  },
 );
 
 export const deleteOrder = createAsyncThunk(
   'orders/deleteOrder',
-  async (id: string, { rejectWithValue }) => {
+  async(id: string, { rejectWithValue }) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -91,7 +91,7 @@ export const deleteOrder = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to delete order');
     }
-  }
+  },
 );
 
 // Slice

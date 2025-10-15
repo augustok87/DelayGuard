@@ -6,22 +6,22 @@ const mockLocalStorage = {
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
-  clear: jest.fn()
+  clear: jest.fn(),
 };
 
 const mockSessionStorage = {
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
-  clear: jest.fn()
+  clear: jest.fn(),
 };
 
 Object.defineProperty(window, 'localStorage', {
-  value: mockLocalStorage
+  value: mockLocalStorage,
 });
 
 Object.defineProperty(window, 'sessionStorage', {
-  value: mockSessionStorage
+  value: mockSessionStorage,
 });
 
 describe('useLocalStorage', () => {
@@ -152,7 +152,7 @@ describe('useLocalStorage', () => {
     expect(result.current[0]).toBe('fallback');
     expect(consoleSpy).toHaveBeenCalledWith(
       'Error reading localStorage key "test-key":',
-      expect.any(Error)
+      expect.any(Error),
     );
 
     consoleSpy.mockRestore();
@@ -172,7 +172,7 @@ describe('useLocalStorage', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       'Error setting localStorage key "test-key":',
-      expect.any(Error)
+      expect.any(Error),
     );
 
     consoleSpy.mockRestore();
@@ -192,7 +192,7 @@ describe('useLocalStorage', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       'Error removing localStorage key "test-key":',
-      expect.any(Error)
+      expect.any(Error),
     );
 
     consoleSpy.mockRestore();
@@ -207,7 +207,7 @@ describe('useLocalStorage', () => {
     expect(result.current[0]).toBe('fallback');
     expect(consoleSpy).toHaveBeenCalledWith(
       'Error reading localStorage key "test-key":',
-      expect.any(Error)
+      expect.any(Error),
     );
 
     consoleSpy.mockRestore();
@@ -242,10 +242,10 @@ describe('useLocalStorage', () => {
       level1: {
         level2: {
           level3: {
-            value: 'deep'
-          }
-        }
-      }
+            value: 'deep',
+          },
+        },
+      },
     };
     mockLocalStorage.getItem.mockReturnValue(JSON.stringify(nestedObject));
 
@@ -337,7 +337,7 @@ describe('useSessionStorage', () => {
     expect(result.current[0]).toBe('fallback');
     expect(consoleSpy).toHaveBeenCalledWith(
       'Error reading sessionStorage key "test-key":',
-      expect.any(Error)
+      expect.any(Error),
     );
 
     consoleSpy.mockRestore();
@@ -357,7 +357,7 @@ describe('useSessionStorage', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       'Error setting sessionStorage key "test-key":',
-      expect.any(Error)
+      expect.any(Error),
     );
 
     consoleSpy.mockRestore();
@@ -377,7 +377,7 @@ describe('useSessionStorage', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       'Error removing sessionStorage key "test-key":',
-      expect.any(Error)
+      expect.any(Error),
     );
 
     consoleSpy.mockRestore();

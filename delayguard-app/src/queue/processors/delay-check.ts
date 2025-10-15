@@ -23,7 +23,7 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
        FROM orders o 
        JOIN shops s ON o.shop_id = s.id 
        WHERE o.id = $1`,
-      [orderId]
+      [orderId],
     );
 
     if (orderResult.rows.length === 0) {
@@ -63,8 +63,8 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
             delayDays,
             delayResult.delayReason,
             delayResult.originalDelivery,
-            delayResult.estimatedDelivery
-          ]
+            delayResult.estimatedDelivery,
+          ],
         );
 
         // Add notification job if notifications are enabled
@@ -76,9 +76,9 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
               trackingNumber,
               trackingUrl: trackingInfo.trackingUrl || `https://tracking.example.com/${trackingNumber}`,
               delayDays,
-              delayReason: delayResult.delayReason
+              delayReason: delayResult.delayReason,
             },
-            shopDomain
+            shopDomain,
           });
         }
       }
@@ -89,7 +89,7 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
     // Update order status
     await query(
       `UPDATE orders SET updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
-      [orderId]
+      [orderId],
     );
 
   } catch (error) {

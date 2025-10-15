@@ -62,7 +62,7 @@ export const useDashboardData = ({
       propOnAlertAction(alertId, 'resolve');
     } else {
       setAlerts(prev => prev.map(alert => 
-        alert.id === alertId ? { ...alert, status: 'resolved' } : alert
+        alert.id === alertId ? { ...alert, status: 'resolved' } : alert,
       ));
       setToastMessage('Alert resolved successfully!');
       setShowToast(true);

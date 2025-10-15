@@ -69,7 +69,7 @@ describe('Card Component', () => {
   });
 
   describe('Accessibility', () => {
-    it('should be accessible', async () => {
+    it('should be accessible', async() => {
       const { container } = render(<Card>Accessible card</Card>);
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -92,7 +92,7 @@ describe('Card Component', () => {
   });
 
   describe('Actions', () => {
-    it('should handle action clicks', async () => {
+    it('should handle action clicks', async() => {
       const user = userEvent.setup();
       const handleAction1 = jest.fn();
       const handleAction2 = jest.fn();
@@ -113,7 +113,7 @@ describe('Card Component', () => {
       expect(handleAction2).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle disabled actions', async () => {
+    it('should handle disabled actions', async() => {
       const user = userEvent.setup();
       const handleAction = jest.fn();
       
@@ -173,7 +173,7 @@ describe('Card Component', () => {
             <h4>Complex</h4>
             <p>Content</p>
           </div>
-        </Card>
+        </Card>,
       );
       
       expect(screen.getByText('Complex')).toBeInTheDocument();

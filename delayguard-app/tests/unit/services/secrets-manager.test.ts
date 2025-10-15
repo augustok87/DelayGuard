@@ -3,7 +3,7 @@ import {
   SecretType, 
   RotationStrategy, 
   SecretsManagerFactory, 
-  SecretUtils 
+  SecretUtils, 
 } from '../../../src/services/secrets-manager';
 
 describe('Secrets Manager', () => {
@@ -17,12 +17,12 @@ describe('Secrets Manager', () => {
       enableRotation: true,
       defaultRotationDays: 30,
       maxSecretVersions: 5,
-      enableAccessControl: false
+      enableAccessControl: false,
     });
   });
 
   describe('Secret Storage and Retrieval', () => {
-    it('should store and retrieve secrets', async () => {
+    it('should store and retrieve secrets', async() => {
       const secretId = await secretsManager.storeSecret(
         'test-api-key',
         'sk_test_123456789',
@@ -30,8 +30,8 @@ describe('Secrets Manager', () => {
         {
           description: 'Test API key',
           tags: ['test', 'api'],
-          createdBy: 'test-user'
-        }
+          createdBy: 'test-user',
+        },
       );
 
       expect(secretId).toBeDefined();
@@ -41,11 +41,11 @@ describe('Secrets Manager', () => {
       expect(retrievedValue).toBe('sk_test_123456789');
     });
 
-    it('should encrypt stored secrets', async () => {
+    it('should encrypt stored secrets', async() => {
       const secretId = await secretsManager.storeSecret(
         'encrypted-secret',
         'sensitive-data',
-        SecretType.CUSTOM
+        SecretType.CUSTOM,
       );
 
       const secret = secretsManager['secrets'].get(secretId);
@@ -55,16 +55,16 @@ describe('Secrets Manager', () => {
       expect(secret!.encryptedValue).toContain(':');
     });
 
-    it('should return null for non-existent secrets', async () => {
+    it('should return null for non-existent secrets', async() => {
       const result = await secretsManager.getSecret('non-existent-id');
       expect(result).toBeNull();
     });
 
-    it('should return null for inactive secrets', async () => {
+    it('should return null for inactive secrets', async() => {
       const secretId = await secretsManager.storeSecret(
         'inactive-secret',
         'test-value',
-        SecretType.CUSTOM
+        SecretType.CUSTOM,
       );
 
       await secretsManager.deleteSecret(secretId);
@@ -74,7 +74,7 @@ describe('Secrets Manager', () => {
   });
 
   describe('Secret Metadata', () => {
-    it('should store and retrieve secret metadata', async () => {
+    it('should store and retrieve secret metadata', async() => {
       const secretId = await secretsManager.storeSecret(
         'metadata-test',
         'test-value',
@@ -84,8 +84,8 @@ describe('Secrets Manager', () => {
           tags: ['jwt', 'auth'],
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
           rotationStrategy: RotationStrategy.AUTOMATIC,
-          createdBy: 'admin'
-        }
+          createdBy: 'admin',
+        },
       );
 
       const metadata = secretsManager.getSecretMetadata(secretId);
@@ -99,7 +99,7 @@ describe('Secrets Manager', () => {
       expect(metadata!.isActive).toBe(true);
     });
 
-    it('should list all secrets', async () => {
+    it('should list all secrets', async() => {
       await secretsManager.storeSecret('secret1', 'value1', SecretType.API_KEY);
       await secretsManager.storeSecret('secret2', 'value2', SecretType.DATABASE_PASSWORD);
       await secretsManager.storeSecret('secret3', 'value3', SecretType.JWT_SECRET);
@@ -111,7 +111,7 @@ describe('Secrets Manager', () => {
       expect(secrets.map(s => s.name)).toContain('secret3');
     });
 
-    it('should filter secrets by type', async () => {
+    it('should filter secrets by type', async() => {
       await secretsManager.storeSecret('api-key-1', 'key1', SecretType.API_KEY);
       await secretsManager.storeSecret('api-key-2', 'key2', SecretType.API_KEY);
       await secretsManager.storeSecret('db-password', 'pass', SecretType.DATABASE_PASSWORD);
@@ -121,15 +121,15 @@ describe('Secrets Manager', () => {
       expect(apiKeys.every(s => s.type === SecretType.API_KEY)).toBe(true);
     });
 
-    it('should filter secrets by tags', async () => {
+    it('should filter secrets by tags', async() => {
       await secretsManager.storeSecret('secret1', 'value1', SecretType.API_KEY, {
-        tags: ['production', 'api']
+        tags: ['production', 'api'],
       });
       await secretsManager.storeSecret('secret2', 'value2', SecretType.DATABASE_PASSWORD, {
-        tags: ['production', 'database']
+        tags: ['production', 'database'],
       });
       await secretsManager.storeSecret('secret3', 'value3', SecretType.JWT_SECRET, {
-        tags: ['development', 'auth']
+        tags: ['development', 'auth'],
       });
 
       const productionSecrets = secretsManager.getSecretsByTags(['production']);
@@ -139,11 +139,11 @@ describe('Secrets Manager', () => {
   });
 
   describe('Secret Updates', () => {
-    it('should update secret values', async () => {
+    it('should update secret values', async() => {
       const secretId = await secretsManager.storeSecret(
         'updatable-secret',
         'original-value',
-        SecretType.CUSTOM
+        SecretType.CUSTOM,
       );
 
       const success = await secretsManager.updateSecret(secretId, 'updated-value', 'test-user');
@@ -156,19 +156,19 @@ describe('Secrets Manager', () => {
       expect(metadata!.version).toBe(2);
     });
 
-    it('should fail to update non-existent secrets', async () => {
+    it('should fail to update non-existent secrets', async() => {
       const success = await secretsManager.updateSecret('non-existent', 'new-value');
       expect(success).toBe(false);
     });
   });
 
   describe('Secret Rotation', () => {
-    it('should rotate secrets', async () => {
+    it('should rotate secrets', async() => {
       const secretId = await secretsManager.storeSecret(
         'rotatable-secret',
         'original-value',
         SecretType.API_KEY,
-        { rotationStrategy: RotationStrategy.MANUAL }
+        { rotationStrategy: RotationStrategy.MANUAL },
       );
 
       const success = await secretsManager.rotateSecret(secretId, 'rotated-value', 'admin');
@@ -181,7 +181,7 @@ describe('Secrets Manager', () => {
       expect(metadata!.lastRotated).toBeDefined();
     });
 
-    it('should identify secrets needing rotation', async () => {
+    it('should identify secrets needing rotation', async() => {
       const expiredDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // Yesterday
       
       const secretId = await secretsManager.storeSecret(
@@ -190,8 +190,8 @@ describe('Secrets Manager', () => {
         SecretType.API_KEY,
         {
           expiresAt: expiredDate,
-          rotationStrategy: RotationStrategy.AUTOMATIC
-        }
+          rotationStrategy: RotationStrategy.AUTOMATIC,
+        },
       );
 
       const needsRotation = secretsManager.needsRotation(secretId);
@@ -199,17 +199,17 @@ describe('Secrets Manager', () => {
 
       const secretsNeedingRotation = secretsManager.getSecretsNeedingRotation();
       expect(secretsNeedingRotation).toContainEqual(
-        expect.objectContaining({ id: secretId })
+        expect.objectContaining({ id: secretId }),
       );
     });
   });
 
   describe('Secret Deletion', () => {
-    it('should soft delete secrets', async () => {
+    it('should soft delete secrets', async() => {
       const secretId = await secretsManager.storeSecret(
         'deletable-secret',
         'value',
-        SecretType.CUSTOM
+        SecretType.CUSTOM,
       );
 
       const success = await secretsManager.deleteSecret(secretId, 'admin');
@@ -222,18 +222,18 @@ describe('Secrets Manager', () => {
       expect(metadata!.isActive).toBe(false);
     });
 
-    it('should fail to delete non-existent secrets', async () => {
+    it('should fail to delete non-existent secrets', async() => {
       const success = await secretsManager.deleteSecret('non-existent', 'admin');
       expect(success).toBe(false);
     });
   });
 
   describe('Access Logging', () => {
-    it('should log secret access', async () => {
+    it('should log secret access', async() => {
       const secretId = await secretsManager.storeSecret(
         'logged-secret',
         'value',
-        SecretType.CUSTOM
+        SecretType.CUSTOM,
       );
 
       await secretsManager.getSecret(secretId, 'test-user');
@@ -248,7 +248,7 @@ describe('Secrets Manager', () => {
       expect(readLog!.accessedBy).toBe('test-user');
     });
 
-    it('should log failed access attempts', async () => {
+    it('should log failed access attempts', async() => {
       await secretsManager.getSecret('non-existent', 'test-user');
 
       const logs = secretsManager.getAccessLogs();
@@ -349,7 +349,7 @@ describe('Secrets Manager', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle encryption errors gracefully', async () => {
+    it('should handle encryption errors gracefully', async() => {
       // Create a manager with invalid encryption key that will cause encryption to fail
       const invalidManager = new SecretsManager({
         encryptionKey: 'invalid-key-that-will-cause-encryption-failure',
@@ -358,7 +358,7 @@ describe('Secrets Manager', () => {
         enableRotation: false,
         defaultRotationDays: 30,
         maxSecretVersions: 5,
-        enableAccessControl: false
+        enableAccessControl: false,
       });
 
       // Mock the encrypt method to throw an error
@@ -379,7 +379,7 @@ describe('Secrets Manager', () => {
       (invalidManager as any).encrypt = originalEncrypt;
     });
 
-    it('should handle decryption errors', async () => {
+    it('should handle decryption errors', async() => {
       const secretId = await secretsManager.storeSecret('test', 'value', SecretType.CUSTOM);
       
       // Corrupt the encrypted value
@@ -395,28 +395,28 @@ describe('Secrets Manager', () => {
   });
 
   describe('Secret Expiration', () => {
-    it('should handle expired secrets', async () => {
+    it('should handle expired secrets', async() => {
       const expiredDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // Yesterday
       
       const secretId = await secretsManager.storeSecret(
         'expired-secret',
         'value',
         SecretType.API_KEY,
-        { expiresAt: expiredDate }
+        { expiresAt: expiredDate },
       );
 
       const result = await secretsManager.getSecret(secretId);
       expect(result).toBeNull();
     });
 
-    it('should handle non-expired secrets', async () => {
+    it('should handle non-expired secrets', async() => {
       const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Tomorrow
       
       const secretId = await secretsManager.storeSecret(
         'valid-secret',
         'value',
         SecretType.API_KEY,
-        { expiresAt: futureDate }
+        { expiresAt: futureDate },
       );
 
       const result = await secretsManager.getSecret(secretId);

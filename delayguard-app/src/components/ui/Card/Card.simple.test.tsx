@@ -89,7 +89,7 @@ describe('Card Component', () => {
             <h4>Complex</h4>
             <p>Content</p>
           </div>
-        </Card>
+        </Card>,
       );
       
       expect(screen.getByText('Complex')).toBeInTheDocument();

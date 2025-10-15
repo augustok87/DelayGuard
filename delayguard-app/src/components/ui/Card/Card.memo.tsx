@@ -8,7 +8,7 @@ const CardComponent: React.FC<CardProps> = ({
   subtitle,
   actions,
   className = '',
-  loading = false
+  loading = false,
 }) => {
   return (
     <div className={`${styles.card} ${className}`}>

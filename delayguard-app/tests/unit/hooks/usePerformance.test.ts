@@ -54,7 +54,7 @@ describe('usePerformance', () => {
       usePerformance('TestComponent', {
         trackRenderTime: true,
         onMetricsUpdate,
-      })
+      }),
     );
 
     const cleanup = result.current.trackRender();
@@ -69,7 +69,7 @@ describe('usePerformance', () => {
       expect.objectContaining({
         renderTime: expect.any(Number),
         componentMountTime: expect.any(Number),
-      })
+      }),
     );
   });
 
@@ -79,7 +79,7 @@ describe('usePerformance', () => {
       usePerformance('TestComponent', {
         trackMemoryUsage: true,
         onMetricsUpdate,
-      })
+      }),
     );
 
     // Memory tracking happens in useEffect, so we need to wait
@@ -90,7 +90,7 @@ describe('usePerformance', () => {
     expect(onMetricsUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         memoryUsage: expect.any(Number),
-      })
+      }),
     );
   });
 
@@ -100,7 +100,7 @@ describe('usePerformance', () => {
       usePerformance('TestComponent', {
         trackFPS: true,
         onMetricsUpdate,
-      })
+      }),
     );
 
     // Just verify the hook doesn't crash and can be unmounted
@@ -122,7 +122,7 @@ describe('usePerformance', () => {
       usePerformance('TestComponent', {
         trackRenderTime: true,
         logToConsole: true,
-      })
+      }),
     );
 
     // Call trackRender to trigger console logging
@@ -141,7 +141,7 @@ describe('usePerformance', () => {
       usePerformance('TestComponent', {
         trackRenderTime: false,
         onMetricsUpdate,
-      })
+      }),
     );
 
     const cleanup = result.current.trackRender();
@@ -162,7 +162,7 @@ describe('useComponentPerformance', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     
     const { unmount } = renderHook(() => 
-      useComponentPerformance('TestComponent', [])
+      useComponentPerformance('TestComponent', []),
     );
 
     // Advance timers to ensure mount time is recorded
@@ -173,7 +173,7 @@ describe('useComponentPerformance', () => {
     unmount();
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('TestComponent total mount time')
+      expect.stringContaining('TestComponent total mount time'),
     );
     
     consoleSpy.mockRestore();
@@ -184,7 +184,7 @@ describe('useComponentPerformance', () => {
     
     const { rerender } = renderHook(
       ({ deps }) => useComponentPerformance('TestComponent', deps),
-      { initialProps: { deps: [1] } }
+      { initialProps: { deps: [1] } },
     );
 
     // Advance timers after initial mount
@@ -206,31 +206,31 @@ describe('useComponentPerformance', () => {
 });
 
 describe('useAsyncPerformance', () => {
-  it('measures async operation duration', async () => {
+  it('measures async operation duration', async() => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     const { result } = renderHook(() => useAsyncPerformance());
 
     const mockOperation = jest.fn().mockResolvedValue('success');
     
-    await act(async () => {
+    await act(async() => {
       await result.current.measureAsync(mockOperation, 'test-operation');
     });
 
     expect(mockOperation).toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('test-operation completed in')
+      expect.stringContaining('test-operation completed in'),
     );
     
     consoleSpy.mockRestore();
   });
 
-  it('handles async operation errors', async () => {
+  it('handles async operation errors', async() => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
     const { result } = renderHook(() => useAsyncPerformance());
 
     const mockOperation = jest.fn().mockRejectedValue(new Error('Test error'));
     
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.measureAsync(mockOperation, 'failing-operation');
       } catch (error) {
@@ -240,19 +240,19 @@ describe('useAsyncPerformance', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('failing-operation failed after'),
-      expect.any(Error)
+      expect.any(Error),
     );
     
     consoleSpy.mockRestore();
   });
 
-  it('returns operation result', async () => {
+  it('returns operation result', async() => {
     const { result } = renderHook(() => useAsyncPerformance());
 
     const mockOperation = jest.fn().mockResolvedValue('test-result');
     
     let operationResult;
-    await act(async () => {
+    await act(async() => {
       operationResult = await result.current.measureAsync(mockOperation, 'test-operation');
     });
 

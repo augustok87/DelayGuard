@@ -3,7 +3,7 @@ import { callback } from '../setup/test-server';
 
 describe('Delay Detection E2E Flow', () => {
   describe('Complete Delay Detection Flow', () => {
-    it('should complete full delay detection flow', async () => {
+    it('should complete full delay detection flow', async() => {
       // 1. Health check
       const healthResponse = await request(callback)
         .get('/health')
@@ -16,7 +16,7 @@ describe('Delay Detection E2E Flow', () => {
         .post('/api/test-delay')
         .send({
           trackingNumber: '1Z999AA1234567890',
-          carrierCode: 'ups'
+          carrierCode: 'ups',
         })
         .expect(200);
       
@@ -30,7 +30,7 @@ describe('Delay Detection E2E Flow', () => {
         .post('/api/test-delay')
         .send({
           trackingNumber: '1234567890',
-          carrierCode: 'fedex'
+          carrierCode: 'fedex',
         })
         .expect(200);
       
@@ -40,30 +40,30 @@ describe('Delay Detection E2E Flow', () => {
   });
 
   describe('Delay Detection Error Handling', () => {
-    it('should handle invalid tracking numbers', async () => {
+    it('should handle invalid tracking numbers', async() => {
       const response = await request(callback)
         .post('/api/test-delay')
         .send({
           trackingNumber: '',
-          carrierCode: 'ups'
+          carrierCode: 'ups',
         })
         .expect(400);
       
       expect(response.body.error).toBeDefined();
     });
 
-    it('should handle missing carrier code', async () => {
+    it('should handle missing carrier code', async() => {
       const response = await request(callback)
         .post('/api/test-delay')
         .send({
-          trackingNumber: '1Z999AA1234567890'
+          trackingNumber: '1Z999AA1234567890',
         })
         .expect(400);
       
       expect(response.body.error).toBeDefined();
     });
 
-    it('should handle completely empty request', async () => {
+    it('should handle completely empty request', async() => {
       const response = await request(callback)
         .post('/api/test-delay')
         .send({})
@@ -74,14 +74,14 @@ describe('Delay Detection E2E Flow', () => {
   });
 
   describe('Delay Detection Performance', () => {
-    it('should handle multiple concurrent delay detection requests', async () => {
+    it('should handle multiple concurrent delay detection requests', async() => {
       const requests = Array.from({ length: 5 }, (_, i) => 
         request(callback)
           .post('/api/test-delay')
           .send({
             trackingNumber: `1Z999AA123456789${i}`,
-            carrierCode: 'ups'
-          })
+            carrierCode: 'ups',
+          }),
       );
 
       const responses = await Promise.all(requests);

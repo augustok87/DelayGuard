@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running DelayGuard Quality Gates..."
+
+# Run quality gates
+node scripts/quality-gates.js
+
+# If quality gates pass, continue with commit
+echo "✅ Quality gates passed, proceeding with commit..."

@@ -9,7 +9,7 @@ describe('Delay Detection Service', () => {
         status: 'IN_TRANSIT',
         estimatedDeliveryDate: '2024-02-15',
         originalEstimatedDeliveryDate: '2024-02-10',
-        events: []
+        events: [],
       };
       
       const result = checkForDelays(trackingData);
@@ -25,7 +25,7 @@ describe('Delay Detection Service', () => {
         status: 'IN_TRANSIT',
         estimatedDeliveryDate: '2024-02-10',
         originalEstimatedDeliveryDate: '2024-02-10',
-        events: []
+        events: [],
       };
       
       const result = checkForDelays(trackingData);
@@ -41,7 +41,7 @@ describe('Delay Detection Service', () => {
         status: 'DELAYED',
         estimatedDeliveryDate: '2024-02-15',
         originalEstimatedDeliveryDate: '2024-02-10',
-        events: []
+        events: [],
       };
       
       const result = checkForDelays(trackingData);
@@ -57,7 +57,7 @@ describe('Delay Detection Service', () => {
         status: 'EXCEPTION',
         estimatedDeliveryDate: '2024-02-15',
         originalEstimatedDeliveryDate: '2024-02-10',
-        events: []
+        events: [],
       };
       
       const result = checkForDelays(trackingData);
@@ -73,7 +73,7 @@ describe('Delay Detection Service', () => {
         status: 'IN_TRANSIT',
         estimatedDeliveryDate: undefined,
         originalEstimatedDeliveryDate: '2024-02-10',
-        events: []
+        events: [],
       };
       
       const result = checkForDelays(trackingData);

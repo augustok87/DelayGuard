@@ -13,14 +13,14 @@ interface OrdersTabProps {
 const OrdersTabComponent: React.FC<OrdersTabProps> = ({ 
   orders, 
   loading, 
-  onOrderAction 
+  onOrderAction, 
 }) => {
   // Memoize filtered orders to prevent recalculation
   const { processingOrders, shippedOrders, deliveredOrders } = useMemo(() => {
     return {
       processingOrders: orders.filter(order => order.status === 'processing'),
       shippedOrders: orders.filter(order => order.status === 'shipped'),
-      deliveredOrders: orders.filter(order => order.status === 'delivered')
+      deliveredOrders: orders.filter(order => order.status === 'delivered'),
     };
   }, [orders]);
 

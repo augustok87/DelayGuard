@@ -19,7 +19,7 @@ describe('useDebounce', () => {
   it('should debounce value changes', () => {
     const { result, rerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 100 } }
+      { initialProps: { value: 'initial', delay: 100 } },
     );
 
     expect(result.current).toBe('initial');
@@ -37,7 +37,7 @@ describe('useDebounce', () => {
   it('should handle multiple rapid changes', () => {
     const { result, rerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 100 } }
+      { initialProps: { value: 'initial', delay: 100 } },
     );
 
     expect(result.current).toBe('initial');
@@ -59,7 +59,7 @@ describe('useDebounce', () => {
   it('should handle zero delay', () => {
     const { result, rerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 0 } }
+      { initialProps: { value: 'initial', delay: 0 } },
     );
 
     expect(result.current).toBe('initial');
@@ -76,7 +76,7 @@ describe('useDebounce', () => {
   it('should handle negative delay', () => {
     const { result, rerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: -100 } }
+      { initialProps: { value: 'initial', delay: -100 } },
     );
 
     expect(result.current).toBe('initial');
@@ -94,7 +94,7 @@ describe('useDebounce', () => {
     // String
     const { result: stringResult, rerender: stringRerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 100 } }
+      { initialProps: { value: 'initial', delay: 100 } },
     );
 
     stringRerender({ value: 'updated', delay: 100 });
@@ -104,7 +104,7 @@ describe('useDebounce', () => {
     // Number
     const { result: numberResult, rerender: numberRerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 0, delay: 100 } }
+      { initialProps: { value: 0, delay: 100 } },
     );
 
     numberRerender({ value: 42, delay: 100 });
@@ -114,7 +114,7 @@ describe('useDebounce', () => {
     // Boolean
     const { result: booleanResult, rerender: booleanRerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: false, delay: 100 } }
+      { initialProps: { value: false, delay: 100 } },
     );
 
     booleanRerender({ value: true, delay: 100 });
@@ -124,7 +124,7 @@ describe('useDebounce', () => {
     // Object
     const { result: objectResult, rerender: objectRerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: { id: 1 }, delay: 100 } }
+      { initialProps: { value: { id: 1 }, delay: 100 } },
     );
 
     objectRerender({ value: { id: 2 }, delay: 100 });
@@ -134,7 +134,7 @@ describe('useDebounce', () => {
     // Array
     const { result: arrayResult, rerender: arrayRerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: [1, 2, 3], delay: 100 } }
+      { initialProps: { value: [1, 2, 3], delay: 100 } },
     );
 
     arrayRerender({ value: [4, 5, 6], delay: 100 });
@@ -145,7 +145,7 @@ describe('useDebounce', () => {
   it('should handle null and undefined values', () => {
     const { result, rerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: null, delay: 100 } }
+      { initialProps: { value: null, delay: 100 } },
     );
 
     expect(result.current).toBeNull();
@@ -162,7 +162,7 @@ describe('useDebounce', () => {
   it('should handle delay changes', () => {
     const { result, rerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 100 } }
+      { initialProps: { value: 'initial', delay: 100 } },
     );
 
     expect(result.current).toBe('initial');
@@ -358,7 +358,7 @@ describe('useDebouncedCallback', () => {
     const callback = jest.fn();
     const { result, rerender } = renderHook(
       ({ callback, delay }) => useDebouncedCallback(callback, delay),
-      { initialProps: { callback, delay: 100 } }
+      { initialProps: { callback, delay: 100 } },
     );
 
     act(() => {
@@ -405,7 +405,7 @@ describe('useDebouncedCallback', () => {
     const callback2 = jest.fn();
     const { result, rerender } = renderHook(
       ({ callback, delay }) => useDebouncedCallback(callback, delay),
-      { initialProps: { callback: callback1, delay: 100 } }
+      { initialProps: { callback: callback1, delay: 100 } },
     );
 
     act(() => {
@@ -427,7 +427,7 @@ describe('useDebouncedCallback', () => {
     expect(callback2).toHaveBeenCalledWith('arg2');
   });
 
-  it('should handle callback with async function', async () => {
+  it('should handle callback with async function', async() => {
     const callback = jest.fn().mockResolvedValue('async result');
     const { result } = renderHook(() => useDebouncedCallback(callback, 100));
 
@@ -443,7 +443,7 @@ describe('useDebouncedCallback', () => {
     expect(callback).toHaveBeenCalledWith('arg1');
   });
 
-  it('should handle callback with promise rejection', async () => {
+  it('should handle callback with promise rejection', async() => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const callback = jest.fn().mockImplementation(() => {
       return Promise.reject(new Error('Promise error'));
@@ -459,7 +459,7 @@ describe('useDebouncedCallback', () => {
     });
 
     // Wait a bit for the promise rejection to be handled
-    await act(async () => {
+    await act(async() => {
       jest.advanceTimersByTime(10);
     });
 

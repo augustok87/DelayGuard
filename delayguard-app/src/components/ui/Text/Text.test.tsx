@@ -26,7 +26,7 @@ describe('Text Component', () => {
       
       variants.forEach(variant => {
         const { unmount } = render(
-          <Text variant={variant}>{variant} text</Text>
+          <Text variant={variant}>{variant} text</Text>,
         );
         
         const text = screen.getByText(`${variant} text`);
@@ -41,7 +41,7 @@ describe('Text Component', () => {
       
       tones.forEach(tone => {
         const { unmount } = render(
-          <Text tone={tone}>{tone} text</Text>
+          <Text tone={tone}>{tone} text</Text>,
         );
         
         const text = screen.getByText(`${tone} text`);
@@ -56,7 +56,7 @@ describe('Text Component', () => {
       
       fontWeights.forEach(fontWeight => {
         const { unmount } = render(
-          <Text fontWeight={fontWeight}>{fontWeight} text</Text>
+          <Text fontWeight={fontWeight}>{fontWeight} text</Text>,
         );
         
         const text = screen.getByText(`${fontWeight} text`);
@@ -90,7 +90,7 @@ describe('Text Component', () => {
   });
 
   describe('Accessibility', () => {
-    it('should be accessible', async () => {
+    it('should be accessible', async() => {
       const { container } = render(<Text>Accessible text</Text>);
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -108,7 +108,7 @@ describe('Text Component', () => {
         <div>
           <Text aria-describedby="help-text">Text</Text>
           <div id="help-text">This text is described</div>
-        </div>
+        </div>,
       );
       
       const text = screen.getByText('Text');
@@ -201,7 +201,7 @@ describe('Text Component', () => {
       render(
         <Text>
           <strong>Bold</strong> and <em>italic</em> text
-        </Text>
+        </Text>,
       );
       
       expect(screen.getByText('Bold')).toBeInTheDocument();
@@ -227,7 +227,7 @@ describe('Text Component', () => {
           as="h2"
         >
           Complex text
-        </Text>
+        </Text>,
       );
       
       const text = screen.getByText('Complex text');

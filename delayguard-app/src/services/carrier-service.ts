@@ -16,9 +16,9 @@ export class CarrierService implements ICarrierService {
       baseURL: 'https://api.shipengine.com',
       headers: {
         'API-Key': this.apiKey,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      timeout: 10000
+      timeout: 10000,
     });
   }
 
@@ -29,8 +29,8 @@ export class CarrierService implements ICarrierService {
       const response = await this.client.get('/v1/tracking', {
         params: {
           tracking_number: trackingNumber,
-          carrier_code: carrierCode
-        }
+          carrier_code: carrierCode,
+        },
       });
 
       const data = response.data;
@@ -48,8 +48,8 @@ export class CarrierService implements ICarrierService {
           location: event.city_locality ? 
             `${event.city_locality}, ${event.state_province}` : 
             undefined,
-          description: event.description || event.status_code
-        })) || []
+          description: event.description || event.status_code,
+        })) || [],
       };
 
       console.log(`✅ Tracking info retrieved: ${trackingInfo.status}`);
@@ -84,7 +84,7 @@ export class CarrierService implements ICarrierService {
       'OD': 'OUT_FOR_DELIVERY',
       'PU': 'PICKED_UP',
       'SE': 'SHIPPED',
-      'UN': 'UNKNOWN'
+      'UN': 'UNKNOWN',
     };
 
     return statusMap[shipEngineStatus] || shipEngineStatus;
@@ -105,7 +105,7 @@ export class CarrierService implements ICarrierService {
       
       return response.data.carriers.map((carrier: any) => ({
         code: carrier.carrier_code,
-        name: carrier.friendly_name
+        name: carrier.friendly_name,
       }));
     } catch (error) {
       console.error('Failed to get carrier list:', error);

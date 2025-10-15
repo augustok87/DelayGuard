@@ -29,7 +29,7 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
        FROM orders o 
        JOIN shops s ON o.shop_id = s.id 
        WHERE o.id = $1`,
-      [orderId]
+      [orderId],
     );
 
     if (orderResult.rows.length === 0) {
@@ -41,7 +41,7 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
     // Check if notifications are already sent
     const alertResult = await query(
       `SELECT email_sent, sms_sent FROM delay_alerts WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1`,
-      [orderId]
+      [orderId],
     );
 
     if (alertResult.rows.length === 0) {
@@ -55,7 +55,7 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
     const smsService = new SMSService(
       process.env.TWILIO_ACCOUNT_SID!,
       process.env.TWILIO_AUTH_TOKEN!,
-      process.env.TWILIO_PHONE_NUMBER!
+      process.env.TWILIO_PHONE_NUMBER!,
     );
     const notificationService = new NotificationService(emailService, smsService);
 
@@ -67,7 +67,7 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       customerEmail: order.customer_email,
       customerPhone: order.customer_phone,
       shopDomain: order.shop_domain,
-      createdAt: order.created_at
+      createdAt: order.created_at,
     };
 
     // Send notifications based on settings and what hasn't been sent
@@ -76,36 +76,36 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
     if (order.email_enabled && order.customer_email && !alert.email_sent) {
       promises.push(
         notificationService.sendDelayNotification(orderInfo, delayDetails)
-          .then(async () => {
+          .then(async() => {
             // Mark email as sent
             await query(
               `UPDATE delay_alerts SET email_sent = TRUE WHERE order_id = $1`,
-              [orderId]
+              [orderId],
             );
             console.log(`✅ Email sent for order ${orderId}`);
           })
           .catch(error => {
             console.error(`❌ Failed to send email for order ${orderId}:`, error);
             throw error;
-          })
+          }),
       );
     }
 
     if (order.sms_enabled && order.customer_phone && !alert.sms_sent) {
       promises.push(
         notificationService.sendDelayNotification(orderInfo, delayDetails)
-          .then(async () => {
+          .then(async() => {
             // Mark SMS as sent
             await query(
               `UPDATE delay_alerts SET sms_sent = TRUE WHERE order_id = $1`,
-              [orderId]
+              [orderId],
             );
             console.log(`✅ SMS sent for order ${orderId}`);
           })
           .catch(error => {
             console.error(`❌ Failed to send SMS for order ${orderId}:`, error);
             throw error;
-          })
+          }),
       );
     }
 

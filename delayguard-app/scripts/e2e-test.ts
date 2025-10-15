@@ -33,7 +33,7 @@ class E2ETester {
         test: testName,
         status: 'PASS',
         message: 'Test passed successfully',
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       });
       console.log(`✅ ${testName} - PASSED (${Date.now() - startTime}ms)`);
     } catch (error) {
@@ -41,7 +41,7 @@ class E2ETester {
         test: testName,
         status: 'FAIL',
         message: error instanceof Error ? error.message : 'Unknown error',
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       });
       console.log(`❌ ${testName} - FAILED (${Date.now() - startTime}ms): ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -76,18 +76,18 @@ class E2ETester {
       customer: {
         first_name: 'John',
         last_name: 'Doe',
-        email: 'john.doe@example.com'
+        email: 'john.doe@example.com',
       },
       line_items: [
         {
           id: 1,
           title: 'Test Product',
           quantity: 1,
-          price: '29.99'
-        }
+          price: '29.99',
+        },
       ],
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
     const response = await fetch(`${API_BASE_URL}/api/webhooks`, {
@@ -95,9 +95,9 @@ class E2ETester {
       headers: {
         'Content-Type': 'application/json',
         'X-Shopify-Topic': 'orders/updated',
-        'X-Shopify-Shop-Domain': 'test-shop.myshopify.com'
+        'X-Shopify-Shop-Domain': 'test-shop.myshopify.com',
       },
-      body: JSON.stringify(webhookData)
+      body: JSON.stringify(webhookData),
     });
 
     if (!response.ok) {
@@ -140,7 +140,7 @@ class E2ETester {
       customer_name: 'John Doe',
       customer_email: 'john.doe@example.com',
       status: 'paid',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     };
 
     const testFulfillment = {
@@ -149,7 +149,7 @@ class E2ETester {
       tracking_number: '1Z999AA1234567890',
       carrier_code: 'ups',
       status: 'shipped',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     };
 
     // This would normally be done through the database
@@ -164,7 +164,7 @@ class E2ETester {
       status: 'IN_TRANSIT',
       estimatedDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       originalEstimatedDeliveryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      events: []
+      events: [],
     };
 
     console.log('🔍 Tracking info simulated:', trackingInfo);
@@ -182,9 +182,9 @@ class E2ETester {
         orderNumber: testOrder.order_number,
         customerEmail: testOrder.customer_email,
         trackingNumber: testFulfillment.tracking_number,
-        delayDays: delayDays,
+        delayDays,
         estimatedDelivery: trackingInfo.estimatedDeliveryDate,
-        message: `Your order ${testOrder.order_number} is delayed by ${delayDays} days. New estimated delivery: ${trackingInfo.estimatedDeliveryDate}`
+        message: `Your order ${testOrder.order_number} is delayed by ${delayDays} days. New estimated delivery: ${trackingInfo.estimatedDeliveryDate}`,
       };
       
       console.log('📧 Notification would be sent:', notification);
@@ -199,13 +199,13 @@ class E2ETester {
       to: 'test@example.com',
       subject: 'DelayGuard Test Email',
       text: 'This is a test email from DelayGuard',
-      html: '<p>This is a test email from DelayGuard</p>'
+      html: '<p>This is a test email from DelayGuard</p>',
     };
 
     // Test SMS service configuration
     const smsTest = {
       to: '+1234567890',
-      message: 'DelayGuard Test SMS: Your order is delayed by 2 days.'
+      message: 'DelayGuard Test SMS: Your order is delayed by 2 days.',
     };
 
     console.log('📧 Email service test data:', emailTest);

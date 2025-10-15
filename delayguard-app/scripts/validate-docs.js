@@ -22,7 +22,7 @@ const validationResults = {
   jsdoc: { status: 'pending', issues: [] },
   api: { status: 'pending', issues: [] },
   coverage: { status: 'pending', issues: [] },
-  quality: { status: 'pending', issues: [] }
+  quality: { status: 'pending', issues: [] },
 };
 
 // Check if documentation files exist
@@ -31,7 +31,7 @@ function checkDocumentationFiles() {
     'jsdoc.conf.json',
     'swagger-config.js',
     'scripts/generate-docs.js',
-    'DEVELOPER_DOCUMENTATION.md'
+    'DEVELOPER_DOCUMENTATION.md',
   ];
 
   const missingFiles = requiredFiles.filter(file => {
@@ -266,7 +266,7 @@ function runValidation() {
     validateJSDocConfig(),
     validateSwaggerConfig(),
     checkDocumentationCoverage(),
-    validateDocumentationQuality()
+    validateDocumentationQuality(),
   ];
   
   const allPassed = checks.every(check => check);

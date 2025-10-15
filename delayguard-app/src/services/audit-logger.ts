@@ -85,7 +85,7 @@ export class AuditLogger extends EventEmitter {
   constructor(config: AuditLoggerConfig) {
     super();
     this.config = {
-      ...config
+      ...config,
     };
 
     this.riskAnalyzer = new RiskAnalyzer();
@@ -100,7 +100,7 @@ export class AuditLogger extends EventEmitter {
     ctx: Context,
     message: string,
     details: Record<string, any> = {},
-    severity: SecuritySeverity = SecuritySeverity.MEDIUM
+    severity: SecuritySeverity = SecuritySeverity.MEDIUM,
   ): Promise<void> {
     const event: SecurityEvent = {
       id: this.generateEventId(),
@@ -118,7 +118,7 @@ export class AuditLogger extends EventEmitter {
       message,
       details,
       riskScore: 0,
-      tags: []
+      tags: [],
     };
 
     // Calculate risk score
@@ -150,7 +150,7 @@ export class AuditLogger extends EventEmitter {
   async logAuthentication(
     ctx: Context,
     success: boolean,
-    details: Record<string, any> = {}
+    details: Record<string, any> = {},
   ): Promise<void> {
     const type = success 
       ? SecurityEventType.AUTHENTICATION_SUCCESS 
@@ -163,7 +163,7 @@ export class AuditLogger extends EventEmitter {
     await this.logSecurityEvent(type, ctx, 
       success ? 'User authenticated successfully' : 'Authentication failed',
       details,
-      severity
+      severity,
     );
   }
 
@@ -174,7 +174,7 @@ export class AuditLogger extends EventEmitter {
     ctx: Context,
     success: boolean,
     resource: string,
-    action: string
+    action: string,
   ): Promise<void> {
     const type = success 
       ? SecurityEventType.AUTHORIZATION_SUCCESS 
@@ -187,7 +187,7 @@ export class AuditLogger extends EventEmitter {
     await this.logSecurityEvent(type, ctx,
       success ? 'Access granted' : 'Access denied',
       { resource, action },
-      severity
+      severity,
     );
   }
 
@@ -198,14 +198,14 @@ export class AuditLogger extends EventEmitter {
     ctx: Context,
     limit: number,
     current: number,
-    windowMs: number
+    windowMs: number,
   ): Promise<void> {
     await this.logSecurityEvent(
       SecurityEventType.RATE_LIMIT_EXCEEDED,
       ctx,
       `Rate limit exceeded: ${current}/${limit} in ${windowMs}ms`,
       { limit, current, windowMs },
-      SecuritySeverity.MEDIUM
+      SecuritySeverity.MEDIUM,
     );
   }
 
@@ -215,14 +215,14 @@ export class AuditLogger extends EventEmitter {
   async logCSRFViolation(
     ctx: Context,
     tokenProvided: boolean,
-    tokenValid: boolean
+    tokenValid: boolean,
   ): Promise<void> {
     await this.logSecurityEvent(
       SecurityEventType.CSRF_TOKEN_INVALID,
       ctx,
       'CSRF token validation failed',
       { tokenProvided, tokenValid },
-      SecuritySeverity.HIGH
+      SecuritySeverity.HIGH,
     );
   }
 
@@ -233,7 +233,7 @@ export class AuditLogger extends EventEmitter {
     ctx: Context,
     sanitizedInput: string,
     originalInput: string,
-    sanitizationType: string
+    sanitizationType: string,
   ): Promise<void> {
     await this.logSecurityEvent(
       SecurityEventType.INPUT_SANITIZATION,
@@ -242,9 +242,9 @@ export class AuditLogger extends EventEmitter {
       { 
         sanitizedInput: sanitizedInput.substring(0, 100), // Truncate for privacy
         originalLength: originalInput.length,
-        sanitizationType 
+        sanitizationType, 
       },
-      SecuritySeverity.MEDIUM
+      SecuritySeverity.MEDIUM,
     );
   }
 
@@ -255,7 +255,7 @@ export class AuditLogger extends EventEmitter {
     ctx: Context,
     attackType: 'SQL_INJECTION' | 'XSS' | 'CSRF' | 'RATE_LIMIT',
     payload: string,
-    blocked: boolean = true
+    blocked: boolean = true,
   ): Promise<void> {
     const type = attackType === 'SQL_INJECTION' 
       ? SecurityEventType.SQL_INJECTION_ATTEMPT 
@@ -268,9 +268,9 @@ export class AuditLogger extends EventEmitter {
       { 
         attackType, 
         payload: payload.substring(0, 200), // Truncate for security
-        blocked 
+        blocked, 
       },
-      SecuritySeverity.HIGH
+      SecuritySeverity.HIGH,
     );
   }
 
@@ -281,14 +281,14 @@ export class AuditLogger extends EventEmitter {
     ctx: Context,
     activity: string,
     indicators: string[],
-    riskScore: number
+    riskScore: number,
   ): Promise<void> {
     await this.logSecurityEvent(
       SecurityEventType.SUSPICIOUS_ACTIVITY,
       ctx,
       `Suspicious activity detected: ${activity}`,
       { activity, indicators, riskScore },
-      riskScore > 80 ? SecuritySeverity.CRITICAL : SecuritySeverity.HIGH
+      riskScore > 80 ? SecuritySeverity.CRITICAL : SecuritySeverity.HIGH,
     );
   }
 
@@ -388,7 +388,7 @@ export class AuditLogger extends EventEmitter {
         severity: event.severity,
         riskScore: event.riskScore,
         ip: event.ipAddress,
-        endpoint: event.endpoint
+        endpoint: event.endpoint,
       });
     });
   }
@@ -536,7 +536,7 @@ class RiskAnalyzer {
       /curl/i,
       /wget/i,
       /python/i,
-      /php/i
+      /php/i,
     ];
 
     return suspiciousPatterns.some(pattern => pattern.test(userAgent));
@@ -559,7 +559,7 @@ export class AuditLoggerFactory {
       logLevel: SecuritySeverity.LOW,
       retentionDays: 90,
       batchSize: 100,
-      flushInterval: 5000
+      flushInterval: 5000,
     });
   }
 
@@ -576,7 +576,7 @@ export class AuditLoggerFactory {
       retentionDays: 365,
       batchSize: 50,
       flushInterval: 2000,
-      ...config
+      ...config,
     });
   }
 }

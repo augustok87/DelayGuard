@@ -13,14 +13,14 @@ interface AlertsTabProps {
 const AlertsTabComponent: React.FC<AlertsTabProps> = ({ 
   alerts, 
   loading, 
-  onAlertAction 
+  onAlertAction, 
 }) => {
   // Memoize filtered alerts to prevent recalculation
   const { activeAlerts, resolvedAlerts, dismissedAlerts } = useMemo(() => {
     return {
       activeAlerts: alerts.filter(alert => alert.status === 'active'),
       resolvedAlerts: alerts.filter(alert => alert.status === 'resolved'),
-      dismissedAlerts: alerts.filter(alert => alert.status === 'dismissed')
+      dismissedAlerts: alerts.filter(alert => alert.status === 'dismissed'),
     };
   }, [alerts]);
 

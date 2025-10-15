@@ -21,7 +21,7 @@ export function SettingsCard({
   onSave,
   onTest,
   onConnect,
-  onSettingsChange
+  onSettingsChange,
 }: SettingsCardProps) {
   const handleDelayThresholdChange = (value: number) => {
     onSettingsChange({ ...settings, delayThreshold: value });

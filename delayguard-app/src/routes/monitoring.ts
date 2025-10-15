@@ -6,7 +6,7 @@ const router = new Router();
 const monitoringService = new MonitoringService(config);
 
 // Health check endpoint
-router.get('/health', async (ctx) => {
+router.get('/health', async(ctx) => {
   try {
     const checks = await monitoringService.performHealthChecks();
     const overallStatus = checks.every(c => c.status === 'healthy') ? 'healthy' : 'degraded';
@@ -19,40 +19,40 @@ router.get('/health', async (ctx) => {
         name: check.name,
         status: check.status,
         responseTime: check.responseTime,
-        lastChecked: check.lastChecked
-      }))
+        lastChecked: check.lastChecked,
+      })),
     };
   } catch (error) {
     ctx.status = 503;
     ctx.body = {
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 });
 
 // System metrics endpoint
-router.get('/metrics', async (ctx) => {
+router.get('/metrics', async(ctx) => {
   try {
     const metrics = await monitoringService.collectSystemMetrics();
     
     ctx.body = {
       success: true,
       data: metrics,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   } catch (error) {
     ctx.status = 500;
     ctx.body = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to collect metrics'
+      error: error instanceof Error ? error.message : 'Failed to collect metrics',
     };
   }
 });
 
 // System status endpoint
-router.get('/status', async (ctx) => {
+router.get('/status', async(ctx) => {
   try {
     const status = await monitoringService.getSystemStatus();
     
@@ -60,38 +60,38 @@ router.get('/status', async (ctx) => {
     ctx.body = {
       success: true,
       data: status,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   } catch (error) {
     ctx.status = 500;
     ctx.body = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get system status'
+      error: error instanceof Error ? error.message : 'Failed to get system status',
     };
   }
 });
 
 // Alerts endpoint
-router.get('/alerts', async (ctx) => {
+router.get('/alerts', async(ctx) => {
   try {
     const alerts = await monitoringService.checkAlerts();
     
     ctx.body = {
       success: true,
       data: alerts,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   } catch (error) {
     ctx.status = 500;
     ctx.body = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to check alerts'
+      error: error instanceof Error ? error.message : 'Failed to check alerts',
     };
   }
 });
 
 // Metrics history endpoint
-router.get('/metrics/history', async (ctx) => {
+router.get('/metrics/history', async(ctx) => {
   try {
     const hours = parseInt(ctx.query.hours as string) || 24;
     const limit = parseInt(ctx.query.limit as string) || 100;
@@ -105,26 +105,26 @@ router.get('/metrics/history', async (ctx) => {
       database: { queryTime: Math.random() * 1000 },
       application: { 
         requests: { successRate: 95 + Math.random() * 5 },
-        responseTime: { average: 30 + Math.random() * 50 }
-      }
+        responseTime: { average: 30 + Math.random() * 50 },
+      },
     })).reverse();
     
     ctx.body = {
       success: true,
       data: history,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   } catch (error) {
     ctx.status = 500;
     ctx.body = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get metrics history'
+      error: error instanceof Error ? error.message : 'Failed to get metrics history',
     };
   }
 });
 
 // Performance summary endpoint
-router.get('/performance', async (ctx) => {
+router.get('/performance', async(ctx) => {
   try {
     const status = await monitoringService.getSystemStatus();
     
@@ -138,41 +138,41 @@ router.get('/performance', async (ctx) => {
       overall: {
         status: status.status,
         uptime: status.metrics.application.uptime,
-        healthScore: calculateHealthScore(status)
+        healthScore: calculateHealthScore(status),
       },
       performance: {
         responseTime: status.metrics.application.responseTime.average,
         successRate: status.metrics.application.requests.successRate,
-        errorRate: 100 - status.metrics.application.requests.successRate
+        errorRate: 100 - status.metrics.application.requests.successRate,
       },
       resources: {
         memoryUsage: status.metrics.memory.percentage,
         cpuUsage: status.metrics.cpu.usage,
-        databaseConnections: status.metrics.database.connections.active
+        databaseConnections: status.metrics.database.connections.active,
       },
       alerts: {
         active: status.alerts.length,
         critical: status.alerts.filter(a => a.severity === 'critical').length,
-        high: status.alerts.filter(a => a.severity === 'high').length
-      }
+        high: status.alerts.filter(a => a.severity === 'high').length,
+      },
     };
     
     ctx.body = {
       success: true,
       data: summary,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   } catch (error) {
     ctx.status = 500;
     ctx.body = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get performance summary'
+      error: error instanceof Error ? error.message : 'Failed to get performance summary',
     };
   }
 });
 
 // System diagnostics endpoint
-router.get('/diagnostics', async (ctx) => {
+router.get('/diagnostics', async(ctx) => {
   try {
     const checks = await monitoringService.performHealthChecks();
     const status = await monitoringService.getSystemStatus();
@@ -183,35 +183,35 @@ router.get('/diagnostics', async (ctx) => {
         nodeVersion: process.version,
         uptime: process.uptime(),
         memory: process.memoryUsage(),
-        cpu: process.cpuUsage()
+        cpu: process.cpuUsage(),
       },
       services: checks.map(check => ({
         name: check.name,
         status: check.status,
         responseTime: check.responseTime,
         details: check.details,
-        error: check.error
+        error: check.error,
       })),
       alerts: status.alerts.map(alert => ({
         id: alert.id,
         severity: alert.severity,
         message: alert.message,
         timestamp: alert.timestamp,
-        resolved: alert.resolved
+        resolved: alert.resolved,
       })),
-      recommendations: generateRecommendations(checks, status)
+      recommendations: generateRecommendations(checks, status),
     };
     
     ctx.body = {
       success: true,
       data: diagnostics,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   } catch (error) {
     ctx.status = 500;
     ctx.body = {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get diagnostics'
+      error: error instanceof Error ? error.message : 'Failed to get diagnostics',
     };
   }
 });

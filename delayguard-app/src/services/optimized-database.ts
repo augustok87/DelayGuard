@@ -25,7 +25,7 @@ export class OptimizedDatabase {
       query_timeout: 10000,
       application_name: 'delayguard',
       keepAlive: true,
-      keepAliveInitialDelayMillis: 0
+      keepAliveInitialDelayMillis: 0,
     });
 
     // Handle pool errors
@@ -37,13 +37,13 @@ export class OptimizedDatabase {
   async query<T extends Record<string, any> = any>(
     text: string, 
     params: any[] = [], 
-    options: QueryOptions = {}
+    options: QueryOptions = {},
   ): Promise<QueryResult<T>> {
     const {
       timeout = 10000,
       retries = 3,
       cache = false,
-      cacheTTL = this.defaultCacheTTL
+      cacheTTL = this.defaultCacheTTL,
     } = options;
 
     const cacheKey = cache ? `${text}:${JSON.stringify(params)}` : null;
@@ -108,7 +108,7 @@ export class OptimizedDatabase {
   }
 
   async transaction<T>(
-    callback: (client: PoolClient) => Promise<T>
+    callback: (client: PoolClient) => Promise<T>,
   ): Promise<T> {
     const client = await this.pool.connect();
     
@@ -127,7 +127,7 @@ export class OptimizedDatabase {
 
   async batchQuery<T extends Record<string, any> = any>(
     queries: Array<{ text: string; params?: any[] }>,
-    options: QueryOptions = {}
+    options: QueryOptions = {},
   ): Promise<QueryResult<T>[]> {
     const client = await this.pool.connect();
     
@@ -161,7 +161,7 @@ export class OptimizedDatabase {
     return {
       totalCount: this.pool.totalCount,
       idleCount: this.pool.idleCount,
-      waitingCount: this.pool.waitingCount
+      waitingCount: this.pool.waitingCount,
     };
   }
 
@@ -170,7 +170,7 @@ export class OptimizedDatabase {
     const result = await this.query(
       'SELECT * FROM shops WHERE shop_domain = $1 LIMIT 1',
       [domain],
-      { cache: true, cacheTTL: 300000 } // 5 minutes
+      { cache: true, cacheTTL: 300000 }, // 5 minutes
     );
     
     return result.rows[0] || null;
@@ -180,7 +180,7 @@ export class OptimizedDatabase {
     const result = await this.query(
       'SELECT * FROM app_settings WHERE shop_id = $1 LIMIT 1',
       [shopId],
-      { cache: true, cacheTTL: 300000 } // 5 minutes
+      { cache: true, cacheTTL: 300000 }, // 5 minutes
     );
     
     return result.rows[0] || null;
@@ -287,7 +287,7 @@ export class OptimizedDatabase {
       'permission denied',
       'relation does not exist',
       'column does not exist',
-      'duplicate key value'
+      'duplicate key value',
     ];
     
     const errorMessage = error.message.toLowerCase();

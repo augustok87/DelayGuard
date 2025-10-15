@@ -12,14 +12,14 @@ interface OrderCardProps {
 const OrderCardComponent: React.FC<OrderCardProps> = ({ 
   order, 
   onAction, 
-  variant 
+  variant, 
 }) => {
   // Memoize status badge calculation
   const statusBadge = useMemo(() => {
     const statusMap: { [key: string]: { class: string; text: string } } = {
       'processing': { class: styles.badgeWarning, text: 'Processing' },
       'shipped': { class: styles.badgeInfo, text: 'Shipped' },
-      'delivered': { class: styles.badgeSuccess, text: 'Delivered' }
+      'delivered': { class: styles.badgeSuccess, text: 'Delivered' },
     };
     
     const statusInfo = statusMap[order.status] || { class: styles.badgeInfo, text: order.status };
@@ -33,7 +33,7 @@ const OrderCardComponent: React.FC<OrderCardProps> = ({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }, [order.createdAt]);
 

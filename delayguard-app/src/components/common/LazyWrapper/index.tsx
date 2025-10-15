@@ -8,7 +8,7 @@ interface LazyWrapperProps {
 
 export const LazyWrapper: React.FC<LazyWrapperProps> = ({ 
   fallback = <LoadingSpinner message="Loading..." />, 
-  children 
+  children, 
 }) => {
   return (
     <Suspense fallback={fallback}>
@@ -20,10 +20,10 @@ export const LazyWrapper: React.FC<LazyWrapperProps> = ({
 // Higher-order component for lazy loading
 export const withLazyLoading = <P extends object>(
   Component: ComponentType<P>,
-  fallback?: React.ReactNode
+  fallback?: React.ReactNode,
 ) => {
   const LazyComponent = lazy(() => 
-    Promise.resolve({ default: Component })
+    Promise.resolve({ default: Component }),
   );
 
   const WrappedComponent: React.FC<P> = (props) => (
@@ -40,7 +40,7 @@ export const withLazyLoading = <P extends object>(
 // Utility function to create lazy components
 export const createLazyComponent = <P extends object>(
   importFn: () => Promise<{ default: ComponentType<P> }>,
-  fallback?: React.ReactNode
+  fallback?: React.ReactNode,
 ) => {
   const LazyComponent = lazy(importFn);
   

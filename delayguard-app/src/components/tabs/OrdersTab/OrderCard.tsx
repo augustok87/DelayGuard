@@ -14,7 +14,7 @@ export function OrderCard({ order, onAction, variant }: OrderCardProps) {
     const statusMap: { [key: string]: { class: string; text: string } } = {
       'shipped': { class: styles.badgeInfo, text: 'Shipped' },
       'delivered': { class: styles.badgeSuccess, text: 'Delivered' },
-      'processing': { class: styles.badgeWarning, text: 'Processing' }
+      'processing': { class: styles.badgeWarning, text: 'Processing' },
     };
     
     const statusInfo = statusMap[status] || { class: styles.badgeInfo, text: status };
@@ -27,7 +27,7 @@ export function OrderCard({ order, onAction, variant }: OrderCardProps) {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -35,7 +35,7 @@ export function OrderCard({ order, onAction, variant }: OrderCardProps) {
     if (!amount) return 'N/A';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency || 'USD'
+      currency: currency || 'USD',
     }).format(amount);
   };
 

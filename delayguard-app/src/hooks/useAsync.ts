@@ -13,14 +13,14 @@ interface UseAsyncOptions {
 
 export const useAsync = <T>(
   asyncFunction: (...args: any[]) => Promise<T>,
-  options: UseAsyncOptions = {}
+  options: UseAsyncOptions = {},
 ) => {
   const { immediate = false, resetOnExecute = true } = options;
   
   const [state, setState] = useState<UseAsyncState<T>>({
     data: null,
     loading: false,
-    error: null
+    error: null,
   });
 
   const isMountedRef = useRef(true);
@@ -31,7 +31,7 @@ export const useAsync = <T>(
     };
   }, []);
 
-  const execute = useCallback(async (...args: any[]) => {
+  const execute = useCallback(async(...args: any[]) => {
     if (!isMountedRef.current) return;
 
     if (resetOnExecute) {
@@ -45,7 +45,7 @@ export const useAsync = <T>(
         setState({
           data: result,
           loading: false,
-          error: null
+          error: null,
         });
       }
       
@@ -55,7 +55,7 @@ export const useAsync = <T>(
         setState({
           data: null,
           loading: false,
-          error: error instanceof Error ? error : new Error(String(error))
+          error: error instanceof Error ? error : new Error(String(error)),
         });
       }
       
@@ -68,7 +68,7 @@ export const useAsync = <T>(
       setState({
         data: null,
         loading: false,
-        error: null
+        error: null,
       });
     }
   }, []);
@@ -82,18 +82,18 @@ export const useAsync = <T>(
   return {
     ...state,
     execute,
-    reset
+    reset,
   };
 };
 
 export const useAsyncCallback = <T extends (...args: any[]) => Promise<any>>(
   asyncFunction: T,
-  deps: React.DependencyList = []
+  deps: React.DependencyList = [],
 ) => {
   const [state, setState] = useState<UseAsyncState<Awaited<ReturnType<T>>>>({
     data: null,
     loading: false,
-    error: null
+    error: null,
   });
 
   const isMountedRef = useRef(true);
@@ -104,7 +104,7 @@ export const useAsyncCallback = <T extends (...args: any[]) => Promise<any>>(
     };
   }, []);
 
-  const execute = useCallback(async (...args: Parameters<T>) => {
+  const execute = useCallback(async(...args: Parameters<T>) => {
     if (!isMountedRef.current) return;
 
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -116,7 +116,7 @@ export const useAsyncCallback = <T extends (...args: any[]) => Promise<any>>(
         setState({
           data: result,
           loading: false,
-          error: null
+          error: null,
         });
       }
       
@@ -126,7 +126,7 @@ export const useAsyncCallback = <T extends (...args: any[]) => Promise<any>>(
         setState({
           data: null,
           loading: false,
-          error: error instanceof Error ? error : new Error('An unknown error occurred')
+          error: error instanceof Error ? error : new Error('An unknown error occurred'),
         });
       }
       
@@ -139,7 +139,7 @@ export const useAsyncCallback = <T extends (...args: any[]) => Promise<any>>(
       setState({
         data: null,
         loading: false,
-        error: null
+        error: null,
       });
     }
   }, []);
@@ -147,6 +147,6 @@ export const useAsyncCallback = <T extends (...args: any[]) => Promise<any>>(
   return {
     ...state,
     execute,
-    reset
+    reset,
   };
 };

@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks';
 
 describe('Performance Tests', () => {
   describe('API Response Times', () => {
-    it('should respond to health check within 100ms', async () => {
+    it('should respond to health check within 100ms', async() => {
       const start = performance.now();
       
       const response = await fetch('/health');
@@ -15,7 +15,7 @@ describe('Performance Tests', () => {
       expect(responseTime).toBeLessThan(100);
     });
 
-    it('should respond to API status within 200ms', async () => {
+    it('should respond to API status within 200ms', async() => {
       const start = performance.now();
       
       const response = await fetch('/api');
@@ -30,7 +30,7 @@ describe('Performance Tests', () => {
   });
 
   describe('Concurrent Request Handling', () => {
-    it('should handle 10 concurrent requests', async () => {
+    it('should handle 10 concurrent requests', async() => {
       const start = performance.now();
       
       const promises = Array.from({ length: 10 }, () => fetch('/health'));
@@ -44,7 +44,7 @@ describe('Performance Tests', () => {
       expect(totalTime).toBeLessThan(1000); // All requests within 1 second
     });
 
-    it('should handle 50 concurrent requests', async () => {
+    it('should handle 50 concurrent requests', async() => {
       const start = performance.now();
       
       const promises = Array.from({ length: 50 }, () => fetch('/api'));
@@ -60,7 +60,7 @@ describe('Performance Tests', () => {
   });
 
   describe('Memory Usage', () => {
-    it('should not leak memory during multiple requests', async () => {
+    it('should not leak memory during multiple requests', async() => {
       const initialMemory = process.memoryUsage();
       
       // Make 100 requests
@@ -77,7 +77,7 @@ describe('Performance Tests', () => {
   });
 
   describe('Error Recovery', () => {
-    it('should recover quickly from errors', async () => {
+    it('should recover quickly from errors', async() => {
       // First, make a request that might fail
       try {
         await fetch('/nonexistent-endpoint');

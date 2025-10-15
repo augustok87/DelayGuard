@@ -182,7 +182,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
           'Inter, system-ui, sans-serif',
           'Helvetica, Arial, sans-serif',
           'Georgia, serif',
-          'Monaco, monospace'
+          'Monaco, monospace',
         ])}
         {renderNumberInput('Animation Speed (ms)', 'animationSpeed', theme.animationSpeed, 100, 500)}
         
@@ -213,7 +213,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
                 height: '40px', 
                 backgroundColor: theme.primaryColor, 
                 borderRadius: '4px',
-                border: '1px solid #d1d5db'
+                border: '1px solid #d1d5db',
               }} />
             </div>
             <div>
@@ -223,7 +223,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
                 height: '40px', 
                 backgroundColor: theme.secondaryColor, 
                 borderRadius: '4px',
-                border: '1px solid #d1d5db'
+                border: '1px solid #d1d5db',
               }} />
             </div>
             <div>
@@ -233,7 +233,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
                 height: '40px', 
                 backgroundColor: theme.accentColor, 
                 borderRadius: '4px',
-                border: '1px solid #d1d5db'
+                border: '1px solid #d1d5db',
               }} />
             </div>
             <div>
@@ -243,7 +243,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
                 height: '40px', 
                 backgroundColor: theme.backgroundColor, 
                 borderRadius: '4px',
-                border: '1px solid #d1d5db'
+                border: '1px solid #d1d5db',
               }} />
             </div>
           </div>

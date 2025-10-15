@@ -79,7 +79,7 @@ export class HealthCheckService {
       try {
         const tracer = getTracer('monitoring');
         const span = tracer.startSpan(`health.${name}`);
-        const result = await withSpan(span, async () => {
+        const result = await withSpan(span, async() => {
           return await checkFn();
         });
         results.push(result);
@@ -133,7 +133,7 @@ export class HealthCheckService {
    */
   private registerDefaultChecks() {
     // Database health check
-    this.registerCheck('database', async () => {
+    this.registerCheck('database', async() => {
       const start = Date.now();
       try {
         // Import database connection
@@ -158,7 +158,7 @@ export class HealthCheckService {
     });
 
     // Redis health check
-    this.registerCheck('redis', async () => {
+    this.registerCheck('redis', async() => {
       const start = Date.now();
       try {
         // Import Redis connection
@@ -183,7 +183,7 @@ export class HealthCheckService {
     });
 
     // External API health checks
-    this.registerCheck('shopify-api', async () => {
+    this.registerCheck('shopify-api', async() => {
       const start = Date.now();
       try {
         const controller = new AbortController();
@@ -212,7 +212,7 @@ export class HealthCheckService {
       }
     });
 
-    this.registerCheck('shipengine-api', async () => {
+    this.registerCheck('shipengine-api', async() => {
       const start = Date.now();
       try {
         const controller = new AbortController();
@@ -253,7 +253,7 @@ export class SystemMetricsService {
   async getSystemMetrics(): Promise<SystemMetrics> {
     const tracer = getTracer('monitoring');
     const span = tracer.startSpan('system.metrics');
-    return withSpan(span, async () => {
+    return withSpan(span, async() => {
       const uptime = process.uptime();
       const memoryUsage = process.memoryUsage();
       const cpuUsage = process.cpuUsage();
@@ -347,13 +347,13 @@ export class SystemMetricsService {
       const [delayWaiting, delayActive, delayFailed] = await Promise.all([
         delayCheckQueue.getWaiting(),
         delayCheckQueue.getActive(),
-        delayCheckQueue.getFailed()
+        delayCheckQueue.getFailed(),
       ]);
       
       const [notifWaiting, notifActive, notifFailed] = await Promise.all([
         notificationQueue.getWaiting(),
         notificationQueue.getActive(),
-        notificationQueue.getFailed()
+        notificationQueue.getFailed(),
       ]);
       
       const waiting = [...delayWaiting, ...notifWaiting];
@@ -496,7 +496,7 @@ export class AlertingService {
       const { delayCheckQueue, notificationQueue } = await import('../queue/setup');
       const [delayWaiting, notifWaiting] = await Promise.all([
         delayCheckQueue.getWaiting(),
-        notificationQueue.getWaiting()
+        notificationQueue.getWaiting(),
       ]);
       const waiting = [...delayWaiting, ...notifWaiting];
       return waiting.length > threshold;
@@ -606,7 +606,7 @@ export class MonitoringService {
    * Start monitoring
    */
   start(intervalMs: number = 60000) { // Default 1 minute
-    this.intervalId = setInterval(async () => {
+    this.intervalId = setInterval(async() => {
       await this.runMonitoringCycle();
     }, intervalMs);
     

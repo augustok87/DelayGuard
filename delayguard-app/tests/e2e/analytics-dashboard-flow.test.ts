@@ -3,7 +3,7 @@ import { callback } from '../setup/test-server';
 
 describe('Analytics Dashboard E2E Flow', () => {
   describe('Complete Dashboard Flow', () => {
-    it('should complete full analytics dashboard flow', async () => {
+    it('should complete full analytics dashboard flow', async() => {
       // 1. Health check
       const healthResponse = await request(callback)
         .get('/health')
@@ -40,7 +40,7 @@ describe('Analytics Dashboard E2E Flow', () => {
         .post('/api/test-delay')
         .send({
           trackingNumber: '1Z999AA1234567890',
-          carrierCode: 'ups'
+          carrierCode: 'ups',
         })
         .expect(200);
       
@@ -50,12 +50,12 @@ describe('Analytics Dashboard E2E Flow', () => {
   });
 
   describe('Dashboard Data Integration', () => {
-    it('should integrate all dashboard data sources', async () => {
+    it('should integrate all dashboard data sources', async() => {
       // Test that all dashboard data sources work together
       const [stats, alerts, orders] = await Promise.all([
         request(callback).get('/api/stats'),
         request(callback).get('/api/alerts'),
-        request(callback).get('/api/orders')
+        request(callback).get('/api/orders'),
       ]);
 
       // Verify all responses are successful
@@ -71,7 +71,7 @@ describe('Analytics Dashboard E2E Flow', () => {
   });
 
   describe('Error Handling in Dashboard Flow', () => {
-    it('should handle errors gracefully in dashboard flow', async () => {
+    it('should handle errors gracefully in dashboard flow', async() => {
       // Test error handling for invalid requests
       const response = await request(callback)
         .post('/api/test-delay')

@@ -30,7 +30,7 @@ export class RateLimitingMiddleware {
       skipFailedRequests: false,
       keyGenerator: (ctx: Context) => `rate_limit:${ctx.ip}`,
       message: 'Too many requests, please try again later.',
-      ...config
+      ...config,
     };
   }
 
@@ -74,7 +74,7 @@ export class RateLimitingMiddleware {
           retryAfter: Math.ceil(this.config.windowMs / 1000),
           limit: this.config.maxRequests,
           remaining: 0,
-          resetTime: new Date(now + this.config.windowMs).toISOString()
+          resetTime: new Date(now + this.config.windowMs).toISOString(),
         };
         ctx.set('Retry-After', Math.ceil(this.config.windowMs / 1000).toString());
         ctx.set('X-RateLimit-Limit', this.config.maxRequests.toString());
@@ -126,7 +126,7 @@ export const RateLimitPresets = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 5,
     keyGenerator: (ctx: Context) => `rate_limit:auth:${ctx.ip}`,
-    message: 'Too many authentication attempts, please try again later.'
+    message: 'Too many authentication attempts, please try again later.',
   },
 
   // Moderate rate limiting for API endpoints
@@ -134,7 +134,7 @@ export const RateLimitPresets = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 100,
     keyGenerator: (ctx: Context) => `rate_limit:api:${ctx.ip}`,
-    message: 'API rate limit exceeded, please try again later.'
+    message: 'API rate limit exceeded, please try again later.',
   },
 
   // Lenient rate limiting for general endpoints
@@ -142,7 +142,7 @@ export const RateLimitPresets = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 200,
     keyGenerator: (ctx: Context) => `rate_limit:general:${ctx.ip}`,
-    message: 'Rate limit exceeded, please try again later.'
+    message: 'Rate limit exceeded, please try again later.',
   },
 
   // Very strict rate limiting for webhook endpoints
@@ -150,8 +150,8 @@ export const RateLimitPresets = {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 10,
     keyGenerator: (ctx: Context) => `rate_limit:webhook:${ctx.ip}`,
-    message: 'Webhook rate limit exceeded.'
-  }
+    message: 'Webhook rate limit exceeded.',
+  },
 };
 
 /**
@@ -190,18 +190,18 @@ export class AdvancedRateLimiting {
       premium: {
         windowMs: 15 * 60 * 1000,
         maxRequests: 1000,
-        keyGenerator: (ctx: Context) => `rate_limit:premium:${ctx.ip}`
+        keyGenerator: (ctx: Context) => `rate_limit:premium:${ctx.ip}`,
       },
       standard: {
         windowMs: 15 * 60 * 1000,
         maxRequests: 200,
-        keyGenerator: (ctx: Context) => `rate_limit:standard:${ctx.ip}`
+        keyGenerator: (ctx: Context) => `rate_limit:standard:${ctx.ip}`,
       },
       free: {
         windowMs: 15 * 60 * 1000,
         maxRequests: 50,
-        keyGenerator: (ctx: Context) => `rate_limit:free:${ctx.ip}`
-      }
+        keyGenerator: (ctx: Context) => `rate_limit:free:${ctx.ip}`,
+      },
     };
 
     return configs[tier as keyof typeof configs] || configs.free;

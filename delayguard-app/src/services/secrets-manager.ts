@@ -113,7 +113,7 @@ export class SecretsManager extends EventEmitter {
       expiresAt?: Date;
       rotationStrategy?: RotationStrategy;
       createdBy?: string;
-    } = {}
+    } = {},
   ): Promise<string> {
     const secretId = this.generateSecretId();
     const encryptedValue = this.encrypt(value);
@@ -131,7 +131,7 @@ export class SecretsManager extends EventEmitter {
       version: 1,
       isActive: true,
       environment: this.config.environment,
-      createdBy: options.createdBy || 'system'
+      createdBy: options.createdBy || 'system',
     };
 
     const secretValue: SecretValue = {
@@ -140,7 +140,7 @@ export class SecretsManager extends EventEmitter {
       encryptedValue,
       version: 1,
       createdAt: new Date(),
-      isActive: true
+      isActive: true,
     };
 
     this.secrets.set(secretId, secretValue);
@@ -201,7 +201,7 @@ export class SecretsManager extends EventEmitter {
   async updateSecret(
     secretId: string,
     newValue: string,
-    updatedBy: string = 'system'
+    updatedBy: string = 'system',
   ): Promise<boolean> {
     const secret = this.secrets.get(secretId);
     const metadata = this.metadata.get(secretId);
@@ -220,7 +220,7 @@ export class SecretsManager extends EventEmitter {
       value: newValue,
       encryptedValue,
       version: newVersion,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     this.secrets.set(secretId, updatedSecret);
@@ -242,7 +242,7 @@ export class SecretsManager extends EventEmitter {
   async rotateSecret(
     secretId: string,
     newValue: string,
-    rotatedBy: string = 'system'
+    rotatedBy: string = 'system',
   ): Promise<boolean> {
     const metadata = this.metadata.get(secretId);
     if (!metadata || !metadata.isActive) {
@@ -299,7 +299,7 @@ export class SecretsManager extends EventEmitter {
    */
   getSecretsByTags(tags: string[]): SecretMetadata[] {
     return this.listSecrets().filter(secret => 
-      tags.some(tag => secret.tags.includes(tag))
+      tags.some(tag => secret.tags.includes(tag)),
     );
   }
 
@@ -361,7 +361,7 @@ export class SecretsManager extends EventEmitter {
     let encrypted = cipher.update(value, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     
-    return iv.toString('hex') + ':' + encrypted;
+    return `${iv.toString('hex')}:${encrypted}`;
   }
 
   /**
@@ -401,7 +401,7 @@ export class SecretsManager extends EventEmitter {
     accessedBy: string,
     action: 'READ' | 'WRITE' | 'DELETE' | 'ROTATE',
     success: boolean,
-    error?: string
+    error?: string,
   ): void {
     if (!this.config.enableAuditLogging) return;
 
@@ -414,7 +414,7 @@ export class SecretsManager extends EventEmitter {
       ipAddress: '127.0.0.1', // In production, get from request context
       userAgent: 'SecretsManager/1.0',
       success,
-      error
+      error,
     };
 
     this.accessLogs.push(log);
@@ -541,7 +541,7 @@ export class SecretUtils {
     return {
       isStrong: score >= 4,
       score,
-      suggestions
+      suggestions,
     };
   }
 }
@@ -561,7 +561,7 @@ export class SecretsManagerFactory {
       enableRotation: false,
       defaultRotationDays: 90,
       maxSecretVersions: 5,
-      enableAccessControl: false
+      enableAccessControl: false,
     });
   }
 
@@ -576,7 +576,7 @@ export class SecretsManagerFactory {
       enableRotation: true,
       defaultRotationDays: 30,
       maxSecretVersions: 10,
-      enableAccessControl: true
+      enableAccessControl: true,
     });
   }
 }

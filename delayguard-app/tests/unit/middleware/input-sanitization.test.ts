@@ -13,13 +13,13 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('XSS Protection', () => {
-    it('should remove script tags', async () => {
+    it('should remove script tags', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        enableXSSProtection: true
+        enableXSSProtection: true,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -33,13 +33,13 @@ describe('Input Sanitization Middleware', () => {
       expect(response.body.received.message).not.toContain('alert');
     });
 
-    it('should remove javascript: protocols', async () => {
+    it('should remove javascript: protocols', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        enableXSSProtection: true
+        enableXSSProtection: true,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -52,13 +52,13 @@ describe('Input Sanitization Middleware', () => {
       expect(response.body.received.link).not.toContain('javascript:');
     });
 
-    it('should remove on* event handlers', async () => {
+    it('should remove on* event handlers', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        enableXSSProtection: true
+        enableXSSProtection: true,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -71,13 +71,13 @@ describe('Input Sanitization Middleware', () => {
       expect(response.body.received.content).not.toContain('onclick');
     });
 
-    it('should escape HTML entities', async () => {
+    it('should escape HTML entities', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        enableXSSProtection: true
+        enableXSSProtection: true,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -93,13 +93,13 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('SQL Injection Protection', () => {
-    it('should remove SQL comment patterns', async () => {
+    it('should remove SQL comment patterns', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        enableSQLInjectionProtection: true
+        enableSQLInjectionProtection: true,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -114,13 +114,13 @@ describe('Input Sanitization Middleware', () => {
       expect(response.body.received.query).not.toContain('*/');
     });
 
-    it('should remove SQL keywords', async () => {
+    it('should remove SQL keywords', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        enableSQLInjectionProtection: true
+        enableSQLInjectionProtection: true,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -136,14 +136,14 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('HTML Sanitization', () => {
-    it('should allow safe HTML tags when configured', async () => {
+    it('should allow safe HTML tags when configured', async() => {
       const sanitization = InputSanitizationMiddleware.create({
         enableHTMLSanitization: true,
-        allowedHTMLTags: ['b', 'i', 'em', 'strong']
+        allowedHTMLTags: ['b', 'i', 'em', 'strong'],
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -159,14 +159,14 @@ describe('Input Sanitization Middleware', () => {
       expect(response.body.received.content).not.toContain('<script>');
     });
 
-    it('should remove all HTML when no tags allowed', async () => {
+    it('should remove all HTML when no tags allowed', async() => {
       const sanitization = InputSanitizationMiddleware.create({
         enableHTMLSanitization: true,
-        allowedHTMLTags: []
+        allowedHTMLTags: [],
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -183,13 +183,13 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Input Validation', () => {
-    it('should validate email format', async () => {
+    it('should validate email format', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        enableInputValidation: true
+        enableInputValidation: true,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         // Simulate email validation
         const email = (ctx.request.body as any)?.email;
         if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -208,13 +208,13 @@ describe('Input Sanitization Middleware', () => {
       expect(response.body.error).toBe('Invalid email format');
     });
 
-    it('should validate URL format', async () => {
+    it('should validate URL format', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        enableInputValidation: true
+        enableInputValidation: true,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         const url = (ctx.request.body as any)?.url;
         if (url && !/^https?:\/\/.+/.test(url)) {
           ctx.status = 400;
@@ -234,13 +234,13 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('String Length Validation', () => {
-    it('should reject strings exceeding max length', async () => {
+    it('should reject strings exceeding max length', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        maxStringLength: 10
+        maxStringLength: 10,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -253,13 +253,13 @@ describe('Input Sanitization Middleware', () => {
       expect(response.body.code).toBe('INPUT_TOO_LONG');
     });
 
-    it('should allow strings within max length', async () => {
+    it('should allow strings within max length', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        maxStringLength: 100
+        maxStringLength: 100,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -273,13 +273,13 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Nested Object Sanitization', () => {
-    it('should sanitize nested objects', async () => {
+    it('should sanitize nested objects', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        enableXSSProtection: true
+        enableXSSProtection: true,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 
@@ -288,10 +288,10 @@ describe('Input Sanitization Middleware', () => {
           name: '<script>alert(1)</script>John',
           email: 'john@example.com',
           profile: {
-            bio: '<img src="x" onerror="alert(1)">Bio text'
-          }
+            bio: '<img src="x" onerror="alert(1)">Bio text',
+          },
         },
-        tags: ['<script>alert(1)</script>tag1', 'normal-tag']
+        tags: ['<script>alert(1)</script>tag1', 'normal-tag'],
       };
 
       const response = await request(app.callback())
@@ -307,13 +307,13 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Query Parameter Sanitization', () => {
-    it('should sanitize query parameters', async () => {
+    it('should sanitize query parameters', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        enableXSSProtection: true
+        enableXSSProtection: true,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { query: ctx.query };
       });
 
@@ -368,7 +368,7 @@ describe('Input Sanitization Middleware', () => {
     it('should validate required fields', () => {
       const schema = {
         name: { required: true, type: 'string' },
-        email: { required: true, type: 'string' }
+        email: { required: true, type: 'string' },
       };
 
       expect(() => {
@@ -379,7 +379,7 @@ describe('Input Sanitization Middleware', () => {
     it('should validate field types', () => {
       const schema = {
         age: { type: 'number' },
-        name: { type: 'string' }
+        name: { type: 'string' },
       };
 
       expect(() => {
@@ -389,7 +389,7 @@ describe('Input Sanitization Middleware', () => {
 
     it('should validate string length', () => {
       const schema = {
-        message: { type: 'string', minLength: 5, maxLength: 10 }
+        message: { type: 'string', minLength: 5, maxLength: 10 },
       };
 
       expect(() => {
@@ -403,7 +403,7 @@ describe('Input Sanitization Middleware', () => {
 
     it('should validate with custom pattern', () => {
       const schema = {
-        phone: { type: 'string', pattern: /^\d{3}-\d{3}-\d{4}$/ }
+        phone: { type: 'string', pattern: /^\d{3}-\d{3}-\d{4}$/ },
       };
 
       expect(() => {
@@ -419,8 +419,8 @@ describe('Input Sanitization Middleware', () => {
       const schema = {
         password: { 
           type: 'string', 
-          validator: (value: string) => value.length >= 8 && /[A-Z]/.test(value)
-        }
+          validator: (value: string) => value.length >= 8 && /[A-Z]/.test(value),
+        },
       };
 
       expect(() => {
@@ -434,13 +434,13 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle validation errors gracefully', async () => {
+    it('should handle validation errors gracefully', async() => {
       const sanitization = InputSanitizationMiddleware.create({
-        maxStringLength: 5
+        maxStringLength: 5,
       });
 
       app.use(sanitization);
-      app.use(async (ctx) => {
+      app.use(async(ctx) => {
         ctx.body = { received: ctx.request.body };
       });
 

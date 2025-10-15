@@ -13,7 +13,7 @@ export const useOrders = () => {
   }, [dispatch]);
 
   // Order actions - Note: createOrder would need to be implemented in the slice
-  const createNewOrder = useCallback(async (orderData: CreateOrderData) => {
+  const createNewOrder = useCallback(async(orderData: CreateOrderData) => {
     try {
       // For now, we'll just add to local state
       // In a real app, this would dispatch a createOrder action
@@ -24,7 +24,7 @@ export const useOrders = () => {
     }
   }, []);
 
-  const updateExistingOrder = useCallback(async (id: string, updates: UpdateOrderData) => {
+  const updateExistingOrder = useCallback(async(id: string, updates: UpdateOrderData) => {
     try {
       await dispatch(updateOrder({ id, updates })).unwrap();
       return { success: true };
@@ -33,7 +33,7 @@ export const useOrders = () => {
     }
   }, [dispatch]);
 
-  const deleteExistingOrder = useCallback(async (id: string) => {
+  const deleteExistingOrder = useCallback(async(id: string) => {
     try {
       await dispatch(deleteOrder(id)).unwrap();
       return { success: true };
@@ -71,7 +71,7 @@ export const useOrders = () => {
 
   const getOrdersByCustomer = useCallback((customerName: string) => {
     return orders.filter(order => 
-      order.customerName.toLowerCase().includes(customerName.toLowerCase())
+      order.customerName.toLowerCase().includes(customerName.toLowerCase()),
     );
   }, [orders]);
 
@@ -90,7 +90,7 @@ export const useOrders = () => {
       order.orderNumber.toLowerCase().includes(lowercaseQuery) ||
       order.customerName.toLowerCase().includes(lowercaseQuery) ||
       (order.trackingNumber && order.trackingNumber.toLowerCase().includes(lowercaseQuery)) ||
-      order.status.toLowerCase().includes(lowercaseQuery)
+      order.status.toLowerCase().includes(lowercaseQuery),
     );
   }, [orders]);
 
@@ -114,7 +114,7 @@ export const useOrders = () => {
       withTracking,
       withoutTracking,
       totalRevenue,
-      avgOrderValue: avgOrderValue.toFixed(2)
+      avgOrderValue: avgOrderValue.toFixed(2),
     };
   }, [orders, getProcessingOrders, getShippedOrders, getDeliveredOrders, getOrdersWithTracking, getOrdersWithoutTracking]);
 
@@ -144,6 +144,6 @@ export const useOrders = () => {
     searchOrders,
     
     // Statistics
-    getOrderStats
+    getOrderStats,
   };
 };

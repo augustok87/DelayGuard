@@ -13,14 +13,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         redis: !!process.env.REDIS_URL,
         shipengine: !!process.env.SHIPENGINE_API_KEY,
         sendgrid: !!process.env.SENDGRID_API_KEY,
-        twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+        twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
       },
       debug: {
         databaseUrlExists: !!process.env.DATABASE_URL,
         databaseUrlLength: process.env.DATABASE_URL ? process.env.DATABASE_URL.length : 0,
-        databaseUrlStart: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 20) + '...' : 'undefined',
-        allEnvVars: Object.keys(process.env).filter(key => key.includes('DATABASE') || key.includes('REDIS') || key.includes('SHIPENGINE') || key.includes('SENDGRID') || key.includes('TWILIO'))
-      }
+        databaseUrlStart: process.env.DATABASE_URL ? `${process.env.DATABASE_URL.substring(0, 20)}...` : 'undefined',
+        allEnvVars: Object.keys(process.env).filter(key => key.includes('DATABASE') || key.includes('REDIS') || key.includes('SHIPENGINE') || key.includes('SENDGRID') || key.includes('TWILIO')),
+      },
     };
     res.status(200).json(healthStatus);
     return;
@@ -35,7 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         health: '/health',
         webhooks: '/webhooks',
         auth: '/auth',
-        monitoring: '/monitoring'
+        monitoring: '/monitoring',
       },
       configuration: {
         database: !!process.env.DATABASE_URL,
@@ -43,10 +43,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         externalServices: {
           shipengine: !!process.env.SHIPENGINE_API_KEY,
           sendgrid: !!process.env.SENDGRID_API_KEY,
-          twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
-        }
+          twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+        },
       },
-      note: 'Configure environment variables to enable full functionality'
+      note: 'Configure environment variables to enable full functionality',
     });
     return;
   }
@@ -60,8 +60,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       configuration: {
         shipengine: !!process.env.SHIPENGINE_API_KEY,
         sendgrid: !!process.env.SENDGRID_API_KEY,
-        twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
-      }
+        twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+      },
     });
     return;
   }
@@ -73,8 +73,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: 'Auth endpoint ready',
       note: 'Authentication will be implemented when Shopify credentials are configured',
       configuration: {
-        shopify: !!(process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET)
-      }
+        shopify: !!(process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET),
+      },
     });
     return;
   }
@@ -89,8 +89,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         redis: !!process.env.REDIS_URL,
         shipengine: !!process.env.SHIPENGINE_API_KEY,
         sendgrid: !!process.env.SENDGRID_API_KEY,
-        twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
-      }
+        twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+      },
     });
     return;
   }
@@ -99,6 +99,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.status(404).json({
     status: 'error',
     message: 'Endpoint not found',
-    availableEndpoints: ['/', '/health', '/webhooks', '/auth', '/monitoring']
+    availableEndpoints: ['/', '/health', '/webhooks', '/auth', '/monitoring'],
   });
 }

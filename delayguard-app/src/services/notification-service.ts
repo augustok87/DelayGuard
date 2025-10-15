@@ -43,7 +43,7 @@ export class NotificationService {
    */
   constructor(
     private emailService: EmailService,
-    private smsService: SMSService
+    private smsService: SMSService,
   ) {}
 
   /**
@@ -98,13 +98,13 @@ export class NotificationService {
 
     if (orderInfo.customerEmail) {
       promises.push(
-        this.emailService.sendDelayEmail(orderInfo.customerEmail, orderInfo, delayDetails)
+        this.emailService.sendDelayEmail(orderInfo.customerEmail, orderInfo, delayDetails),
       );
     }
 
     if (orderInfo.customerPhone) {
       promises.push(
-        this.smsService.sendDelaySMS(orderInfo.customerPhone, orderInfo, delayDetails)
+        this.smsService.sendDelaySMS(orderInfo.customerPhone, orderInfo, delayDetails),
       );
     }
 

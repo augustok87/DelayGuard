@@ -149,7 +149,7 @@ class MockRedis {
         commands.push(['expire', key, seconds]);
         return pipeline;
       }),
-      exec: jest.fn().mockImplementation(async () => {
+      exec: jest.fn().mockImplementation(async() => {
         const results = [];
         for (const [command, ...args] of commands) {
           try {
@@ -161,7 +161,7 @@ class MockRedis {
         }
         commands.length = 0;
         return results;
-      })
+      }),
     };
     return pipeline;
   }

@@ -6,7 +6,7 @@ const router = new Router();
 const analyticsService = new AnalyticsService(config);
 
 // Get analytics metrics
-router.get('/analytics', async (ctx) => {
+router.get('/analytics', async(ctx) => {
   try {
     const shopId = ctx.state.shopify?.session?.shop || ctx.query.shop;
     const timeRange = ctx.query.timeRange as '7d' | '30d' | '90d' | '1y' || '30d';
@@ -23,20 +23,20 @@ router.get('/analytics', async (ctx) => {
       success: true,
       data: metrics,
       timeRange,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
   } catch (error) {
     console.error('Analytics error:', error);
     ctx.status = 500;
     ctx.body = { 
       error: 'Failed to fetch analytics data',
-      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined,
     };
   }
 });
 
 // Get real-time metrics
-router.get('/analytics/realtime', async (ctx) => {
+router.get('/analytics/realtime', async(ctx) => {
   try {
     const shopId = ctx.state.shopify?.session?.shop || ctx.query.shop;
 
@@ -51,20 +51,20 @@ router.get('/analytics/realtime', async (ctx) => {
     ctx.body = {
       success: true,
       data: metrics,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
   } catch (error) {
     console.error('Real-time analytics error:', error);
     ctx.status = 500;
     ctx.body = { 
       error: 'Failed to fetch real-time metrics',
-      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined,
     };
   }
 });
 
 // Get analytics summary
-router.get('/analytics/summary', async (ctx) => {
+router.get('/analytics/summary', async(ctx) => {
   try {
     const shopId = ctx.state.shopify?.session?.shop || ctx.query.shop;
 
@@ -76,7 +76,7 @@ router.get('/analytics/summary', async (ctx) => {
 
     const [metrics, realtime] = await Promise.all([
       analyticsService.getAnalyticsMetrics(shopId, '30d'),
-      analyticsService.getRealTimeMetrics(shopId)
+      analyticsService.getRealTimeMetrics(shopId),
     ]);
 
     const summary = {
@@ -84,42 +84,42 @@ router.get('/analytics/summary', async (ctx) => {
         totalOrders: metrics.totalOrders,
         totalAlerts: metrics.totalAlerts,
         activeAlerts: realtime.activeAlerts,
-        averageDelayDays: metrics.averageDelayDays
+        averageDelayDays: metrics.averageDelayDays,
       },
       performance: {
         responseTime: realtime.responseTime,
         successRate: metrics.performanceMetrics.successRate,
         errorRate: realtime.errorRate,
-        memoryUsage: realtime.memoryUsage
+        memoryUsage: realtime.memoryUsage,
       },
       revenue: {
         totalValue: metrics.revenueImpact.totalValue,
         averageOrderValue: metrics.revenueImpact.averageOrderValue,
-        potentialLoss: metrics.revenueImpact.potentialLoss
+        potentialLoss: metrics.revenueImpact.potentialLoss,
       },
       notifications: {
         emailSuccessRate: metrics.notificationSuccessRate.email,
-        smsSuccessRate: metrics.notificationSuccessRate.sms
-      }
+        smsSuccessRate: metrics.notificationSuccessRate.sms,
+      },
     };
     
     ctx.body = {
       success: true,
       data: summary,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
   } catch (error) {
     console.error('Analytics summary error:', error);
     ctx.status = 500;
     ctx.body = { 
       error: 'Failed to fetch analytics summary',
-      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined,
     };
   }
 });
 
 // Clear analytics cache
-router.delete('/analytics/cache', async (ctx) => {
+router.delete('/analytics/cache', async(ctx) => {
   try {
     const shopId = ctx.state.shopify?.session?.shop || ctx.query.shop;
 
@@ -133,20 +133,20 @@ router.delete('/analytics/cache', async (ctx) => {
     
     ctx.body = {
       success: true,
-      message: 'Analytics cache cleared successfully'
+      message: 'Analytics cache cleared successfully',
     };
   } catch (error) {
     console.error('Cache clear error:', error);
     ctx.status = 500;
     ctx.body = { 
       error: 'Failed to clear analytics cache',
-      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined,
     };
   }
 });
 
 // Get analytics export data
-router.get('/analytics/export', async (ctx) => {
+router.get('/analytics/export', async(ctx) => {
   try {
     const shopId = ctx.state.shopify?.session?.shop || ctx.query.shop;
     const format = ctx.query.format as 'json' | 'csv' || 'json';
@@ -171,7 +171,7 @@ router.get('/analytics/export', async (ctx) => {
         success: true,
         data: metrics,
         timeRange,
-        exportedAt: new Date().toISOString()
+        exportedAt: new Date().toISOString(),
       };
     }
   } catch (error) {
@@ -179,7 +179,7 @@ router.get('/analytics/export', async (ctx) => {
     ctx.status = 500;
     ctx.body = { 
       error: 'Failed to export analytics data',
-      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined,
     };
   }
 });
@@ -188,7 +188,7 @@ function convertToCSV(metrics: any): string {
   const headers = [
     'Metric',
     'Value',
-    'Category'
+    'Category',
   ];
 
   const rows = [
@@ -202,7 +202,7 @@ function convertToCSV(metrics: any): string {
     ['Potential Loss', metrics.revenueImpact.potentialLoss, 'Revenue'],
     ['Response Time', `${metrics.performanceMetrics.averageResponseTime}ms`, 'Performance'],
     ['Success Rate', `${metrics.performanceMetrics.successRate}%`, 'Performance'],
-    ['Error Rate', `${metrics.performanceMetrics.errorRate}%`, 'Performance']
+    ['Error Rate', `${metrics.performanceMetrics.errorRate}%`, 'Performance'],
   ];
 
   const csvContent = [headers, ...rows]

@@ -35,7 +35,7 @@ export class InputSanitizationMiddleware {
       allowedHTMLTags: ['b', 'i', 'em', 'strong', 'p', 'br'],
       allowedHTMLAttributes: ['class', 'id'],
       customValidators: {},
-      ...config
+      ...config,
     };
   }
 
@@ -64,7 +64,7 @@ export class InputSanitizationMiddleware {
         ctx.body = {
           error: error.message,
           code: error.code,
-          field: error.field
+          field: error.field,
         };
         return;
       }
@@ -113,7 +113,7 @@ export class InputSanitizationMiddleware {
     if (this.config.maxStringLength && input.length > this.config.maxStringLength) {
       throw new ValidationError(
         `Input exceeds maximum length of ${this.config.maxStringLength} characters`,
-        'INPUT_TOO_LONG'
+        'INPUT_TOO_LONG',
       );
     }
 
@@ -168,7 +168,7 @@ export class InputSanitizationMiddleware {
       ALLOWED_TAGS: this.config.allowedHTMLTags || [],
       ALLOWED_ATTR: this.config.allowedHTMLAttributes || [],
       ALLOW_DATA_ATTR: false,
-      ALLOW_UNKNOWN_PROTOCOLS: false
+      ALLOW_UNKNOWN_PROTOCOLS: false,
     };
 
     return DOMPurify.sanitize(input, config);
@@ -186,7 +186,7 @@ export class InputSanitizationMiddleware {
     // Remove SQL keywords that could be used in injection
     const sqlKeywords = [
       'union', 'select', 'insert', 'update', 'delete', 'drop', 'create', 'alter',
-      'exec', 'execute', 'sp_', 'xp_', 'waitfor', 'delay', 'shutdown'
+      'exec', 'execute', 'sp_', 'xp_', 'waitfor', 'delay', 'shutdown',
     ];
     
     const regex = new RegExp(`\\b(${sqlKeywords.join('|')})\\b`, 'gi');
@@ -203,7 +203,7 @@ export class InputSanitizationMiddleware {
       'x-forwarded-for',
       'x-real-ip',
       'x-forwarded-proto',
-      'user-agent'
+      'user-agent',
     ];
 
     for (const header of dangerousHeaders) {
@@ -346,7 +346,7 @@ export const SanitizationPresets = {
     enableHTMLSanitization: true,
     maxStringLength: 1000,
     allowedHTMLTags: [],
-    allowedHTMLAttributes: []
+    allowedHTMLAttributes: [],
   },
 
   // Moderate sanitization for content
@@ -356,7 +356,7 @@ export const SanitizationPresets = {
     enableHTMLSanitization: true,
     maxStringLength: 5000,
     allowedHTMLTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li'],
-    allowedHTMLAttributes: ['class']
+    allowedHTMLAttributes: ['class'],
   },
 
   // Minimal sanitization for trusted input
@@ -364,6 +364,6 @@ export const SanitizationPresets = {
     enableXSSProtection: true,
     enableSQLInjectionProtection: false,
     enableHTMLSanitization: false,
-    maxStringLength: 10000
-  }
+    maxStringLength: 10000,
+  },
 };

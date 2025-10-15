@@ -12,14 +12,14 @@ interface AlertCardProps {
 const AlertCardComponent: React.FC<AlertCardProps> = ({ 
   alert, 
   onAction, 
-  variant 
+  variant, 
 }) => {
   // Memoize status badge calculation
   const statusBadge = useMemo(() => {
     const statusMap: { [key: string]: { class: string; text: string } } = {
       'active': { class: styles.badgeDanger, text: 'Active' },
       'resolved': { class: styles.badgeSuccess, text: 'Resolved' },
-      'dismissed': { class: styles.badgeInfo, text: 'Dismissed' }
+      'dismissed': { class: styles.badgeInfo, text: 'Dismissed' },
     };
     
     const statusInfo = statusMap[alert.status] || { class: styles.badgeInfo, text: alert.status };
@@ -41,7 +41,7 @@ const AlertCardComponent: React.FC<AlertCardProps> = ({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }, [alert.createdAt]);
 
@@ -53,7 +53,7 @@ const AlertCardComponent: React.FC<AlertCardProps> = ({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }, [alert.resolvedAt]);
 
@@ -69,7 +69,7 @@ const AlertCardComponent: React.FC<AlertCardProps> = ({
 
   // Memoize delay info style
   const delayInfoStyle = useMemo(() => ({
-    color: priorityColor
+    color: priorityColor,
   }), [priorityColor]);
 
   // Stable callback functions

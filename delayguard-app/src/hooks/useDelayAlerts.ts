@@ -13,7 +13,7 @@ export const useDelayAlerts = () => {
   }, [dispatch]);
 
   // Alert actions - Note: createAlert would need to be implemented in the slice
-  const createNewAlert = useCallback(async (alertData: CreateAlertData) => {
+  const createNewAlert = useCallback(async(alertData: CreateAlertData) => {
     try {
       // For now, we'll just add to local state
       // In a real app, this would dispatch a createAlert action
@@ -24,7 +24,7 @@ export const useDelayAlerts = () => {
     }
   }, []);
 
-  const updateExistingAlert = useCallback(async (id: string, updates: UpdateAlertData) => {
+  const updateExistingAlert = useCallback(async(id: string, updates: UpdateAlertData) => {
     try {
       await dispatch(updateAlert({ id, updates })).unwrap();
       return { success: true };
@@ -33,7 +33,7 @@ export const useDelayAlerts = () => {
     }
   }, [dispatch]);
 
-  const deleteExistingAlert = useCallback(async (id: string) => {
+  const deleteExistingAlert = useCallback(async(id: string) => {
     try {
       await dispatch(deleteAlert(id)).unwrap();
       return { success: true };
@@ -91,7 +91,7 @@ export const useDelayAlerts = () => {
       active,
       resolved,
       dismissed,
-      avgResolutionTime: avgResolutionTime.toFixed(1)
+      avgResolutionTime: avgResolutionTime.toFixed(1),
     };
   }, [alerts, getActiveAlerts, getResolvedAlerts, getDismissedAlerts]);
 
@@ -115,6 +115,6 @@ export const useDelayAlerts = () => {
     getAlertsByDelayDays,
     
     // Statistics
-    getAlertStats
+    getAlertStats,
   };
 };

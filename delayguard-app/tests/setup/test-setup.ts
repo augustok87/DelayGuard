@@ -8,8 +8,8 @@ jest.mock('pg', () => ({
     query: jest.fn().mockResolvedValue({ rows: [{ count: '10' }] }),
     end: jest.fn(),
     totalCount: 10,
-    idleCount: 8
-  }))
+    idleCount: 8,
+  })),
 }));
 
 jest.mock('ioredis', () => {
@@ -22,26 +22,26 @@ jest.mock('ioredis', () => {
     llen: jest.fn().mockResolvedValue(0),
     pipeline: jest.fn(() => ({
       setex: jest.fn().mockReturnThis(),
-      exec: jest.fn().mockResolvedValue([['OK'], ['OK']])
+      exec: jest.fn().mockResolvedValue([['OK'], ['OK']]),
     })),
     ping: jest.fn().mockResolvedValue('PONG'),
     info: jest.fn().mockResolvedValue('used_memory:1048576\nused_memory_peak:2097152'),
     dbsize: jest.fn().mockResolvedValue(100),
     quit: jest.fn().mockResolvedValue('OK'),
-    status: 'ready'
+    status: 'ready',
   }));
   
   return {
     Redis: MockRedis,
-    default: MockRedis
+    default: MockRedis,
   };
 });
 
 jest.mock('axios', () => ({
   create: jest.fn(() => ({
-    get: jest.fn()
+    get: jest.fn(),
   })),
-  isAxiosError: jest.fn((error: any) => error && error.response)
+  isAxiosError: jest.fn((error: any) => error && error.response),
 }));
 
 // Mock global fetch
@@ -54,7 +54,7 @@ process.memoryUsage = jest.fn(() => ({
   heapTotal: 1000 * 1024 * 1024,
   external: 0,
   rss: 1000 * 1024 * 1024,
-  arrayBuffers: 0
+  arrayBuffers: 0,
 })) as any;
 
 // Mock os.totalmem
@@ -62,9 +62,9 @@ jest.mock('os', () => ({
   totalmem: jest.fn(() => 1000 * 1024 * 1024), // 1GB
   freemem: jest.fn(() => 500 * 1024 * 1024), // 500MB
   cpus: jest.fn(() => [
-    { times: { user: 1000, nice: 0, sys: 1000, idle: 8000, irq: 0 } }
+    { times: { user: 1000, nice: 0, sys: 1000, idle: 8000, irq: 0 } },
   ]),
-  loadavg: jest.fn(() => [0.5, 0.8, 1.2])
+  loadavg: jest.fn(() => [0.5, 0.8, 1.2]),
 }));
 
 // Mock console methods to reduce noise in tests
@@ -73,7 +73,7 @@ global.console = {
   log: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
-  info: jest.fn()
+  info: jest.fn(),
 };
 
 // Clean up after each test

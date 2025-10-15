@@ -89,7 +89,7 @@ describe('DashboardTab', () => {
     expect(screen.getByTestId('stats-card')).toBeInTheDocument();
   });
 
-  it('calls onSaveSettings when save button is clicked', async () => {
+  it('calls onSaveSettings when save button is clicked', async() => {
     render(<DashboardTab {...mockProps} />);
     
     const saveButton = screen.getByText('Save Settings');
@@ -100,7 +100,7 @@ describe('DashboardTab', () => {
     });
   });
 
-  it('calls onTestDelayDetection when test button is clicked', async () => {
+  it('calls onTestDelayDetection when test button is clicked', async() => {
     render(<DashboardTab {...mockProps} />);
     
     const testButton = screen.getByText('Test Detection');
@@ -111,7 +111,7 @@ describe('DashboardTab', () => {
     });
   });
 
-  it('calls onConnectShopify when connect button is clicked', async () => {
+  it('calls onConnectShopify when connect button is clicked', async() => {
     render(<DashboardTab {...mockProps} />);
     
     const connectButton = screen.getByText('Connect Shopify');
@@ -122,7 +122,7 @@ describe('DashboardTab', () => {
     });
   });
 
-  it('calls onSettingsChange when settings are changed', async () => {
+  it('calls onSettingsChange when settings are changed', async() => {
     render(<DashboardTab {...mockProps} />);
     
     const changeButton = screen.getByText('Change Settings');

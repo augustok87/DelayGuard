@@ -12,7 +12,7 @@ class CacheManager {
   constructor(redisUrl: string, config: CacheConfig) {
     this.redis = new IORedis(redisUrl, {
       maxRetriesPerRequest: 3,
-      enableReadyCheck: false
+      enableReadyCheck: false,
     });
     this.config = config;
   }
@@ -113,14 +113,14 @@ class CacheManager {
       return {
         usedMemory,
         connectedClients,
-        totalKeys: dbSize
+        totalKeys: dbSize,
       };
     } catch (error) {
       console.error('Cache stats error:', error);
       return {
         usedMemory: '0B',
         connectedClients: 0,
-        totalKeys: 0
+        totalKeys: 0,
       };
     }
   }
@@ -134,30 +134,30 @@ class CacheManager {
 export const CACHE_CONFIGS = {
   tracking: {
     defaultTTL: 3600, // 1 hour
-    keyPrefix: 'tracking'
+    keyPrefix: 'tracking',
   },
   settings: {
     defaultTTL: 86400, // 24 hours
-    keyPrefix: 'settings'
+    keyPrefix: 'settings',
   },
   orders: {
     defaultTTL: 1800, // 30 minutes
-    keyPrefix: 'orders'
+    keyPrefix: 'orders',
   },
   alerts: {
     defaultTTL: 3600, // 1 hour
-    keyPrefix: 'alerts'
-  }
+    keyPrefix: 'alerts',
+  },
 };
 
 // Singleton cache instances
-let cacheInstances: { [key: string]: CacheManager } = {};
+const cacheInstances: { [key: string]: CacheManager } = {};
 
 export function getCache(type: keyof typeof CACHE_CONFIGS): CacheManager {
   if (!cacheInstances[type]) {
     cacheInstances[type] = new CacheManager(
       process.env.REDIS_URL!,
-      CACHE_CONFIGS[type]
+      CACHE_CONFIGS[type],
     );
   }
   return cacheInstances[type];
@@ -165,11 +165,11 @@ export function getCache(type: keyof typeof CACHE_CONFIGS): CacheManager {
 
 // Cache decorator for methods
 export function cached(cacheType: keyof typeof CACHE_CONFIGS, ttl?: number) {
-  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+  return function(target: any, propertyName: string, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
     const cache = getCache(cacheType);
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function(...args: any[]) {
       const cacheKey = `${propertyName}:${JSON.stringify(args)}`;
       
       // Try to get from cache

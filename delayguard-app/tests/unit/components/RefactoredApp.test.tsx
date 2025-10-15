@@ -11,7 +11,7 @@ jest.mock('../../../src/components/layout/AppHeader', () => ({
       {shop && <span>Shop: {shop}</span>}
       <button onClick={onConnectShopify}>Connect to Shopify</button>
     </div>
-  )
+  ),
 }));
 
 jest.mock('../../../src/components/layout/TabNavigation', () => ({
@@ -39,7 +39,7 @@ jest.mock('../../../src/components/layout/TabNavigation', () => ({
         Orders
       </button>
     </div>
-  )
+  ),
 }));
 
 // Mock the common components
@@ -49,11 +49,11 @@ jest.mock('../../../src/components/common/ErrorAlert', () => ({
       <span>{error}</span>
       <button onClick={onDismiss}>Dismiss</button>
     </div>
-  )
+  ),
 }));
 
 jest.mock('../../../src/components/ui/LoadingSpinner', () => ({
-  LoadingSpinner: () => <div data-testid="loading-spinner">Loading...</div>
+  LoadingSpinner: () => <div data-testid="loading-spinner">Loading...</div>,
 }));
 
 // Mock the tab components
@@ -66,7 +66,7 @@ jest.mock('../../../src/components/tabs/DashboardTab', () => ({
       <button onClick={onSaveSettings}>Save Settings</button>
       <button onClick={onTestDelayDetection}>Test Delay Detection</button>
     </div>
-  )
+  ),
 }));
 
 jest.mock('../../../src/components/tabs/AlertsTab', () => ({
@@ -77,7 +77,7 @@ jest.mock('../../../src/components/tabs/AlertsTab', () => ({
       <button onClick={() => onAlertAction('1', 'resolve')}>Resolve Alert</button>
       <button onClick={() => onAlertAction('1', 'dismiss')}>Dismiss Alert</button>
     </div>
-  )
+  ),
 }));
 
 jest.mock('../../../src/components/tabs/OrdersTab', () => ({
@@ -88,57 +88,57 @@ jest.mock('../../../src/components/tabs/OrdersTab', () => ({
       <button onClick={() => onOrderAction('1', 'track')}>Track Order</button>
       <button onClick={() => onOrderAction('1', 'view')}>View Details</button>
     </div>
-  )
+  ),
 }));
 
 // Mock the custom hooks
 const mockUseTabs = {
   selectedTab: 0, // Dashboard tab
-  changeTab: jest.fn()
+  changeTab: jest.fn(),
 };
 
 const mockUseDelayAlerts = {
   alerts: [
     { id: '1', orderId: 'ORD-001', customerName: 'John Doe', delayDays: 3, status: 'active' },
-    { id: '2', orderId: 'ORD-002', customerName: 'Jane Smith', delayDays: 1, status: 'resolved' }
+    { id: '2', orderId: 'ORD-002', customerName: 'Jane Smith', delayDays: 1, status: 'resolved' },
   ],
   loading: false,
-  error: null
+  error: null,
 };
 
 const mockUseOrders = {
   orders: [
     { id: '1', orderNumber: 'ORD-001', customerName: 'John Doe', status: 'shipped' },
-    { id: '2', orderNumber: 'ORD-002', customerName: 'Jane Smith', status: 'delivered' }
+    { id: '2', orderNumber: 'ORD-002', customerName: 'Jane Smith', status: 'delivered' },
   ],
   loading: false,
-  error: null
+  error: null,
 };
 
 const mockUseSettings = {
   settings: {
     delayThreshold: 3,
     emailNotifications: true,
-    smsNotifications: false
+    smsNotifications: false,
   },
   loading: false,
-  error: null
+  error: null,
 };
 
 const mockUseAlertActions = {
   resolveAlert: jest.fn(),
-  dismissAlert: jest.fn()
+  dismissAlert: jest.fn(),
 };
 
 const mockUseOrderActions = {
   trackOrder: jest.fn(),
-  viewOrderDetails: jest.fn()
+  viewOrderDetails: jest.fn(),
 };
 
 const mockUseSettingsActions = {
   saveSettings: jest.fn(),
   testDelayDetection: jest.fn(),
-  connectToShopify: jest.fn()
+  connectToShopify: jest.fn(),
 };
 
 jest.mock('../../../src/hooks', () => ({
@@ -148,7 +148,7 @@ jest.mock('../../../src/hooks', () => ({
   useSettings: jest.fn(() => mockUseSettings),
   useAlertActions: jest.fn(() => mockUseAlertActions),
   useOrderActions: jest.fn(() => mockUseOrderActions),
-  useSettingsActions: jest.fn(() => mockUseSettingsActions)
+  useSettingsActions: jest.fn(() => mockUseSettingsActions),
 }));
 
 // Mock CSS modules
@@ -158,7 +158,7 @@ jest.mock('../../../src/components/RefactoredApp.module.css', () => ({
   content: 'content',
   sidebar: 'sidebar',
   main: 'main',
-  footer: 'footer'
+  footer: 'footer',
 }));
 
 describe('RefactoredApp', () => {
@@ -178,7 +178,7 @@ describe('RefactoredApp', () => {
     // Mock loading state
     (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
-      loading: true
+      loading: true,
     });
 
     render(<RefactoredApp />);
@@ -190,7 +190,7 @@ describe('RefactoredApp', () => {
     // Mock error state
     (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
-      error: 'Failed to load alerts'
+      error: 'Failed to load alerts',
     });
 
     render(<RefactoredApp />);
@@ -220,7 +220,7 @@ describe('RefactoredApp', () => {
     // Mock selected tab
     (hooks.useTabs as jest.Mock).mockReturnValue({
       ...mockUseTabs,
-      selectedTab: 'alerts'
+      selectedTab: 'alerts',
     });
 
     render(<RefactoredApp />);
@@ -233,7 +233,7 @@ describe('RefactoredApp', () => {
     // Mock selected tab
     (hooks.useTabs as jest.Mock).mockReturnValue({
       ...mockUseTabs,
-      selectedTab: 2 // Orders tab
+      selectedTab: 2, // Orders tab
     });
 
     render(<RefactoredApp />);
@@ -246,7 +246,7 @@ describe('RefactoredApp', () => {
     // Mock alerts tab selection
     (hooks.useTabs as jest.Mock).mockReturnValue({
       ...mockUseTabs,
-      selectedTab: 1 // Alerts tab
+      selectedTab: 1, // Alerts tab
     });
 
     render(<RefactoredApp />);
@@ -268,7 +268,7 @@ describe('RefactoredApp', () => {
     // Mock orders tab selection
     (hooks.useTabs as jest.Mock).mockReturnValue({
       ...mockUseTabs,
-      selectedTab: 2 // Orders tab
+      selectedTab: 2, // Orders tab
     });
 
     render(<RefactoredApp />);
@@ -324,7 +324,7 @@ describe('RefactoredApp', () => {
         resolvedAlerts: 9,
         avgResolutionTime: '2.3 days',
         customerSatisfaction: '94%',
-        supportTicketReduction: '35%'
+        supportTicketReduction: '35%',
       }, jest.fn()]);
 
     render(<RefactoredApp />);
@@ -339,7 +339,7 @@ describe('RefactoredApp', () => {
     // Mock error state
     (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
-      error: 'Failed to load alerts'
+      error: 'Failed to load alerts',
     });
 
     render(<RefactoredApp />);
@@ -356,7 +356,7 @@ describe('RefactoredApp', () => {
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
       configurable: true,
-      value: 768
+      value: 768,
     });
 
     render(<RefactoredApp />);
@@ -385,12 +385,12 @@ describe('RefactoredApp', () => {
     // Mock empty data
     (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
-      alerts: []
+      alerts: [],
     });
 
     jest.mocked(require('../../../src/hooks')).useOrders.mockReturnValue({
       ...mockUseOrders,
-      orders: []
+      orders: [],
     });
 
     render(<RefactoredApp />);
@@ -406,12 +406,12 @@ describe('RefactoredApp', () => {
     // Mock multiple errors
     (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
-      error: 'Failed to load alerts'
+      error: 'Failed to load alerts',
     });
 
     jest.mocked(require('../../../src/hooks')).useOrders.mockReturnValue({
       ...mockUseOrders,
-      error: 'Failed to load orders'
+      error: 'Failed to load orders',
     });
 
     render(<RefactoredApp />);
@@ -430,8 +430,8 @@ describe('RefactoredApp', () => {
       expect.objectContaining({
         delayThreshold: 3,
         emailNotifications: true,
-        smsNotifications: false
-      })
+        smsNotifications: false,
+      }),
     );
   });
 
@@ -444,12 +444,12 @@ describe('RefactoredApp', () => {
       orderId: 'ORD-003',
       customerName: 'Bob Johnson',
       delayDays: 2,
-      status: 'active'
+      status: 'active',
     };
 
     (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
-      alerts: [...mockUseDelayAlerts.alerts, newAlert]
+      alerts: [...mockUseDelayAlerts.alerts, newAlert],
     });
 
     // Re-render with new data
@@ -479,8 +479,8 @@ describe('RefactoredApp', () => {
     (hooks.useDelayAlerts as jest.Mock).mockReturnValue({
       ...mockUseDelayAlerts,
       alerts: [
-        { id: '1', orderId: 'ORD-001', customerName: 'John Doe', delayDays: 3, status: 'active' }
-      ]
+        { id: '1', orderId: 'ORD-001', customerName: 'John Doe', delayDays: 3, status: 'active' },
+      ],
     });
 
     rerender(<RefactoredApp />);

@@ -24,7 +24,7 @@ export function DashboardTab({
   onSaveSettings,
   onTestDelayDetection,
   onConnectShopify,
-  onSettingsChange
+  onSettingsChange,
 }: DashboardTabProps) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>

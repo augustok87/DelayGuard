@@ -26,12 +26,12 @@ describe('MinimalApp Component', () => {
     jest.runOnlyPendingTimers();
   });
 
-  it.skip('renders loading state initially', async () => {
+  it.skip('renders loading state initially', async() => {
     // Skip this test for now - loading state testing is complex in Jest environment
     // The component loads too quickly to reliably test the loading state
   });
 
-  it('renders main interface after loading', async () => {
+  it('renders main interface after loading', async() => {
     render(<TestWrapper><MinimalApp /></TestWrapper>);
     
     // Fast-forward the 1-second delay
@@ -42,7 +42,7 @@ describe('MinimalApp Component', () => {
     });
   });
 
-  it('displays settings tab by default', async () => {
+  it('displays settings tab by default', async() => {
     render(<TestWrapper><MinimalApp /></TestWrapper>);
     
     // Fast-forward the 1-second delay
@@ -54,7 +54,7 @@ describe('MinimalApp Component', () => {
     });
   });
 
-  it('allows changing delay threshold', async () => {
+  it('allows changing delay threshold', async() => {
     render(<TestWrapper><MinimalApp /></TestWrapper>);
     
     // Fast-forward the 1-second delay
@@ -69,7 +69,7 @@ describe('MinimalApp Component', () => {
     });
   });
 
-  it('allows changing notification template', async () => {
+  it('allows changing notification template', async() => {
     render(<TestWrapper><MinimalApp /></TestWrapper>);
     
     // Fast-forward the 1-second delay
@@ -82,7 +82,7 @@ describe('MinimalApp Component', () => {
     });
   });
 
-  it('switches to alerts tab', async () => {
+  it('switches to alerts tab', async() => {
     render(<TestWrapper><MinimalApp /></TestWrapper>);
     
     // Fast-forward the 1-second delay
@@ -95,7 +95,7 @@ describe('MinimalApp Component', () => {
     });
   });
 
-  it('switches to orders tab', async () => {
+  it('switches to orders tab', async() => {
     render(<TestWrapper><MinimalApp /></TestWrapper>);
     
     // Fast-forward the 1-second delay
@@ -110,7 +110,7 @@ describe('MinimalApp Component', () => {
     expect(screen.getByText('📦 Orders')).toBeInTheDocument();
   });
 
-  it('displays mock data in alerts tab', async () => {
+  it('displays mock data in alerts tab', async() => {
     render(<TestWrapper><MinimalApp /></TestWrapper>);
     
     // Fast-forward the 1-second delay
@@ -125,7 +125,7 @@ describe('MinimalApp Component', () => {
     expect(screen.getByText('🚨 Delay Alerts')).toBeInTheDocument();
   });
 
-  it('displays mock data in orders tab', async () => {
+  it('displays mock data in orders tab', async() => {
     render(<TestWrapper><MinimalApp /></TestWrapper>);
     
     // Fast-forward the 1-second delay
@@ -140,7 +140,7 @@ describe('MinimalApp Component', () => {
     expect(screen.getByText('📦 Orders')).toBeInTheDocument();
   });
 
-  it('handles save settings button click', async () => {
+  it('handles save settings button click', async() => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     
     render(<TestWrapper><MinimalApp /></TestWrapper>);
@@ -158,7 +158,7 @@ describe('MinimalApp Component', () => {
     consoleSpy.mockRestore();
   });
 
-  it('handles test delay detection button click', async () => {
+  it('handles test delay detection button click', async() => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     
     render(<TestWrapper><MinimalApp /></TestWrapper>);
@@ -176,7 +176,7 @@ describe('MinimalApp Component', () => {
     consoleSpy.mockRestore();
   });
 
-  it('handles test delay detection cancellation', async () => {
+  it('handles test delay detection cancellation', async() => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     
     render(<TestWrapper><MinimalApp /></TestWrapper>);

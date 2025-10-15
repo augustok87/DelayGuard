@@ -36,11 +36,11 @@ export class CSRFProtectionMiddleware {
         httpOnly: false, // Must be readable by JavaScript
         secure: true,
         sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
       },
       excludedMethods: ['GET', 'HEAD', 'OPTIONS'],
       excludedPaths: ['/health', '/api/health'],
-      ...config
+      ...config,
     };
   }
 
@@ -69,7 +69,7 @@ export class CSRFProtectionMiddleware {
       ctx.status = 403;
       ctx.body = {
         error: 'Invalid CSRF token',
-        code: 'CSRF_TOKEN_INVALID'
+        code: 'CSRF_TOKEN_INVALID',
       };
       return;
     }
@@ -93,7 +93,7 @@ export class CSRFProtectionMiddleware {
       httpOnly: cookieOptions.httpOnly,
       secure: cookieOptions.secure,
       sameSite: cookieOptions.sameSite,
-      maxAge: cookieOptions.maxAge
+      maxAge: cookieOptions.maxAge,
     });
   }
 
@@ -120,7 +120,7 @@ export class CSRFProtectionMiddleware {
     
     return crypto.timingSafeEqual(
       Buffer.from(cookieToken, 'utf8'),
-      Buffer.from(providedToken, 'utf8')
+      Buffer.from(providedToken, 'utf8'),
     );
   }
 
@@ -186,7 +186,7 @@ export class CSRFTokenGenerator {
       
       return crypto.timingSafeEqual(
         Buffer.from(token, 'hex'),
-        Buffer.from(expectedToken, 'hex')
+        Buffer.from(expectedToken, 'hex'),
       );
     } catch (error) {
       return false;
@@ -220,7 +220,7 @@ export class APICSRFProtection {
       ctx.status = 403;
       ctx.body = {
         error: 'CSRF token required',
-        code: 'CSRF_TOKEN_REQUIRED'
+        code: 'CSRF_TOKEN_REQUIRED',
       };
       return;
     }
@@ -230,7 +230,7 @@ export class APICSRFProtection {
       ctx.status = 403;
       ctx.body = {
         error: 'Invalid CSRF token format',
-        code: 'CSRF_TOKEN_INVALID'
+        code: 'CSRF_TOKEN_INVALID',
       };
       return;
     }

@@ -15,13 +15,13 @@ describe('Tabs Component', () => {
   const defaultTabs = [
     { id: 'tab1', label: 'Tab 1', content: 'Content 1' },
     { id: 'tab2', label: 'Tab 2', content: 'Content 2' },
-    { id: 'tab3', label: 'Tab 3', content: 'Content 3' }
+    { id: 'tab3', label: 'Tab 3', content: 'Content 3' },
   ];
 
   const defaultProps = {
     tabs: defaultTabs,
     activeTab: 'tab1',
-    onTabChange: jest.fn()
+    onTabChange: jest.fn(),
   };
 
   beforeEach(() => {
@@ -62,17 +62,17 @@ describe('Tabs Component', () => {
     it('should render with different active tabs', () => {
       const { rerender } = render(<Tabs {...defaultProps} activeTab="tab2" />);
       
-      let tab2 = screen.getByRole('tab', { name: /tab 2/i });
+      const tab2 = screen.getByRole('tab', { name: /tab 2/i });
       expect(tab2).toHaveAttribute('aria-selected', 'true');
       
       rerender(<Tabs {...defaultProps} activeTab="tab1" />);
-      let tab1 = screen.getByRole('tab', { name: /tab 1/i });
+      const tab1 = screen.getByRole('tab', { name: /tab 1/i });
       expect(tab1).toHaveAttribute('aria-selected', 'true');
     });
   });
 
   describe('Interactions', () => {
-    it('should change active tab when clicked', async () => {
+    it('should change active tab when clicked', async() => {
       const user = userEvent.setup();
       const onTabChange = jest.fn();
       
@@ -84,7 +84,7 @@ describe('Tabs Component', () => {
       expect(onTabChange).toHaveBeenCalledWith('tab2');
     });
 
-    it('should show new tab content after change', async () => {
+    it('should show new tab content after change', async() => {
       const user = userEvent.setup();
       
       render(<Tabs {...defaultProps} />);
@@ -99,7 +99,7 @@ describe('Tabs Component', () => {
       expect(screen.queryByText('Content 1')).not.toBeInTheDocument();
     });
 
-    it('should handle keyboard navigation', async () => {
+    it('should handle keyboard navigation', async() => {
       const user = userEvent.setup();
       const onTabChange = jest.fn();
       
@@ -117,14 +117,14 @@ describe('Tabs Component', () => {
       expect(onTabChange).toHaveBeenCalledWith('tab1');
     });
 
-    it('should handle disabled tabs', async () => {
+    it('should handle disabled tabs', async() => {
       const user = userEvent.setup();
       const onTabChange = jest.fn();
       
       const tabsWithDisabled = [
         { id: 'tab1', label: 'Tab 1', content: 'Content 1' },
         { id: 'tab2', label: 'Tab 2', content: 'Content 2', disabled: true },
-        { id: 'tab3', label: 'Tab 3', content: 'Content 3' }
+        { id: 'tab3', label: 'Tab 3', content: 'Content 3' },
       ];
       
       render(
@@ -132,7 +132,7 @@ describe('Tabs Component', () => {
           {...defaultProps} 
           tabs={tabsWithDisabled} 
           onTabChange={onTabChange} 
-        />
+        />,
       );
       
       const disabledTab = screen.getByRole('tab', { name: /tab 2/i });
@@ -144,7 +144,7 @@ describe('Tabs Component', () => {
   });
 
   describe('Accessibility', () => {
-    it('should be accessible', async () => {
+    it('should be accessible', async() => {
       const { container } = render(<Tabs {...defaultProps} />);
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -230,8 +230,8 @@ describe('Tabs Component', () => {
               <p>With multiple elements</p>
               <button>Action</button>
             </div>
-          )
-        }
+          ),
+        },
       ];
       
       render(<Tabs {...defaultProps} tabs={complexTabs} />);

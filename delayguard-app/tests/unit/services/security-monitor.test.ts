@@ -24,7 +24,7 @@ describe('SecurityMonitor', () => {
       details: { username: 'testuser' },
       riskScore: 75,
       tags: ['auth-failure'],
-      correlationId: 'corr-123'
+      correlationId: 'corr-123',
     };
   });
 
@@ -67,7 +67,7 @@ describe('SecurityMonitor', () => {
       securityMonitor.startMonitoring();
     });
 
-    it('should process security events', async () => {
+    it('should process security events', async() => {
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
       await securityMonitor.processSecurityEvent(mockEvent);
@@ -76,7 +76,7 @@ describe('SecurityMonitor', () => {
       eventSpy.mockRestore();
     });
 
-    it('should not process events when monitoring is stopped', async () => {
+    it('should not process events when monitoring is stopped', async() => {
       securityMonitor.stopMonitoring();
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
@@ -86,7 +86,7 @@ describe('SecurityMonitor', () => {
       eventSpy.mockRestore();
     });
 
-    it('should handle event processing errors', async () => {
+    it('should handle event processing errors', async() => {
       const errorSpy = jest.spyOn(console, 'error').mockImplementation();
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
@@ -99,7 +99,7 @@ describe('SecurityMonitor', () => {
         severity: SecuritySeverity.HIGH,
         conditions: [],
         actions: [],
-        cooldownMs: 0
+        cooldownMs: 0,
       };
       
       // Mock evaluateRule to throw error
@@ -125,12 +125,12 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'type', operator: 'equals' as const, value: SecurityEventType.SUSPICIOUS_ACTIVITY }
+          { field: 'type', operator: 'equals' as const, value: SecurityEventType.SUSPICIOUS_ACTIVITY },
         ],
         actions: [
-          { type: 'alert' as const, config: { title: 'Custom threat detected' } }
+          { type: 'alert' as const, config: { title: 'Custom threat detected' } },
         ],
-        cooldownMs: 300000
+        cooldownMs: 300000,
       };
 
       securityMonitor.addRule(customRule);
@@ -149,7 +149,7 @@ describe('SecurityMonitor', () => {
       eventSpy.mockRestore();
     });
 
-    it('should trigger rules on matching events', async () => {
+    it('should trigger rules on matching events', async() => {
       securityMonitor.startMonitoring();
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
@@ -161,12 +161,12 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE }
+          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE },
         ],
         actions: [
-          { type: 'alert' as const, config: { title: 'Auth failure detected' } }
+          { type: 'alert' as const, config: { title: 'Auth failure detected' } },
         ],
-        cooldownMs: 0
+        cooldownMs: 0,
       };
 
       securityMonitor.addRule(matchingRule);
@@ -175,7 +175,7 @@ describe('SecurityMonitor', () => {
       
       expect(eventSpy).toHaveBeenCalledWith('ruleTriggered', expect.objectContaining({
         rule: matchingRule,
-        event: mockEvent
+        event: mockEvent,
       }));
       eventSpy.mockRestore();
     });
@@ -246,7 +246,7 @@ describe('SecurityMonitor', () => {
       securityMonitor.startMonitoring();
     });
 
-    it('should create alerts from triggered rules', async () => {
+    it('should create alerts from triggered rules', async() => {
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
       const alertRule = {
@@ -256,12 +256,12 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE }
+          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE },
         ],
         actions: [
-          { type: 'alert' as const, config: { title: 'Security Alert', description: 'Test alert' } }
+          { type: 'alert' as const, config: { title: 'Security Alert', description: 'Test alert' } },
         ],
-        cooldownMs: 0
+        cooldownMs: 0,
       };
 
       securityMonitor.addRule(alertRule);
@@ -271,7 +271,7 @@ describe('SecurityMonitor', () => {
       expect(eventSpy).toHaveBeenCalledWith('alertCreated', expect.objectContaining({
         title: 'Security Alert',
         description: 'Test alert',
-        source: mockEvent.ipAddress
+        source: mockEvent.ipAddress,
       }));
       
       eventSpy.mockRestore();
@@ -293,7 +293,7 @@ describe('SecurityMonitor', () => {
         recommendedActions: ['Test action'],
         isResolved: false,
         resolvedAt: undefined as Date | undefined,
-        resolvedBy: undefined as string | undefined
+        resolvedBy: undefined as string | undefined,
       };
       
       (securityMonitor as any).alerts.set(alert.id, alert);
@@ -314,7 +314,7 @@ describe('SecurityMonitor', () => {
       securityMonitor.startMonitoring();
     });
 
-    it('should track security metrics', async () => {
+    it('should track security metrics', async() => {
       const initialMetrics = securityMonitor.getMetrics();
       expect(initialMetrics.totalEvents).toBe(0);
 
@@ -326,7 +326,7 @@ describe('SecurityMonitor', () => {
       expect(updatedMetrics.eventsBySeverity[SecuritySeverity.MEDIUM]).toBe(1);
     });
 
-    it('should calculate threat levels correctly', async () => {
+    it('should calculate threat levels correctly', async() => {
       const highRiskEvent = { ...mockEvent, riskScore: 85 };
       const criticalRiskEvent = { ...mockEvent, riskScore: 95 };
       
@@ -347,7 +347,7 @@ describe('SecurityMonitor', () => {
       expect(metrics).toBeDefined();
     });
 
-    it('should detect brute force attacks', async () => {
+    it('should detect brute force attacks', async() => {
       securityMonitor.startMonitoring();
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
@@ -355,14 +355,14 @@ describe('SecurityMonitor', () => {
       const authFailureEvent = {
         ...mockEvent,
         type: SecurityEventType.AUTHENTICATION_FAILURE,
-        riskScore: 75
+        riskScore: 75,
       };
       
       await securityMonitor.processSecurityEvent(authFailureEvent);
       
       // The default brute force rule should trigger
       expect(eventSpy).toHaveBeenCalledWith('ruleTriggered', expect.objectContaining({
-        rule: expect.objectContaining({ id: 'brute_force_detection' })
+        rule: expect.objectContaining({ id: 'brute_force_detection' }),
       }));
       
       eventSpy.mockRestore();
@@ -370,7 +370,7 @@ describe('SecurityMonitor', () => {
   });
 
   describe('Event History Cleanup', () => {
-    it('should cleanup old events', async () => {
+    it('should cleanup old events', async() => {
       securityMonitor.startMonitoring();
       
       // Process many events to trigger cleanup
@@ -378,7 +378,7 @@ describe('SecurityMonitor', () => {
         await securityMonitor.processSecurityEvent({
           ...mockEvent,
           id: `event-${i}`,
-          timestamp: new Date(Date.now() - i * 1000) // Stagger timestamps
+          timestamp: new Date(Date.now() - i * 1000), // Stagger timestamps
         });
       }
       
@@ -405,7 +405,7 @@ describe('SecurityMonitor', () => {
   });
 
   describe('Rule Cooldown', () => {
-    it('should respect rule cooldown periods', async () => {
+    it('should respect rule cooldown periods', async() => {
       securityMonitor.startMonitoring();
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
@@ -416,12 +416,12 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE }
+          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE },
         ],
         actions: [
-          { type: 'alert' as const, config: { title: 'Cooldown test' } }
+          { type: 'alert' as const, config: { title: 'Cooldown test' } },
         ],
-        cooldownMs: 1000 // 1 second cooldown
+        cooldownMs: 1000, // 1 second cooldown
       };
 
       securityMonitor.addRule(cooldownRule);
@@ -429,7 +429,7 @@ describe('SecurityMonitor', () => {
       // First event should trigger
       await securityMonitor.processSecurityEvent(mockEvent);
       expect(eventSpy).toHaveBeenCalledWith('ruleTriggered', expect.objectContaining({
-        rule: cooldownRule
+        rule: cooldownRule,
       }));
       
       // Reset spy
@@ -438,7 +438,7 @@ describe('SecurityMonitor', () => {
       // Second event within cooldown should not trigger
       await securityMonitor.processSecurityEvent(mockEvent);
       expect(eventSpy).not.toHaveBeenCalledWith('ruleTriggered', expect.objectContaining({
-        rule: cooldownRule
+        rule: cooldownRule,
       }));
       
       eventSpy.mockRestore();
@@ -446,7 +446,7 @@ describe('SecurityMonitor', () => {
   });
 
   describe('Condition Evaluation', () => {
-    it('should evaluate equals conditions', async () => {
+    it('should evaluate equals conditions', async() => {
       securityMonitor.startMonitoring();
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
@@ -457,23 +457,23 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE }
+          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE },
         ],
         actions: [{ type: 'alert' as const, config: { title: 'Equals test' } }],
-        cooldownMs: 0
+        cooldownMs: 0,
       };
 
       securityMonitor.addRule(rule);
       await securityMonitor.processSecurityEvent(mockEvent);
       
       expect(eventSpy).toHaveBeenCalledWith('ruleTriggered', expect.objectContaining({
-        rule
+        rule,
       }));
       
       eventSpy.mockRestore();
     });
 
-    it('should evaluate contains conditions', async () => {
+    it('should evaluate contains conditions', async() => {
       securityMonitor.startMonitoring();
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
@@ -484,23 +484,23 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'userAgent', operator: 'contains' as const, value: 'Mozilla' }
+          { field: 'userAgent', operator: 'contains' as const, value: 'Mozilla' },
         ],
         actions: [{ type: 'alert' as const, config: { title: 'Contains test' } }],
-        cooldownMs: 0
+        cooldownMs: 0,
       };
 
       securityMonitor.addRule(rule);
       await securityMonitor.processSecurityEvent(mockEvent);
       
       expect(eventSpy).toHaveBeenCalledWith('ruleTriggered', expect.objectContaining({
-        rule
+        rule,
       }));
       
       eventSpy.mockRestore();
     });
 
-    it('should evaluate greater_than conditions', async () => {
+    it('should evaluate greater_than conditions', async() => {
       securityMonitor.startMonitoring();
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
@@ -511,17 +511,17 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'riskScore', operator: 'greater_than' as const, value: 70 }
+          { field: 'riskScore', operator: 'greater_than' as const, value: 70 },
         ],
         actions: [{ type: 'alert' as const, config: { title: 'Greater test' } }],
-        cooldownMs: 0
+        cooldownMs: 0,
       };
 
       securityMonitor.addRule(rule);
       await securityMonitor.processSecurityEvent(mockEvent);
       
       expect(eventSpy).toHaveBeenCalledWith('ruleTriggered', expect.objectContaining({
-        rule
+        rule,
       }));
       
       eventSpy.mockRestore();
@@ -533,7 +533,7 @@ describe('SecurityMonitor', () => {
       securityMonitor.startMonitoring();
     });
 
-    it('should execute alert actions', async () => {
+    it('should execute alert actions', async() => {
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
       const rule = {
@@ -543,12 +543,12 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE }
+          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE },
         ],
         actions: [
-          { type: 'alert' as const, config: { title: 'Action test', description: 'Test description' } }
+          { type: 'alert' as const, config: { title: 'Action test', description: 'Test description' } },
         ],
-        cooldownMs: 0
+        cooldownMs: 0,
       };
 
       securityMonitor.addRule(rule);
@@ -556,13 +556,13 @@ describe('SecurityMonitor', () => {
       
       expect(eventSpy).toHaveBeenCalledWith('alertCreated', expect.objectContaining({
         title: 'Action test',
-        description: 'Test description'
+        description: 'Test description',
       }));
       
       eventSpy.mockRestore();
     });
 
-    it('should execute block_ip actions', async () => {
+    it('should execute block_ip actions', async() => {
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
       const rule = {
@@ -572,12 +572,12 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE }
+          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE },
         ],
         actions: [
-          { type: 'block_ip' as const, config: { reason: 'Test block', durationMs: 60000 } }
+          { type: 'block_ip' as const, config: { reason: 'Test block', durationMs: 60000 } },
         ],
-        cooldownMs: 0
+        cooldownMs: 0,
       };
 
       securityMonitor.addRule(rule);
@@ -585,13 +585,13 @@ describe('SecurityMonitor', () => {
       
       expect(securityMonitor.isIPBlocked(mockEvent.ipAddress)).toBe(true);
       expect(eventSpy).toHaveBeenCalledWith('ipBlocked', expect.objectContaining({
-        ip: mockEvent.ipAddress
+        ip: mockEvent.ipAddress,
       }));
       
       eventSpy.mockRestore();
     });
 
-    it('should execute rate_limit actions', async () => {
+    it('should execute rate_limit actions', async() => {
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
       const rule = {
@@ -601,12 +601,12 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE }
+          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE },
         ],
         actions: [
-          { type: 'rate_limit' as const, config: { multiplier: 0.1 } }
+          { type: 'rate_limit' as const, config: { multiplier: 0.1 } },
         ],
-        cooldownMs: 0
+        cooldownMs: 0,
       };
 
       securityMonitor.addRule(rule);
@@ -615,7 +615,7 @@ describe('SecurityMonitor', () => {
       expect(securityMonitor.getRateLimitOverride(mockEvent.ipAddress)).toBe(0.1);
       expect(eventSpy).toHaveBeenCalledWith('rateLimitOverridden', expect.objectContaining({
         ip: mockEvent.ipAddress,
-        multiplier: 0.1
+        multiplier: 0.1,
       }));
       
       eventSpy.mockRestore();
@@ -633,7 +633,7 @@ describe('SecurityMonitor', () => {
       expect(Array.isArray(allAlerts)).toBe(true);
     });
 
-    it('should create alerts with correct structure', async () => {
+    it('should create alerts with correct structure', async() => {
       securityMonitor.startMonitoring();
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
@@ -644,12 +644,12 @@ describe('SecurityMonitor', () => {
         enabled: true,
         severity: SecuritySeverity.HIGH,
         conditions: [
-          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE }
+          { field: 'type', operator: 'equals' as const, value: SecurityEventType.AUTHENTICATION_FAILURE },
         ],
         actions: [
-          { type: 'alert' as const, config: { title: 'Structure test' } }
+          { type: 'alert' as const, config: { title: 'Structure test' } },
         ],
-        cooldownMs: 0
+        cooldownMs: 0,
       };
 
       securityMonitor.addRule(rule);
@@ -670,7 +670,7 @@ describe('SecurityMonitor', () => {
         affectedSystems: [mockEvent.endpoint],
         indicators: expect.any(Array),
         recommendedActions: expect.any(Array),
-        isResolved: false
+        isResolved: false,
       });
       
       eventSpy.mockRestore();

@@ -20,7 +20,7 @@ class MockPool {
       rowCount: 0,
       command: 'SELECT',
       oid: null,
-      fields: []
+      fields: [],
     };
   }
 
@@ -63,7 +63,7 @@ class MockClient {
         rowCount: 1,
         command: 'SELECT',
         oid: null,
-        fields: []
+        fields: [],
       };
     }
     
@@ -73,7 +73,7 @@ class MockClient {
         rowCount: 1,
         command: 'INSERT',
         oid: null,
-        fields: []
+        fields: [],
       };
     }
     
@@ -83,7 +83,7 @@ class MockClient {
         rowCount: 1,
         command: 'UPDATE',
         oid: null,
-        fields: []
+        fields: [],
       };
     }
     
@@ -93,7 +93,7 @@ class MockClient {
         rowCount: 1,
         command: 'DELETE',
         oid: null,
-        fields: []
+        fields: [],
       };
     }
     
@@ -102,7 +102,7 @@ class MockClient {
       rowCount: 0,
       command: 'SELECT',
       oid: null,
-      fields: []
+      fields: [],
     };
   }
 
@@ -139,5 +139,5 @@ module.exports.Pool = MockPoolConstructor;
 module.exports.Client = MockClientConstructor;
 module.exports.default = {
   Pool: MockPoolConstructor,
-  Client: MockClientConstructor
+  Client: MockClientConstructor,
 };

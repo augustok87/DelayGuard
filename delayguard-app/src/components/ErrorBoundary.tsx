@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
     
     // Log error to console in development
@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
           border: '1px solid #e1e5e9',
           borderRadius: '8px',
           backgroundColor: '#fef2f2',
-          color: '#dc2626'
+          color: '#dc2626',
         }}>
           <h2>Something went wrong</h2>
           <p>An error occurred while rendering this component.</p>
@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 backgroundColor: '#f3f4f6',
                 borderRadius: '4px',
                 fontSize: '0.875rem',
-                overflow: 'auto'
+                overflow: 'auto',
               }}>
                 {this.state.error.toString()}
                 {this.state.errorInfo?.componentStack}
@@ -75,7 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             Try again

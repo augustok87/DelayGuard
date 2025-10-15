@@ -108,7 +108,7 @@ describe('VirtualList', () => {
         renderItem={(item: any, index: number) => (
           <div data-testid={`large-item-${index}`}>{item.name}</div>
         )}
-      />
+      />,
     );
     
     // Should only render visible items, not all 10000
@@ -120,7 +120,7 @@ describe('VirtualList', () => {
 describe('useVirtualList', () => {
   it('returns correct initial values', () => {
     const { result } = renderHook(() => 
-      useVirtualList(mockItems, 50, 400)
+      useVirtualList(mockItems, 50, 400),
     );
 
     expect(result.current.visibleItems).toBeDefined();
@@ -131,7 +131,7 @@ describe('useVirtualList', () => {
 
   it('calculates visible range correctly', () => {
     const { result } = renderHook(() => 
-      useVirtualList(mockItems, 50, 400)
+      useVirtualList(mockItems, 50, 400),
     );
 
     // With containerHeight 400 and itemHeight 50, should show about 8 items
@@ -141,7 +141,7 @@ describe('useVirtualList', () => {
 
   it('updates when scroll position changes', () => {
     const { result } = renderHook(() => 
-      useVirtualList(mockItems, 50, 400)
+      useVirtualList(mockItems, 50, 400),
     );
 
     const initialVisibleItems = result.current.visibleItems.length;
@@ -156,22 +156,22 @@ describe('useVirtualList', () => {
 
   it('handles different overscan values', () => {
     const { result: result1 } = renderHook(() => 
-      useVirtualList(mockItems, 50, 400, 5)
+      useVirtualList(mockItems, 50, 400, 5),
     );
     
     const { result: result2 } = renderHook(() => 
-      useVirtualList(mockItems, 50, 400, 10)
+      useVirtualList(mockItems, 50, 400, 10),
     );
 
     // More overscan should show more items
     expect(result2.current.visibleItems.length).toBeGreaterThanOrEqual(
-      result1.current.visibleItems.length
+      result1.current.visibleItems.length,
     );
   });
 
   it('handles empty items array', () => {
     const { result } = renderHook(() => 
-      useVirtualList([], 50, 400)
+      useVirtualList([], 50, 400),
     );
 
     expect(result.current.visibleItems).toHaveLength(0);
@@ -182,7 +182,7 @@ describe('useVirtualList', () => {
   it('handles single item', () => {
     const singleItem = [mockItems[0]];
     const { result } = renderHook(() => 
-      useVirtualList(singleItem, 50, 400)
+      useVirtualList(singleItem, 50, 400),
     );
 
     expect(result.current.visibleItems).toHaveLength(1);

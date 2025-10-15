@@ -53,7 +53,7 @@ class MockMeter implements Meter {
     return {
       add: (value: number, attributes?: any) => {
         console.log(`[METRICS] Counter ${name}: +${value}`, attributes);
-      }
+      },
     };
   }
   
@@ -62,7 +62,7 @@ class MockMeter implements Meter {
     return {
       record: (value: number, attributes?: any) => {
         console.log(`[METRICS] Histogram ${name}: ${value}`, attributes);
-      }
+      },
     };
   }
 }
@@ -181,5 +181,5 @@ export const delayGuardMetrics = {
   },
   updateQueueSize: (queueName: string, size: number, attributes?: any) => {
     console.log(`[METRICS] Queue Size ${queueName}: ${size}`, attributes);
-  }
+  },
 };

@@ -17,13 +17,13 @@ describe('useAsync', () => {
     expect(typeof result.current.reset).toBe('function');
   });
 
-  it('should execute async function and update state', async () => {
+  it('should execute async function and update state', async() => {
     const mockData = { id: 1, name: 'Test' };
     const mockAsyncFunction = jest.fn().mockResolvedValue(mockData);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -37,13 +37,13 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle async function errors', async () => {
+  it('should handle async function errors', async() => {
     const mockError = new Error('Test error');
     const mockAsyncFunction = jest.fn().mockRejectedValue(mockError);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -57,13 +57,13 @@ describe('useAsync', () => {
     expect(result.current.error).toEqual(mockError);
   });
 
-  it('should pass arguments to async function', async () => {
+  it('should pass arguments to async function', async() => {
     const mockData = { id: 1, name: 'Test' };
     const mockAsyncFunction = jest.fn().mockResolvedValue(mockData);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       await result.current.execute('arg1', 'arg2', { key: 'value' });
     });
 
@@ -71,7 +71,7 @@ describe('useAsync', () => {
     expect(result.current.data).toEqual(mockData);
   });
 
-  it('should set loading state during execution', async () => {
+  it('should set loading state during execution', async() => {
     let resolvePromise: (value: any) => void;
     const promise = new Promise(resolve => {
       resolvePromise = resolve;
@@ -87,7 +87,7 @@ describe('useAsync', () => {
     expect(result.current.loading).toBe(true);
     expect(result.current.error).toBeNull();
 
-    await act(async () => {
+    await act(async() => {
       resolvePromise!({ id: 1, name: 'Test' });
       await promise;
     });
@@ -95,7 +95,7 @@ describe('useAsync', () => {
     expect(result.current.loading).toBe(false);
   });
 
-  it('should not update state if component is unmounted', async () => {
+  it('should not update state if component is unmounted', async() => {
     const mockData = { id: 1, name: 'Test' };
     let resolvePromise: (value: any) => void;
     const promise = new Promise(resolve => {
@@ -111,7 +111,7 @@ describe('useAsync', () => {
 
     unmount();
 
-    await act(async () => {
+    await act(async() => {
       resolvePromise!(mockData);
       await promise;
     });
@@ -120,13 +120,13 @@ describe('useAsync', () => {
     expect(result.current.data).toBeNull();
   });
 
-  it('should reset state when reset is called', async () => {
+  it('should reset state when reset is called', async() => {
     const mockData = { id: 1, name: 'Test' };
     const mockAsyncFunction = jest.fn().mockResolvedValue(mockData);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -145,7 +145,7 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should not reset state on execute when resetOnExecute is false', async () => {
+  it('should not reset state on execute when resetOnExecute is false', async() => {
     const mockData = { id: 1, name: 'Test' };
     const mockAsyncFunction = jest.fn().mockResolvedValue(mockData);
 
@@ -156,7 +156,7 @@ describe('useAsync', () => {
       result.current.execute();
     });
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -168,13 +168,13 @@ describe('useAsync', () => {
     expect(result.current.loading).toBe(false);
   });
 
-  it('should execute immediately when immediate option is true', async () => {
+  it('should execute immediately when immediate option is true', async() => {
     const mockData = { id: 1, name: 'Test' };
     const mockAsyncFunction = jest.fn().mockResolvedValue(mockData);
 
     renderHook(() => useAsync(mockAsyncFunction, { immediate: true }));
 
-    await act(async () => {
+    await act(async() => {
       // Wait for immediate execution
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -182,7 +182,7 @@ describe('useAsync', () => {
     expect(mockAsyncFunction).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle multiple executions', async () => {
+  it('should handle multiple executions', async() => {
     const mockData1 = { id: 1, name: 'Test 1' };
     const mockData2 = { id: 2, name: 'Test 2' };
     const mockAsyncFunction = jest.fn()
@@ -191,7 +191,7 @@ describe('useAsync', () => {
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -201,7 +201,7 @@ describe('useAsync', () => {
 
     expect(result.current.data).toEqual(mockData1);
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -213,7 +213,7 @@ describe('useAsync', () => {
     expect(mockAsyncFunction).toHaveBeenCalledTimes(2);
   });
 
-  it('should handle concurrent executions', async () => {
+  it('should handle concurrent executions', async() => {
     const mockData1 = { id: 1, name: 'Test 1' };
     const mockData2 = { id: 2, name: 'Test 2' };
     const mockAsyncFunction = jest.fn()
@@ -228,7 +228,7 @@ describe('useAsync', () => {
       result.current.execute();
     });
 
-    await act(async () => {
+    await act(async() => {
       // Wait for both to complete
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -236,7 +236,7 @@ describe('useAsync', () => {
     expect(mockAsyncFunction).toHaveBeenCalledTimes(2);
   });
 
-  it('should handle async function that throws synchronously', async () => {
+  it('should handle async function that throws synchronously', async() => {
     const mockError = new Error('Sync error');
     const mockAsyncFunction = jest.fn().mockImplementation(() => {
       throw mockError;
@@ -244,7 +244,7 @@ describe('useAsync', () => {
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -257,13 +257,13 @@ describe('useAsync', () => {
     expect(result.current.error).toEqual(mockError);
   });
 
-  it('should handle async function that returns non-promise', async () => {
+  it('should handle async function that returns non-promise', async() => {
     const mockData = { id: 1, name: 'Test' };
     const mockAsyncFunction = jest.fn().mockReturnValue(mockData);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -276,12 +276,12 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle async function that returns null', async () => {
+  it('should handle async function that returns null', async() => {
     const mockAsyncFunction = jest.fn().mockResolvedValue(null);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -294,12 +294,12 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle async function that returns undefined', async () => {
+  it('should handle async function that returns undefined', async() => {
     const mockAsyncFunction = jest.fn().mockResolvedValue(undefined);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -312,12 +312,12 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle async function that returns false', async () => {
+  it('should handle async function that returns false', async() => {
     const mockAsyncFunction = jest.fn().mockResolvedValue(false);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -330,12 +330,12 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle async function that returns 0', async () => {
+  it('should handle async function that returns 0', async() => {
     const mockAsyncFunction = jest.fn().mockResolvedValue(0);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -348,12 +348,12 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle async function that returns empty string', async () => {
+  it('should handle async function that returns empty string', async() => {
     const mockAsyncFunction = jest.fn().mockResolvedValue('');
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -366,12 +366,12 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle async function that returns empty array', async () => {
+  it('should handle async function that returns empty array', async() => {
     const mockAsyncFunction = jest.fn().mockResolvedValue([]);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -384,12 +384,12 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle async function that returns empty object', async () => {
+  it('should handle async function that returns empty object', async() => {
     const mockAsyncFunction = jest.fn().mockResolvedValue({});
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -402,18 +402,18 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle async function with complex return type', async () => {
+  it('should handle async function with complex return type', async() => {
     const mockData = {
       id: 1,
       name: 'Test',
       items: [{ id: 1, value: 'test' }],
-      metadata: { created: new Date(), updated: new Date() }
+      metadata: { created: new Date(), updated: new Date() },
     };
     const mockAsyncFunction = jest.fn().mockResolvedValue(mockData);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -426,14 +426,14 @@ describe('useAsync', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should handle async function with different error types', async () => {
+  it('should handle async function with different error types', async() => {
     const customError = new Error('Custom error');
     customError.name = 'CustomError';
     const mockAsyncFunction = jest.fn().mockRejectedValue(customError);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -447,12 +447,12 @@ describe('useAsync', () => {
     expect(result.current.error?.name).toBe('CustomError');
   });
 
-  it('should handle async function with string error', async () => {
+  it('should handle async function with string error', async() => {
     const mockAsyncFunction = jest.fn().mockRejectedValue('String error');
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {
@@ -465,13 +465,13 @@ describe('useAsync', () => {
     expect(result.current.error).toEqual(new Error('String error'));
   });
 
-  it('should handle async function with object error', async () => {
+  it('should handle async function with object error', async() => {
     const objectError = { message: 'Object error', code: 500 };
     const mockAsyncFunction = jest.fn().mockRejectedValue(objectError);
 
     const { result } = renderHook(() => useAsync(mockAsyncFunction));
 
-    await act(async () => {
+    await act(async() => {
       try {
         await result.current.execute();
       } catch (error) {

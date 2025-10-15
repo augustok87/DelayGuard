@@ -143,28 +143,28 @@ export class MonitoringService {
       timestamp,
       cpu: {
         usage: Math.round((cpuUsage.user + cpuUsage.system) / 1000000), // Convert to seconds
-        loadAverage
+        loadAverage,
       },
       memory: {
         used: Math.round(memoryUsage.heapUsed / 1024 / 1024), // MB
         free: Math.round(freeMemory / 1024 / 1024), // MB
         total: Math.round(totalMemory / 1024 / 1024), // MB
-        percentage: Math.round((memoryUsage.heapUsed / totalMemory) * 100)
+        percentage: Math.round((memoryUsage.heapUsed / totalMemory) * 100),
       },
       database: {
         connections: dbStats,
-        queryTime: dbQueryTime
+        queryTime: dbQueryTime,
       },
       redis: {
         connected: this.redis.status === 'ready',
         memory: redisStats.memory,
-        operations: redisStats.operations
+        operations: redisStats.operations,
       },
       application: {
         uptime,
         requests: appStats.requests,
-        responseTime: appStats.responseTime
-      }
+        responseTime: appStats.responseTime,
+      },
     };
 
     // Store metrics
@@ -178,7 +178,7 @@ export class MonitoringService {
       await this.redis.setex(
         `metrics:system:${timestamp.getTime()}`,
         3600, // 1 hour TTL
-        JSON.stringify(metrics)
+        JSON.stringify(metrics),
       );
     } catch (error) {
       // Log error but don't fail the metrics collection
@@ -213,7 +213,7 @@ export class MonitoringService {
             threshold: rule.threshold,
             timestamp: new Date(),
             resolved: false,
-            metadata: { rule }
+            metadata: { rule },
           };
 
           this.alerts.set(alertId, alert);
@@ -264,7 +264,7 @@ export class MonitoringService {
         status: responseTime < 1000 ? 'healthy' : 'degraded',
         responseTime,
         lastChecked: new Date(),
-        details: { query: 'SELECT 1' }
+        details: { query: 'SELECT 1' },
       };
     } catch (error) {
       return {
@@ -272,7 +272,7 @@ export class MonitoringService {
         status: 'unhealthy',
         responseTime: Date.now() - start,
         lastChecked: new Date(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -289,7 +289,7 @@ export class MonitoringService {
         status: responseTime < 100 ? 'healthy' : 'degraded',
         responseTime,
         lastChecked: new Date(),
-        details: { status: this.redis.status }
+        details: { status: this.redis.status },
       };
     } catch (error) {
       return {
@@ -297,7 +297,7 @@ export class MonitoringService {
         status: 'unhealthy',
         responseTime: Date.now() - start,
         lastChecked: new Date(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -307,7 +307,7 @@ export class MonitoringService {
     const apis = [
       { name: 'ShipEngine', url: 'https://api.shipengine.com/v1/rates' },
       { name: 'SendGrid', url: 'https://api.sendgrid.com/v3/mail/send' },
-      { name: 'Twilio', url: 'https://api.twilio.com/2010-04-01/Accounts' }
+      { name: 'Twilio', url: 'https://api.twilio.com/2010-04-01/Accounts' },
     ];
 
     for (const api of apis) {
@@ -323,7 +323,7 @@ export class MonitoringService {
           status: response.ok && responseTime < 5000 ? 'healthy' : 'degraded',
           responseTime,
           lastChecked: new Date(),
-          details: { status: response.status }
+          details: { status: response.status },
         });
       } catch (error) {
         checks.push({
@@ -331,7 +331,7 @@ export class MonitoringService {
           status: 'unhealthy',
           responseTime: Date.now() - start,
           lastChecked: new Date(),
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
@@ -365,8 +365,8 @@ export class MonitoringService {
         details: {
           uptime: process.uptime(),
           memoryPercentage: Math.round(memoryPercentage),
-          nodeVersion: process.version
-        }
+          nodeVersion: process.version,
+        },
       };
     } catch (error) {
       return {
@@ -374,7 +374,7 @@ export class MonitoringService {
         status: 'unhealthy',
         responseTime: Date.now() - start,
         lastChecked: new Date(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -384,7 +384,7 @@ export class MonitoringService {
       return {
         total: this.db.totalCount,
         idle: this.db.idleCount,
-        active: this.db.totalCount - this.db.idleCount
+        active: this.db.totalCount - this.db.idleCount,
       };
     } catch {
       return { total: 0, idle: 0, active: 0 };
@@ -415,17 +415,17 @@ export class MonitoringService {
       return {
         memory: {
           used: Math.round(parseInt(used) / 1024 / 1024), // MB
-          peak: Math.round(parseInt(peak) / 1024 / 1024) // MB
+          peak: Math.round(parseInt(peak) / 1024 / 1024), // MB
         },
         operations: {
           commands: 0, // Would need to track this
-          keyspace
-        }
+          keyspace,
+        },
       };
     } catch {
       return {
         memory: { used: 0, peak: 0 },
-        operations: { commands: 0, keyspace: 0 }
+        operations: { commands: 0, keyspace: 0 },
       };
     }
   }
@@ -440,20 +440,20 @@ export class MonitoringService {
       requests: {
         total: 1000,
         errors: 10,
-        successRate: 99
+        successRate: 99,
       },
       responseTime: {
         average: 45,
         p95: 120,
-        p99: 200
-      }
+        p99: 200,
+      },
     };
   }
 
   private async getAlertRules(): Promise<AlertRule[]> {
     try {
       const result = await this.db.query(
-        'SELECT * FROM alert_rules WHERE enabled = true ORDER BY severity DESC'
+        'SELECT * FROM alert_rules WHERE enabled = true ORDER BY severity DESC',
       );
       return result.rows;
     } catch (error) {
@@ -508,7 +508,7 @@ export class MonitoringService {
         alert.value,
         alert.threshold,
         alert.timestamp,
-        alert.resolved
+        alert.resolved,
       ]);
     } catch (error) {
       console.error('Failed to store alert:', error);
@@ -519,7 +519,7 @@ export class MonitoringService {
     try {
       await Promise.all([
         this.redis.quit(),
-        this.db.end()
+        this.db.end(),
       ]);
     } catch (error) {
       // Log error but don't throw

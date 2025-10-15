@@ -8,7 +8,7 @@ describe('Card', () => {
     render(
       <Card>
         <p>Card content</p>
-      </Card>
+      </Card>,
     );
     
     expect(screen.getByText('Card content')).toBeInTheDocument();
@@ -18,7 +18,7 @@ describe('Card', () => {
     render(
       <Card title="Card Title" subtitle="Card subtitle">
         <p>Card content</p>
-      </Card>
+      </Card>,
     );
     
     expect(screen.getByText('Card Title')).toBeInTheDocument();
@@ -33,7 +33,7 @@ describe('Card', () => {
     render(
       <Card title="Card Title" actions={actions}>
         <p>Card content</p>
-      </Card>
+      </Card>,
     );
     
     expect(screen.getByText('Action Button')).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe('Card', () => {
     render(
       <Card loading>
         <p>This should not be visible</p>
-      </Card>
+      </Card>,
     );
     
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe('Card', () => {
     render(
       <Card className="custom-card">
         <p>Card content</p>
-      </Card>
+      </Card>,
     );
     
     const card = screen.getByText('Card content').closest('.card');
@@ -65,7 +65,7 @@ describe('Card', () => {
     render(
       <Card>
         <p>Card content</p>
-      </Card>
+      </Card>,
     );
     
     // Should not have header section
@@ -76,7 +76,7 @@ describe('Card', () => {
     const { rerender } = render(
       <Card title="Test Card">
         <p>Card content</p>
-      </Card>
+      </Card>,
     );
     
     expect(screen.getByText('Test Card')).toBeInTheDocument();
@@ -85,7 +85,7 @@ describe('Card', () => {
     rerender(
       <Card title="Test Card">
         <p>Card content</p>
-      </Card>
+      </Card>,
     );
     
     // Should still be in document (memoized)
@@ -96,7 +96,7 @@ describe('Card', () => {
     const { rerender } = render(
       <Card title="Original Title">
         <p>Card content</p>
-      </Card>
+      </Card>,
     );
     
     expect(screen.getByText('Original Title')).toBeInTheDocument();
@@ -105,7 +105,7 @@ describe('Card', () => {
     rerender(
       <Card title="New Title">
         <p>Card content</p>
-      </Card>
+      </Card>,
     );
     
     expect(screen.getByText('New Title')).toBeInTheDocument();
@@ -126,7 +126,7 @@ describe('Card', () => {
     render(
       <Card title="Parent Card">
         {complexContent}
-      </Card>
+      </Card>,
     );
     
     expect(screen.getByText('Parent Card')).toBeInTheDocument();

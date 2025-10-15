@@ -16,7 +16,7 @@ router.use(verifyRequest());
 router.use(analyticsRoutes.routes());
 
 // Get app settings (optimized)
-router.get('/settings', async (ctx) => {
+router.get('/settings', async(ctx) => {
   const shop = ctx.state.shopify.session.shop;
   const result = await optimizedApi.getSettings(shop);
   
@@ -35,7 +35,7 @@ router.get('/settings', async (ctx) => {
 });
 
 // Update app settings (optimized)
-router.put('/settings', async (ctx) => {
+router.put('/settings', async(ctx) => {
   const shop = ctx.state.shopify.session.shop;
   const settings = ctx.request.body as any;
 
@@ -66,7 +66,7 @@ router.put('/settings', async (ctx) => {
 });
 
 // Get delay alerts (optimized)
-router.get('/alerts', async (ctx) => {
+router.get('/alerts', async(ctx) => {
   const shop = ctx.state.shopify.session.shop;
   const page = Number(ctx.query.page) || 1;
   const limit = Number(ctx.query.limit) || 20;
@@ -88,7 +88,7 @@ router.get('/alerts', async (ctx) => {
 });
 
 // Get queue statistics (optimized)
-router.get('/stats', async (ctx) => {
+router.get('/stats', async(ctx) => {
   const shop = ctx.state.shopify.session.shop;
   const result = await optimizedApi.getStats(shop);
   
@@ -107,7 +107,7 @@ router.get('/stats', async (ctx) => {
 });
 
 // Test delay detection
-router.post('/test-delay', async (ctx) => {
+router.post('/test-delay', async(ctx) => {
   try {
     const { trackingNumber, carrierCode } = ctx.request.body as any;
 
@@ -129,7 +129,7 @@ router.post('/test-delay', async (ctx) => {
 
     ctx.body = {
       trackingInfo,
-      delayResult
+      delayResult,
     };
   } catch (error) {
     console.error('Error testing delay detection:', error);
@@ -139,7 +139,7 @@ router.post('/test-delay', async (ctx) => {
 });
 
 // Get recent orders (optimized)
-router.get('/orders', async (ctx) => {
+router.get('/orders', async(ctx) => {
   const shop = ctx.state.shopify.session.shop;
   const page = Number(ctx.query.page) || 1;
   const limit = Number(ctx.query.limit) || 20;
@@ -161,7 +161,7 @@ router.get('/orders', async (ctx) => {
 });
 
 // Clear cache
-router.delete('/cache', async (ctx) => {
+router.delete('/cache', async(ctx) => {
   const shop = ctx.state.shopify.session.shop;
   const result = await optimizedApi.clearCache(shop);
   

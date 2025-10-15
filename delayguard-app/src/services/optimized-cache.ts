@@ -18,7 +18,7 @@ export class OptimizedCache {
     this.redis = new Redis(config.redis.url, {
       lazyConnect: true,
       maxRetriesPerRequest: 3,
-      enableReadyCheck: false
+      enableReadyCheck: false,
     });
   }
 
@@ -170,7 +170,7 @@ export class OptimizedCache {
     return {
       localCacheSize,
       localCacheHitRate: 0, // Would need to track hits/misses
-      redisConnected
+      redisConnected,
     };
   }
 
@@ -219,5 +219,5 @@ export const CACHE_CONFIGS = {
   alerts: { ttl: 3600, keyPrefix: 'alerts' }, // 1 hour
   analytics: { ttl: 300, keyPrefix: 'analytics' }, // 5 minutes
   realtime: { ttl: 60, keyPrefix: 'realtime' }, // 1 minute
-  performance: { ttl: 300, keyPrefix: 'performance' } // 5 minutes
+  performance: { ttl: 300, keyPrefix: 'performance' }, // 5 minutes
 } as const;

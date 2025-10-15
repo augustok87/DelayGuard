@@ -25,7 +25,7 @@ describe('Button Component', () => {
       render(
         <Button variant="secondary" size="lg">
           Large Secondary
-        </Button>
+        </Button>,
       );
       
       const button = screen.getByRole('button', { name: /large secondary/i });
@@ -58,7 +58,7 @@ describe('Button Component', () => {
   });
 
   describe('Interactions', () => {
-    it('should handle click events', async () => {
+    it('should handle click events', async() => {
       const handleClick = jest.fn();
       const user = userEvent.setup();
       
@@ -70,7 +70,7 @@ describe('Button Component', () => {
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle keyboard events (Enter)', async () => {
+    it('should handle keyboard events (Enter)', async() => {
       const handleClick = jest.fn();
       const user = userEvent.setup();
       
@@ -83,7 +83,7 @@ describe('Button Component', () => {
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle keyboard events (Space)', async () => {
+    it('should handle keyboard events (Space)', async() => {
       const handleClick = jest.fn();
       const user = userEvent.setup();
       
@@ -96,7 +96,7 @@ describe('Button Component', () => {
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
-    it('should not trigger click when disabled', async () => {
+    it('should not trigger click when disabled', async() => {
       const handleClick = jest.fn();
       const user = userEvent.setup();
       
@@ -108,7 +108,7 @@ describe('Button Component', () => {
       expect(handleClick).not.toHaveBeenCalled();
     });
 
-    it('should not trigger click when loading', async () => {
+    it('should not trigger click when loading', async() => {
       const handleClick = jest.fn();
       const user = userEvent.setup();
       
@@ -122,7 +122,7 @@ describe('Button Component', () => {
   });
 
   describe('Accessibility', () => {
-    it('should be accessible', async () => {
+    it('should be accessible', async() => {
       const { container } = render(<Button>Accessible Button</Button>);
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -140,7 +140,7 @@ describe('Button Component', () => {
         <div>
           <Button aria-describedby="help-text">Button</Button>
           <div id="help-text">This button does something</div>
-        </div>
+        </div>,
       );
       
       const button = screen.getByRole('button', { name: /button/i });
@@ -222,7 +222,7 @@ describe('Button Component', () => {
         <Button>
           <span>Complex</span>
           <strong>Content</strong>
-        </Button>
+        </Button>,
       );
       
       const button = screen.getByRole('button');

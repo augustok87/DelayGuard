@@ -87,7 +87,7 @@ jest.mock('../../../src/components/ui', () => ({
     </div>
   ),
   BlockStack: ({ children, ...props }: any) => <div data-testid="block-stack" {...props}>{children}</div>,
-  InlineStack: ({ children, ...props }: any) => <div data-testid="inline-stack" {...props}>{children}</div>
+  InlineStack: ({ children, ...props }: any) => <div data-testid="inline-stack" {...props}>{children}</div>,
 }));
 
 // Mock the analytics API
@@ -95,11 +95,11 @@ const mockAnalyticsAPI = {
   getMetrics: jest.fn(),
   getAlerts: jest.fn(),
   getOrders: jest.fn(),
-  exportData: jest.fn()
+  exportData: jest.fn(),
 };
 
 jest.mock('../../../src/services/analytics-service', () => ({
-  AnalyticsService: jest.fn().mockImplementation(() => mockAnalyticsAPI)
+  AnalyticsService: jest.fn().mockImplementation(() => mockAnalyticsAPI),
 }));
 
 describe('AnalyticsDashboard', () => {
@@ -110,29 +110,29 @@ describe('AnalyticsDashboard', () => {
       low: 10,
       medium: 8,
       high: 5,
-      critical: 2
+      critical: 2,
     },
     alertsByReason: {
       'Weather Delay': 8,
       'Carrier Issue': 12,
       'Customs Hold': 3,
-      'Address Issue': 2
+      'Address Issue': 2,
     },
     averageDelayDays: 3.2,
     notificationSuccessRate: {
       email: 95.5,
-      sms: 87.2
+      sms: 87.2,
     },
     revenueImpact: {
       totalValue: 45000,
       averageOrderValue: 300,
-      potentialLoss: 1500
+      potentialLoss: 1500,
     },
     performanceMetrics: {
       averageResponseTime: 1.2,
       uptime: 99.8,
-      errorRate: 0.2
-    }
+      errorRate: 0.2,
+    },
   };
 
   const mockAlerts = [
@@ -145,7 +145,7 @@ describe('AnalyticsDashboard', () => {
       delay_reason: 'Weather Delay',
       severity: 'high',
       created_at: '2024-01-15T10:00:00Z',
-      status: 'active'
+      status: 'active',
     },
     {
       id: 2,
@@ -156,8 +156,8 @@ describe('AnalyticsDashboard', () => {
       delay_reason: 'Carrier Issue',
       severity: 'medium',
       created_at: '2024-01-15T11:00:00Z',
-      status: 'resolved'
-    }
+      status: 'resolved',
+    },
   ];
 
   const mockOrders = [
@@ -167,7 +167,7 @@ describe('AnalyticsDashboard', () => {
       customer_name: 'John Doe',
       total_value: 299.99,
       created_at: '2024-01-10T10:00:00Z',
-      status: 'shipped'
+      status: 'shipped',
     },
     {
       id: 2,
@@ -175,8 +175,8 @@ describe('AnalyticsDashboard', () => {
       customer_name: 'Jane Smith',
       total_value: 149.99,
       created_at: '2024-01-12T14:00:00Z',
-      status: 'delivered'
-    }
+      status: 'delivered',
+    },
   ];
 
   beforeEach(() => {
@@ -187,7 +187,7 @@ describe('AnalyticsDashboard', () => {
     mockAnalyticsAPI.exportData.mockResolvedValue('export-data');
   });
 
-  it('should render analytics dashboard with metrics', async () => {
+  it('should render analytics dashboard with metrics', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -208,7 +208,7 @@ describe('AnalyticsDashboard', () => {
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
 
-  it('should handle tab switching', async () => {
+  it('should handle tab switching', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -224,7 +224,7 @@ describe('AnalyticsDashboard', () => {
     });
   });
 
-  it('should filter alerts by severity', async () => {
+  it('should filter alerts by severity', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -249,7 +249,7 @@ describe('AnalyticsDashboard', () => {
     });
   });
 
-  it('should export data when export button is clicked', async () => {
+  it('should export data when export button is clicked', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -264,7 +264,7 @@ describe('AnalyticsDashboard', () => {
     });
   });
 
-  it('should handle date range filtering', async () => {
+  it('should handle date range filtering', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -278,13 +278,13 @@ describe('AnalyticsDashboard', () => {
     await waitFor(() => {
       expect(mockAnalyticsAPI.getMetrics).toHaveBeenCalledWith(
         expect.objectContaining({
-          startDate: '2024-01-01'
-        })
+          startDate: '2024-01-01',
+        }),
       );
     });
   });
 
-  it('should display error state when API fails', async () => {
+  it('should display error state when API fails', async() => {
     mockAnalyticsAPI.getMetrics.mockRejectedValue(new Error('API Error'));
     
     render(<AnalyticsDashboard />);
@@ -294,7 +294,7 @@ describe('AnalyticsDashboard', () => {
     });
   });
 
-  it('should refresh data when refresh button is clicked', async () => {
+  it('should refresh data when refresh button is clicked', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -309,7 +309,7 @@ describe('AnalyticsDashboard', () => {
     });
   });
 
-  it('should display revenue impact metrics', async () => {
+  it('should display revenue impact metrics', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -322,7 +322,7 @@ describe('AnalyticsDashboard', () => {
     expect(screen.getByText('$1,500')).toBeInTheDocument();
   });
 
-  it('should display performance metrics', async () => {
+  it('should display performance metrics', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -335,7 +335,7 @@ describe('AnalyticsDashboard', () => {
     expect(screen.getByText('0.2%')).toBeInTheDocument();
   });
 
-  it('should handle empty data state', async () => {
+  it('should handle empty data state', async() => {
     mockAnalyticsAPI.getMetrics.mockResolvedValue({
       totalOrders: 0,
       totalAlerts: 0,
@@ -344,7 +344,7 @@ describe('AnalyticsDashboard', () => {
       averageDelayDays: 0,
       notificationSuccessRate: { email: 0, sms: 0 },
       revenueImpact: { totalValue: 0, averageOrderValue: 0, potentialLoss: 0 },
-      performanceMetrics: { averageResponseTime: 0, uptime: 0, errorRate: 0 }
+      performanceMetrics: { averageResponseTime: 0, uptime: 0, errorRate: 0 },
     });
 
     render(<AnalyticsDashboard />);
@@ -354,7 +354,7 @@ describe('AnalyticsDashboard', () => {
     });
   });
 
-  it('should handle different time periods', async () => {
+  it('should handle different time periods', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -368,13 +368,13 @@ describe('AnalyticsDashboard', () => {
     await waitFor(() => {
       expect(mockAnalyticsAPI.getMetrics).toHaveBeenCalledWith(
         expect.objectContaining({
-          timePeriod: '30d'
-        })
+          timePeriod: '30d',
+        }),
       );
     });
   });
 
-  it('should display notification success rates', async () => {
+  it('should display notification success rates', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -386,7 +386,7 @@ describe('AnalyticsDashboard', () => {
     expect(screen.getByText('87.2%')).toBeInTheDocument();
   });
 
-  it('should handle modal interactions', async () => {
+  it('should handle modal interactions', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -415,7 +415,7 @@ describe('AnalyticsDashboard', () => {
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
       configurable: true,
-      value: 768
+      value: 768,
     });
 
     render(<AnalyticsDashboard />);
@@ -424,7 +424,7 @@ describe('AnalyticsDashboard', () => {
     expect(screen.getByTestId('layout')).toBeInTheDocument();
   });
 
-  it('should handle keyboard navigation', async () => {
+  it('should handle keyboard navigation', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -438,7 +438,7 @@ describe('AnalyticsDashboard', () => {
     expect(document.activeElement).toBe(firstButton);
   });
 
-  it('should display alerts by reason chart', async () => {
+  it('should display alerts by reason chart', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
@@ -450,7 +450,7 @@ describe('AnalyticsDashboard', () => {
     expect(screen.getByText('Carrier Issue')).toBeInTheDocument();
   });
 
-  it('should handle data refresh on window focus', async () => {
+  it('should handle data refresh on window focus', async() => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {

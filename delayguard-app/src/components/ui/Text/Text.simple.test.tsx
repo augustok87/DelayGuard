@@ -22,7 +22,7 @@ describe('Text Component', () => {
       
       variants.forEach(variant => {
         const { unmount } = render(
-          <Text variant={variant}>{variant} text</Text>
+          <Text variant={variant}>{variant} text</Text>,
         );
         
         const text = screen.getByText(`${variant} text`);
@@ -37,7 +37,7 @@ describe('Text Component', () => {
       
       tones.forEach(tone => {
         const { unmount } = render(
-          <Text tone={tone}>{tone} text</Text>
+          <Text tone={tone}>{tone} text</Text>,
         );
         
         const text = screen.getByText(`${tone} text`);
@@ -76,7 +76,7 @@ describe('Text Component', () => {
         <div>
           <Text aria-describedby="help-text">Text</Text>
           <div id="help-text">This text is described</div>
-        </div>
+        </div>,
       );
       
       const text = screen.getByText('Text');
@@ -121,7 +121,7 @@ describe('Text Component', () => {
       render(
         <Text>
           <strong>Bold</strong> and <em>italic</em> text
-        </Text>
+        </Text>,
       );
       
       expect(screen.getByText('Bold')).toBeInTheDocument();

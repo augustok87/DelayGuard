@@ -5,7 +5,7 @@ import ordersSlice, {
   setFilters,
   clearFilters,
   setPagination,
-  clearError
+  clearError,
 } from '../../../../src/store/slices/ordersSlice';
 import { configureStore } from '@reduxjs/toolkit';
 import { Order } from '../../../../src/types';
@@ -109,12 +109,12 @@ describe('ordersSlice', () => {
           customerEmail: 'john@example.com',
           totalAmount: 99.99,
           currency: 'USD',
-        }
+        },
       ];
 
       store.dispatch({ 
         type: fetchOrders.fulfilled.type, 
-        payload: mockOrders 
+        payload: mockOrders, 
       });
       
       const state = store.getState().orders;
@@ -128,7 +128,7 @@ describe('ordersSlice', () => {
       const errorMessage = 'Failed to fetch orders';
       store.dispatch({ 
         type: fetchOrders.rejected.type, 
-        payload: errorMessage 
+        payload: errorMessage, 
       });
       
       const state = store.getState().orders;
@@ -158,23 +158,23 @@ describe('ordersSlice', () => {
           customerEmail: 'john@example.com',
           totalAmount: 99.99,
           currency: 'USD',
-        }
+        },
       ];
       
       store.dispatch({ 
         type: fetchOrders.fulfilled.type, 
-        payload: mockOrders 
+        payload: mockOrders, 
       });
 
       // Then update an order
       const updatePayload = { 
         id: '1', 
-        updates: { status: 'delivered' } 
+        updates: { status: 'delivered' }, 
       };
       
       store.dispatch({ 
         type: updateOrder.fulfilled.type, 
-        payload: updatePayload 
+        payload: updatePayload, 
       });
       
       const state = store.getState().orders;
@@ -186,7 +186,7 @@ describe('ordersSlice', () => {
       const errorMessage = 'Failed to update order';
       store.dispatch({ 
         type: updateOrder.rejected.type, 
-        payload: errorMessage 
+        payload: errorMessage, 
       });
       
       const state = store.getState().orders;
@@ -226,18 +226,18 @@ describe('ordersSlice', () => {
           customerEmail: 'jane@example.com',
           totalAmount: 149.99,
           currency: 'USD',
-        }
+        },
       ];
       
       store.dispatch({ 
         type: fetchOrders.fulfilled.type, 
-        payload: mockOrders 
+        payload: mockOrders, 
       });
 
       // Then delete an order
       store.dispatch({ 
         type: deleteOrder.fulfilled.type, 
-        payload: '1' 
+        payload: '1', 
       });
       
       const state = store.getState().orders;
@@ -252,7 +252,7 @@ describe('ordersSlice', () => {
       const errorMessage = 'Failed to delete order';
       store.dispatch({ 
         type: deleteOrder.rejected.type, 
-        payload: errorMessage 
+        payload: errorMessage, 
       });
       
       const state = store.getState().orders;
@@ -276,7 +276,7 @@ describe('ordersSlice', () => {
       
       store.dispatch({ 
         type: fetchOrders.fulfilled.type, 
-        payload: mockOrders 
+        payload: mockOrders, 
       });
       
       const state = store.getState().orders;

@@ -34,6 +34,6 @@ export const useModals = () => {
     openSettingsModal,
     openAlertDetailsModal,
     openOrderTrackingModal,
-    closeModal: closeCurrentModal
+    closeModal: closeCurrentModal,
   };
 };

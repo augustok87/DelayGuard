@@ -14,7 +14,7 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     const statusMap: { [key: string]: { class: string; text: string } } = {
       'active': { class: styles.badgeDanger, text: 'Active' },
       'resolved': { class: styles.badgeSuccess, text: 'Resolved' },
-      'dismissed': { class: styles.badgeInfo, text: 'Dismissed' }
+      'dismissed': { class: styles.badgeInfo, text: 'Dismissed' },
     };
     
     const statusInfo = statusMap[status] || { class: styles.badgeInfo, text: status };
@@ -34,7 +34,7 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 

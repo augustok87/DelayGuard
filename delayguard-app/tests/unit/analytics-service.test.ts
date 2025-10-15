@@ -8,8 +8,8 @@ const mockLlen = jest.fn();
 
 jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => ({
-    query: mockQuery
-  }))
+    query: mockQuery,
+  })),
 }));
 
 jest.mock('ioredis', () => {
@@ -18,7 +18,7 @@ jest.mock('ioredis', () => {
     setex: mockSetex,
     del: mockDel,
     keys: mockKeys,
-    llen: mockLlen
+    llen: mockLlen,
   }));
 });
 
@@ -29,25 +29,25 @@ const mockConfig: AppConfig = {
   shopify: {
     apiKey: 'test-key',
     apiSecret: 'test-secret',
-    scopes: ['read_orders']
+    scopes: ['read_orders'],
   },
   database: {
-    url: 'postgresql://test:test@localhost:5432/test'
+    url: 'postgresql://test:test@localhost:5432/test',
   },
   redis: {
-    url: 'redis://localhost:6379'
+    url: 'redis://localhost:6379',
   },
   shipengine: {
-    apiKey: 'test-shipengine-key'
+    apiKey: 'test-shipengine-key',
   },
   sendgrid: {
-    apiKey: 'test-sendgrid-key'
+    apiKey: 'test-sendgrid-key',
   },
   twilio: {
     accountSid: 'test-sid',
     authToken: 'test-token',
-    phoneNumber: '+1234567890'
-  }
+    phoneNumber: '+1234567890',
+  },
 };
 
 describe('AnalyticsService', () => {
@@ -61,7 +61,7 @@ describe('AnalyticsService', () => {
     
     // Create new instances with mocked methods
     mockDb = {
-      query: mockQuery
+      query: mockQuery,
     };
     
     mockRedis = {
@@ -69,7 +69,7 @@ describe('AnalyticsService', () => {
       setex: mockSetex,
       del: mockDel,
       keys: mockKeys,
-      llen: mockLlen
+      llen: mockLlen,
     };
     
     analyticsService = new AnalyticsService(mockConfig);
@@ -80,7 +80,7 @@ describe('AnalyticsService', () => {
   });
 
   describe('getAnalyticsMetrics', () => {
-    it('should return analytics metrics for a shop', async () => {
+    it('should return analytics metrics for a shop', async() => {
       const shopId = 'test-shop';
       const timeRange = '30d';
       
@@ -89,25 +89,25 @@ describe('AnalyticsService', () => {
         .mockResolvedValueOnce({ rows: [{ count: '100' }] }) // totalOrders
         .mockResolvedValueOnce({ rows: [{ count: '10' }] }) // totalAlerts
         .mockResolvedValueOnce({ 
-          rows: [{ low: '5', medium: '3', high: '2', critical: '0' }] 
+          rows: [{ low: '5', medium: '3', high: '2', critical: '0' }], 
         }) // alertsBySeverity
         .mockResolvedValueOnce({ 
-          rows: [{ delay_reason: 'weather', count: '5' }] 
+          rows: [{ delay_reason: 'weather', count: '5' }], 
         }) // alertsByReason
         .mockResolvedValueOnce({ rows: [{ avg_delay: '2.5' }] }) // averageDelayDays
         .mockResolvedValueOnce({ 
-          rows: [{ email_rate: '0.95', sms_rate: '0.90' }] 
+          rows: [{ email_rate: '0.95', sms_rate: '0.90' }], 
         }) // notificationSuccessRate
         .mockResolvedValueOnce({ 
-          rows: [{ total_value: '5000', avg_order_value: '50', potential_loss: '500' }] 
+          rows: [{ total_value: '5000', avg_order_value: '50', potential_loss: '500' }], 
         }) // revenueImpact
         .mockResolvedValueOnce({ 
           rows: [{ 
             date: '2024-01-01', 
             orders: '10', 
             alerts: '1', 
-            revenue: '500' 
-          }] 
+            revenue: '500', 
+          }], 
         }); // timeSeriesData
 
       // Mock Redis responses
@@ -123,42 +123,42 @@ describe('AnalyticsService', () => {
           low: 5,
           medium: 3,
           high: 2,
-          critical: 0
+          critical: 0,
         },
         alertsByReason: {
-          weather: 5
+          weather: 5,
         },
         averageDelayDays: 2.5,
         notificationSuccessRate: {
           email: 95,
-          sms: 90
+          sms: 90,
         },
         revenueImpact: {
           totalValue: 5000,
           averageOrderValue: 50,
-          potentialLoss: 500
+          potentialLoss: 500,
         },
         performanceMetrics: {
           averageResponseTime: 0,
           successRate: 100,
-          errorRate: 0
+          errorRate: 0,
         },
         timeSeriesData: [{
           date: '2024-01-01',
           orders: 10,
           alerts: 1,
-          revenue: 500
-        }]
+          revenue: 500,
+        }],
       });
 
       expect(mockRedis.setex).toHaveBeenCalledWith(
         `analytics:${shopId}:${timeRange}`,
         300,
-        expect.any(String)
+        expect.any(String),
       );
     });
 
-    it('should return cached data when available', async () => {
+    it('should return cached data when available', async() => {
       const shopId = 'test-shop';
       const timeRange = '30d';
       const cachedData = {
@@ -170,7 +170,7 @@ describe('AnalyticsService', () => {
         notificationSuccessRate: { email: 98, sms: 95 },
         revenueImpact: { totalValue: 2500, averageOrderValue: 50, potentialLoss: 250 },
         performanceMetrics: { averageResponseTime: 45, successRate: 99, errorRate: 1 },
-        timeSeriesData: []
+        timeSeriesData: [],
       };
 
       mockGet.mockResolvedValue(JSON.stringify(cachedData));
@@ -181,7 +181,7 @@ describe('AnalyticsService', () => {
       expect(mockDb.query).not.toHaveBeenCalled();
     });
 
-    it('should handle database errors gracefully', async () => {
+    it('should handle database errors gracefully', async() => {
       const shopId = 'test-shop';
       const timeRange = '30d';
 
@@ -194,7 +194,7 @@ describe('AnalyticsService', () => {
   });
 
   describe('getRealTimeMetrics', () => {
-    it('should return real-time metrics', async () => {
+    it('should return real-time metrics', async() => {
       const shopId = 'test-shop';
       
       // Mock database responses
@@ -219,11 +219,11 @@ describe('AnalyticsService', () => {
         processingRate: 25.5,
         errorRate: 1.2,
         memoryUsage: expect.any(Number),
-        responseTime: 45.0
+        responseTime: 45.0,
       });
     });
 
-    it('should return cached data when available', async () => {
+    it('should return cached data when available', async() => {
       const shopId = 'test-shop';
       const cachedData = {
         activeAlerts: 3,
@@ -231,7 +231,7 @@ describe('AnalyticsService', () => {
         processingRate: 30.0,
         errorRate: 0.5,
         memoryUsage: 128,
-        responseTime: 35.0
+        responseTime: 35.0,
       };
 
       mockGet.mockResolvedValue(JSON.stringify(cachedData));
@@ -243,13 +243,13 @@ describe('AnalyticsService', () => {
   });
 
   describe('clearCache', () => {
-    it('should clear all cache entries for a shop', async () => {
+    it('should clear all cache entries for a shop', async() => {
       const shopId = 'test-shop';
       
       mockKeys.mockResolvedValue([
         'analytics:test-shop:30d',
         'realtime:test-shop',
-        'metrics:response_time:test-shop'
+        'metrics:response_time:test-shop',
       ]);
       mockDel.mockResolvedValue(3);
 
@@ -261,7 +261,7 @@ describe('AnalyticsService', () => {
       expect(mockRedis.del).toHaveBeenCalledWith(
         'analytics:test-shop:30d',
         'realtime:test-shop',
-        'metrics:response_time:test-shop'
+        'metrics:response_time:test-shop',
       );
     });
   });

@@ -13,7 +13,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   componentName,
   enabled = process.env.NODE_ENV === 'development',
   showMetrics = false,
-  onMetricsUpdate
+  onMetricsUpdate,
 }) => {
   const [metrics, setMetrics] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -28,7 +28,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       if (onMetricsUpdate) {
         onMetricsUpdate(newMetrics);
       }
-    }
+    },
   });
 
   // Track render performance
@@ -124,7 +124,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 // HOC for adding performance monitoring to any component
 export const withPerformanceMonitoring = <P extends object>(
   Component: React.ComponentType<P>,
-  componentName: string
+  componentName: string,
 ) => {
   const WrappedComponent: React.FC<P> = (props) => {
     return (

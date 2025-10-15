@@ -27,21 +27,21 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
-      retryCount: 0
+      retryCount: 0,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // Log error to external service
@@ -79,7 +79,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
         hasError: false,
         error: null,
         errorInfo: null,
-        retryCount: prevState.retryCount + 1
+        retryCount: prevState.retryCount + 1,
       }));
 
       // Call custom retry handler
@@ -91,7 +91,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
       this.setState({
         hasError: true,
         error: new Error('Maximum retry attempts reached. Please refresh the page.'),
-        errorInfo: null
+        errorInfo: null,
       });
     }
   };
@@ -111,7 +111,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
         componentStack: errorInfo?.componentStack,
         timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent,
-        url: window.location.href
+        url: window.location.href,
       };
 
       console.log('Error report:', errorReport);

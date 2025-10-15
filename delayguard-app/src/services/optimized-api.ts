@@ -32,7 +32,7 @@ export class OptimizedApiService {
           success: true,
           data: cached,
           cached: true,
-          responseTime: Date.now() - start
+          responseTime: Date.now() - start,
         };
       }
 
@@ -42,7 +42,7 @@ export class OptimizedApiService {
         return {
           success: false,
           error: 'Shop not found',
-          responseTime: Date.now() - start
+          responseTime: Date.now() - start,
         };
       }
 
@@ -51,7 +51,7 @@ export class OptimizedApiService {
         delayThresholdDays: 2,
         emailEnabled: true,
         smsEnabled: false,
-        notificationTemplate: 'default'
+        notificationTemplate: 'default',
       };
 
       // Cache the result
@@ -61,13 +61,13 @@ export class OptimizedApiService {
         success: true,
         data: result,
         cached: false,
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     }
   }
@@ -81,7 +81,7 @@ export class OptimizedApiService {
         return {
           success: false,
           error: 'Shop not found',
-          responseTime: Date.now() - start
+          responseTime: Date.now() - start,
         };
       }
 
@@ -106,7 +106,7 @@ export class OptimizedApiService {
         settings.delayThresholdDays,
         settings.emailEnabled,
         settings.smsEnabled,
-        settings.notificationTemplate
+        settings.notificationTemplate,
       ]);
 
       // Invalidate cache
@@ -116,13 +116,13 @@ export class OptimizedApiService {
       return {
         success: true,
         data: settings,
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     }
   }
@@ -136,7 +136,7 @@ export class OptimizedApiService {
         return {
           success: false,
           error: 'Shop not found',
-          responseTime: Date.now() - start
+          responseTime: Date.now() - start,
         };
       }
 
@@ -150,7 +150,7 @@ export class OptimizedApiService {
           success: true,
           data: cached,
           cached: true,
-          responseTime: Date.now() - start
+          responseTime: Date.now() - start,
         };
       }
 
@@ -164,8 +164,8 @@ export class OptimizedApiService {
           page,
           limit,
           total: totalCount,
-          pages: Math.ceil(totalCount / limit)
-        }
+          pages: Math.ceil(totalCount / limit),
+        },
       };
 
       // Cache the result
@@ -175,13 +175,13 @@ export class OptimizedApiService {
         success: true,
         data: result,
         cached: false,
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     }
   }
@@ -195,7 +195,7 @@ export class OptimizedApiService {
         return {
           success: false,
           error: 'Shop not found',
-          responseTime: Date.now() - start
+          responseTime: Date.now() - start,
         };
       }
 
@@ -209,7 +209,7 @@ export class OptimizedApiService {
           success: true,
           data: cached,
           cached: true,
-          responseTime: Date.now() - start
+          responseTime: Date.now() - start,
         };
       }
 
@@ -223,8 +223,8 @@ export class OptimizedApiService {
           page,
           limit,
           total: totalCount,
-          pages: Math.ceil(totalCount / limit)
-        }
+          pages: Math.ceil(totalCount / limit),
+        },
       };
 
       // Cache the result
@@ -234,13 +234,13 @@ export class OptimizedApiService {
         success: true,
         data: result,
         cached: false,
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     }
   }
@@ -254,7 +254,7 @@ export class OptimizedApiService {
         return {
           success: false,
           error: 'Shop not found',
-          responseTime: Date.now() - start
+          responseTime: Date.now() - start,
         };
       }
 
@@ -267,7 +267,7 @@ export class OptimizedApiService {
           success: true,
           data: cached,
           cached: true,
-          responseTime: Date.now() - start
+          responseTime: Date.now() - start,
         };
       }
 
@@ -276,7 +276,7 @@ export class OptimizedApiService {
         this.db.getOrderCount(shop.id),
         this.db.getAlertCount(shop.id),
         this.db.getStats(),
-        this.cache.getStats()
+        this.cache.getStats(),
       ]);
 
       const result = {
@@ -284,7 +284,7 @@ export class OptimizedApiService {
         alerts: { total: alertCount },
         database: dbStats,
         cache: cacheStats,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Cache the result
@@ -294,13 +294,13 @@ export class OptimizedApiService {
         success: true,
         data: result,
         cached: false,
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     }
   }
@@ -314,7 +314,7 @@ export class OptimizedApiService {
         return {
           success: false,
           error: 'Shop not found',
-          responseTime: Date.now() - start
+          responseTime: Date.now() - start,
         };
       }
 
@@ -323,19 +323,19 @@ export class OptimizedApiService {
         this.cache.invalidatePattern(`settings:${shopDomain}`, CACHE_CONFIGS.settings),
         this.cache.invalidatePattern(`alerts:${shop.id}:*`, CACHE_CONFIGS.alerts),
         this.cache.invalidatePattern(`orders:${shop.id}:*`, CACHE_CONFIGS.orders),
-        this.cache.invalidatePattern(`stats:${shop.id}`, CACHE_CONFIGS.performance)
+        this.cache.invalidatePattern(`stats:${shop.id}`, CACHE_CONFIGS.performance),
       ]);
 
       return {
         success: true,
         data: { message: 'Cache cleared successfully' },
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        responseTime: Date.now() - start
+        responseTime: Date.now() - start,
       };
     }
   }
@@ -343,7 +343,7 @@ export class OptimizedApiService {
   async close(): Promise<void> {
     await Promise.all([
       this.db.close(),
-      this.cache.close()
+      this.cache.close(),
     ]);
   }
 }

@@ -176,14 +176,14 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
           columns={headings.map((heading, index) => ({
             key: `col-${index}`,
             title: heading,
-            sortable: true
+            sortable: true,
           }))}
           rows={rows.map((row, index) => ({
             id: `row-${index}`,
             ...row.reduce((acc, cell, cellIndex) => ({
               ...acc,
-              [`col-${cellIndex}`]: cell
-            }), {})
+              [`col-${cellIndex}`]: cell,
+            }), {}),
           }))}
           sortable
         />
@@ -291,7 +291,7 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
               {renderSeverityBreakdown()}
               {renderNotificationMetrics()}
             </div>
-          )},
+          ) },
           { id: 'severity', label: 'Severity', content: renderSeverityBreakdown() },
           { id: 'reasons', label: 'Reasons', content: renderReasonBreakdown() },
           { id: 'notifications', label: 'Notifications', content: renderNotificationMetrics() },

@@ -9,14 +9,14 @@ describe('DelayDetectionService', () => {
   });
 
   describe('checkForDelays', () => {
-    it('should detect delay when estimated delivery is past original', async () => {
+    it('should detect delay when estimated delivery is past original', async() => {
       const trackingInfo: TrackingInfo = {
         trackingNumber: '1Z999AA1234567890',
         carrierCode: 'ups',
         status: 'IN_TRANSIT',
         estimatedDeliveryDate: '2024-02-15',
         originalEstimatedDeliveryDate: '2024-02-10',
-        events: []
+        events: [],
       };
 
       const result = await delayDetectionService.checkForDelays(trackingInfo);
@@ -26,14 +26,14 @@ describe('DelayDetectionService', () => {
       expect(result.delayReason).toBe('DATE_DELAY');
     });
 
-    it('should detect delay when estimated delivery is past original', async () => {
+    it('should detect delay when estimated delivery is past original', async() => {
       const trackingInfo: TrackingInfo = {
         trackingNumber: '1Z999AA1234567890',
         carrierCode: 'ups',
         status: 'IN_TRANSIT',
         estimatedDeliveryDate: '2024-02-11',
         originalEstimatedDeliveryDate: '2024-02-10',
-        events: []
+        events: [],
       };
 
       const result = await delayDetectionService.checkForDelays(trackingInfo);
@@ -43,14 +43,14 @@ describe('DelayDetectionService', () => {
       expect(result.delayReason).toBe('DATE_DELAY');
     });
 
-    it('should detect delay from status codes', async () => {
+    it('should detect delay from status codes', async() => {
       const trackingInfo: TrackingInfo = {
         trackingNumber: '1Z999AA1234567890',
         carrierCode: 'ups',
         status: 'DELAYED',
         estimatedDeliveryDate: '2024-02-15',
         originalEstimatedDeliveryDate: '2024-02-10',
-        events: []
+        events: [],
       };
 
       const result = await delayDetectionService.checkForDelays(trackingInfo);
@@ -59,7 +59,7 @@ describe('DelayDetectionService', () => {
       expect(result.delayReason).toBe('DELAYED_STATUS');
     });
 
-    it('should detect delay from event descriptions', async () => {
+    it('should detect delay from event descriptions', async() => {
       const trackingInfo: TrackingInfo = {
         trackingNumber: '1Z999AA1234567890',
         carrierCode: 'ups',
@@ -71,9 +71,9 @@ describe('DelayDetectionService', () => {
             timestamp: '2024-02-01T10:00:00Z',
             status: 'IN_TRANSIT',
             description: 'Package delayed due to weather',
-            location: 'Atlanta, GA'
-          }
-        ]
+            location: 'Atlanta, GA',
+          },
+        ],
       };
 
       const result = await delayDetectionService.checkForDelays(trackingInfo);
@@ -82,7 +82,7 @@ describe('DelayDetectionService', () => {
       expect(result.delayReason).toBe('DATE_DELAY'); // DATE_DELAY is detected first
     });
 
-    it('should detect ETA exceeded delay', async () => {
+    it('should detect ETA exceeded delay', async() => {
       const pastDate = new Date();
       pastDate.setDate(pastDate.getDate() - 2); // 2 days ago
 
@@ -92,7 +92,7 @@ describe('DelayDetectionService', () => {
         status: 'IN_TRANSIT',
         estimatedDeliveryDate: pastDate.toISOString().split('T')[0],
         originalEstimatedDeliveryDate: pastDate.toISOString().split('T')[0],
-        events: []
+        events: [],
       };
 
       const result = await delayDetectionService.checkForDelays(trackingInfo);
@@ -102,12 +102,12 @@ describe('DelayDetectionService', () => {
       expect(result.delayDays).toBeGreaterThan(0);
     });
 
-    it('should handle missing delivery dates gracefully', async () => {
+    it('should handle missing delivery dates gracefully', async() => {
       const trackingInfo: TrackingInfo = {
         trackingNumber: '1Z999AA1234567890',
         carrierCode: 'ups',
         status: 'IN_TRANSIT',
-        events: []
+        events: [],
       };
 
       const result = await delayDetectionService.checkForDelays(trackingInfo);
@@ -123,7 +123,7 @@ describe('DelayDetectionService', () => {
       expect(delayDetectionService.getDelayThreshold()).toBe(3);
     });
 
-    it('should respect delay threshold when checking delays', async () => {
+    it('should respect delay threshold when checking delays', async() => {
       delayDetectionService.setDelayThreshold(3);
 
       const trackingInfo: TrackingInfo = {
@@ -132,7 +132,7 @@ describe('DelayDetectionService', () => {
         status: 'IN_TRANSIT',
         estimatedDeliveryDate: '2024-02-12',
         originalEstimatedDeliveryDate: '2024-02-10',
-        events: []
+        events: [],
       };
 
       const result = await delayDetectionService.checkForDelays(trackingInfo);

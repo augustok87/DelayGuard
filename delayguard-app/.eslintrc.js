@@ -118,7 +118,9 @@ module.exports = {
     'node_modules/',
     'dist/',
     'coverage/',
+    'public/',
     '*.config.js',
     '*.config.ts',
+    'scripts/',
   ],
 };

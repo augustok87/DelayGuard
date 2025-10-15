@@ -23,8 +23,8 @@ DelayGuard is a **functional Shopify app** for delay detection and customer noti
 
 ### 🧪 **Testing Infrastructure**
 - ✅ **Test Framework**: Jest with React Testing Library
-- ✅ **Test Coverage**: 46.91% statements, 44.86% branches
-- ✅ **Test Results**: 687 passing tests, 60 failing
+- ⚠️ **Test Coverage**: 53% statements, 41% branches (MinimalApp component)
+- ⚠️ **Test Results**: 12 passing tests, 13 failing (MinimalApp component)
 - ✅ **Test Types**: Unit, integration, and component tests
 
 ## ⚠️ **CURRENT LIMITATIONS**

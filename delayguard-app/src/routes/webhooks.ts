@@ -17,7 +17,7 @@ function verifyWebhook(data: string, hmac: string): boolean {
 }
 
 // Webhook handler for orders/updated
-router.post('/orders/updated', async (ctx) => {
+router.post('/orders/updated', async(ctx) => {
   const hmac = ctx.get('X-Shopify-Hmac-Sha256');
   const body = ctx.request.rawBody || JSON.stringify(ctx.request.body);
   const shop = ctx.get('X-Shopify-Shop-Domain');
@@ -42,7 +42,7 @@ router.post('/orders/updated', async (ctx) => {
 });
 
 // Webhook handler for fulfillments/updated
-router.post('/fulfillments/updated', async (ctx) => {
+router.post('/fulfillments/updated', async(ctx) => {
   const hmac = ctx.get('X-Shopify-Hmac-Sha256');
   const body = ctx.request.rawBody || JSON.stringify(ctx.request.body);
   const shop = ctx.get('X-Shopify-Shop-Domain');
@@ -67,7 +67,7 @@ router.post('/fulfillments/updated', async (ctx) => {
 });
 
 // Webhook handler for orders/paid
-router.post('/orders/paid', async (ctx) => {
+router.post('/orders/paid', async(ctx) => {
   const hmac = ctx.get('X-Shopify-Hmac-Sha256');
   const body = ctx.request.rawBody || JSON.stringify(ctx.request.body);
   const shop = ctx.get('X-Shopify-Shop-Domain');
@@ -96,7 +96,7 @@ async function processOrderUpdate(shopDomain: string, orderData: any): Promise<v
     // Get shop ID
     const shopResult = await query(
       'SELECT id FROM shops WHERE shop_domain = $1',
-      [shopDomain]
+      [shopDomain],
     );
 
     if (shopResult.rows.length === 0) {
@@ -134,13 +134,13 @@ async function processOrderUpdate(shopDomain: string, orderData: any): Promise<v
         : orderData.customer?.first_name || 'Unknown',
       orderData.customer?.email,
       orderData.customer?.phone,
-      orderData.fulfillment_status || 'unfulfilled'
+      orderData.fulfillment_status || 'unfulfilled',
     ]);
 
     // Get the order ID
     const orderResult = await query(
       'SELECT id FROM orders WHERE shop_id = $1 AND shopify_order_id = $2',
-      [shopId, orderData.id.toString()]
+      [shopId, orderData.id.toString()],
     );
 
     const orderId = orderResult.rows[0].id;
@@ -165,7 +165,7 @@ async function processFulfillmentUpdate(shopDomain: string, fulfillmentData: any
     // Get shop ID
     const shopResult = await query(
       'SELECT id FROM shops WHERE shop_domain = $1',
-      [shopDomain]
+      [shopDomain],
     );
 
     if (shopResult.rows.length === 0) {
@@ -178,7 +178,7 @@ async function processFulfillmentUpdate(shopDomain: string, fulfillmentData: any
     // Get order ID
     const orderResult = await query(
       'SELECT id FROM orders WHERE shop_id = $1 AND shopify_order_id = $2',
-      [shopId, fulfillmentData.order_id.toString()]
+      [shopId, fulfillmentData.order_id.toString()],
     );
 
     if (orderResult.rows.length === 0) {
@@ -204,7 +204,7 @@ async function processOrderPaid(shopDomain: string, orderData: any): Promise<voi
     // Get shop ID
     const shopResult = await query(
       'SELECT id FROM shops WHERE shop_domain = $1',
-      [shopDomain]
+      [shopDomain],
     );
 
     if (shopResult.rows.length === 0) {
@@ -217,7 +217,7 @@ async function processOrderPaid(shopDomain: string, orderData: any): Promise<voi
     // Update order status to paid
     await query(
       'UPDATE orders SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE shop_id = $2 AND shopify_order_id = $3',
-      ['paid', shopId, orderData.id.toString()]
+      ['paid', shopId, orderData.id.toString()],
     );
 
     console.log(`✅ Order ${orderData.name} marked as paid`);
@@ -253,14 +253,14 @@ async function processFulfillment(orderId: number, fulfillmentData: any): Promis
       fulfillmentData.tracking_info?.number,
       fulfillmentData.tracking_info?.company,
       fulfillmentData.tracking_info?.url,
-      fulfillmentData.status || 'pending'
+      fulfillmentData.status || 'pending',
     ]);
 
     // If tracking info exists, add delay check job
     if (fulfillmentData.tracking_info?.number && fulfillmentData.tracking_info?.company) {
       const shopResult = await query(
         'SELECT shop_domain FROM shops s JOIN orders o ON s.id = o.shop_id WHERE o.id = $1',
-        [orderId]
+        [orderId],
       );
 
       if (shopResult.rows.length > 0) {
@@ -268,7 +268,7 @@ async function processFulfillment(orderId: number, fulfillmentData: any): Promis
           orderId,
           trackingNumber: fulfillmentData.tracking_info.number,
           carrierCode: fulfillmentData.tracking_info.company,
-          shopDomain: shopResult.rows[0].shop_domain
+          shopDomain: shopResult.rows[0].shop_domain,
         });
 
         console.log(`🔍 Delay check job added for tracking ${fulfillmentData.tracking_info.number}`);

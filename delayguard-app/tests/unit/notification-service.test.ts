@@ -18,21 +18,21 @@ describe('Notification Service', () => {
   });
 
   describe('sendDelayNotification', () => {
-    it('should send email notification when email is provided', async () => {
+    it('should send email notification when email is provided', async() => {
       const orderInfo = {
         id: 'order-123',
         orderNumber: '1001',
         customerName: 'John Doe',
         customerEmail: 'test@example.com',
         shopDomain: 'test-shop.myshopify.com',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       const delayDetails = {
         estimatedDelivery: '2024-02-15',
         trackingNumber: '1Z999AA1234567890',
         trackingUrl: 'https://tracking.example.com',
         delayDays: 5,
-        delayReason: 'DATE_DELAY'
+        delayReason: 'DATE_DELAY',
       };
 
       await notificationService.sendDelayNotification(orderInfo, delayDetails);
@@ -40,25 +40,25 @@ describe('Notification Service', () => {
       expect(mockEmailService.sendDelayEmail).toHaveBeenCalledWith(
         'test@example.com',
         orderInfo,
-        delayDetails
+        delayDetails,
       );
     });
 
-    it('should send SMS notification when phone is provided', async () => {
+    it('should send SMS notification when phone is provided', async() => {
       const orderInfo = {
         id: 'order-123',
         orderNumber: '1001',
         customerName: 'John Doe',
         customerPhone: '+1234567890',
         shopDomain: 'test-shop.myshopify.com',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       const delayDetails = {
         estimatedDelivery: '2024-02-15',
         trackingNumber: '1Z999AA1234567890',
         trackingUrl: 'https://tracking.example.com',
         delayDays: 5,
-        delayReason: 'DATE_DELAY'
+        delayReason: 'DATE_DELAY',
       };
 
       await notificationService.sendDelayNotification(orderInfo, delayDetails);
@@ -66,11 +66,11 @@ describe('Notification Service', () => {
       expect(mockSMSService.sendDelaySMS).toHaveBeenCalledWith(
         '+1234567890',
         orderInfo,
-        delayDetails
+        delayDetails,
       );
     });
 
-    it('should send both email and SMS when both are provided', async () => {
+    it('should send both email and SMS when both are provided', async() => {
       const orderInfo = {
         id: 'order-123',
         orderNumber: '1001',
@@ -78,14 +78,14 @@ describe('Notification Service', () => {
         customerEmail: 'test@example.com',
         customerPhone: '+1234567890',
         shopDomain: 'test-shop.myshopify.com',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       const delayDetails = {
         estimatedDelivery: '2024-02-15',
         trackingNumber: '1Z999AA1234567890',
         trackingUrl: 'https://tracking.example.com',
         delayDays: 5,
-        delayReason: 'DATE_DELAY'
+        delayReason: 'DATE_DELAY',
       };
 
       await notificationService.sendDelayNotification(orderInfo, delayDetails);
@@ -94,24 +94,24 @@ describe('Notification Service', () => {
       expect(mockSMSService.sendDelaySMS).toHaveBeenCalled();
     });
 
-    it('should handle missing contact information gracefully', async () => {
+    it('should handle missing contact information gracefully', async() => {
       const orderInfo = {
         id: 'order-123',
         orderNumber: '1001',
         customerName: 'John Doe',
         shopDomain: 'test-shop.myshopify.com',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       const delayDetails = {
         estimatedDelivery: '2024-02-15',
         trackingNumber: '1Z999AA1234567890',
         trackingUrl: 'https://tracking.example.com',
         delayDays: 5,
-        delayReason: 'DATE_DELAY'
+        delayReason: 'DATE_DELAY',
       };
 
       await expect(
-        notificationService.sendDelayNotification(orderInfo, delayDetails)
+        notificationService.sendDelayNotification(orderInfo, delayDetails),
       ).rejects.toThrow('No contact information provided');
     });
   });

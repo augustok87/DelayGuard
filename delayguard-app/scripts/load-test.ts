@@ -44,7 +44,7 @@ class LoadTester {
 
     // Create workers for each endpoint
     const workers = this.config.endpoints.map(endpoint => 
-      this.createWorker(endpoint, endTime)
+      this.createWorker(endpoint, endTime),
     );
 
     // Wait for all workers to complete
@@ -56,7 +56,7 @@ class LoadTester {
 
   private createWorker(endpoint: any, endTime: number): Promise<void> {
     return new Promise((resolve) => {
-      const worker = async () => {
+      const worker = async() => {
         const endpointResults: TestResult = {
           endpoint: endpoint.path,
           totalRequests: 0,
@@ -66,7 +66,7 @@ class LoadTester {
           minResponseTime: Infinity,
           maxResponseTime: 0,
           requestsPerSecond: 0,
-          errors: []
+          errors: [],
         };
 
         const responseTimes: number[] = [];
@@ -107,7 +107,7 @@ class LoadTester {
         // Convert error counts to array
         endpointResults.errors = Array.from(errorCounts.entries()).map(([message, count]) => ({
           message,
-          count
+          count,
         }));
 
         this.results.set(endpoint.path, endpointResults);
@@ -129,9 +129,9 @@ class LoadTester {
       data: endpoint.data,
       headers: {
         'Content-Type': 'application/json',
-        ...endpoint.headers
+        ...endpoint.headers,
       },
-      timeout: 10000 // 10 second timeout
+      timeout: 10000, // 10 second timeout
     };
 
     const response = await axios(config);
@@ -185,8 +185,8 @@ const loadTestConfigs = {
     endpoints: [
       { path: '/health', method: 'GET' },
       { path: '/api/settings', method: 'GET' },
-      { path: '/api/stats', method: 'GET' }
-    ]
+      { path: '/api/stats', method: 'GET' },
+    ],
   },
 
   // Webhook load test
@@ -204,17 +204,17 @@ const loadTestConfigs = {
           customer: {
             first_name: 'John',
             last_name: 'Doe',
-            email: 'john@example.com'
+            email: 'john@example.com',
           },
           fulfillments: [],
-          fulfillment_status: 'unfulfilled'
+          fulfillment_status: 'unfulfilled',
         },
         headers: {
           'X-Shopify-Shop-Domain': 'test-shop.myshopify.com',
-          'X-Shopify-Hmac-Sha256': 'test-hmac'
-        }
-      }
-    ]
+          'X-Shopify-Hmac-Sha256': 'test-hmac',
+        },
+      },
+    ],
   },
 
   // Stress test
@@ -231,11 +231,11 @@ const loadTestConfigs = {
         method: 'POST',
         data: {
           trackingNumber: '1Z999AA1234567890',
-          carrierCode: 'ups'
-        }
-      }
-    ]
-  }
+          carrierCode: 'ups',
+        },
+      },
+    ],
+  },
 };
 
 async function runLoadTest(testName: keyof typeof loadTestConfigs) {

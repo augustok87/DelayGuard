@@ -2,7 +2,7 @@ import appReducer, {
   setShop, 
   setLoading, 
   clearError,
-  initializeApp
+  initializeApp,
 } from '../../../src/store/slices/appSlice';
 import { AppState } from '../../../src/types/store';
 

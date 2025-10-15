@@ -53,13 +53,13 @@ try {
       "info": {
         "title": "DelayGuard API",
         "version": "1.0.0",
-        "description": "API for DelayGuard shipping delay notification system"
+        "description": "API for DelayGuard shipping delay notification system",
       },
       "servers": [
         {
           "url": "https://delayguard.vercel.app",
-          "description": "Production server"
-        }
+          "description": "Production server",
+        },
       ],
       "paths": {
         "/api/settings": {
@@ -67,22 +67,22 @@ try {
             "summary": "Get app settings",
             "responses": {
               "200": {
-                "description": "Settings retrieved successfully"
-              }
-            }
-          }
+                "description": "Settings retrieved successfully",
+              },
+            },
+          },
         },
         "/api/alerts": {
           "get": {
             "summary": "Get delay alerts",
             "responses": {
               "200": {
-                "description": "Alerts retrieved successfully"
-              }
-            }
-          }
-        }
-      }
+                "description": "Alerts retrieved successfully",
+              },
+            },
+          },
+        },
+      },
     };
     fs.writeFileSync(path.join(apiDir, 'swagger.json'), JSON.stringify(basicApiDoc, null, 2));
     console.log('✅ Basic API documentation created\n');

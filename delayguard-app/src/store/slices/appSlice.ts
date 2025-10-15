@@ -12,7 +12,7 @@ const initialState: AppState = {
 // Async thunks
 export const initializeApp = createAsyncThunk(
   'app/initialize',
-  async (_, { rejectWithValue }) => {
+  async(_, { rejectWithValue }) => {
     try {
       // Simulate API call to get shop info
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -20,12 +20,12 @@ export const initializeApp = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to initialize app');
     }
-  }
+  },
 );
 
 export const connectShopify = createAsyncThunk(
   'app/connectShopify',
-  async (_, { rejectWithValue }) => {
+  async(_, { rejectWithValue }) => {
     try {
       // Simulate OAuth flow
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -33,7 +33,7 @@ export const connectShopify = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to connect to Shopify');
     }
-  }
+  },
 );
 
 // Slice

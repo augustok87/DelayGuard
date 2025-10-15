@@ -20,19 +20,19 @@ describe('MonitoringService', () => {
     mockRedis = {
       status: 'ready',
       setex: jest.fn().mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve('OK'), 5))
+        new Promise(resolve => setTimeout(() => resolve('OK'), 5)),
       ),
       get: jest.fn().mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve(null), 5))
+        new Promise(resolve => setTimeout(() => resolve(null), 5)),
       ),
       info: jest.fn().mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve('connected_clients:1\nused_memory:1024\n'), 5))
+        new Promise(resolve => setTimeout(() => resolve('connected_clients:1\nused_memory:1024\n'), 5)),
       ),
       ping: jest.fn().mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve('PONG'), 5))
+        new Promise(resolve => setTimeout(() => resolve('PONG'), 5)),
       ),
       quit: jest.fn().mockResolvedValue('OK'),
-      disconnect: jest.fn()
+      disconnect: jest.fn(),
     };
 
     mockPool = {
@@ -40,15 +40,15 @@ describe('MonitoringService', () => {
       idleCount: 5,
       waitingCount: 0,
       query: jest.fn().mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ rows: [], rowCount: 0 }), 10))
+        new Promise(resolve => setTimeout(() => resolve({ rows: [], rowCount: 0 }), 10)),
       ),
       connect: jest.fn().mockResolvedValue({
         query: jest.fn().mockImplementation(() => 
-          new Promise(resolve => setTimeout(() => resolve({ rows: [], rowCount: 0 }), 10))
+          new Promise(resolve => setTimeout(() => resolve({ rows: [], rowCount: 0 }), 10)),
         ),
-        release: jest.fn()
+        release: jest.fn(),
       }),
-      end: jest.fn().mockResolvedValue(undefined)
+      end: jest.fn().mockResolvedValue(undefined),
     };
 
     MockedRedis.mockImplementation(() => mockRedis);
@@ -56,14 +56,14 @@ describe('MonitoringService', () => {
 
     mockConfig = {
       redis: { url: 'redis://localhost:6379' },
-      database: { url: 'postgresql://user:password@host:port/database' }
+      database: { url: 'postgresql://user:password@host:port/database' },
     };
 
     monitoringService = new MonitoringService(mockConfig);
   });
 
   describe('Health Checks', () => {
-    it('should perform all health checks', async () => {
+    it('should perform all health checks', async() => {
       const healthChecks = await monitoringService.performHealthChecks();
       
       expect(healthChecks).toHaveLength(6); // Database, Redis, 3 External APIs, Application
@@ -71,11 +71,11 @@ describe('MonitoringService', () => {
         check.name && 
         ['healthy', 'degraded', 'unhealthy'].includes(check.status) &&
         typeof check.responseTime === 'number' &&
-        check.lastChecked instanceof Date
+        check.lastChecked instanceof Date,
       )).toBe(true);
     });
 
-    it('should check database health', async () => {
+    it('should check database health', async() => {
       const healthChecks = await monitoringService.performHealthChecks();
       const dbCheck = healthChecks.find(check => check.name === 'Database');
       
@@ -84,7 +84,7 @@ describe('MonitoringService', () => {
       expect(dbCheck!.responseTime).toBeGreaterThan(0);
     });
 
-    it('should check Redis health', async () => {
+    it('should check Redis health', async() => {
       const healthChecks = await monitoringService.performHealthChecks();
       const redisCheck = healthChecks.find(check => check.name === 'Redis');
       
@@ -93,17 +93,17 @@ describe('MonitoringService', () => {
       expect(redisCheck!.responseTime).toBeGreaterThan(0);
     });
 
-    it('should check external APIs health', async () => {
+    it('should check external APIs health', async() => {
       const healthChecks = await monitoringService.performHealthChecks();
       const apiChecks = healthChecks.filter(check => 
-        ['ShipEngine', 'SendGrid', 'Twilio'].includes(check.name)
+        ['ShipEngine', 'SendGrid', 'Twilio'].includes(check.name),
       );
       
       expect(apiChecks).toHaveLength(3);
       expect(apiChecks.every(check => check.status === 'healthy')).toBe(true);
     });
 
-    it('should check application health', async () => {
+    it('should check application health', async() => {
       const healthChecks = await monitoringService.performHealthChecks();
       const appCheck = healthChecks.find(check => check.name === 'Application');
       
@@ -112,7 +112,7 @@ describe('MonitoringService', () => {
       expect(appCheck!.responseTime).toBeGreaterThan(0);
     });
 
-    it('should handle database connection errors', async () => {
+    it('should handle database connection errors', async() => {
       mockPool.query.mockRejectedValueOnce(new Error('Connection failed'));
       
       const healthChecks = await monitoringService.performHealthChecks();
@@ -122,7 +122,7 @@ describe('MonitoringService', () => {
       expect(dbCheck!.error).toContain('Connection failed');
     });
 
-    it('should handle Redis connection errors', async () => {
+    it('should handle Redis connection errors', async() => {
       mockRedis.ping.mockRejectedValueOnce(new Error('Redis connection failed'));
       
       const healthChecks = await monitoringService.performHealthChecks();
@@ -134,67 +134,67 @@ describe('MonitoringService', () => {
   });
 
   describe('System Metrics Collection', () => {
-    it('should collect system metrics', async () => {
+    it('should collect system metrics', async() => {
       const metrics = await monitoringService.collectSystemMetrics();
       
       expect(metrics).toMatchObject({
         timestamp: expect.any(Date),
         cpu: {
           usage: expect.any(Number),
-          loadAverage: expect.arrayContaining([expect.any(Number)])
+          loadAverage: expect.arrayContaining([expect.any(Number)]),
         },
         memory: {
           used: expect.any(Number),
           free: expect.any(Number),
           total: expect.any(Number),
-          percentage: expect.any(Number)
+          percentage: expect.any(Number),
         },
         database: {
           connections: {
             total: expect.any(Number),
             idle: expect.any(Number),
-            active: expect.any(Number)
+            active: expect.any(Number),
           },
-          queryTime: expect.any(Number)
+          queryTime: expect.any(Number),
         },
         redis: {
           connected: expect.any(Boolean),
           memory: {
             used: expect.any(Number),
-            peak: expect.any(Number)
+            peak: expect.any(Number),
           },
           operations: {
             commands: expect.any(Number),
-            keyspace: expect.any(Number)
-          }
+            keyspace: expect.any(Number),
+          },
         },
         application: {
           uptime: expect.any(Number),
           requests: {
             total: expect.any(Number),
             errors: expect.any(Number),
-            successRate: expect.any(Number)
+            successRate: expect.any(Number),
           },
           responseTime: {
             average: expect.any(Number),
             p95: expect.any(Number),
-            p99: expect.any(Number)
-          }
-        }
+            p99: expect.any(Number),
+          },
+        },
       });
     });
 
-    it('should store metrics in Redis', async () => {
+    it('should store metrics in Redis', async() => {
       await monitoringService.collectSystemMetrics();
       
       expect(mockRedis.setex).toHaveBeenCalledWith(
         expect.stringMatching(/^metrics:system:\d+$/),
         3600,
-        expect.any(String)
+        expect.any(String),
       );
     });
 
-    it('should limit metrics history', async () => {
+    it('should limit metrics history', async() => {
       // Collect more metrics than the limit (reduced for performance)
       for (let i = 0; i < 11; i++) {
         await monitoringService.collectSystemMetrics();
@@ -205,7 +205,7 @@ describe('MonitoringService', () => {
       expect(mockRedis.setex).toHaveBeenCalledTimes(11);
     });
 
-    it('should handle Redis storage errors gracefully', async () => {
+    it('should handle Redis storage errors gracefully', async() => {
       mockRedis.setex.mockRejectedValueOnce(new Error('Redis storage failed'));
       
       // Should not throw an error
@@ -214,7 +214,7 @@ describe('MonitoringService', () => {
   });
 
   describe('Alert Management', () => {
-    it('should check alerts with rules', async () => {
+    it('should check alerts with rules', async() => {
       // Mock alert rules
       const mockRules: AlertRule[] = [
         {
@@ -226,8 +226,8 @@ describe('MonitoringService', () => {
           duration: 300,
           severity: 'high',
           enabled: true,
-          channels: ['email', 'slack']
-        }
+          channels: ['email', 'slack'],
+        },
       ];
 
       // Mock getAlertRules method
@@ -242,11 +242,11 @@ describe('MonitoringService', () => {
         severity: 'high',
         value: 90,
         threshold: 80,
-        resolved: false
+        resolved: false,
       });
     });
 
-    it('should not create duplicate alerts', async () => {
+    it('should not create duplicate alerts', async() => {
       const mockRules: AlertRule[] = [
         {
           id: 'cpu-high',
@@ -257,8 +257,8 @@ describe('MonitoringService', () => {
           duration: 300,
           severity: 'high',
           enabled: true,
-          channels: ['email']
-        }
+          channels: ['email'],
+        },
       ];
 
       jest.spyOn(monitoringService as any, 'getAlertRules').mockResolvedValue(mockRules);
@@ -272,7 +272,7 @@ describe('MonitoringService', () => {
       expect(alerts2.length).toBe(0); // No duplicate alerts
     });
 
-    it('should skip disabled rules', async () => {
+    it('should skip disabled rules', async() => {
       const mockRules: AlertRule[] = [
         {
           id: 'cpu-high',
@@ -283,8 +283,8 @@ describe('MonitoringService', () => {
           duration: 300,
           severity: 'high',
           enabled: false, // Disabled
-          channels: ['email']
-        }
+          channels: ['email'],
+        },
       ];
 
       jest.spyOn(monitoringService as any, 'getAlertRules').mockResolvedValue(mockRules);
@@ -294,7 +294,7 @@ describe('MonitoringService', () => {
       expect(alerts).toHaveLength(0);
     });
 
-    it('should handle missing metric values', async () => {
+    it('should handle missing metric values', async() => {
       const mockRules: AlertRule[] = [
         {
           id: 'cpu-high',
@@ -305,8 +305,8 @@ describe('MonitoringService', () => {
           duration: 300,
           severity: 'high',
           enabled: true,
-          channels: ['email']
-        }
+          channels: ['email'],
+        },
       ];
 
       jest.spyOn(monitoringService as any, 'getAlertRules').mockResolvedValue(mockRules);
@@ -329,7 +329,7 @@ describe('MonitoringService', () => {
         duration: 300,
         severity: 'high',
         enabled: true,
-        channels: ['email']
+        channels: ['email'],
       };
 
       const evaluateRule = (monitoringService as any).evaluateAlertRule.bind(monitoringService);
@@ -349,7 +349,7 @@ describe('MonitoringService', () => {
         duration: 300,
         severity: 'high',
         enabled: true,
-        channels: ['email']
+        channels: ['email'],
       };
 
       const evaluateRule = (monitoringService as any).evaluateAlertRule.bind(monitoringService);
@@ -369,7 +369,7 @@ describe('MonitoringService', () => {
         duration: 300,
         severity: 'high',
         enabled: true,
-        channels: ['email']
+        channels: ['email'],
       };
 
       const evaluateRule = (monitoringService as any).evaluateAlertRule.bind(monitoringService);
@@ -388,7 +388,7 @@ describe('MonitoringService', () => {
         duration: 300,
         severity: 'high',
         enabled: true,
-        channels: ['email']
+        channels: ['email'],
       };
 
       const evaluateRule = (monitoringService as any).evaluateAlertRule.bind(monitoringService);
@@ -408,7 +408,7 @@ describe('MonitoringService', () => {
         duration: 300,
         severity: 'high',
         enabled: true,
-        channels: ['email']
+        channels: ['email'],
       };
 
       const evaluateRule = (monitoringService as any).evaluateAlertRule.bind(monitoringService);
@@ -420,27 +420,27 @@ describe('MonitoringService', () => {
   });
 
   describe('Database Statistics', () => {
-    it('should get database connection stats', async () => {
+    it('should get database connection stats', async() => {
       const stats = await (monitoringService as any).getDatabaseStats();
       
       expect(stats).toMatchObject({
         total: expect.any(Number),
         idle: expect.any(Number),
-        active: expect.any(Number)
+        active: expect.any(Number),
       });
     });
 
-    it('should measure database query time', async () => {
+    it('should measure database query time', async() => {
       const queryTime = await (monitoringService as any).measureDatabaseQueryTime();
       
       expect(typeof queryTime).toBe('number');
       expect(queryTime).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle database errors gracefully', async () => {
+    it('should handle database errors gracefully', async() => {
       // Mock pool properties to throw an error
       Object.defineProperty(mockPool, 'totalCount', {
-        get: () => { throw new Error('Database error'); }
+        get: () => { throw new Error('Database error'); },
       });
       
       const stats = await (monitoringService as any).getDatabaseStats();
@@ -448,28 +448,28 @@ describe('MonitoringService', () => {
       expect(stats).toMatchObject({
         total: 0,
         idle: 0,
-        active: 0
+        active: 0,
       });
     });
   });
 
   describe('Redis Statistics', () => {
-    it('should get Redis stats', async () => {
+    it('should get Redis stats', async() => {
       const stats = await (monitoringService as any).getRedisStats();
       
       expect(stats).toMatchObject({
         memory: {
           used: expect.any(Number),
-          peak: expect.any(Number)
+          peak: expect.any(Number),
         },
         operations: {
           commands: expect.any(Number),
-          keyspace: expect.any(Number)
-        }
+          keyspace: expect.any(Number),
+        },
       });
     });
 
-    it('should handle Redis errors gracefully', async () => {
+    it('should handle Redis errors gracefully', async() => {
       mockRedis.info.mockRejectedValueOnce(new Error('Redis error'));
       
       const stats = await (monitoringService as any).getRedisStats();
@@ -477,37 +477,37 @@ describe('MonitoringService', () => {
       expect(stats).toMatchObject({
         memory: {
           used: 0,
-          peak: 0
+          peak: 0,
         },
         operations: {
           commands: 0,
-          keyspace: 0
-        }
+          keyspace: 0,
+        },
       });
     });
   });
 
   describe('Application Statistics', () => {
-    it('should get application stats', async () => {
+    it('should get application stats', async() => {
       const stats = await (monitoringService as any).getApplicationStats();
       
       expect(stats).toMatchObject({
         requests: {
           total: expect.any(Number),
           errors: expect.any(Number),
-          successRate: expect.any(Number)
+          successRate: expect.any(Number),
         },
         responseTime: {
           average: expect.any(Number),
           p95: expect.any(Number),
-          p99: expect.any(Number)
-        }
+          p99: expect.any(Number),
+        },
       });
     });
   });
 
   describe('Metric Value Retrieval', () => {
-    it('should get metric values from current metrics', async () => {
+    it('should get metric values from current metrics', async() => {
       // First collect some metrics
       await monitoringService.collectSystemMetrics();
       
@@ -518,13 +518,13 @@ describe('MonitoringService', () => {
       expect(typeof memoryUsed).toBe('number');
     });
 
-    it('should return null for unknown metrics', async () => {
+    it('should return null for unknown metrics', async() => {
       const value = await (monitoringService as any).getMetricValue('unknown.metric');
       
       expect(value).toBeNull();
     });
 
-    it('should handle nested metric paths', async () => {
+    it('should handle nested metric paths', async() => {
       await monitoringService.collectSystemMetrics();
       
       const dbTotal = await (monitoringService as any).getMetricValue('database.connections.total');
@@ -536,7 +536,7 @@ describe('MonitoringService', () => {
   });
 
   describe('Alert Rules Management', () => {
-    it('should get alert rules from database', async () => {
+    it('should get alert rules from database', async() => {
       const mockRules = [
         {
           id: 'cpu-high',
@@ -547,24 +547,24 @@ describe('MonitoringService', () => {
           duration: 300,
           severity: 'high',
           enabled: true,
-          channels: ['email']
-        }
+          channels: ['email'],
+        },
       ];
 
       mockPool.query.mockResolvedValueOnce({
         rows: mockRules,
-        rowCount: 1
+        rowCount: 1,
       });
 
       const rules = await (monitoringService as any).getAlertRules();
       
       expect(rules).toEqual(mockRules);
       expect(mockPool.query).toHaveBeenCalledWith(
-        'SELECT * FROM alert_rules WHERE enabled = true ORDER BY severity DESC'
+        'SELECT * FROM alert_rules WHERE enabled = true ORDER BY severity DESC',
       );
     });
 
-    it('should handle database errors when getting rules', async () => {
+    it('should handle database errors when getting rules', async() => {
       mockPool.query.mockRejectedValueOnce(new Error('Database error'));
       
       const rules = await (monitoringService as any).getAlertRules();
@@ -574,14 +574,14 @@ describe('MonitoringService', () => {
   });
 
   describe('Cleanup', () => {
-    it('should close resources', async () => {
+    it('should close resources', async() => {
       await monitoringService.close();
       
       expect(mockRedis.quit).toHaveBeenCalled();
       expect(mockPool.end).toHaveBeenCalled();
     });
 
-    it('should handle close errors gracefully', async () => {
+    it('should handle close errors gracefully', async() => {
       mockRedis.quit.mockRejectedValueOnce(new Error('Redis quit failed'));
       mockPool.end.mockRejectedValueOnce(new Error('Pool end failed'));
       

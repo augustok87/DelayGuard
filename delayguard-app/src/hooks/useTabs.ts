@@ -34,6 +34,6 @@ export const useTabs = () => {
     nextTab,
     previousTab,
     goToFirstTab,
-    goToLastTab
+    goToLastTab,
   };
 };

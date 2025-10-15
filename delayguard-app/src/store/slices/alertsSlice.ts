@@ -60,7 +60,7 @@ const mockAlerts: DelayAlert[] = [
 // Async thunks
 export const fetchAlerts = createAsyncThunk(
   'alerts/fetchAlerts',
-  async (_, { rejectWithValue }) => {
+  async(_, { rejectWithValue }) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -68,12 +68,12 @@ export const fetchAlerts = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to fetch alerts');
     }
-  }
+  },
 );
 
 export const updateAlert = createAsyncThunk(
   'alerts/updateAlert',
-  async ({ id, updates }: { id: string; updates: Partial<DelayAlert> }, { rejectWithValue }) => {
+  async({ id, updates }: { id: string; updates: Partial<DelayAlert> }, { rejectWithValue }) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -81,12 +81,12 @@ export const updateAlert = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to update alert');
     }
-  }
+  },
 );
 
 export const deleteAlert = createAsyncThunk(
   'alerts/deleteAlert',
-  async (id: string, { rejectWithValue }) => {
+  async(id: string, { rejectWithValue }) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -94,7 +94,7 @@ export const deleteAlert = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Failed to delete alert');
     }
-  }
+  },
 );
 
 // Slice

@@ -19,7 +19,7 @@ const ButtonComponent: React.FC<ButtonProps> = ({
     styles[size],
     loading && styles.loading,
     disabled && styles.disabled,
-    className
+    className,
   ].filter(Boolean).join(' ');
 
   return (

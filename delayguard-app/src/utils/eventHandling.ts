@@ -15,7 +15,7 @@ export function createSimpleEventHandler(
   options: {
     preventDefault?: boolean;
     stopPropagation?: boolean;
-  } = {}
+  } = {},
 ) {
   const { preventDefault = false, stopPropagation = false } = options;
 
@@ -46,7 +46,7 @@ export class EventListenerManager {
     element: HTMLElement,
     eventType: string,
     handler: EventListener,
-    options?: AddEventListenerOptions
+    options?: AddEventListenerOptions,
   ) {
     if (!this.listeners.has(element)) {
       this.listeners.set(element, new Map());
@@ -112,9 +112,9 @@ export const EventUtils = {
   /**
    * Debounce function for event handlers
    */
-  debounce<T extends (...args: any[]) => any>(
+  debounce<T extends(...args: any[]) => any>(
     func: T,
-    wait: number
+    wait: number,
   ): (...args: Parameters<T>) => void {
     let timeout: NodeJS.Timeout;
     return (...args: Parameters<T>) => {
@@ -126,9 +126,9 @@ export const EventUtils = {
   /**
    * Throttle function for event handlers
    */
-  throttle<T extends (...args: any[]) => any>(
+  throttle<T extends(...args: any[]) => any>(
     func: T,
-    limit: number
+    limit: number,
   ): (...args: Parameters<T>) => void {
     let inThrottle: boolean;
     return (...args: Parameters<T>) => {

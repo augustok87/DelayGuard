@@ -16,8 +16,8 @@ describe('OptimizedDatabase', () => {
     
     mockConfig = {
       database: {
-        url: 'postgresql://test:test@localhost:5432/testdb'
-      }
+        url: 'postgresql://test:test@localhost:5432/testdb',
+      },
     };
 
     // Mock pool client
@@ -25,7 +25,7 @@ describe('OptimizedDatabase', () => {
       query: jest.fn(),
       release: jest.fn(),
       connect: jest.fn(),
-      end: jest.fn()
+      end: jest.fn(),
     } as any;
 
     // Mock pool
@@ -35,7 +35,7 @@ describe('OptimizedDatabase', () => {
       totalCount: 10,
       idleCount: 5,
       waitingCount: 2,
-      on: jest.fn()
+      on: jest.fn(),
     } as any;
 
     MockedPool.mockImplementation(() => mockPool);
@@ -59,7 +59,7 @@ describe('OptimizedDatabase', () => {
         query_timeout: 10000,
         application_name: 'delayguard',
         keepAlive: true,
-        keepAliveInitialDelayMillis: 0
+        keepAliveInitialDelayMillis: 0,
       });
     });
 
@@ -70,13 +70,13 @@ describe('OptimizedDatabase', () => {
   });
 
   describe('Query Execution', () => {
-    it('should execute simple queries successfully', async () => {
+    it('should execute simple queries successfully', async() => {
       const mockResult: QueryResult = {
         rows: [{ id: 1, name: 'test' }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -90,13 +90,13 @@ describe('OptimizedDatabase', () => {
       expect(result).toEqual(mockResult);
     });
 
-    it('should execute queries with parameters', async () => {
+    it('should execute queries with parameters', async() => {
       const mockResult: QueryResult = {
         rows: [{ id: 1 }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -107,13 +107,13 @@ describe('OptimizedDatabase', () => {
       expect(result).toEqual(mockResult);
     });
 
-    it('should handle query timeouts', async () => {
+    it('should handle query timeouts', async() => {
       const mockResult: QueryResult = {
         rows: [],
         rowCount: 0,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -124,17 +124,17 @@ describe('OptimizedDatabase', () => {
       expect(result).toEqual(mockResult);
     });
 
-    it('should log slow queries', async () => {
+    it('should log slow queries', async() => {
       const mockResult: QueryResult = {
         rows: [],
         rowCount: 0,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       // Mock slow query by delaying the response
-      mockClient.query.mockImplementation(async () => {
+      mockClient.query.mockImplementation(async() => {
         await new Promise(resolve => setTimeout(resolve, 1100)); // 1.1 seconds
         return mockResult;
       });
@@ -144,7 +144,7 @@ describe('OptimizedDatabase', () => {
       await database.query('SELECT * FROM slow_table');
       
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringMatching(/Slow query detected: \d+ms - SELECT \* FROM slow_table\.\.\./)
+        expect.stringMatching(/Slow query detected: \d+ms - SELECT \* FROM slow_table\.\.\./),
       );
       
       consoleSpy.mockRestore();
@@ -152,13 +152,13 @@ describe('OptimizedDatabase', () => {
   });
 
   describe('Query Retry Logic', () => {
-    it('should retry on transient errors', async () => {
+    it('should retry on transient errors', async() => {
       const mockResult: QueryResult = {
         rows: [],
         rowCount: 0,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       // Mock the timeout setting to succeed, then fail twice, then succeed
@@ -174,7 +174,7 @@ describe('OptimizedDatabase', () => {
       expect(result).toEqual(mockResult);
     });
 
-    it('should not retry on non-retryable errors', async () => {
+    it('should not retry on non-retryable errors', async() => {
       const syntaxError = new Error('syntax error at or near "INVALID"');
       
       mockClient.query.mockRejectedValue(syntaxError);
@@ -183,13 +183,13 @@ describe('OptimizedDatabase', () => {
       expect(mockClient.query).toHaveBeenCalledTimes(1); // No retries
     });
 
-    it('should use exponential backoff for retries', async () => {
+    it('should use exponential backoff for retries', async() => {
       const mockResult: QueryResult = {
         rows: [],
         rowCount: 0,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query
@@ -205,7 +205,7 @@ describe('OptimizedDatabase', () => {
       expect(duration).toBeGreaterThan(3000);
     });
 
-    it('should throw error after all retries exhausted', async () => {
+    it('should throw error after all retries exhausted', async() => {
       const persistentError = new Error('Persistent connection error');
       
       mockClient.query.mockRejectedValue(persistentError);
@@ -216,13 +216,13 @@ describe('OptimizedDatabase', () => {
   });
 
   describe('Query Caching', () => {
-    it('should cache query results when enabled', async () => {
+    it('should cache query results when enabled', async() => {
       const mockResult: QueryResult = {
         rows: [{ id: 1, name: 'cached' }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -238,13 +238,13 @@ describe('OptimizedDatabase', () => {
       expect(result2).toEqual(result1);
     });
 
-    it('should not cache when cache is disabled', async () => {
+    it('should not cache when cache is disabled', async() => {
       const mockResult: QueryResult = {
         rows: [{ id: 1 }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -255,13 +255,13 @@ describe('OptimizedDatabase', () => {
       expect(mockClient.query).toHaveBeenCalledTimes(4); // 2 timeout + 2 query calls
     });
 
-    it('should respect cache TTL', async () => {
+    it('should respect cache TTL', async() => {
       const mockResult: QueryResult = {
         rows: [{ id: 1 }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -278,13 +278,13 @@ describe('OptimizedDatabase', () => {
       expect(mockClient.query).toHaveBeenCalledTimes(2); // timeout + query
     });
 
-    it('should cleanup cache when full', async () => {
+    it('should cleanup cache when full', async() => {
       const mockResult: QueryResult = {
         rows: [{ id: 1 }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -301,7 +301,7 @@ describe('OptimizedDatabase', () => {
   });
 
   describe('Transactions', () => {
-    it('should execute transactions successfully', async () => {
+    it('should execute transactions successfully', async() => {
       const mockResult = { id: 1, name: 'transaction result' };
       
       mockClient.query
@@ -319,7 +319,7 @@ describe('OptimizedDatabase', () => {
       expect(result).toEqual(mockResult);
     });
 
-    it('should rollback transactions on error', async () => {
+    it('should rollback transactions on error', async() => {
       const transactionError = new Error('Transaction failed');
       
       mockClient.query
@@ -337,10 +337,10 @@ describe('OptimizedDatabase', () => {
   });
 
   describe('Batch Queries', () => {
-    it('should execute batch queries', async () => {
+    it('should execute batch queries', async() => {
       const mockResults = [
         { rows: [{ id: 1 }], rowCount: 1, command: 'SELECT', oid: null, fields: [] },
-        { rows: [{ id: 2 }], rowCount: 1, command: 'SELECT', oid: null, fields: [] }
+        { rows: [{ id: 2 }], rowCount: 1, command: 'SELECT', oid: null, fields: [] },
       ];
 
       mockClient.query
@@ -349,7 +349,7 @@ describe('OptimizedDatabase', () => {
 
       const queries = [
         { text: 'SELECT * FROM table1' },
-        { text: 'SELECT * FROM table2', params: [123] }
+        { text: 'SELECT * FROM table2', params: [123] },
       ];
 
       const results = await database.batchQuery(queries);
@@ -362,37 +362,37 @@ describe('OptimizedDatabase', () => {
   });
 
   describe('Connection Management', () => {
-    it('should get connection from pool', async () => {
+    it('should get connection from pool', async() => {
       const connection = await database.getConnection();
       expect(connection).toBe(mockClient);
       expect(mockPool.connect).toHaveBeenCalled();
     });
 
-    it('should close database connection', async () => {
+    it('should close database connection', async() => {
       await database.close();
       expect(mockPool.end).toHaveBeenCalled();
     });
 
-    it('should get pool statistics', async () => {
+    it('should get pool statistics', async() => {
       const stats = await database.getStats();
       
       expect(stats).toEqual({
         totalCount: 10,
         idleCount: 5,
-        waitingCount: 2
+        waitingCount: 2,
       });
     });
   });
 
   describe('Optimized Query Methods', () => {
-    it('should get shop by domain with caching', async () => {
+    it('should get shop by domain with caching', async() => {
       const mockShop = { id: 1, domain: 'test-shop.myshopify.com' };
       const mockResult: QueryResult = {
         rows: [mockShop],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -401,18 +401,18 @@ describe('OptimizedDatabase', () => {
       
       expect(mockClient.query).toHaveBeenCalledWith(
         'SELECT * FROM shops WHERE shop_domain = $1 LIMIT 1',
-        ['test-shop.myshopify.com']
+        ['test-shop.myshopify.com'],
       );
       expect(result).toEqual(mockShop);
     });
 
-    it('should return null when shop not found', async () => {
+    it('should return null when shop not found', async() => {
       const mockResult: QueryResult = {
         rows: [],
         rowCount: 0,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -421,14 +421,14 @@ describe('OptimizedDatabase', () => {
       expect(result).toBeNull();
     });
 
-    it('should get shop settings', async () => {
+    it('should get shop settings', async() => {
       const mockSettings = { id: 1, shop_id: 123, delay_threshold: 2 };
       const mockResult: QueryResult = {
         rows: [mockSettings],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -437,22 +437,22 @@ describe('OptimizedDatabase', () => {
       
       expect(mockClient.query).toHaveBeenCalledWith(
         'SELECT * FROM app_settings WHERE shop_id = $1 LIMIT 1',
-        [123]
+        [123],
       );
       expect(result).toEqual(mockSettings);
     });
 
-    it('should get recent orders with joins', async () => {
+    it('should get recent orders with joins', async() => {
       const mockOrders = [
         { id: 1, order_number: '1001', tracking_number: '1Z123', carrier_code: 'ups' },
-        { id: 2, order_number: '1002', tracking_number: '1Z456', carrier_code: 'ups' }
+        { id: 2, order_number: '1002', tracking_number: '1Z456', carrier_code: 'ups' },
       ];
       const mockResult: QueryResult = {
         rows: mockOrders,
         rowCount: 2,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -462,22 +462,22 @@ describe('OptimizedDatabase', () => {
       // Check that the query was called with the expected parameters
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT o.*, f.tracking_number, f.carrier_code, f.status as fulfillment_status'),
-        [123, 10, 0]
+        [123, 10, 0],
       );
       expect(result).toEqual(mockOrders);
     });
 
-    it('should get recent alerts with joins', async () => {
+    it('should get recent alerts with joins', async() => {
       const mockAlerts = [
         { id: 1, order_number: '1001', customer_name: 'John Doe', tracking_number: '1Z123' },
-        { id: 2, order_number: '1002', customer_name: 'Jane Smith', tracking_number: '1Z456' }
+        { id: 2, order_number: '1002', customer_name: 'Jane Smith', tracking_number: '1Z456' },
       ];
       const mockResult: QueryResult = {
         rows: mockAlerts,
         rowCount: 2,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -487,18 +487,18 @@ describe('OptimizedDatabase', () => {
       // Check that the query was called with the expected parameters
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT da.*, o.order_number, o.customer_name, o.customer_email'),
-        [123, 10, 0]
+        [123, 10, 0],
       );
       expect(result).toEqual(mockAlerts);
     });
 
-    it('should get order count', async () => {
+    it('should get order count', async() => {
       const mockResult: QueryResult = {
         rows: [{ count: '42' }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -507,19 +507,19 @@ describe('OptimizedDatabase', () => {
       
       expect(mockClient.query).toHaveBeenCalledWith(
         'SELECT COUNT(*) as count FROM orders WHERE shop_id = $1',
-        [123]
+        [123],
       );
       expect(count).toBe(42);
     });
 
-    it('should get order count with date filter', async () => {
+    it('should get order count with date filter', async() => {
       const startDate = new Date('2024-01-01');
       const mockResult: QueryResult = {
         rows: [{ count: '15' }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -528,18 +528,18 @@ describe('OptimizedDatabase', () => {
       
       expect(mockClient.query).toHaveBeenCalledWith(
         'SELECT COUNT(*) as count FROM orders WHERE shop_id = $1 AND created_at >= $2',
-        [123, startDate]
+        [123, startDate],
       );
       expect(count).toBe(15);
     });
 
-    it('should get alert count', async () => {
+    it('should get alert count', async() => {
       const mockResult: QueryResult = {
         rows: [{ count: '8' }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -548,19 +548,19 @@ describe('OptimizedDatabase', () => {
       
       expect(mockClient.query).toHaveBeenCalledWith(
         'SELECT COUNT(*) as count FROM delay_alerts da JOIN orders o ON da.order_id = o.id WHERE o.shop_id = $1',
-        [123]
+        [123],
       );
       expect(count).toBe(8);
     });
 
-    it('should get alert count with date filter', async () => {
+    it('should get alert count with date filter', async() => {
       const startDate = new Date('2024-01-01');
       const mockResult: QueryResult = {
         rows: [{ count: '3' }],
         rowCount: 1,
         command: 'SELECT',
         oid: 0,
-        fields: []
+        fields: [],
       };
 
       mockClient.query.mockResolvedValue(mockResult);
@@ -569,7 +569,7 @@ describe('OptimizedDatabase', () => {
       
       expect(mockClient.query).toHaveBeenCalledWith(
         'SELECT COUNT(*) as count FROM delay_alerts da JOIN orders o ON da.order_id = o.id WHERE o.shop_id = $1 AND da.created_at >= $2',
-        [123, startDate]
+        [123, startDate],
       );
       expect(count).toBe(3);
     });
@@ -582,7 +582,7 @@ describe('OptimizedDatabase', () => {
         'permission denied for table users',
         'relation does not exist',
         'column does not exist',
-        'duplicate key value violates unique constraint'
+        'duplicate key value violates unique constraint',
       ];
 
       nonRetryableErrors.forEach(errorMessage => {
@@ -597,7 +597,7 @@ describe('OptimizedDatabase', () => {
         'connection timeout',
         'network error',
         'temporary failure',
-        'server unavailable'
+        'server unavailable',
       ];
 
       retryableErrors.forEach(errorMessage => {

@@ -434,7 +434,7 @@ export class SecurityMonitor extends EventEmitter {
       'method': event.method,
       'statusCode': event.statusCode,
       'riskScore': event.riskScore,
-      'shopDomain': event.shopDomain
+      'shopDomain': event.shopDomain,
     };
     
     return fieldMap[field] || event.details[field];
@@ -508,7 +508,7 @@ export class SecurityMonitor extends EventEmitter {
       indicators: this.extractIndicators(event),
       recommendedActions: config.actions || ['Review logs', 'Investigate source'],
       correlationId: event.correlationId,
-      isResolved: false
+      isResolved: false,
     };
 
     this.alerts.set(alert.id, alert);
@@ -580,7 +580,7 @@ export class SecurityMonitor extends EventEmitter {
       topAttackSources: [],
       attackTrends: [],
       responseTime: 0,
-      falsePositiveRate: 0
+      falsePositiveRate: 0,
     };
   }
 
@@ -597,13 +597,13 @@ export class SecurityMonitor extends EventEmitter {
       severity: SecuritySeverity.HIGH,
       conditions: [
         { field: 'type', operator: 'equals', value: SecurityEventType.AUTHENTICATION_FAILURE },
-        { field: 'riskScore', operator: 'greater_than', value: 60 }
+        { field: 'riskScore', operator: 'greater_than', value: 60 },
       ],
       actions: [
         { type: 'alert', config: { title: 'Brute Force Attack Detected' } },
-        { type: 'block_ip', config: { reason: 'Brute force attack', durationMs: 3600000 } }
+        { type: 'block_ip', config: { reason: 'Brute force attack', durationMs: 3600000 } },
       ],
-      cooldownMs: 300000 // 5 minutes
+      cooldownMs: 300000, // 5 minutes
     });
 
     // SQL injection detection
@@ -614,14 +614,14 @@ export class SecurityMonitor extends EventEmitter {
       enabled: true,
       severity: SecuritySeverity.CRITICAL,
       conditions: [
-        { field: 'type', operator: 'equals', value: SecurityEventType.SQL_INJECTION_ATTEMPT }
+        { field: 'type', operator: 'equals', value: SecurityEventType.SQL_INJECTION_ATTEMPT },
       ],
       actions: [
         { type: 'alert', config: { title: 'SQL Injection Attempt Detected' } },
         { type: 'block_ip', config: { reason: 'SQL injection attempt', durationMs: 7200000 } },
-        { type: 'escalate', config: { level: 'critical' } }
+        { type: 'escalate', config: { level: 'critical' } },
       ],
-      cooldownMs: 60000 // 1 minute
+      cooldownMs: 60000, // 1 minute
     });
 
     // XSS detection
@@ -632,13 +632,13 @@ export class SecurityMonitor extends EventEmitter {
       enabled: true,
       severity: SecuritySeverity.HIGH,
       conditions: [
-        { field: 'type', operator: 'equals', value: SecurityEventType.XSS_ATTEMPT }
+        { field: 'type', operator: 'equals', value: SecurityEventType.XSS_ATTEMPT },
       ],
       actions: [
         { type: 'alert', config: { title: 'XSS Attempt Detected' } },
-        { type: 'block_ip', config: { reason: 'XSS attempt', durationMs: 3600000 } }
+        { type: 'block_ip', config: { reason: 'XSS attempt', durationMs: 3600000 } },
       ],
-      cooldownMs: 300000 // 5 minutes
+      cooldownMs: 300000, // 5 minutes
     });
 
     // Rate limit abuse
@@ -650,13 +650,13 @@ export class SecurityMonitor extends EventEmitter {
       severity: SecuritySeverity.MEDIUM,
       conditions: [
         { field: 'type', operator: 'equals', value: SecurityEventType.RATE_LIMIT_EXCEEDED },
-        { field: 'riskScore', operator: 'greater_than', value: 40 }
+        { field: 'riskScore', operator: 'greater_than', value: 40 },
       ],
       actions: [
         { type: 'alert', config: { title: 'Rate Limit Abuse Detected' } },
-        { type: 'rate_limit', config: { multiplier: 0.1 } }
+        { type: 'rate_limit', config: { multiplier: 0.1 } },
       ],
-      cooldownMs: 600000 // 10 minutes
+      cooldownMs: 600000, // 10 minutes
     });
   }
 
@@ -673,7 +673,7 @@ export class SecurityMonitor extends EventEmitter {
     
     const cutoffTime = Date.now() - maxAge;
     this.eventHistory = this.eventHistory.filter(event => 
-      event.timestamp.getTime() > cutoffTime
+      event.timestamp.getTime() > cutoffTime,
     );
   }
 }
@@ -703,13 +703,13 @@ export class SecurityMonitorFactory {
       enabled: true,
       severity: SecuritySeverity.MEDIUM,
       conditions: [
-        { field: 'type', operator: 'equals', value: SecurityEventType.SUSPICIOUS_ACTIVITY }
+        { field: 'type', operator: 'equals', value: SecurityEventType.SUSPICIOUS_ACTIVITY },
       ],
       actions: [
         { type: 'alert', config: { title: 'Suspicious Activity Detected' } },
-        { type: 'notify', config: { message: 'Review user activity' } }
+        { type: 'notify', config: { message: 'Review user activity' } },
       ],
-      cooldownMs: 900000 // 15 minutes
+      cooldownMs: 900000, // 15 minutes
     });
 
     return monitor;

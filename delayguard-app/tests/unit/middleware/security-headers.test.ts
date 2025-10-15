@@ -8,13 +8,13 @@ describe('Security Headers Middleware', () => {
   beforeEach(() => {
     app = new Koa();
     app.use(securityHeaders);
-    app.use(async (ctx) => {
+    app.use(async(ctx) => {
       ctx.body = { message: 'test' };
     });
   });
 
   describe('Content Security Policy', () => {
-    it('should set comprehensive CSP header', async () => {
+    it('should set comprehensive CSP header', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -26,7 +26,7 @@ describe('Security Headers Middleware', () => {
       expect(response.headers['content-security-policy']).toContain("upgrade-insecure-requests");
     });
 
-    it('should allow Shopify domains in CSP', async () => {
+    it('should allow Shopify domains in CSP', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -39,7 +39,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('X-Frame-Options', () => {
-    it('should set X-Frame-Options to DENY', async () => {
+    it('should set X-Frame-Options to DENY', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -49,7 +49,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('X-Content-Type-Options', () => {
-    it('should set X-Content-Type-Options to nosniff', async () => {
+    it('should set X-Content-Type-Options to nosniff', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -59,7 +59,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('X-XSS-Protection', () => {
-    it('should set X-XSS-Protection to block mode', async () => {
+    it('should set X-XSS-Protection to block mode', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -69,7 +69,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Strict-Transport-Security', () => {
-    it('should set HSTS header for HTTPS requests', async () => {
+    it('should set HSTS header for HTTPS requests', async() => {
       const response = await request(app.callback())
         .get('/')
         .set('x-forwarded-proto', 'https')
@@ -81,7 +81,7 @@ describe('Security Headers Middleware', () => {
       expect(response.headers['strict-transport-security']).toContain('preload');
     });
 
-    it('should not set HSTS header for HTTP requests', async () => {
+    it('should not set HSTS header for HTTP requests', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -91,7 +91,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Referrer Policy', () => {
-    it('should set Referrer-Policy header', async () => {
+    it('should set Referrer-Policy header', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -101,7 +101,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Permissions Policy', () => {
-    it('should set Permissions-Policy header', async () => {
+    it('should set Permissions-Policy header', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -114,7 +114,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Cross-Origin Policies', () => {
-    it('should set Cross-Origin-Embedder-Policy', async () => {
+    it('should set Cross-Origin-Embedder-Policy', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -122,7 +122,7 @@ describe('Security Headers Middleware', () => {
       expect(response.headers['cross-origin-embedder-policy']).toBe('require-corp');
     });
 
-    it('should set Cross-Origin-Opener-Policy', async () => {
+    it('should set Cross-Origin-Opener-Policy', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -130,7 +130,7 @@ describe('Security Headers Middleware', () => {
       expect(response.headers['cross-origin-opener-policy']).toBe('same-origin');
     });
 
-    it('should set Cross-Origin-Resource-Policy', async () => {
+    it('should set Cross-Origin-Resource-Policy', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -140,7 +140,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Cache Control for API endpoints', () => {
-    it('should set no-cache headers for API endpoints', async () => {
+    it('should set no-cache headers for API endpoints', async() => {
       const response = await request(app.callback())
         .get('/api/test')
         .expect(200);
@@ -150,7 +150,7 @@ describe('Security Headers Middleware', () => {
       expect(response.headers['expires']).toBe('0');
     });
 
-    it('should set no-cache headers for auth endpoints', async () => {
+    it('should set no-cache headers for auth endpoints', async() => {
       const response = await request(app.callback())
         .get('/auth/test')
         .expect(200);
@@ -162,7 +162,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Server Information Removal', () => {
-    it('should remove X-Powered-By header', async () => {
+    it('should remove X-Powered-By header', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
@@ -170,7 +170,7 @@ describe('Security Headers Middleware', () => {
       expect(response.headers['x-powered-by']).toBeUndefined();
     });
 
-    it('should remove Server header', async () => {
+    it('should remove Server header', async() => {
       const response = await request(app.callback())
         .get('/')
         .expect(200);
