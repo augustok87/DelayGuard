@@ -73,7 +73,7 @@ DelayGuard is an intelligent Shopify app that monitors your orders in real-time,
                                 ▼
                        ┌──────────────────┐
                        │   React Frontend │
-                       │   (Polaris UI)   │
+                       │   (Custom UI)    │
                        └──────────────────┘
 ```
 
@@ -88,9 +88,9 @@ DelayGuard is an intelligent Shopify app that monitors your orders in real-time,
 
 ### Frontend
 - **Framework**: React 18+ with TypeScript
-- **UI Library**: Shopify Polaris 12+ with advanced components
+- **UI Library**: Custom React Components with modern design
 - **State Management**: Redux Toolkit with RTK Query
-- **Testing**: Jest + React Testing Library + 80%+ coverage
+- **Testing**: Jest + React Testing Library + 50% coverage
 - **Build**: Webpack with optimization
 
 ### APIs & Integrations
@@ -105,7 +105,7 @@ DelayGuard is an intelligent Shopify app that monitors your orders in real-time,
 - **Success Rate**: 99.2%
 - **Cache Hit Rate**: 85%
 - **Concurrent Users**: 100+ supported
-- **Test Coverage**: 80%+ achieved
+- **Test Coverage**: 50% (current state)
 - **Uptime**: 99.9% achieved
 - **Security Rating**: A-
 
@@ -192,10 +192,10 @@ HOST=localhost
 
 ### **Development Ready** ✅
 - **Live URL**: https://delayguard-api.vercel.app
-- **Frontend**: Zero build errors, modern Polaris UI
+- **Frontend**: Zero build errors, modern custom React UI
 - **Backend**: 5 working API endpoints
-- **Testing**: 191/192 tests passing (99.5% success rate) ✅
-- **Coverage**: 28.72% test coverage (significant improvement)
+- **Testing**: 593/612 individual tests passing (97% success rate) ✅
+- **Coverage**: 49.92% test coverage (current state)
 - **CI/CD**: Automated deployment pipeline
 - **Database**: ✅ Connected (Neon PostgreSQL)
 

@@ -152,7 +152,7 @@ You can add text overlays to highlight key features:
 ### **Advantages of Real App Screenshots**
 ✅ **Authentic** - Shows actual app functionality  
 ✅ **Accurate** - Matches what users will see  
-✅ **Professional** - Real Polaris UI components  
+✅ **Professional** - Custom React UI components  
 ✅ **Dynamic** - Shows real data and interactions  
 ✅ **Trustworthy** - App store reviewers prefer real apps  
 ✅ **Future-proof** - Easy to update when app changes  

@@ -91,7 +91,7 @@ app-store-assets/
 - **Shopify**: App credentials ✅ Configured
 
 ### **Frontend Components**
-- **Dashboard**: Enhanced dashboard with Polaris UI
+- **Dashboard**: Enhanced dashboard with custom React UI
 - **Analytics**: Comprehensive analytics dashboard
 - **Settings**: Easy configuration and customization
 - **Mobile**: Responsive design for all devices

@@ -44,9 +44,10 @@ DelayGuard is a production-ready Shopify app built with enterprise-grade archite
 - **Framework**: React 18+ with TypeScript
 - **UI Library**: Custom React Components (zero Polaris dependencies)
 - **State Management**: Redux Toolkit with RTK Query
-- **Testing**: Jest + React Testing Library + 100% migration test coverage
+- **Testing**: Jest + React Testing Library + 50% coverage
 - **Build**: Webpack with optimization
 - **Styling**: CSS Modules with custom theming
+- **Component Architecture**: React Components for main application, Web Components for testing infrastructure
 
 ### **APIs & Integrations**
 - **Shopify**: GraphQL Admin API, Webhooks, App Bridge
@@ -78,13 +79,14 @@ DelayGuard is a production-ready Shopify app built with enterprise-grade archite
 ## 🧪 **Testing Infrastructure** ✅ **FULLY OPERATIONAL**
 
 ### **Test Coverage Status**
-- **Overall Coverage**: 5.66% (improved from 0% - significant progress)
-- **Total Tests**: 94 tests
-- **Passing Tests**: 73 tests (77.7% success rate)
-- **Integration Tests**: 17/17 passing (100% ✅)
-- **E2E Tests**: 8/8 passing (100% ✅)
-- **Performance Tests**: 6/6 passing (100% ✅)
-- **Unit Tests**: 48/77 passing (62% - some React component tests still failing)
+- **Overall Coverage**: 49.92% (current state)
+- **Total Tests**: 612 individual tests
+- **Passing Tests**: 593 tests (97% individual test success rate)
+- **Test Suites**: 37 passed, 28 failed (57% test suite success rate)
+- **Integration Tests**: 23/23 passing (100% ✅)
+- **Performance Tests**: 16/16 passing (100% ✅)
+- **Migration Tests**: 10/10 passing (100% ✅)
+- **Web Component Tests**: Some failing due to test infrastructure issues
 
 ### **Testing Stack** ✅ **FIXED**
 - **Framework**: Jest 29+ with TypeScript support and ESM module handling
@@ -113,6 +115,13 @@ DelayGuard is a production-ready Shopify app built with enterprise-grade archite
 ---
 
 ## 🏗️ **Frontend Architecture**
+
+### **Component Architecture Overview**
+The application uses a **hybrid component architecture**:
+- **Main Application**: Uses custom React Components from `/src/components/ui/`
+- **Testing Infrastructure**: Includes Web Components for comprehensive testing
+- **Type Definitions**: Both React and Web Component types are maintained
+- **Migration Status**: React Components migration completed for main application
 
 ### **Component Structure**
 ```
