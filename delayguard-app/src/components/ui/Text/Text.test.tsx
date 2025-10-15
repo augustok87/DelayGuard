@@ -30,7 +30,7 @@ describe('Text Component', () => {
         );
         
         const text = screen.getByText(`${variant} text`);
-        expect(text).toHaveClass('text', variant);
+        expect(text).toHaveClass(`text ${variant}`);
         
         unmount();
       });
@@ -45,7 +45,7 @@ describe('Text Component', () => {
         );
         
         const text = screen.getByText(`${tone} text`);
-        expect(text).toHaveClass('text', 'bodyMd', tone);
+        expect(text).toHaveClass(`text bodyMd ${tone}`);
         
         unmount();
       });
@@ -60,7 +60,7 @@ describe('Text Component', () => {
         );
         
         const text = screen.getByText(`${fontWeight} text`);
-        expect(text).toHaveClass('text', 'bodyMd', fontWeight);
+        expect(text).toHaveClass(`text bodyMd ${fontWeight}`);
         
         unmount();
       });
@@ -70,7 +70,7 @@ describe('Text Component', () => {
       render(<Text className="custom-text">Custom text</Text>);
       
       const text = screen.getByText('Custom text');
-      expect(text).toHaveClass('text', 'bodyMd', 'custom-text');
+      expect(text).toHaveClass('text bodyMd custom-text');
     });
 
     it('should render with custom element', () => {
@@ -85,7 +85,7 @@ describe('Text Component', () => {
       
       const text = screen.getByText('Heading text');
       expect(text.tagName).toBe('H1');
-      expect(text).toHaveClass('text', 'headingLg');
+      expect(text).toHaveClass('text headingLg');
     });
   });
 
@@ -129,7 +129,7 @@ describe('Text Component', () => {
       
       const heading = screen.getByText('Heading');
       expect(heading.tagName).toBe('H1');
-      expect(heading).toHaveClass('text', 'headingLg');
+      expect(heading).toHaveClass('text headingLg');
     });
 
     it('should render subheading variant with correct semantic element', () => {
@@ -137,7 +137,7 @@ describe('Text Component', () => {
       
       const subheading = screen.getByText('Subheading');
       expect(subheading.tagName).toBe('H2');
-      expect(subheading).toHaveClass('text', 'headingMd');
+      expect(subheading).toHaveClass('text headingMd');
     });
 
     it('should render body variant with correct semantic element', () => {
@@ -145,7 +145,7 @@ describe('Text Component', () => {
       
       const body = screen.getByText('Body text');
       expect(body.tagName).toBe('P');
-      expect(body).toHaveClass('text', 'bodyMd');
+      expect(body).toHaveClass('text bodyMd');
     });
 
     it('should render small variant with correct semantic element', () => {
@@ -153,7 +153,7 @@ describe('Text Component', () => {
       
       const small = screen.getByText('Small text');
       expect(small.tagName).toBe('P');
-      expect(small).toHaveClass('text', 'bodySm');
+      expect(small).toHaveClass('text bodySm');
     });
   });
 
@@ -221,7 +221,7 @@ describe('Text Component', () => {
       render(
         <Text 
           variant="headingLg" 
-          tone="primary" 
+          tone="base" 
           fontWeight="bold"
           className="custom"
           as="h2"
@@ -232,7 +232,7 @@ describe('Text Component', () => {
       
       const text = screen.getByText('Complex text');
       expect(text.tagName).toBe('H2');
-      expect(text).toHaveClass('text', 'headingLg', 'primary', 'bold', 'custom');
+      expect(text).toHaveClass('text headingLg base bold custom');
     });
   });
 });

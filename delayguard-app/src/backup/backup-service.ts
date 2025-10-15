@@ -3,8 +3,7 @@
  * Provides automated backup, restore, and disaster recovery capabilities
  */
 
-import { createSpan, withSpan } from '../observability/tracing';
-import { delayGuardMetrics } from '../observability/tracing';
+import { createSpan, withSpan, getTracer, delayGuardMetrics } from '../observability/tracing';
 
 export interface BackupConfig {
   id: string;
@@ -96,7 +95,9 @@ export class BackupService {
     this.results.set(backupId, result);
 
     try {
-      return await withSpan(`backup.${config.type}`, async (span) => {
+      const tracer = getTracer('backup');
+      const span = tracer.startSpan(`backup.${config.type}`);
+      return await withSpan(span, async () => {
         span.setAttributes({
           'backup.id': backupId,
           'backup.type': config.type,
@@ -183,7 +184,9 @@ export class BackupService {
     this.restoreResults.set(restoreId, result);
 
     try {
-      return await withSpan(`restore.${restoreConfig.backupId}`, async (span) => {
+      const tracer = getTracer('backup');
+      const span = tracer.startSpan(`restore.${restoreConfig.backupId}`);
+      return await withSpan(span, async () => {
         span.setAttributes({
           'restore.id': restoreId,
           'restore.backup_id': restoreConfig.backupId,
@@ -344,10 +347,10 @@ export class BackupService {
    * Backup database
    */
   private async backupDatabase(): Promise<Buffer> {
-    const { db } = await import('../database/connection');
+    const { query } = await import('../database/connection');
     
     // Create database dump
-    const dump = await db.query(`
+    const dump = await query(`
       SELECT 
         table_name,
         column_name,

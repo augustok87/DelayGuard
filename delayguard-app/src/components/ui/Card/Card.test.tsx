@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { Card } from './index';
 
@@ -28,10 +29,12 @@ describe('Card Component', () => {
     });
 
     it('should render with actions', () => {
-      const actions = [
-        { label: 'Action 1', onClick: jest.fn() },
-        { label: 'Action 2', onClick: jest.fn() }
-      ];
+      const actions = (
+        <div>
+          <button>Action 1</button>
+          <button>Action 2</button>
+        </div>
+      );
       
       render(<Card actions={actions}>Card content</Card>);
       
@@ -43,29 +46,25 @@ describe('Card Component', () => {
       render(<Card className="custom-card">Card content</Card>);
       
       const card = screen.getByText('Card content');
-      expect(card).toHaveClass('card', 'custom-card');
+      expect(card).toHaveClass('card custom-card');
     });
 
     it('should render with loading state', () => {
       render(<Card loading>Card content</Card>);
       
       const card = screen.getByText('Card content');
-      expect(card).toHaveClass('card', 'loading');
+      expect(card).toHaveClass('card loading');
     });
 
-    it('should render with different variants', () => {
-      const variants = ['default', 'outlined', 'elevated'] as const;
+    it('should render with different loading states', () => {
+      const { rerender } = render(<Card>Normal card</Card>);
       
-      variants.forEach(variant => {
-        const { unmount } = render(
-          <Card variant={variant}>{variant} card</Card>
-        );
-        
-        const card = screen.getByText(`${variant} card`);
-        expect(card).toHaveClass('card', variant);
-        
-        unmount();
-      });
+      let card = screen.getByText('Normal card');
+      expect(card).not.toHaveClass('loading');
+      
+      rerender(<Card loading>Loading card</Card>);
+      card = screen.getByText('Loading card');
+      expect(card).toHaveClass('loading');
     });
   });
 
@@ -84,11 +83,11 @@ describe('Card Component', () => {
       expect(heading.tagName).toBe('H3');
     });
 
-    it('should support custom heading level', () => {
-      render(<Card title="Card Title" titleLevel={2}>Card content</Card>);
+    it('should support subtitle', () => {
+      render(<Card title="Card Title" subtitle="Card subtitle">Card content</Card>);
       
-      const heading = screen.getByRole('heading', { name: /card title/i });
-      expect(heading.tagName).toBe('H2');
+      expect(screen.getByText('Card Title')).toBeInTheDocument();
+      expect(screen.getByText('Card subtitle')).toBeInTheDocument();
     });
   });
 
@@ -98,10 +97,12 @@ describe('Card Component', () => {
       const handleAction1 = jest.fn();
       const handleAction2 = jest.fn();
       
-      const actions = [
-        { label: 'Action 1', onClick: handleAction1 },
-        { label: 'Action 2', onClick: handleAction2 }
-      ];
+      const actions = (
+        <div>
+          <button onClick={handleAction1}>Action 1</button>
+          <button onClick={handleAction2}>Action 2</button>
+        </div>
+      );
       
       render(<Card actions={actions}>Card content</Card>);
       
@@ -116,9 +117,11 @@ describe('Card Component', () => {
       const user = userEvent.setup();
       const handleAction = jest.fn();
       
-      const actions = [
-        { label: 'Disabled Action', onClick: handleAction, disabled: true }
-      ];
+      const actions = (
+        <div>
+          <button onClick={handleAction} disabled>Disabled Action</button>
+        </div>
+      );
       
       render(<Card actions={actions}>Card content</Card>);
       

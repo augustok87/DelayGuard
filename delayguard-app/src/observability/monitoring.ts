@@ -3,8 +3,7 @@
  * Provides real-time monitoring, alerting, and health checks for DelayGuard
  */
 
-import { delayGuardMetrics } from './tracing';
-import { createSpan, withSpan } from './tracing';
+import { delayGuardMetrics, createSpan, withSpan, getTracer } from './tracing';
 
 export interface HealthCheck {
   name: string;
@@ -78,7 +77,9 @@ export class HealthCheckService {
     
     for (const [name, checkFn] of this.checks) {
       try {
-        const result = await withSpan(`health.${name}`, async () => {
+        const tracer = getTracer('monitoring');
+        const span = tracer.startSpan(`health.${name}`);
+        const result = await withSpan(span, async () => {
           return await checkFn();
         });
         results.push(result);
@@ -136,8 +137,8 @@ export class HealthCheckService {
       const start = Date.now();
       try {
         // Import database connection
-        const { db } = await import('../database/connection');
-        await db.query('SELECT 1');
+        const { query } = await import('../database/connection');
+        await query('SELECT 1');
         const responseTime = Date.now() - start;
         
         return {
@@ -185,9 +186,14 @@ export class HealthCheckService {
     this.registerCheck('shopify-api', async () => {
       const start = Date.now();
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
         const response = await fetch('https://api.shopify.com/health', {
-          timeout: 5000,
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
         const responseTime = Date.now() - start;
         
         return {
@@ -209,9 +215,14 @@ export class HealthCheckService {
     this.registerCheck('shipengine-api', async () => {
       const start = Date.now();
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
         const response = await fetch('https://api.shipengine.com/health', {
-          timeout: 5000,
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
         const responseTime = Date.now() - start;
         
         return {
@@ -240,7 +251,9 @@ export class SystemMetricsService {
    * Get current system metrics
    */
   async getSystemMetrics(): Promise<SystemMetrics> {
-    return withSpan('system.metrics', async () => {
+    const tracer = getTracer('monitoring');
+    const span = tracer.startSpan('system.metrics');
+    return withSpan(span, async () => {
       const uptime = process.uptime();
       const memoryUsage = process.memoryUsage();
       const cpuUsage = process.cpuUsage();
@@ -277,8 +290,8 @@ export class SystemMetricsService {
    */
   private async getDatabaseMetrics() {
     try {
-      const { db } = await import('../database/connection');
-      const result = await db.query(`
+      const { query } = await import('../database/connection');
+      const result = await query(`
         SELECT 
           count(*) as connections,
           (SELECT setting::int FROM pg_settings WHERE name = 'max_connections') as max_connections,
@@ -330,10 +343,22 @@ export class SystemMetricsService {
    */
   private async getQueueMetrics() {
     try {
-      const { queue } = await import('../queue/setup');
-      const waiting = await queue.getWaiting();
-      const active = await queue.getActive();
-      const failed = await queue.getFailed();
+      const { delayCheckQueue, notificationQueue } = await import('../queue/setup');
+      const [delayWaiting, delayActive, delayFailed] = await Promise.all([
+        delayCheckQueue.getWaiting(),
+        delayCheckQueue.getActive(),
+        delayCheckQueue.getFailed()
+      ]);
+      
+      const [notifWaiting, notifActive, notifFailed] = await Promise.all([
+        notificationQueue.getWaiting(),
+        notificationQueue.getActive(),
+        notificationQueue.getFailed()
+      ]);
+      
+      const waiting = [...delayWaiting, ...notifWaiting];
+      const active = [...delayActive, ...notifActive];
+      const failed = [...delayFailed, ...notifFailed];
       
       return {
         size: waiting.length,
@@ -468,8 +493,12 @@ export class AlertingService {
    */
   private async checkQueueSize(threshold: number): Promise<boolean> {
     try {
-      const { queue } = await import('../queue/setup');
-      const waiting = await queue.getWaiting();
+      const { delayCheckQueue, notificationQueue } = await import('../queue/setup');
+      const [delayWaiting, notifWaiting] = await Promise.all([
+        delayCheckQueue.getWaiting(),
+        notificationQueue.getWaiting()
+      ]);
+      const waiting = [...delayWaiting, ...notifWaiting];
       return waiting.length > threshold;
     } catch (error) {
       return false;
@@ -481,8 +510,8 @@ export class AlertingService {
    */
   private async checkDatabaseConnections(threshold: number): Promise<boolean> {
     try {
-      const { db } = await import('../database/connection');
-      const result = await db.query('SELECT count(*) as connections FROM pg_stat_activity WHERE state = \'active\'');
+      const { query } = await import('../database/connection');
+      const result = await query('SELECT count(*) as connections FROM pg_stat_activity WHERE state = \'active\'');
       const connections = parseInt(result.rows[0].connections);
       return connections > threshold;
     } catch (error) {
@@ -618,7 +647,7 @@ export class MonitoringService {
       }
       
       // Update metrics
-      delayGuardMetrics.updateQueueSize(metrics.queue.size);
+      delayGuardMetrics.updateQueueSize('delay-check', metrics.queue.size);
       
       console.log(`Monitoring cycle completed - Health: ${health.status}, Alerts: ${alerts.length}`);
       

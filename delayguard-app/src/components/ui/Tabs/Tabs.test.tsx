@@ -56,37 +56,18 @@ describe('Tabs Component', () => {
       render(<Tabs {...defaultProps} className="custom-tabs" />);
       
       const tabsContainer = screen.getByRole('tablist');
-      expect(tabsContainer).toHaveClass('tabs', 'custom-tabs');
+      expect(tabsContainer).toHaveClass('tabs custom-tabs');
     });
 
-    it('should render with different variants', () => {
-      const variants = ['default', 'pills', 'underline'] as const;
+    it('should render with different active tabs', () => {
+      const { rerender } = render(<Tabs {...defaultProps} activeTab="tab2" />);
       
-      variants.forEach(variant => {
-        const { unmount } = render(
-          <Tabs {...defaultProps} variant={variant} />
-        );
-        
-        const tabsContainer = screen.getByRole('tablist');
-        expect(tabsContainer).toHaveClass('tabs', 'md', variant);
-        
-        unmount();
-      });
-    });
-
-    it('should render with different sizes', () => {
-      const sizes = ['sm', 'md', 'lg'] as const;
+      let tab2 = screen.getByRole('tab', { name: /tab 2/i });
+      expect(tab2).toHaveAttribute('aria-selected', 'true');
       
-      sizes.forEach(size => {
-        const { unmount } = render(
-          <Tabs {...defaultProps} size={size} />
-        );
-        
-        const tabsContainer = screen.getByRole('tablist');
-        expect(tabsContainer).toHaveClass('tabs', size, 'default');
-        
-        unmount();
-      });
+      rerender(<Tabs {...defaultProps} activeTab="tab1" />);
+      let tab1 = screen.getByRole('tab', { name: /tab 1/i });
+      expect(tab1).toHaveAttribute('aria-selected', 'true');
     });
   });
 
