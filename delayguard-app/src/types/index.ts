@@ -269,3 +269,14 @@ export interface OrderUpdateWebhook extends ShopifyWebhook {
     }>;
   };
 }
+
+export interface EnhancedDashboardProps {
+  settings?: AppSettings;
+  alerts?: DelayAlert[];
+  stats?: StatsData;
+  onSave?: () => void;
+  onTest?: () => void;
+  onConnect?: () => void;
+  onAlertAction?: (alertId: string, action: string) => void;
+  onSettingsChange?: (settings: AppSettings) => void;
+}

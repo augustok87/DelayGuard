@@ -26,9 +26,22 @@ export interface CardProps {
 }
 
 export interface BadgeProps {
-  status: 'active' | 'resolved' | 'dismissed' | 'shipped' | 'delivered' | 'processing';
+  status?: 'active' | 'resolved' | 'dismissed' | 'shipped' | 'delivered' | 'processing';
+  tone?: 'critical' | 'warning' | 'success' | 'info' | 'base' | 'subdued';
   children: React.ReactNode;
   className?: string;
+}
+
+export interface TextProps {
+  variant?: 'headingLg' | 'headingMd' | 'headingSm' | 'bodyLg' | 'bodyMd' | 'bodySm';
+  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span' | 'div';
+  tone?: 'base' | 'subdued' | 'critical' | 'warning' | 'success' | 'info';
+  fontWeight?: 'regular' | 'medium' | 'semibold' | 'bold';
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+  'aria-label'?: string;
+  'aria-describedby'?: string;
 }
 
 export interface TableProps {
@@ -46,12 +59,21 @@ export interface TableRow {
   onClick?: () => void;
 }
 
+export interface ModalAction {
+  content: string;
+  onAction: () => void;
+  variant?: 'primary' | 'secondary' | 'destructive';
+  disabled?: boolean;
+}
+
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
   actions?: React.ReactNode;
+  primaryAction?: ModalAction;
+  secondaryActions?: ModalAction[];
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
@@ -81,6 +103,58 @@ export interface LoadingSpinnerProps {
   message?: string;
   overlay?: boolean;
   className?: string;
+}
+
+export interface ToastProps {
+  message: string;
+  type?: 'info' | 'success' | 'warning' | 'error';
+  duration?: number;
+  onClose?: () => void;
+  className?: string;
+}
+
+export interface DataTableColumn {
+  key: string;
+  title: string;
+  sortable?: boolean;
+  width?: string;
+  align?: 'left' | 'center' | 'right';
+  render?: (value: any, row: DataTableRow) => React.ReactNode;
+}
+
+export interface DataTableRow {
+  id: string;
+  [key: string]: any;
+}
+
+export interface DataTableProps {
+  columns: DataTableColumn[];
+  data?: DataTableRow[];
+  rows?: DataTableRow[];
+  loading?: boolean;
+  emptyMessage?: string;
+  sortable?: boolean;
+  onSort?: (column: string, direction: 'asc' | 'desc') => void;
+  onRowClick?: (row: DataTableRow) => void;
+  className?: string;
+  'aria-label'?: string;
+}
+
+export interface TabItem {
+  id: string;
+  label: string;
+  content: React.ReactNode;
+  disabled?: boolean;
+  icon?: React.ReactNode;
+}
+
+export interface TabsProps {
+  tabs: TabItem[];
+  defaultActiveTab?: string;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
+  className?: string;
+  'aria-label'?: string;
 }
 
 export interface ErrorBoundaryState {

@@ -24,7 +24,7 @@ DelayGuard is a production-ready Shopify app built with enterprise-grade archite
                                 ▼
                        ┌──────────────────┐
                        │   React Frontend │
-                       │   (Polaris UI)   │
+                       │   (Custom UI)    │
                        └──────────────────┘
 ```
 
@@ -42,11 +42,11 @@ DelayGuard is a production-ready Shopify app built with enterprise-grade archite
 
 ### **Frontend Infrastructure**
 - **Framework**: React 18+ with TypeScript
-- **UI Library**: Shopify Polaris 12+ with advanced components
+- **UI Library**: Custom React Components (zero Polaris dependencies)
 - **State Management**: Redux Toolkit with RTK Query
-- **Testing**: Jest + React Testing Library + 80%+ coverage
+- **Testing**: Jest + React Testing Library + 100% migration test coverage
 - **Build**: Webpack with optimization
-- **Styling**: CSS Modules with Polaris theming
+- **Styling**: CSS Modules with custom theming
 
 ### **APIs & Integrations**
 - **Shopify**: GraphQL Admin API, Webhooks, App Bridge

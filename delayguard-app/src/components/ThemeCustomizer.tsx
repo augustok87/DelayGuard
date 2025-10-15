@@ -1,14 +1,13 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import {
-  // Web Components
+  // React UI Components
   Button,
   Text,
   Card,
-  Divider,
   Modal,
   Toast,
-} from './index';
+} from './ui';
 
 interface ThemeSettings {
   primaryColor: string;
@@ -147,7 +146,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
 
   const renderModal = () => (
     <Modal
-      open={showModal}
+      isOpen={showModal}
       title="Theme Customizer"
       primaryAction={{
         content: 'Save',
@@ -165,35 +164,33 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
       ]}
       onClose={() => setShowModal(false)}
     >
-      <Modal.Section>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Text variant="headingMd" as="h3">Colors</Text>
-          {renderColorPicker('Primary Color', 'primaryColor', theme.primaryColor)}
-          {renderColorPicker('Secondary Color', 'secondaryColor', theme.secondaryColor)}
-          {renderColorPicker('Accent Color', 'accentColor', theme.accentColor)}
-          {renderColorPicker('Background Color', 'backgroundColor', theme.backgroundColor)}
-          {renderColorPicker('Text Color', 'textColor', theme.textColor)}
-          
-          <Divider />
-          
-          <Text variant="headingMd" as="h3">Layout</Text>
-          {renderNumberInput('Border Radius (px)', 'borderRadius', theme.borderRadius, 0, 20)}
-          {renderNumberInput('Spacing (px)', 'spacing', theme.spacing, 8, 32)}
-          {renderNumberInput('Font Size (px)', 'fontSize', theme.fontSize, 12, 20)}
-          {renderSelect('Font Family', 'fontFamily', theme.fontFamily, [
-            'Inter, system-ui, sans-serif',
-            'Helvetica, Arial, sans-serif',
-            'Georgia, serif',
-            'Monaco, monospace'
-          ])}
-          {renderNumberInput('Animation Speed (ms)', 'animationSpeed', theme.animationSpeed, 100, 500)}
-          
-          <Divider />
-          
-          <Text variant="headingMd" as="h3">Preferences</Text>
-          {renderCheckbox('Dark Mode', 'darkMode', theme.darkMode)}
-        </div>
-      </Modal.Section>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <Text variant="headingMd" as="h3">Colors</Text>
+        {renderColorPicker('Primary Color', 'primaryColor', theme.primaryColor)}
+        {renderColorPicker('Secondary Color', 'secondaryColor', theme.secondaryColor)}
+        {renderColorPicker('Accent Color', 'accentColor', theme.accentColor)}
+        {renderColorPicker('Background Color', 'backgroundColor', theme.backgroundColor)}
+        {renderColorPicker('Text Color', 'textColor', theme.textColor)}
+        
+        <div style={{ height: '1px', backgroundColor: '#e5e7eb', margin: '16px 0' }} />
+        
+        <Text variant="headingMd" as="h3">Layout</Text>
+        {renderNumberInput('Border Radius (px)', 'borderRadius', theme.borderRadius, 0, 20)}
+        {renderNumberInput('Spacing (px)', 'spacing', theme.spacing, 8, 32)}
+        {renderNumberInput('Font Size (px)', 'fontSize', theme.fontSize, 12, 20)}
+        {renderSelect('Font Family', 'fontFamily', theme.fontFamily, [
+          'Inter, system-ui, sans-serif',
+          'Helvetica, Arial, sans-serif',
+          'Georgia, serif',
+          'Monaco, monospace'
+        ])}
+        {renderNumberInput('Animation Speed (ms)', 'animationSpeed', theme.animationSpeed, 100, 500)}
+        
+        <div style={{ height: '1px', backgroundColor: '#e5e7eb', margin: '16px 0' }} />
+        
+        <Text variant="headingMd" as="h3">Preferences</Text>
+        {renderCheckbox('Dark Mode', 'darkMode', theme.darkMode)}
+      </div>
     </Modal>
   );
 
@@ -252,10 +249,10 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
           </div>
           
           <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-            <Button size="small" onClick={handleReset}>
+            <Button size="sm" onClick={handleReset}>
               Reset
             </Button>
-            <Button size="small" variant="secondary" onClick={() => setShowModal(true)}>
+            <Button size="sm" variant="secondary" onClick={() => setShowModal(true)}>
               Advanced
             </Button>
           </div>
@@ -265,7 +262,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
       {renderModal()}
 
       {showToast && (
-        <Toast content={toastMessage} onDismiss={handleCloseToast} />
+        <Toast message={toastMessage} onClose={handleCloseToast} />
       )}
     </div>
   );

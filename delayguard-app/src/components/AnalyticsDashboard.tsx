@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  // Web Components
+  // React UI Components
   Button,
   Text,
   Card,
   Badge,
   Spinner,
   DataTable,
-  ResourceList,
-  ResourceItem,
-  EmptyState,
   Modal,
   Tabs,
   Toast,
-} from './index';
+} from './ui';
 
 interface AnalyticsMetrics {
   totalOrders: number;
@@ -114,25 +111,25 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
 
   const renderOverviewCards = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-      <Card sectioned>
+      <Card>
         <div style={{ textAlign: 'center' }}>
           <Text variant="headingLg" as="h3">{metrics.totalOrders.toLocaleString()}</Text>
           <Text variant="bodyMd" tone="subdued">Total Orders</Text>
         </div>
       </Card>
-      <Card sectioned>
+      <Card>
         <div style={{ textAlign: 'center' }}>
           <Text variant="headingLg" as="h3">{metrics.totalAlerts}</Text>
           <Text variant="bodyMd" tone="subdued">Total Alerts</Text>
         </div>
       </Card>
-      <Card sectioned>
+      <Card>
         <div style={{ textAlign: 'center' }}>
           <Text variant="headingLg" as="h3">{metrics.averageDelayDays} days</Text>
           <Text variant="bodyMd" tone="subdued">Avg Delay</Text>
         </div>
       </Card>
-      <Card sectioned>
+      <Card>
         <div style={{ textAlign: 'center' }}>
           <Text variant="headingLg" as="h3">{metrics.customerSatisfaction}/5</Text>
           <Text variant="bodyMd" tone="subdued">Satisfaction</Text>
@@ -150,7 +147,7 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
         {Object.entries(metrics.alertsBySeverity).map(([severity, count]) => (
           <div key={severity} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Badge tone={severity === 'critical' ? 'critical' : severity === 'high' ? 'attention' : 'info'}>
+              <Badge tone={severity === 'critical' ? 'critical' : severity === 'high' ? 'warning' : 'info'}>
                 {severity}
               </Badge>
             </div>
@@ -176,8 +173,18 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
           <Text variant="headingMd" as="h3">Alerts by Reason</Text>
         </div>
         <DataTable
-          headings={headings}
-          rows={rows}
+          columns={headings.map((heading, index) => ({
+            key: `col-${index}`,
+            title: heading,
+            sortable: true
+          }))}
+          rows={rows.map((row, index) => ({
+            id: `row-${index}`,
+            ...row.reduce((acc, cell, cellIndex) => ({
+              ...acc,
+              [`col-${cellIndex}`]: cell
+            }), {})
+          }))}
           sortable
         />
       </Card>
@@ -222,7 +229,7 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
 
   const renderExportModal = () => (
     <Modal
-      open={showExportModal}
+      isOpen={showExportModal}
       title="Export Analytics"
       primaryAction={{
         content: 'Export',
@@ -236,34 +243,32 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
       ]}
       onClose={() => setShowExportModal(false)}
     >
-      <Modal.Section>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Text variant="bodyMd" as="p">
-            Choose the format for exporting your analytics data:
-          </Text>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input type="radio" name="format" value="csv" defaultChecked />
-              <Text variant="bodyMd" as="span">CSV (Excel compatible)</Text>
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input type="radio" name="format" value="json" />
-              <Text variant="bodyMd" as="span">JSON (API format)</Text>
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input type="radio" name="format" value="pdf" />
-              <Text variant="bodyMd" as="span">PDF (Report format)</Text>
-            </label>
-          </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <Text variant="bodyMd" as="p">
+          Choose the format for exporting your analytics data:
+        </Text>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="radio" name="format" value="csv" defaultChecked />
+            <Text variant="bodyMd" as="span">CSV (Excel compatible)</Text>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="radio" name="format" value="json" />
+            <Text variant="bodyMd" as="span">JSON (API format)</Text>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="radio" name="format" value="pdf" />
+            <Text variant="bodyMd" as="span">PDF (Report format)</Text>
+          </label>
         </div>
-      </Modal.Section>
+      </div>
     </Modal>
   );
 
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-        <Spinner size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -281,31 +286,30 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
 
       <Tabs
         tabs={[
-          { id: 'overview', content: 'Overview' },
-          { id: 'severity', content: 'Severity' },
-          { id: 'reasons', content: 'Reasons' },
-          { id: 'notifications', content: 'Notifications' },
-          { id: 'resolution', content: 'Resolution' },
+          { id: 'overview', label: 'Overview', content: (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+              {renderSeverityBreakdown()}
+              {renderNotificationMetrics()}
+            </div>
+          )},
+          { id: 'severity', label: 'Severity', content: renderSeverityBreakdown() },
+          { id: 'reasons', label: 'Reasons', content: renderReasonBreakdown() },
+          { id: 'notifications', label: 'Notifications', content: renderNotificationMetrics() },
+          { id: 'resolution', label: 'Resolution', content: renderResolutionMetrics() },
         ]}
-        selected={selectedTab}
-        onSelect={handleTabChange}
-      >
-        {selectedTab === 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-            {renderSeverityBreakdown()}
-            {renderNotificationMetrics()}
-          </div>
-        )}
-        {selectedTab === 1 && renderSeverityBreakdown()}
-        {selectedTab === 2 && renderReasonBreakdown()}
-        {selectedTab === 3 && renderNotificationMetrics()}
-        {selectedTab === 4 && renderResolutionMetrics()}
-      </Tabs>
+        activeTab={['overview', 'severity', 'reasons', 'notifications', 'resolution'][selectedTab]}
+        onTabChange={(tabId) => {
+          const tabIndex = ['overview', 'severity', 'reasons', 'notifications', 'resolution'].indexOf(tabId);
+          if (tabIndex !== -1) {
+            handleTabChange(tabIndex);
+          }
+        }}
+      />
 
       {renderExportModal()}
 
       {showToast && (
-        <Toast content={toastMessage} onDismiss={handleCloseToast} />
+        <Toast message={toastMessage} onClose={handleCloseToast} />
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  // Web Components
+  // React UI Components
   Button,
   Text,
   Card,
@@ -10,7 +10,7 @@ import {
   Tabs,
   Modal,
   Toast,
-} from './index';
+} from './ui';
 import styles from '../styles/DelayGuard.module.css';
 
 // App Bridge integration will be added later
@@ -157,8 +157,18 @@ function MinimalApp() {
           <Text variant="headingMd" as="h3">Delay Alerts</Text>
         </div>
         <DataTable
-          headings={headings}
-          rows={rows}
+          columns={headings.map((heading, index) => ({
+            key: `col-${index}`,
+            title: heading,
+            sortable: true
+          }))}
+          rows={rows.map((row, index) => ({
+            id: `row-${index}`,
+            ...row.reduce((acc, cell, cellIndex) => ({
+              ...acc,
+              [`col-${cellIndex}`]: cell
+            }), {})
+          }))}
           sortable
         />
         <div style={{ padding: '16px' }}>
@@ -166,15 +176,15 @@ function MinimalApp() {
             <div key={alert.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
               <div>
                 <Text variant="bodyMd" as="span">{alert.orderId} - {alert.customerName}</Text>
-                <Badge tone={alert.delayDays > 5 ? 'critical' : alert.delayDays > 3 ? 'attention' : 'info'}>
+                <Badge tone={alert.delayDays > 5 ? 'critical' : alert.delayDays > 3 ? 'warning' : 'info'}>
                   {alert.delayDays} days
                 </Badge>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <Button size="small" onClick={() => handleResolveAlert(alert.id)}>
+                <Button size="sm" onClick={() => handleResolveAlert(alert.id)}>
                   Resolve
                 </Button>
-                <Button size="small" variant="secondary" onClick={() => handleDismissAlert(alert.id)}>
+                <Button size="sm" variant="secondary" onClick={() => handleDismissAlert(alert.id)}>
                   Dismiss
                 </Button>
               </div>
@@ -201,8 +211,18 @@ function MinimalApp() {
           <Text variant="headingMd" as="h3">Orders</Text>
         </div>
         <DataTable
-          headings={headings}
-          rows={rows}
+          columns={headings.map((heading, index) => ({
+            key: `col-${index}`,
+            title: heading,
+            sortable: true
+          }))}
+          rows={rows.map((row, index) => ({
+            id: `row-${index}`,
+            ...row.reduce((acc, cell, cellIndex) => ({
+              ...acc,
+              [`col-${cellIndex}`]: cell
+            }), {})
+          }))}
           sortable
         />
       </Card>
@@ -211,7 +231,7 @@ function MinimalApp() {
 
   const renderSettingsModal = () => (
     <Modal
-      open={showSettingsModal}
+      isOpen={showSettingsModal}
       title="Settings"
       primaryAction={{
         content: 'Save',
@@ -225,54 +245,52 @@ function MinimalApp() {
       ]}
       onClose={() => setShowSettingsModal(false)}
     >
-      <Modal.Section>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <Text variant="bodyMd" as="div">Delay Threshold (days)</Text>
-            <input
-              type="number"
-              value={settings.delayThreshold}
-              onChange={(e) => setSettings(prev => ({ ...prev, delayThreshold: parseInt(e.target.value) }))}
-              style={{ width: '100%', padding: '8px', marginTop: '4px' }}
-            />
-          </div>
-          <div>
-            <Text variant="bodyMd" as="div">Notification Template</Text>
-            <textarea
-              value={settings.notificationTemplate}
-              onChange={(e) => setSettings(prev => ({ ...prev, notificationTemplate: e.target.value }))}
-              style={{ width: '100%', padding: '8px', marginTop: '4px', minHeight: '100px' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="checkbox"
-                checked={settings.emailNotifications}
-                onChange={(e) => setSettings(prev => ({ ...prev, emailNotifications: e.target.checked }))}
-              />
-              <Text variant="bodyMd" as="span">Email Notifications</Text>
-            </label>
-          </div>
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="checkbox"
-                checked={settings.smsNotifications}
-                onChange={(e) => setSettings(prev => ({ ...prev, smsNotifications: e.target.checked }))}
-              />
-              <Text variant="bodyMd" as="span">SMS Notifications</Text>
-            </label>
-          </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div>
+          <Text variant="bodyMd" as="div">Delay Threshold (days)</Text>
+          <input
+            type="number"
+            value={settings.delayThreshold}
+            onChange={(e) => setSettings(prev => ({ ...prev, delayThreshold: parseInt(e.target.value) }))}
+            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+          />
         </div>
-      </Modal.Section>
+        <div>
+          <Text variant="bodyMd" as="div">Notification Template</Text>
+          <textarea
+            value={settings.notificationTemplate}
+            onChange={(e) => setSettings(prev => ({ ...prev, notificationTemplate: e.target.value }))}
+            style={{ width: '100%', padding: '8px', marginTop: '4px', minHeight: '100px' }}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              checked={settings.emailNotifications}
+              onChange={(e) => setSettings(prev => ({ ...prev, emailNotifications: e.target.checked }))}
+            />
+            <Text variant="bodyMd" as="span">Email Notifications</Text>
+          </label>
+        </div>
+        <div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              checked={settings.smsNotifications}
+              onChange={(e) => setSettings(prev => ({ ...prev, smsNotifications: e.target.checked }))}
+            />
+            <Text variant="bodyMd" as="span">SMS Notifications</Text>
+          </label>
+        </div>
+      </div>
     </Modal>
   );
 
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-        <Spinner size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -289,20 +307,22 @@ function MinimalApp() {
 
         <Tabs
           tabs={[
-            { id: 'alerts', content: 'Alerts' },
-            { id: 'orders', content: 'Orders' },
+            { id: 'alerts', label: 'Alerts', content: renderAlertsTable() },
+            { id: 'orders', label: 'Orders', content: renderOrdersTable() },
           ]}
-          selected={selectedTab}
-          onSelect={handleTabChange}
-        >
-          {selectedTab === 0 && renderAlertsTable()}
-          {selectedTab === 1 && renderOrdersTable()}
-        </Tabs>
+          activeTab={['alerts', 'orders'][selectedTab]}
+          onTabChange={(tabId) => {
+            const tabIndex = ['alerts', 'orders'].indexOf(tabId);
+            if (tabIndex !== -1) {
+              handleTabChange(tabIndex);
+            }
+          }}
+        />
 
         {renderSettingsModal()}
 
         {showToast && (
-          <Toast content={toastMessage} onDismiss={handleCloseToast} />
+          <Toast message={toastMessage} onClose={handleCloseToast} />
         )}
       </div>
     </div>
