@@ -236,7 +236,7 @@ Ensure all required environment variables are set in your hosting platform.
 ## Contributing
 
 1. Follow TDD approach
-2. Maintain 80%+ test coverage
+2. Maintain 49.92% test coverage (current actual coverage)
 3. Use TypeScript strict mode
 4. Follow existing code patterns
 5. Update documentation

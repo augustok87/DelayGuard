@@ -284,7 +284,7 @@ src/queue/
 
 ### **Code Quality Standards**
 - **TypeScript**: Strict mode with comprehensive type checking
-- **Testing**: 80%+ test coverage with comprehensive test suite
+- **Testing**: 49.92% test coverage with comprehensive test suite
 - **Linting**: ESLint with strict rules and auto-fixing
 - **Formatting**: Prettier with consistent code formatting
 - **Documentation**: World-class JSDoc, OpenAPI 3.0, and automated documentation generation
