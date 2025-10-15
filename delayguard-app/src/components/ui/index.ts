@@ -9,7 +9,7 @@
 export { Button } from './Button';
 export { Card } from './Card';
 export { Text } from './Text';
-export { Badge } from './Badge';
+export { Badge } from '../Badge';
 export { Spinner } from './Spinner';
 export { LoadingSpinner } from './LoadingSpinner';
 

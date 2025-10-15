@@ -1,280 +1,231 @@
 /**
- * Global TypeScript declarations for Web Components
+ * Global TypeScript declarations for React Components
  * 
- * This file provides comprehensive type definitions for Web Components
- * integration with React and TypeScript.
+ * This file provides comprehensive type definitions for React Components
+ * integration with TypeScript.
  */
 
-// Global JSX namespace augmentation for Web Components
+// Global JSX namespace augmentation for React Components
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      // Polaris Web Components
-      's-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        variant?: 'primary' | 'secondary' | 'tertiary' | 'destructive';
-        size?: 'small' | 'medium' | 'large';
-        disabled?: boolean;
-        loading?: boolean;
-        type?: 'button' | 'submit' | 'reset';
+      // Standard HTML elements with enhanced props
+      div: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
         'data-testid'?: string;
         'aria-label'?: string;
-        'aria-disabled'?: boolean;
+        'aria-describedby'?: string;
+        'aria-hidden'?: boolean;
       };
       
-      's-text': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        variant?: 'headingLg' | 'headingMd' | 'headingSm' | 'bodyLg' | 'bodyMd' | 'bodySm';
-        as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span' | 'div';
-        tone?: 'base' | 'subdued' | 'critical' | 'warning' | 'success' | 'info';
-        fontWeight?: 'regular' | 'medium' | 'semibold' | 'bold';
+      span: React.DetailedHTMLProps<React.HTMLAttributes<HTMLSpanElement>, HTMLSpanElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+        'aria-describedby'?: string;
+        'aria-hidden'?: boolean;
+      };
+      
+      button: React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+        'aria-describedby'?: string;
+        'aria-pressed'?: boolean;
+        'aria-expanded'?: boolean;
+      };
+      
+      input: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+        'aria-describedby'?: string;
+        'aria-invalid'?: boolean;
+        'aria-required'?: boolean;
+      };
+      
+      select: React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+        'aria-describedby'?: string;
+        'aria-invalid'?: boolean;
+        'aria-required'?: boolean;
+      };
+      
+      textarea: React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+        'aria-describedby'?: string;
+        'aria-invalid'?: boolean;
+        'aria-required'?: boolean;
+      };
+      
+      form: React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      table: React.DetailedHTMLProps<React.TableHTMLAttributes<HTMLTableElement>, HTMLTableElement> & {
         'data-testid'?: string;
         'aria-label'?: string;
         'aria-describedby'?: string;
       };
       
-      's-card': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        title?: string;
-        sectioned?: boolean;
-        subdued?: boolean;
+      thead: React.DetailedHTMLProps<React.HTMLAttributes<HTMLTableSectionElement>, HTMLTableSectionElement> & {
         'data-testid'?: string;
       };
       
-      's-section': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        title?: string;
-        sectioned?: boolean;
-        subdued?: boolean;
+      tbody: React.DetailedHTMLProps<React.HTMLAttributes<HTMLTableSectionElement>, HTMLTableSectionElement> & {
         'data-testid'?: string;
       };
       
-      's-layout': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+      tr: React.DetailedHTMLProps<React.HTMLAttributes<HTMLTableRowElement>, HTMLTableRowElement> & {
         'data-testid'?: string;
       };
       
-      's-layout-section': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        variant?: 'oneHalf' | 'oneThird' | 'twoThirds' | 'fullWidth';
+      td: React.DetailedHTMLProps<React.TdHTMLAttributes<HTMLTableDataCellElement>, HTMLTableDataCellElement> & {
         'data-testid'?: string;
       };
       
-      's-page': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        title?: string;
-        subtitle?: string;
-        primaryAction?: any;
-        secondaryActions?: any[];
+      th: React.DetailedHTMLProps<React.ThHTMLAttributes<HTMLTableHeaderCellElement>, HTMLTableHeaderCellElement> & {
+        'data-testid'?: string;
+        'aria-sort'?: 'ascending' | 'descending' | 'none';
+      };
+      
+      ul: React.DetailedHTMLProps<React.HTMLAttributes<HTMLUListElement>, HTMLUListElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      ol: React.DetailedHTMLProps<React.OlHTMLAttributes<HTMLOListElement>, HTMLOListElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      li: React.DetailedHTMLProps<React.LiHTMLAttributes<HTMLLIElement>, HTMLLIElement> & {
         'data-testid'?: string;
       };
       
-      's-badge': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        tone?: 'info' | 'success' | 'warning' | 'critical' | 'attention';
+      a: React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+        'aria-describedby'?: string;
+      };
+      
+      img: React.DetailedHTMLProps<React.ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+        'aria-describedby'?: string;
+      };
+      
+      h1: React.DetailedHTMLProps<React.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      h2: React.DetailedHTMLProps<React.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      h3: React.DetailedHTMLProps<React.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      h4: React.DetailedHTMLProps<React.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      h5: React.DetailedHTMLProps<React.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      h6: React.DetailedHTMLProps<React.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      p: React.DetailedHTMLProps<React.HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      label: React.DetailedHTMLProps<React.LabelHTMLAttributes<HTMLLabelElement>, HTMLLabelElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      fieldset: React.DetailedHTMLProps<React.FieldsetHTMLAttributes<HTMLFieldSetElement>, HTMLFieldSetElement> & {
+        'data-testid'?: string;
+        'aria-label'?: string;
+      };
+      
+      legend: React.DetailedHTMLProps<React.HTMLAttributes<HTMLLegendElement>, HTMLLegendElement> & {
         'data-testid'?: string;
       };
       
-      's-spinner': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        size?: 'small' | 'large';
+      section: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
         'data-testid'?: string;
+        'aria-label'?: string;
+        'aria-labelledby'?: string;
       };
       
-      's-text-field': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        label?: string;
-        value?: string;
-        placeholder?: string;
-        disabled?: boolean;
-        error?: string;
-        helpText?: string;
-        multiline?: boolean;
-        rows?: number;
-        type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
-        autoComplete?: string;
+      article: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
         'data-testid'?: string;
+        'aria-label'?: string;
+        'aria-labelledby'?: string;
       };
       
-      's-select': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        label?: string;
-        value?: string;
-        placeholder?: string;
-        disabled?: boolean;
-        error?: string;
-        helpText?: string;
+      header: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
         'data-testid'?: string;
+        'aria-label'?: string;
       };
       
-      's-option': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        value?: string;
-        disabled?: boolean;
+      footer: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
         'data-testid'?: string;
+        'aria-label'?: string;
       };
       
-      's-checkbox': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        label?: string;
-        checked?: boolean;
-        disabled?: boolean;
-        error?: string;
-        helpText?: string;
+      nav: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
         'data-testid'?: string;
+        'aria-label'?: string;
       };
       
-      's-button-group': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+      main: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
         'data-testid'?: string;
+        'aria-label'?: string;
       };
       
-      's-tabs': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        tabs?: any[];
-        selected?: number;
+      aside: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
         'data-testid'?: string;
-      };
-      
-      's-tab': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'data-tab'?: string;
-        'data-testid'?: string;
-      };
-      
-      's-modal': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        open?: boolean;
-        title?: string;
-        primaryAction?: any;
-        secondaryActions?: any[];
-        'data-testid'?: string;
-      };
-      
-      's-toast': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        content?: string;
-        'data-testid'?: string;
-      };
-      
-      's-banner': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        tone?: 'info' | 'success' | 'warning' | 'critical';
-        'data-testid'?: string;
-      };
-      
-      's-data-table': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'column-content-types'?: string;
-        headings?: string;
-        sortable?: boolean;
-        'data-testid'?: string;
-      };
-      
-      's-resource-list': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        items?: string;
-        selectable?: boolean;
-        'data-testid'?: string;
-      };
-      
-      's-resource-item': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        id?: string;
-        'data-testid'?: string;
-      };
-      
-      's-empty-state': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        heading?: string;
-        image?: string;
-        'data-testid'?: string;
-      };
-      
-      's-form-layout': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'data-testid'?: string;
-      };
-      
-      's-form-layout-group': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'data-testid'?: string;
-      };
-      
-      's-range-slider': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        label?: string;
-        value?: number;
-        min?: number;
-        max?: number;
-        step?: number;
-        output?: boolean;
-        disabled?: boolean;
-        'data-testid'?: string;
-      };
-      
-      's-color-picker': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        color?: any;
-        'data-testid'?: string;
-      };
-      
-      's-divider': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'data-testid'?: string;
-      };
-      
-      's-avatar': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        source?: string;
-        name?: string;
-        initials?: string;
-        'data-testid'?: string;
-      };
-      
-      's-popover': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        active?: boolean;
-        'data-testid'?: string;
-      };
-      
-      's-action-list': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'data-testid'?: string;
-      };
-      
-      's-icon': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        source?: string;
-        'data-testid'?: string;
-      };
-      
-      's-skeleton-body-text': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'data-testid'?: string;
-      };
-      
-      's-skeleton-display-text': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'data-testid'?: string;
-      };
-      
-      's-frame': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        'data-testid'?: string;
-      };
-      
-      's-block-stack': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        gap?: string;
-        align?: string;
-        'data-testid'?: string;
-      };
-      
-      's-inline-stack': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        gap?: string;
-        align?: string;
-        'data-testid'?: string;
+        'aria-label'?: string;
       };
     }
   }
-
-  // Extend HTMLElement interface for Web Components
-  interface HTMLElement {
-    connectedCallback?(): void;
-    disconnectedCallback?(): void;
-    attributeChangedCallback?(name: string, oldValue: string, newValue: string): void;
-    getEventListeners?(): any[];
-  }
 }
 
-// Web Component event types
-export interface WebComponentEvent extends CustomEvent {
+// React Component event types
+export interface ReactComponentEvent extends React.SyntheticEvent {
   detail?: any;
 }
 
-// Web Component lifecycle events
-export interface WebComponentLifecycleEvents {
-  'connected': CustomEvent;
-  'disconnected': CustomEvent;
-  'attribute-changed': CustomEvent<{ name: string; oldValue: string; newValue: string }>;
+// React Component lifecycle events
+export interface ReactComponentLifecycleEvents {
+  'componentDidMount': React.SyntheticEvent;
+  'componentWillUnmount': React.SyntheticEvent;
+  'componentDidUpdate': React.SyntheticEvent;
 }
 
-// Polaris Web Component events
-export interface PolarisWebComponentEvents {
-  'polaris-click': CustomEvent;
-  'polaris-change': CustomEvent<{ value: any }>;
-  'polaris-focus': CustomEvent;
-  'polaris-blur': CustomEvent;
-  'polaris-sort': CustomEvent<{ column: string; direction: 'asc' | 'desc' }>;
-  'polaris-selection-change': CustomEvent<{ selectedIds: string[] }>;
-  'polaris-tab-change': CustomEvent<{ selectedIndex: number }>;
-  'polaris-modal-close': CustomEvent;
-  'polaris-toast-dismiss': CustomEvent;
+// React Component events
+export interface ReactComponentEvents {
+  'react-click': React.MouseEvent;
+  'react-change': React.ChangeEvent;
+  'react-focus': React.FocusEvent;
+  'react-blur': React.FocusEvent;
+  'react-submit': React.FormEvent;
+  'react-keydown': React.KeyboardEvent;
+  'react-keyup': React.KeyboardEvent;
+  'react-mouseenter': React.MouseEvent;
+  'react-mouseleave': React.MouseEvent;
 }
 
 // Event conversion utilities
@@ -293,6 +244,6 @@ export interface SyntheticEventData {
   type: string;
 }
 
-export type WebComponentEventConverter<T extends Event = CustomEvent> = (
+export type ReactComponentEventConverter<T extends React.SyntheticEvent = React.SyntheticEvent> = (
   event: T
 ) => SyntheticEventData;
