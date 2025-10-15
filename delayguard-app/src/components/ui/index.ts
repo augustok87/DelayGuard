@@ -1,8 +1,8 @@
 /**
  * React Components Index
  * 
- * This file exports all the custom React components that replace
- * the Web Components for a consistent, maintainable architecture.
+ * This file exports all the custom React components for a consistent,
+ * maintainable, and world-class architecture.
  */
 
 // Basic Components

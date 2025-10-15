@@ -2,11 +2,11 @@
 import { AppSettings, DelayAlert, Order, StatsData } from './index';
 
 export interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning';
+  variant?: 'primary' | 'secondary' | 'tertiary' | 'danger' | 'success' | 'warning';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
-  onClick: () => void;
+  onClick?: () => void;
   children: React.ReactNode;
   type?: 'button' | 'submit' | 'reset';
   className?: string;

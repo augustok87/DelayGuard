@@ -25,7 +25,7 @@ export const Button: React.FC<ButtonProps> = ({
   ].filter(Boolean).join(' ');
 
   const handleClick = () => {
-    if (!loading && !disabled) {
+    if (!loading && !disabled && onClick) {
       onClick();
     }
   };
