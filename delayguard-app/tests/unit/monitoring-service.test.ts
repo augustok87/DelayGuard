@@ -237,6 +237,22 @@ describe('MonitoringService', () => {
       mockDbsize.mockResolvedValue(100);
       mockSetex.mockResolvedValue('OK');
 
+      // Mock alert rules query
+      mockQuery.mockResolvedValueOnce({ rows: [{ health_check: 1 }] })
+        .mockResolvedValueOnce({
+          rows: [{
+            id: 'high_memory_usage',
+            name: 'High Memory Usage',
+            metric: 'memory.percentage',
+            operator: 'gt',
+            threshold: 80,
+            duration: 60,
+            severity: 'high',
+            enabled: true,
+            channels: ['email', 'sms']
+          }]
+        });
+
       // Collect metrics first to populate the metrics array
       await monitoringService.collectSystemMetrics();
 

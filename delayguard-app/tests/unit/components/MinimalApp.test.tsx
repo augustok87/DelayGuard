@@ -6,26 +6,44 @@ import { MinimalApp } from '../../../src/components/MinimalApp';
 jest.mock('../../../src/components', () => ({
   Button: ({ children, onClick, ...props }: any) => <button data-testid="button" onClick={onClick} {...props}>{children}</button>,
   Card: ({ children, title, ...props }: any) => <div data-testid="card" data-title={title} {...props}>{children}</div>,
-  DataTable: ({ headings, rows, ...props }: any) => (
-    <table data-testid="data-table" {...props}>
-      <thead>
-        <tr>
-          {headings?.map((heading: any, index: number) => (
-            <th key={index}>{heading}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows?.map((row: any, index: number) => (
-          <tr key={index}>
-            {row?.map((cell: any, cellIndex: number) => (
-              <td key={cellIndex}>{cell}</td>
+  DataTable: ({ columns, data, headings, rows, ...props }: any) => {
+    // Support both old API (headings/rows) and new API (columns/data)
+    const tableColumns = columns || headings?.map((heading: any, index: number) => ({
+      key: `col_${index}`,
+      title: heading,
+      sortable: false
+    }));
+    const tableData = data || rows?.map((row: any, index: number) => ({
+      id: `row_${index}`,
+      ...(Array.isArray(row) ? 
+        row.reduce((acc, cell, cellIndex) => ({ ...acc, [`col_${cellIndex}`]: cell }), {}) :
+        row
+      )
+    }));
+
+    return (
+      <table data-testid="data-table" {...props}>
+        <thead>
+          <tr>
+            {tableColumns?.map((column: any, index: number) => (
+              <th key={column.key || index}>{column.title || column}</th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
-  ),
+        </thead>
+        <tbody>
+          {tableData?.map((row: any, index: number) => (
+            <tr key={row.id || index}>
+              {tableColumns?.map((column: any, colIndex: number) => (
+                <td key={column.key || colIndex}>
+                  {row[column.key] || (Array.isArray(row) ? row[colIndex] : row)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  },
   Badge: ({ children, status, ...props }: any) => <span data-testid="badge" data-status={status} {...props}>{children}</span>,
   Text: ({ children, ...props }: any) => <span data-testid="text" {...props}>{children}</span>,
   Tabs: ({ tabs, selected, onSelect, ...props }: any) => (

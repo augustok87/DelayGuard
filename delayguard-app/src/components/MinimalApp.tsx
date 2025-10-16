@@ -490,9 +490,14 @@ function MinimalApp() {
       <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }} data-testid="layout">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <Text variant="headingLg" as="h1">DelayGuard</Text>
-          <Button onClick={() => setShowSettingsModal(true)} data-testid="settings-button">
-            Settings
-          </Button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button onClick={handleRealTimeUpdate} data-testid="refresh-button">
+              Refresh
+            </Button>
+            <Button onClick={() => setShowSettingsModal(true)} data-testid="settings-button">
+              Settings
+            </Button>
+          </div>
         </div>
 
         <Tabs

@@ -94,6 +94,15 @@ export class NotificationService {
       throw new Error('No contact information provided');
     }
 
+    // Validate delay details
+    if (!delayDetails || typeof delayDetails !== 'object') {
+      throw new Error('Invalid delay details provided');
+    }
+
+    if (!delayDetails.estimatedDelivery || !delayDetails.delayDays || delayDetails.delayDays < 0) {
+      throw new Error('Invalid delay details: missing required fields or invalid values');
+    }
+
     const promises: Promise<void>[] = [];
 
     if (orderInfo.customerEmail) {
