@@ -28,8 +28,18 @@ export class SecurityHeadersMiddleware {
    * Apply comprehensive security headers
    */
   static async apply(ctx: Context, next: Next): Promise<void> {
-    // Content Security Policy
-    ctx.set('Content-Security-Policy', SecurityHeadersMiddleware.CSP_POLICY);
+    // Generate nonce for inline scripts
+    const nonce = require('crypto').randomBytes(16).toString('base64');
+    
+    // Content Security Policy with nonce
+    const cspWithNonce = SecurityHeadersMiddleware.CSP_POLICY.replace(
+      "script-src 'self' 'unsafe-inline'",
+      `script-src 'self' 'nonce-${nonce}'`
+    );
+    ctx.set('Content-Security-Policy', cspWithNonce);
+    
+    // Set X-Powered-By header
+    ctx.set('X-Powered-By', 'DelayGuard');
     
     // X-Frame-Options (redundant with CSP frame-ancestors but for older browsers)
     ctx.set('X-Frame-Options', 'DENY');
@@ -76,8 +86,8 @@ export class SecurityHeadersMiddleware {
     }
     
     // Remove server information
-    ctx.remove('X-Powered-By');
-    ctx.remove('Server');
+    delete ctx.response.headers['X-Powered-By'];
+    delete ctx.response.headers['Server'];
     
     await next();
   }

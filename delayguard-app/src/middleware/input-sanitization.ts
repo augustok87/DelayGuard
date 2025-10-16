@@ -16,6 +16,11 @@ export interface SanitizationConfig {
   allowedHTMLTags?: string[];
   allowedHTMLAttributes?: string[];
   customValidators?: Record<string, (value: any) => boolean>;
+  xss?: boolean;
+  sql?: boolean;
+  nosql?: boolean;
+  pathTraversal?: boolean;
+  commandInjection?: boolean;
 }
 
 /**
@@ -347,6 +352,22 @@ export const SanitizationPresets = {
     maxStringLength: 1000,
     allowedHTMLTags: [],
     allowedHTMLAttributes: [],
+  },
+
+  // API input sanitization with comprehensive protection
+  API_INPUT: {
+    enableXSSProtection: true,
+    enableSQLInjectionProtection: true,
+    enableHTMLSanitization: true,
+    enableInputValidation: true,
+    maxStringLength: 10000,
+    allowedHTMLTags: [],
+    allowedHTMLAttributes: [],
+    xss: true,
+    sql: true,
+    nosql: true,
+    pathTraversal: true,
+    commandInjection: true,
   },
 
   // Moderate sanitization for content

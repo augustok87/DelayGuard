@@ -37,7 +37,7 @@ describe('Security Headers Middleware', () => {
       );
       expect(ctx.set).toHaveBeenCalledWith(
         'Content-Security-Policy',
-        expect.stringContaining("script-src 'self' 'unsafe-inline'")
+        expect.stringContaining("script-src 'self' 'nonce-")
       );
       expect(ctx.set).toHaveBeenCalledWith(
         'Content-Security-Policy',

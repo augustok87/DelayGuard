@@ -28,6 +28,10 @@ export class CSRFProtectionMiddleware {
   private config: CSRFConfig;
 
   constructor(config: CSRFConfig) {
+    if (!config.secret || config.secret.trim() === '') {
+      throw new Error('CSRF secret is required');
+    }
+    
     this.config = {
       tokenLength: 32,
       cookieName: '_csrf',
@@ -48,8 +52,8 @@ export class CSRFProtectionMiddleware {
    * Apply CSRF protection middleware
    */
   async apply(ctx: Context, next: Next): Promise<void> {
-    // Generate and set CSRF token for GET requests
-    if (ctx.method === 'GET') {
+    // Generate and set CSRF token for safe methods
+    if (this.config.excludedMethods!.includes(ctx.method)) {
       const token = this.generateToken();
       this.setCSRFCookie(ctx, token);
       ctx.state.csrfToken = token;
@@ -57,8 +61,8 @@ export class CSRFProtectionMiddleware {
       return;
     }
 
-    // Skip CSRF check for excluded methods and paths
-    if (this.shouldSkipCSRFCheck(ctx)) {
+    // Skip CSRF check for excluded paths
+    if (this.config.excludedPaths!.some(path => ctx.path.startsWith(path))) {
       await next();
       return;
     }
@@ -66,11 +70,7 @@ export class CSRFProtectionMiddleware {
     // Validate CSRF token for state-changing requests
     const isValid = this.validateToken(ctx);
     if (!isValid) {
-      ctx.status = 403;
-      ctx.body = {
-        error: 'Invalid CSRF token',
-        code: 'CSRF_TOKEN_INVALID',
-      };
+      ctx.throw(403, 'CSRF token missing');
       return;
     }
 
@@ -124,22 +124,6 @@ export class CSRFProtectionMiddleware {
     );
   }
 
-  /**
-   * Check if CSRF check should be skipped
-   */
-  private shouldSkipCSRFCheck(ctx: Context): boolean {
-    // Skip for excluded methods (but not GET - GET needs token generation)
-    if (this.config.excludedMethods!.includes(ctx.method) && ctx.method !== 'GET') {
-      return true;
-    }
-
-    // Skip for excluded paths
-    if (this.config.excludedPaths!.some(path => ctx.path.startsWith(path))) {
-      return true;
-    }
-
-    return false;
-  }
 
   /**
    * Get CSRF token for current request
@@ -201,41 +185,100 @@ export class APICSRFProtection {
   private config: CSRFConfig;
 
   constructor(config: CSRFConfig) {
-    this.config = config;
+    if (!config.secret || config.secret.trim() === '') {
+      throw new Error('CSRF secret is required');
+    }
+    
+    this.config = {
+      tokenLength: 32,
+      cookieName: '_csrf',
+      headerName: 'x-csrf-token',
+      cookieOptions: {
+        httpOnly: false, // Must be readable by JavaScript
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      },
+      excludedMethods: ['GET', 'HEAD', 'OPTIONS'],
+      excludedPaths: ['/health', '/api/health'],
+      ...config,
+    };
   }
 
   /**
    * Apply CSRF protection to API routes
    */
   async apply(ctx: Context, next: Next): Promise<void> {
-    // Only apply to state-changing methods
-    if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(ctx.method)) {
+    // Generate and set CSRF token for safe methods
+    if (this.config.excludedMethods!.includes(ctx.method)) {
+      const token = this.generateToken();
+      this.setCSRFCookie(ctx, token);
+      ctx.state.csrfToken = token;
       await next();
       return;
     }
 
-    // Check for CSRF token in header
-    const csrfToken = ctx.get(this.config.headerName || 'x-csrf-token');
-    if (!csrfToken) {
-      ctx.status = 403;
-      ctx.body = {
-        error: 'CSRF token required',
-        code: 'CSRF_TOKEN_REQUIRED',
-      };
+    // Skip CSRF check for excluded paths
+    if (this.config.excludedPaths!.some(path => ctx.path.startsWith(path))) {
+      await next();
       return;
     }
 
-    // Validate token (simplified for API - in production, use proper validation)
-    if (csrfToken.length < 32) {
-      ctx.status = 403;
-      ctx.body = {
-        error: 'Invalid CSRF token format',
-        code: 'CSRF_TOKEN_INVALID',
-      };
+    // Validate CSRF token for state-changing requests
+    const isValid = this.validateToken(ctx);
+    if (!isValid) {
+      ctx.throw(403, 'CSRF token missing');
       return;
     }
 
     await next();
+  }
+
+  /**
+   * Generate CSRF token
+   */
+  private generateToken(): string {
+    return crypto.randomBytes(this.config.tokenLength!).toString('hex');
+  }
+
+  /**
+   * Set CSRF cookie
+   */
+  private setCSRFCookie(ctx: Context, token: string): void {
+    const cookieOptions = this.config.cookieOptions!;
+    ctx.cookies.set(this.config.cookieName!, token, {
+      httpOnly: cookieOptions.httpOnly,
+      secure: cookieOptions.secure,
+      sameSite: cookieOptions.sameSite,
+      maxAge: cookieOptions.maxAge,
+    });
+  }
+
+  /**
+   * Validate CSRF token
+   */
+  private validateToken(ctx: Context): boolean {
+    const cookieToken = ctx.cookies.get(this.config.cookieName!);
+    const headerToken = ctx.get(this.config.headerName!);
+    const bodyToken = (ctx.request as any).body?.csrfToken;
+
+    // Token can be in header or body
+    const providedToken = headerToken || bodyToken;
+
+    if (!cookieToken || !providedToken) {
+      return false;
+    }
+
+    // Use constant-time comparison to prevent timing attacks
+    // Ensure both tokens are the same length to avoid timing attacks
+    if (cookieToken.length !== providedToken.length) {
+      return false;
+    }
+    
+    return crypto.timingSafeEqual(
+      Buffer.from(cookieToken, 'utf8'),
+      Buffer.from(providedToken, 'utf8'),
+    );
   }
 
   /**
