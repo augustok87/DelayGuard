@@ -34,7 +34,7 @@ export const useSettingsActions = () => {
         return { success: false, error: validation.errors.join(', ') };
       }
 
-      const result = await updateSettings(settings);
+      const result = await updateSettings('settings', settings);
 
       if (result.success) {
         showSaveSuccessToast();

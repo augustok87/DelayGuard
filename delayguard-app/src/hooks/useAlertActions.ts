@@ -3,12 +3,12 @@ import { useDelayAlerts } from './useDelayAlerts';
 import { useToasts } from './useToasts';
 
 export const useAlertActions = () => {
-  const { updateExistingAlert: updateAlert, deleteExistingAlert: deleteAlert } = useDelayAlerts();
+  const { updateExistingAlert, deleteExistingAlert } = useDelayAlerts();
   const { showSuccessToast, showErrorToast, showDeleteSuccessToast, showDeleteErrorToast } = useToasts();
 
   const resolveAlert = useCallback(async(alertId: string) => {
     try {
-      const result = await updateAlert(alertId, {
+      const result = await updateExistingAlert(alertId, {
         status: 'resolved',
         resolvedAt: new Date().toISOString(),
       });
@@ -24,11 +24,11 @@ export const useAlertActions = () => {
       showErrorToast('An unexpected error occurred');
       return { success: false, error: 'An unexpected error occurred' };
     }
-  }, [updateAlert, showSuccessToast, showErrorToast]);
+  }, [updateExistingAlert, showSuccessToast, showErrorToast]);
 
   const dismissAlert = useCallback(async(alertId: string) => {
     try {
-      const result = await updateAlert(alertId, {
+      const result = await updateExistingAlert(alertId, {
         status: 'dismissed',
       });
 
@@ -43,11 +43,11 @@ export const useAlertActions = () => {
       showErrorToast('An unexpected error occurred');
       return { success: false, error: 'An unexpected error occurred' };
     }
-  }, [updateAlert, showSuccessToast, showErrorToast]);
+  }, [updateExistingAlert, showSuccessToast, showErrorToast]);
 
   const deleteAlertPermanently = useCallback(async(alertId: string) => {
     try {
-      const result = await deleteAlert(alertId);
+      const result = await deleteExistingAlert(alertId);
 
       if (result.success) {
         showDeleteSuccessToast('Alert deleted permanently!');
@@ -60,13 +60,13 @@ export const useAlertActions = () => {
       showDeleteErrorToast('An unexpected error occurred');
       return { success: false, error: 'An unexpected error occurred' };
     }
-  }, [deleteAlert, showDeleteSuccessToast, showDeleteErrorToast, showErrorToast]);
+  }, [deleteExistingAlert, showDeleteSuccessToast, showDeleteErrorToast, showErrorToast]);
 
   const bulkResolveAlerts = useCallback(async(alertIds: string[]) => {
     const results = await Promise.allSettled(
       alertIds.map(async(id) => {
         try {
-          const result = await updateAlert(id, {
+          const result = await updateExistingAlert(id, {
             status: 'resolved',
             resolvedAt: new Date().toISOString(),
           });
@@ -98,13 +98,13 @@ export const useAlertActions = () => {
       resolvedCount: successful, 
       totalCount: alertIds.length, 
     };
-  }, [updateAlert, showSuccessToast, showErrorToast]);
+  }, [updateExistingAlert, showSuccessToast, showErrorToast]);
 
   const bulkDismissAlerts = useCallback(async(alertIds: string[]) => {
     const results = await Promise.allSettled(
       alertIds.map(async(id) => {
         try {
-          const result = await updateAlert(id, {
+          const result = await updateExistingAlert(id, {
             status: 'dismissed',
           });
           return result;
@@ -133,13 +133,13 @@ export const useAlertActions = () => {
       dismissedCount: successful, 
       totalCount: alertIds.length, 
     };
-  }, [updateAlert, showSuccessToast, showErrorToast]);
+  }, [updateExistingAlert, showSuccessToast, showErrorToast]);
 
   const bulkDeleteAlerts = useCallback(async(alertIds: string[]) => {
     const results = await Promise.allSettled(
       alertIds.map(async(id) => {
         try {
-          const result = await deleteAlert(id);
+          const result = await deleteExistingAlert(id);
           return result;
         } catch (error) {
           return { success: false, error: 'An unexpected error occurred' };
@@ -166,7 +166,7 @@ export const useAlertActions = () => {
       deletedCount: successful, 
       totalCount: alertIds.length, 
     };
-  }, [deleteAlert, showDeleteSuccessToast, showDeleteErrorToast]);
+  }, [deleteExistingAlert, showDeleteSuccessToast, showDeleteErrorToast]);
 
   return {
     resolveAlert,

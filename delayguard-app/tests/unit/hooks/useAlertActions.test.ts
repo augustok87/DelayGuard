@@ -23,8 +23,8 @@ describe('useAlertActions', () => {
     
     // Mock useDelayAlerts
     require('../../../src/hooks/useDelayAlerts').useDelayAlerts.mockReturnValue({
-      updateAlert: mockUpdateAlert,
-      deleteAlert: mockDeleteAlert,
+      updateExistingAlert: mockUpdateAlert,
+      deleteExistingAlert: mockDeleteAlert,
     });
 
     // Mock useToasts

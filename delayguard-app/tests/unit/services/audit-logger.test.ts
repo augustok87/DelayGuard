@@ -545,12 +545,16 @@ describe('Audit Logger', () => {
         SecurityEventType.AUTHENTICATION_SUCCESS,
         mockContext,
         'Low severity event',
+        {},
+        SecuritySeverity.LOW,
       );
 
       await auditLogger.logSecurityEvent(
         SecurityEventType.SQL_INJECTION_ATTEMPT,
         mockContext,
         'High severity event',
+        {},
+        SecuritySeverity.HIGH,
       );
 
       // Wait a bit to ensure flush completes

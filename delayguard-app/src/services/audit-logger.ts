@@ -140,6 +140,7 @@ export class AuditLogger extends EventEmitter {
 
     // Check if buffer needs flushing
     if (this.eventBuffer.length >= this.config.batchSize) {
+      console.log('Flushing events due to batch size reached:', this.eventBuffer.length);
       await this.flushEvents();
     }
   }

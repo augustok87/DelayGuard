@@ -1,51 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { useCallback } from 'react';
+import { useAsyncResource, useItemFilters } from './useAsyncResource';
 import { fetchOrders, updateOrder, deleteOrder } from '../store/slices/ordersSlice';
 import { Order, CreateOrderData, UpdateOrderData } from '../types';
 
 export const useOrders = () => {
-  const dispatch = useAppDispatch();
-  const { items: orders, loading, error } = useAppSelector(state => state.orders);
+  // Use the generic useAsyncResource hook
+  const {
+    items: orders,
+    loading,
+    error,
+    createItem: createNewOrder,
+    updateItem: updateExistingOrder,
+    deleteItem: deleteExistingOrder,
+    refreshItems: refreshOrders,
+  } = useAsyncResource<Order>(
+    'orders',
+    fetchOrders,
+    updateOrder,
+    deleteOrder,
+    (state) => ({
+      items: state.orders.items,
+      loading: state.orders.loading,
+      error: state.orders.error,
+    })
+  );
 
-  // Load orders on mount
-  useEffect(() => {
-    dispatch(fetchOrders());
-  }, [dispatch]);
-
-  // Order actions - Note: createOrder would need to be implemented in the slice
-  const createNewOrder = useCallback(async(orderData: CreateOrderData) => {
-    try {
-      // For now, we'll just add to local state
-      // In a real app, this would dispatch a createOrder action
-      console.log('Creating order:', orderData);
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err as string };
-    }
-  }, []);
-
-  const updateExistingOrder = useCallback(async(id: string, updates: UpdateOrderData) => {
-    try {
-      await dispatch(updateOrder({ id, updates })).unwrap();
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err as string };
-    }
-  }, [dispatch]);
-
-  const deleteExistingOrder = useCallback(async(id: string) => {
-    try {
-      await dispatch(deleteOrder(id)).unwrap();
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err as string };
-    }
-  }, [dispatch]);
-
-  // Order filtering and sorting
-  const getOrdersByStatus = useCallback((status: string) => {
-    return orders.filter(order => order.status === status);
-  }, [orders]);
+  // Use the generic filtering and sorting hook
+  const {
+    getItemsByStatus: getOrdersByStatus,
+    searchItems: searchOrdersGeneric,
+    sortItems: sortOrdersGeneric,
+  } = useItemFilters<Order>(
+    orders,
+    (order) => order.status
+  );
 
   const getProcessingOrders = useCallback(() => {
     return getOrdersByStatus('processing');
@@ -83,16 +71,10 @@ export const useOrders = () => {
     return orders.filter(order => !order.trackingNumber);
   }, [orders]);
 
-  // Search functionality
+  // Search functionality using generic search
   const searchOrders = useCallback((query: string) => {
-    const lowercaseQuery = query.toLowerCase();
-    return orders.filter(order => 
-      order.orderNumber.toLowerCase().includes(lowercaseQuery) ||
-      order.customerName.toLowerCase().includes(lowercaseQuery) ||
-      (order.trackingNumber && order.trackingNumber.toLowerCase().includes(lowercaseQuery)) ||
-      order.status.toLowerCase().includes(lowercaseQuery),
-    );
-  }, [orders]);
+    return searchOrdersGeneric(query, ['orderNumber', 'customerName', 'trackingNumber', 'status']);
+  }, [searchOrdersGeneric]);
 
   // Statistics
   const getOrderStats = useCallback(() => {
@@ -128,7 +110,7 @@ export const useOrders = () => {
     createOrder: createNewOrder,
     updateOrder: updateExistingOrder,
     deleteOrder: deleteExistingOrder,
-    refreshOrders: () => dispatch(fetchOrders()),
+    refreshOrders,
     
     // Filtering
     getOrdersByStatus,

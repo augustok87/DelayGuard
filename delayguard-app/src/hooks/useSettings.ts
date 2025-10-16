@@ -1,67 +1,62 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { fetchSettings, updateSettings, resetSettings } from '../store/slices/settingsSlice';
+import { useCallback } from 'react';
+import { useAsyncResource } from './useAsyncResource';
+import { fetchSettings, saveSettings, resetSettings } from '../store/slices/settingsSlice';
 import { AppSettings } from '../types';
 
 export const useSettings = () => {
-  const dispatch = useAppDispatch();
-  const { data: settings, loading, error } = useAppSelector(state => state.settings);
+  // Use the generic useAsyncResource hook for settings
+  const {
+    items: settingsArray,
+    loading,
+    error,
+    updateItem: updateAppSettings,
+    refreshItems: refreshSettings,
+  } = useAsyncResource<AppSettings>(
+    'settings',
+    fetchSettings,
+    saveSettings,
+    resetSettings, // Using resetSettings as delete action
+    (state) => ({
+      items: [state.settings.data], // Wrap single settings object in array
+      loading: state.settings.loading,
+      error: state.settings.error,
+    })
+  );
 
-  // Load settings on mount
-  useEffect(() => {
-    dispatch(fetchSettings());
-  }, [dispatch]);
-
-  // Settings actions
-  const updateAppSettings = useCallback(async(newSettings: Partial<AppSettings>) => {
-    try {
-      dispatch(updateSettings(newSettings));
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err as string };
-    }
-  }, [dispatch]);
-
-  const resetToDefaults = useCallback(async() => {
-    try {
-      dispatch(resetSettings());
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err as string };
-    }
-  }, [dispatch]);
+  // Extract the single settings object
+  const settings = settingsArray[0] || {};
 
   // Individual setting updates
   const updateDelayThreshold = useCallback(async(threshold: number) => {
-    return updateAppSettings({ delayThreshold: threshold });
+    return updateAppSettings('settings', { delayThreshold: threshold });
   }, [updateAppSettings]);
 
   const updateNotificationTemplate = useCallback(async(template: string) => {
-    return updateAppSettings({ notificationTemplate: template });
+    return updateAppSettings('settings', { notificationTemplate: template });
   }, [updateAppSettings]);
 
   const toggleEmailNotifications = useCallback(async() => {
-    return updateAppSettings({ emailNotifications: !settings.emailNotifications });
+    return updateAppSettings('settings', { emailNotifications: !settings.emailNotifications });
   }, [updateAppSettings, settings.emailNotifications]);
 
   const toggleSmsNotifications = useCallback(async() => {
-    return updateAppSettings({ smsNotifications: !settings.smsNotifications });
+    return updateAppSettings('settings', { smsNotifications: !settings.smsNotifications });
   }, [updateAppSettings, settings.smsNotifications]);
 
   const updateTheme = useCallback(async(theme: 'light' | 'dark') => {
-    return updateAppSettings({ theme });
+    return updateAppSettings('settings', { theme });
   }, [updateAppSettings]);
 
   const updateLanguage = useCallback(async(language: string) => {
-    return updateAppSettings({ language });
+    return updateAppSettings('settings', { language });
   }, [updateAppSettings]);
 
   const updateAutoResolveDays = useCallback(async(days: number) => {
-    return updateAppSettings({ autoResolveDays: days });
+    return updateAppSettings('settings', { autoResolveDays: days });
   }, [updateAppSettings]);
 
   const toggleAnalytics = useCallback(async() => {
-    return updateAppSettings({ enableAnalytics: !settings.enableAnalytics });
+    return updateAppSettings('settings', { enableAnalytics: !settings.enableAnalytics });
   }, [updateAppSettings, settings.enableAnalytics]);
 
   // Validation
@@ -116,7 +111,7 @@ export const useSettings = () => {
       },
     };
 
-    return updateAppSettings(presets[preset]);
+    return updateAppSettings('settings', presets[preset]);
   }, [updateAppSettings]);
 
   // Export/Import settings
@@ -141,7 +136,7 @@ export const useSettings = () => {
         return { success: false, error: validation.errors.join(', ') };
       }
 
-      return updateAppSettings(importedSettings);
+      return updateAppSettings('settings', importedSettings);
     } catch (err) {
       return { success: false, error: 'Invalid settings file' };
     }
@@ -155,8 +150,8 @@ export const useSettings = () => {
     
     // Actions
     updateSettings: updateAppSettings,
-    resetSettings: resetToDefaults,
-    refreshSettings: () => dispatch(fetchSettings()),
+    resetSettings: () => updateAppSettings('settings', {}), // Reset to defaults
+    refreshSettings,
     
     // Individual updates
     updateDelayThreshold,

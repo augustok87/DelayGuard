@@ -39,17 +39,6 @@ export const Modal: React.FC<ModalProps> = ({
   const handleBackdropClick = useCallback((event: React.MouseEvent) => {
     if (event.target === event.currentTarget) {
       onClose();
-      
-      // Restore focus after closing using requestAnimationFrame
-      requestAnimationFrame(() => {
-        if (previousActiveElement.current) {
-          // Ensure the element is still in the DOM and focusable
-          if (document.contains(previousActiveElement.current)) {
-            previousActiveElement.current.focus();
-          }
-          previousActiveElement.current = null;
-        }
-      });
     }
   }, [onClose]);
 
@@ -59,17 +48,6 @@ export const Modal: React.FC<ModalProps> = ({
     (event.target as HTMLElement).blur();
     
     onClose();
-    
-    // Restore focus after closing using requestAnimationFrame
-    requestAnimationFrame(() => {
-      if (previousActiveElement.current) {
-        // Ensure the element is still in the DOM and focusable
-        if (document.contains(previousActiveElement.current)) {
-          previousActiveElement.current.focus();
-        }
-        previousActiveElement.current = null;
-      }
-    });
   }, [onClose]);
 
   // Focus trap functionality
@@ -85,12 +63,22 @@ export const Modal: React.FC<ModalProps> = ({
     const firstElement = focusableElements[0] as HTMLElement;
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 
-    if (event.shiftKey) {
+    // If we're on the modal itself, move to first/last focusable element
+    if (document.activeElement === modal) {
+      event.preventDefault();
+      if (event.shiftKey) {
+        lastElement?.focus();
+      } else {
+        firstElement?.focus();
+      }
+    } else if (event.shiftKey) {
+      // Shift+Tab from first element should go to last element
       if (document.activeElement === firstElement) {
         event.preventDefault();
         lastElement?.focus();
       }
     } else {
+      // Tab from last element should go to first element
       if (document.activeElement === lastElement) {
         event.preventDefault();
         firstElement?.focus();
@@ -124,6 +112,22 @@ export const Modal: React.FC<ModalProps> = ({
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, handleEscape, handleKeyDown]);
+
+  // Handle focus restoration when modal closes
+  useEffect(() => {
+    if (!isOpen && previousActiveElement.current) {
+      // Restore focus after closing using setTimeout to ensure modal is fully closed
+      setTimeout(() => {
+        if (previousActiveElement.current) {
+          // Ensure the element is still in the DOM and focusable
+          if (document.contains(previousActiveElement.current)) {
+            previousActiveElement.current.focus();
+          }
+          previousActiveElement.current = null;
+        }
+      }, 0);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
