@@ -49,6 +49,27 @@ npm run docs:serve
 2. **Live Server**: Run `npm run docs:serve` and visit `http://localhost:8080`
 3. **API Documentation**: Interactive Swagger UI available at `/docs/api/`
 
+#### 🚀 **Swagger API Documentation (Recommended)**
+
+For the interactive API documentation, use the standalone Swagger UI:
+
+```bash
+# Navigate to the delayguard-app directory
+cd delayguard-app
+
+# Start the HTTP server
+npx http-server . -p 8080
+
+# Open in browser
+open http://localhost:8080/swagger-ui.html
+```
+
+**Available Endpoints:**
+- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
+- **Swagger JSON**: `http://localhost:8080/docs/api/swagger.json`
+
+**Note**: The full backend server (`npm run dev:server`) requires environment variables (database, Redis, external APIs) to run. The standalone Swagger UI works without these dependencies.
+
 ---
 
 ## 📚 Documentation Standards

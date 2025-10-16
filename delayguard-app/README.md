@@ -188,6 +188,30 @@ src/
 - `POST /webhooks/fulfillments/updated` - Fulfillment update webhook
 - `POST /webhooks/orders/paid` - Order paid webhook
 
+## 🚀 **API Documentation (Swagger UI)**
+
+For interactive API documentation without setting up the full backend:
+
+```bash
+# Start the HTTP server
+npx http-server . -p 8080
+
+# Open Swagger UI in browser
+open http://localhost:8080/swagger-ui.html
+```
+
+**Available Endpoints:**
+- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
+- **Swagger JSON**: `http://localhost:8080/docs/api/swagger.json`
+
+**Features:**
+- Interactive API testing
+- Request/response schemas
+- Authentication examples
+- All endpoint documentation
+
+**Note**: This standalone approach works without requiring database, Redis, or external API credentials.
+
 ## Development Workflow
 
 ### 1. TDD Approach
