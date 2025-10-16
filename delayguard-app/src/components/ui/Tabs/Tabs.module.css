@@ -43,7 +43,8 @@
   outline-offset: -2px;
 }
 
-.tabActive {
+.tabActive,
+.active {
   color: var(--delayguard-primary);
   border-bottom-color: var(--delayguard-primary);
   background: var(--delayguard-primary-50);

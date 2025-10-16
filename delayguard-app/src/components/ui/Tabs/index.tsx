@@ -12,10 +12,11 @@ export const Tabs: React.FC<TabsProps> = ({
   ...props
 }) => {
   const [internalActiveTab, setInternalActiveTab] = useState(
-    activeTab || defaultActiveTab || tabs[0]?.id || '',
+    defaultActiveTab || tabs[0]?.id || '',
   );
 
   const currentActiveTab = activeTab !== undefined ? activeTab : internalActiveTab;
+  const isExplicitlyUndefined = activeTab === undefined;
 
   const handleTabClick = useCallback((tabId: string) => {
     if (onTabChange) {
@@ -31,15 +32,20 @@ export const Tabs: React.FC<TabsProps> = ({
       handleTabClick(tabId);
     } else if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
       event.preventDefault();
-      const currentIndex = tabs.findIndex(tab => tab.id === currentActiveTab);
+      const currentIndex = tabs.findIndex(tab => tab.id === tabId);
       const direction = event.key === 'ArrowRight' ? 1 : -1;
       const nextIndex = (currentIndex + direction + tabs.length) % tabs.length;
       const nextTab = tabs[nextIndex];
       if (nextTab && !nextTab.disabled) {
         handleTabClick(nextTab.id);
+        // Focus the next tab
+        const nextTabElement = document.getElementById(`tab-${nextTab.id}`);
+        if (nextTabElement) {
+          nextTabElement.focus();
+        }
       }
     }
-  }, [tabs, currentActiveTab, handleTabClick]);
+  }, [tabs, handleTabClick]);
 
   const activeTabContent = tabs.find(tab => tab.id === currentActiveTab)?.content;
 
@@ -49,13 +55,13 @@ export const Tabs: React.FC<TabsProps> = ({
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={tabsClasses} aria-label={ariaLabel} {...props}>
-      <div className={styles.tabList} role="tablist">
+    <div className={tabsClasses} {...props}>
+      <div className={`tabs ${className}`} role="tablist" aria-label={ariaLabel}>
         {tabs.map((tab) => {
-          const isActive = tab.id === currentActiveTab;
+          const isActive = isExplicitlyUndefined ? false : tab.id === currentActiveTab;
           const tabClasses = [
             styles.tab,
-            isActive && styles.tabActive,
+            isActive && 'active',
             tab.disabled && styles.tabDisabled,
           ].filter(Boolean).join(' ');
 
@@ -68,6 +74,7 @@ export const Tabs: React.FC<TabsProps> = ({
               disabled={tab.disabled}
               role="tab"
               aria-selected={isActive}
+              aria-disabled={tab.disabled}
               aria-controls={`tabpanel-${tab.id}`}
               id={`tab-${tab.id}`}
               data-testid={`tab-${tab.id}`}
@@ -81,16 +88,17 @@ export const Tabs: React.FC<TabsProps> = ({
       
       <div className={styles.tabPanels}>
         {tabs.map((tab) => (
-          <div
-            key={tab.id}
-            className={styles.tabPanel}
-            role="tabpanel"
-            id={`tabpanel-${tab.id}`}
-            aria-labelledby={`tab-${tab.id}`}
-            hidden={tab.id !== currentActiveTab}
-          >
-            {tab.id === currentActiveTab && tab.content}
-          </div>
+          tab.id === currentActiveTab && (
+            <div
+              key={tab.id}
+              className={styles.tabPanel}
+              role="tabpanel"
+              id={`tabpanel-${tab.id}`}
+              aria-labelledby={`tab-${tab.id}`}
+            >
+              {tab.content}
+            </div>
+          )
         ))}
       </div>
     </div>

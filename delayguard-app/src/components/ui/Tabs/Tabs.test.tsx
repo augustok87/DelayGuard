@@ -87,13 +87,13 @@ describe('Tabs Component', () => {
     it('should show new tab content after change', async() => {
       const user = userEvent.setup();
       
-      render(<Tabs {...defaultProps} />);
+      const { rerender } = render(<Tabs {...defaultProps} />);
       
       const tab2 = screen.getByRole('tab', { name: /tab 2/i });
       await user.click(tab2);
       
       // Update props to reflect the change
-      render(<Tabs {...defaultProps} activeTab="tab2" />);
+      rerender(<Tabs {...defaultProps} activeTab="tab2" />);
       
       expect(screen.getByText('Content 2')).toBeInTheDocument();
       expect(screen.queryByText('Content 1')).not.toBeInTheDocument();

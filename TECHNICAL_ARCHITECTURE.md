@@ -1,14 +1,14 @@
 # DelayGuard - Technical Architecture & Implementation
 
 **Last Updated**: January 2025  
-**Status**: Production Ready with Fully Operational Testing Infrastructure  
+**Status**: In Development with TDD Implementation  
 **Version**: 1.0.0  
 
 ---
 
 ## 🏗️ **System Architecture Overview**
 
-DelayGuard is a production-ready Shopify app built with enterprise-grade architecture and world-class engineering practices. The system proactively detects shipping delays and automatically notifies customers, reducing support tickets by 20-40%.
+DelayGuard is a Shopify app in development built with enterprise-grade architecture and world-class engineering practices. The system is designed to proactively detect shipping delays and automatically notify customers, with the goal of reducing support tickets by 20-40%.
 
 ### **High-Level Architecture**
 ```
@@ -44,7 +44,7 @@ DelayGuard is a production-ready Shopify app built with enterprise-grade archite
 - **Framework**: React 18+ with TypeScript
 - **UI Library**: Custom React Components (zero Polaris dependencies)
 - **State Management**: Redux Toolkit with RTK Query
-- **Testing**: Jest + React Testing Library + 50% coverage
+- **Testing**: Jest + React Testing Library + TDD implementation
 - **Build**: Webpack with optimization
 - **Styling**: CSS Modules with custom theming
 - **Component Architecture**: React Components for main application, Web Components for testing infrastructure

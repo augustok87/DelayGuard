@@ -106,32 +106,38 @@ export function RefactoredAppOptimized() {
     switch (selectedTab) {
       case 0:
         return (
-          <DashboardTabWithSuspense
-            shop={shop}
-            settings={settings}
-            stats={stats}
-            loading={loading}
-            onSaveSettings={handleSaveSettings}
-            onTestDelayDetection={handleTestDelayDetection}
-            onConnectShopify={handleConnectShopify}
-            onSettingsChange={handleSettingsChange}
-          />
+          <div data-testid="dashboard-tab">
+            <DashboardTabWithSuspense
+              shop={shop}
+              settings={settings}
+              stats={stats}
+              loading={loading}
+              onSaveSettings={handleSaveSettings}
+              onTestDelayDetection={handleTestDelayDetection}
+              onConnectShopify={handleConnectShopify}
+              onSettingsChange={handleSettingsChange}
+            />
+          </div>
         );
       case 1:
         return (
-          <AlertsTabWithSuspense
-            alerts={alerts}
-            loading={loading}
-            onAlertAction={handleAlertAction}
-          />
+          <div data-testid="alerts-tab">
+            <AlertsTabWithSuspense
+              alerts={alerts}
+              loading={loading}
+              onAlertAction={handleAlertAction}
+            />
+          </div>
         );
       case 2:
         return (
-          <OrdersTabWithSuspense
-            orders={orders}
-            loading={loading}
-            onOrderAction={handleOrderAction}
-          />
+          <div data-testid="orders-tab">
+            <OrdersTabWithSuspense
+              orders={orders}
+              loading={loading}
+              onOrderAction={handleOrderAction}
+            />
+          </div>
         );
       default:
         return null;
