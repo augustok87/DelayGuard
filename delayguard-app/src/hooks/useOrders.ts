@@ -29,7 +29,7 @@ export const useOrders = () => {
   const {
     getItemsByStatus: getOrdersByStatus,
     searchItems: searchOrdersGeneric,
-    sortItems: sortOrdersGeneric,
+    // sortItems: sortOrdersGeneric, // Available for future use
   } = useItemFilters<Order>(
     orders,
     (order) => order.status,

@@ -1,6 +1,6 @@
 // OrderDetailsModal component for displaying order details
 import React from 'react';
-import { Modal, Button, Text } from '../../ui';
+import { Modal, Text } from '../../ui';
 import { Order } from '../../../types';
 
 interface OrderDetailsModalProps {

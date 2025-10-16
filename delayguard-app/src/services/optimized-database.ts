@@ -127,7 +127,7 @@ export class OptimizedDatabase {
 
   async batchQuery<T extends Record<string, any> = any>(
     queries: Array<{ text: string; params?: any[] }>,
-    options: QueryOptions = {},
+    _options: QueryOptions = {},
   ): Promise<QueryResult<T>[]> {
     const client = await this.pool.connect();
     

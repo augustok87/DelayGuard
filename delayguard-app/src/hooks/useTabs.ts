@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setSelectedTab } from '../store/slices/uiSlice';
 

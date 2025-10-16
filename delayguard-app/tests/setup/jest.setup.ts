@@ -8,9 +8,8 @@ import '@testing-library/jest-dom';
 // Polyfill for Node.js environment
 import { TextEncoder, TextDecoder } from 'util';
 
-// @ts-ignore
 global.TextEncoder = TextEncoder;
-// @ts-ignore
+// @ts-expect-error - TextDecoder type mismatch between Node.js and DOM types
 global.TextDecoder = TextDecoder;
 
 // Mock environment variables

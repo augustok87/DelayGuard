@@ -6,7 +6,7 @@ describe('Performance Tests', () => {
       const start = performance.now();
       
       const response = await fetch('/health');
-      const data = await response.json();
+      await response.json();
       
       const end = performance.now();
       const responseTime = end - start;
@@ -19,7 +19,7 @@ describe('Performance Tests', () => {
       const start = performance.now();
       
       const response = await fetch('/api');
-      const data = await response.json();
+      await response.json();
       
       const end = performance.now();
       const responseTime = end - start;

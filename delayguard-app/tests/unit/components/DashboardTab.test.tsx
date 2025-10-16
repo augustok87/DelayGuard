@@ -1,8 +1,7 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, waitFor } from '../../setup/test-utils';
+import { render, screen, fireEvent, waitFor, createMockSettings, createMockStats } from '../../setup/test-utils';
 import { DashboardTab } from '../../../src/components/tabs/DashboardTab/DashboardTab.memo';
-import { createMockSettings, createMockStats } from '../../setup/test-utils';
 
 // Mock the child components
 jest.mock('../../../src/components/ui/Card', () => ({

@@ -7,7 +7,7 @@ jest.mock('../../../src/components/ui', () => ({
   Button: ({ children, onClick, ...props }: any) => <button data-testid="button" onClick={onClick} {...props}>{children}</button>,
   Card: ({ children, title, ...props }: any) => <div data-testid="card" data-title={title} {...props}>{children}</div>,
   Text: ({ children, ...props }: any) => <span {...props}>{children}</span>,
-  Modal: ({ children, title, isOpen, open, onClose, primaryAction, secondaryAction, ...props }: any) => {
+  Modal: ({ children, title, isOpen, open, onClose: _onClose, primaryAction, secondaryAction, ...props }: any) => {
     const modalOpen = isOpen !== undefined ? isOpen : open;
     return modalOpen ? (
       <div data-testid="modal" {...props}>

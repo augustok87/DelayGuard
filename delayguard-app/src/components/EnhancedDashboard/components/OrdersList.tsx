@@ -1,7 +1,7 @@
 // OrdersList component for displaying orders
 import React from 'react';
 import { Card, DataTable, Text, Badge } from '../../ui';
-import { Order } from '../../../types';
+import { Order, DataTableRow } from '../../../types';
 
 interface OrdersListProps {
   orders: Order[];
@@ -9,7 +9,7 @@ interface OrdersListProps {
 }
 
 export const OrdersList: React.FC<OrdersListProps> = ({ orders, onOrderClick }) => {
-  const handleRowClick = (row: any) => {
+  const handleRowClick = (row: DataTableRow) => {
     if (onOrderClick) {
       onOrderClick(row as Order);
     }
@@ -44,7 +44,7 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, onOrderClick }) 
       title: 'Total Amount',
       sortable: true,
       width: '140px',
-      render: (value: number, row: any) => (
+      render: (value: number, row: DataTableRow) => (
         <Text variant="bodyMd" as="span">
           {value ? `$${value.toFixed(2)} ${row.currency || 'USD'}` : 'N/A'}
         </Text>

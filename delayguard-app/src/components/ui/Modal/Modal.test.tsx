@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { Modal } from './index';
@@ -75,7 +75,7 @@ describe('Modal Component', () => {
       
       render(<Modal {...defaultProps} onClose={onClose} />);
       
-      const closeButton = screen.getByRole('button', { name: /close/i });
+      const closeButton = screen.getByTestId('modal-close-button');
       await user.click(closeButton);
       
       expect(onClose).toHaveBeenCalledTimes(1);
@@ -200,7 +200,7 @@ describe('Modal Component', () => {
       const button = screen.getByText('Focus me');
       button.focus();
       
-      const closeButton = screen.getByRole('button', { name: /close/i });
+      const closeButton = screen.getByTestId('modal-close-button');
       await user.click(closeButton);
       
       // Wait for modal to close
@@ -225,7 +225,7 @@ describe('Modal Component', () => {
         </Modal>,
       );
       
-      const closeButton = screen.getByRole('button', { name: /close/i });
+      const closeButton = screen.getByTestId('modal-close-button');
       const firstButton = screen.getByText('First');
       const secondButton = screen.getByText('Second');
       const thirdButton = screen.getByText('Third');

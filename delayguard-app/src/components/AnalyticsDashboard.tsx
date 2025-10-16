@@ -54,7 +54,7 @@ function AnalyticsDashboard({ dateRange: propDateRange, onExport }: AnalyticsDas
   const [metrics, setMetrics] = useState<AnalyticsMetrics>(defaultMetrics);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [, setSelectedTab] = useState(0);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -269,23 +269,7 @@ function AnalyticsDashboard({ dateRange: propDateRange, onExport }: AnalyticsDas
     </Card>
   );
 
-  const renderResolutionMetrics = () => (
-    <Card>
-      <div style={{ padding: '16px' }}>
-        <Text variant="headingMd" as="h3">Resolution Time</Text>
-      </div>
-      <div style={{ padding: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
-          <Text variant="bodyMd" as="span">Average</Text>
-          <Text variant="bodyMd" as="span">{metrics.resolutionTime.average} days</Text>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
-          <Text variant="bodyMd" as="span">Median</Text>
-          <Text variant="bodyMd" as="span">{metrics.resolutionTime.median} days</Text>
-        </div>
-      </div>
-    </Card>
-  );
+  // Removed unused renderResolutionMetrics function
 
   const renderExportModal = () => (
     <Modal

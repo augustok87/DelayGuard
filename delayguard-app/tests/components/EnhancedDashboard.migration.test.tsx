@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../utils/react-components/test-utils';
-import { testAccessibility, testPerformance, createMockProps } from '../utils/react-components/test-utils';
+import { render, screen, fireEvent, waitFor, testAccessibility, testPerformance } from '../utils/react-components/test-utils';
+// import { createMockProps } from '../utils/react-components/test-utils'; // Available for future use
 import EnhancedDashboard from '../../src/components/EnhancedDashboard/EnhancedDashboard.refactored';
 import { mockAppSettings, mockDelayAlerts, mockStatsData, mockFunctions } from '../utils/react-components/mock-data';
 

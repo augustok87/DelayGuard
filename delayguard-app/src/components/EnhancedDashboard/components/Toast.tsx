@@ -1,6 +1,6 @@
 // Toast component for displaying temporary messages
 import React from 'react';
-import { Button } from '../../ui';
+// Button import removed as it's not used in this component
 import { TOAST_STYLES, TOAST_BUTTON_STYLES } from '../constants';
 
 interface ToastProps {

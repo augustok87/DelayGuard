@@ -3,7 +3,7 @@
  * Provides real-time monitoring, alerting, and health checks for DelayGuard
  */
 
-import { delayGuardMetrics, createSpan, withSpan, getTracer } from './tracing';
+import { delayGuardMetrics, withSpan, getTracer } from './tracing';
 
 export interface HealthCheck {
   name: string;
@@ -464,7 +464,7 @@ export class AlertingService {
   /**
    * Check error rate
    */
-  private async checkErrorRate(threshold: number): Promise<boolean> {
+  private async checkErrorRate(_threshold: number): Promise<boolean> {
     // This would integrate with your metrics system
     // For now, return false as placeholder
     return false;
@@ -473,7 +473,7 @@ export class AlertingService {
   /**
    * Check response time
    */
-  private async checkResponseTime(threshold: number): Promise<boolean> {
+  private async checkResponseTime(_threshold: number): Promise<boolean> {
     // This would integrate with your metrics system
     // For now, return false as placeholder
     return false;

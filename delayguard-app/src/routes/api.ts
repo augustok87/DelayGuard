@@ -1,7 +1,7 @@
 import Router from 'koa-router';
 import { verifyRequest } from '@shopify/koa-shopify-auth';
-import { query } from '../database/connection';
-import { getQueueStats } from '../queue/setup';
+// import { query } from '../database/connection'; // Available for future use
+// import { getQueueStats } from '../queue/setup'; // Available for future use
 import { analyticsRoutes } from './analytics';
 import { OptimizedApiService } from '../services/optimized-api';
 import { config } from '../server';

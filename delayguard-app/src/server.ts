@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 // Shopify imports
 import { shopifyApi, LATEST_API_VERSION, LogSeverity } from '@shopify/shopify-api';
 import { verifyRequest } from '@shopify/koa-shopify-auth';
-import createShopifyGraphQLClient from '@shopify/koa-shopify-graphql-proxy';
+// import createShopifyGraphQLClient from '@shopify/koa-shopify-graphql-proxy'; // Available for future use
 
 // Internal imports
 import { AppConfig } from './types';
@@ -23,7 +23,7 @@ import { PerformanceMonitor } from './services/performance-monitor';
 
 // Security middleware imports
 import { securityHeaders } from './middleware/security-headers';
-import { RateLimitingMiddleware, RateLimitPresets } from './middleware/rate-limiting';
+// import { RateLimitingMiddleware, RateLimitPresets } from './middleware/rate-limiting'; // Available for future use
 import { CSRFProtectionMiddleware } from './middleware/csrf-protection';
 import { InputSanitizationMiddleware, SanitizationPresets } from './middleware/input-sanitization';
 

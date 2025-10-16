@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-expect-error - This is a test setup file
 // Test setup and mocks
 import { jest } from '@jest/globals';
 

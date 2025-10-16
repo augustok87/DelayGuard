@@ -368,8 +368,8 @@ export class SecretsManager extends EventEmitter {
    * Decrypt value
    */
   private decrypt(encryptedValue: string): string {
-    const [ivHex, encrypted] = encryptedValue.split(':');
-    const iv = Buffer.from(ivHex, 'hex');
+    const [, encrypted] = encryptedValue.split(':');
+    // const iv = Buffer.from(ivHex, 'hex'); // Available for future use
     
     const decipher = crypto.createDecipher('aes-256-cbc', this.encryptionKey);
     

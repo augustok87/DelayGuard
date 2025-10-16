@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card } from '../../ui/Card';
-import { Button } from '../../ui/Button';
+// import { Card } from '../../ui/Card'; // Available for future use
+// import { Button } from '../../ui/Button'; // Available for future use
 import { SettingsCard } from './SettingsCard';
 import { StatsCard } from './StatsCard';
 import { AppSettings, StatsData } from '../../../types';

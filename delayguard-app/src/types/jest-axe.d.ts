@@ -1,4 +1,4 @@
-import { AxeResults } from 'jest-axe';
+// import { AxeResults } from 'jest-axe'; // Available for future use
 
 declare global {
   namespace jest {

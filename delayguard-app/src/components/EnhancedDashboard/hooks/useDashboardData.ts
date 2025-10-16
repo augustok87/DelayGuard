@@ -50,8 +50,10 @@ export const useDashboardData = ({
       try {
         const { AnalyticsService } = await import('../../../services/analytics-service');
         
-        // Create a mock config for the service
-        const mockConfig = {
+        // Create a mock config for the service (used for testing)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const mockConfig = {
           shopify: {
             apiKey: 'mock-key',
             apiSecret: 'mock-secret',
@@ -94,7 +96,10 @@ export const useDashboardData = ({
     const handleWebSocketMessage = async() => {
       try {
         const { AnalyticsService } = await import('../../../services/analytics-service');
-        const mockConfig = {
+        // Mock configuration for testing (used in service instantiation)
+        // Mock configuration for testing (used in service instantiation)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const mockConfig = {
           shopify: {
             apiKey: 'mock-key',
             apiSecret: 'mock-secret',
@@ -129,6 +134,8 @@ export const useDashboardData = ({
   const handleSaveSettings = useCallback(async() => {
     try {
       const { AnalyticsService } = await import('../../../services/analytics-service');
+      // Mock configuration for testing (used in service instantiation)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const mockConfig = {
         shopify: {
           apiKey: 'mock-key',
@@ -189,6 +196,8 @@ export const useDashboardData = ({
   const handleTest = useCallback(async() => {
     try {
       const { AnalyticsService } = await import('../../../services/analytics-service');
+      // Mock configuration for testing (used in service instantiation)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const mockConfig = {
         shopify: {
           apiKey: 'mock-key',
@@ -260,6 +269,8 @@ export const useDashboardData = ({
       const { AnalyticsService } = await import('../../../services/analytics-service');
       
       // Create a mock config for the service
+      // Mock configuration for testing (used in service instantiation)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const mockConfig = {
         shopify: {
           apiKey: 'mock-key',

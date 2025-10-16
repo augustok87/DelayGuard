@@ -335,8 +335,9 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
             <Button size="sm" variant="secondary" onClick={handleShareTheme}>
               Share Theme
             </Button>
-            <label style={{ display: 'inline-block' }}>
+            <label htmlFor="theme-import" style={{ display: 'inline-block' }} aria-label="Import theme from file">
               <input
+                id="theme-import"
                 type="file"
                 accept=".json"
                 onChange={handleImportTheme}
@@ -410,12 +411,12 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
             </Text>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
               {colorPalettes.map((palette, index) => (
-                <div key={index} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px' }}>
+                <div key={palette.name || `palette-${index}`} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px' }}>
                   <Text variant="bodyMd" as="div" style={{ marginBottom: '8px' }}>{palette.name}</Text>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     {palette.colors.map((color, colorIndex) => (
                       <div
-                        key={colorIndex}
+                        key={`${palette.name}-color-${colorIndex}`}
                         style={{
                           width: '30px',
                           height: '30px',
@@ -436,6 +437,24 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
                           setToastMessage(`${palette.name} palette applied!`);
                           setShowToast(true);
                         }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setTheme(prev => ({
+                              ...prev,
+                              primaryColor: palette.colors[0],
+                              secondaryColor: palette.colors[1],
+                              accentColor: palette.colors[2],
+                              backgroundColor: palette.colors[3],
+                            }));
+                            setShowColorSuggestions(false);
+                            setToastMessage(`${palette.name} palette applied!`);
+                            setShowToast(true);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Apply ${palette.name} color palette`}
                       />
                     ))}
                   </div>

@@ -512,7 +512,7 @@ export class BackupService {
     const algorithm = 'aes-256-gcm';
     
     const key = data.subarray(0, 32);
-    const _iv = data.subarray(32, 48);
+    // const _iv = data.subarray(32, 48); // Available for future use
     const authTag = data.subarray(48, 64);
     const encrypted = data.subarray(64);
     

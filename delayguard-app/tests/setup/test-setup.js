@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-// @ts-nocheck
+// @ts-expect-error - This is a generated file
 // Test setup and mocks
 const globals_1 = require("@jest/globals");
 // Mock all external dependencies

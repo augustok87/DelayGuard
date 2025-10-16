@@ -167,7 +167,7 @@ export class PerformanceMonitor {
     return Math.round(usage.user / 1000000); // Convert to seconds
   }
 
-  private updateInMemoryMetrics(operation: string, duration: number, success: boolean): void {
+  private updateInMemoryMetrics(operation: string, duration: number, _success: boolean): void {
     if (!this.metrics.has(operation)) {
       this.metrics.set(operation, []);
     }

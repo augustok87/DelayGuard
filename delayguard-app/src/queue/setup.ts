@@ -1,6 +1,7 @@
-import { Queue, Worker, QueueEvents } from 'bullmq';
+import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
-import { AppConfig } from '../types';
+// import { QueueEvents } from 'bullmq'; // Available for future use
+// import { AppConfig } from '../types'; // Available for future use
 import { processDelayCheck } from './processors/delay-check';
 import { processNotification } from './processors/notification';
 

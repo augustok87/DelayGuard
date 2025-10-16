@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePerformance } from '../../../hooks/usePerformance';
 import styles from './PerformanceMonitor.module.css';
 

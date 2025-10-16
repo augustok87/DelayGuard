@@ -114,7 +114,7 @@ export const useOrderActions = () => {
     return { successful, failed };
   }, [updateOrderStatus, showSuccessToast, showErrorToast]);
 
-  const exportOrders = useCallback(async(orderIds?: string[]) => {
+  const exportOrders = useCallback(async(_orderIds?: string[]) => {
     try {
       showInfoToast('Preparing order export...');
       

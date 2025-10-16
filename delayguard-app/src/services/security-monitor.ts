@@ -443,7 +443,7 @@ export class SecurityMonitor extends EventEmitter {
   /**
    * Check if rule should be evaluated
    */
-  private shouldEvaluateRule(rule: ThreatDetectionRule, event: SecurityEvent): boolean {
+  private shouldEvaluateRule(rule: ThreatDetectionRule, _event: SecurityEvent): boolean {
     if (!rule.enabled) return false;
     
     // Check cooldown

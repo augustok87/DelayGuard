@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import styles from './VirtualList.module.css';
 
 interface VirtualListProps<T> {
@@ -50,23 +50,23 @@ export function VirtualList<T>({
     setScrollTop(e.currentTarget.scrollTop);
   }, []);
 
-  // Scroll to specific item
-  const scrollToItem = useCallback((index: number) => {
-    if (containerRef.current) {
-      const scrollTop = index * itemHeight;
-      containerRef.current.scrollTop = scrollTop;
-    }
-  }, [itemHeight]);
+  // Scroll to specific item (available for future use)
+  // const scrollToItem = useCallback((index: number) => {
+  //   if (containerRef.current) {
+  //     const scrollTop = index * itemHeight;
+  //     containerRef.current.scrollTop = scrollTop;
+  //   }
+  // }, [itemHeight]);
 
-  // Scroll to top
-  const scrollToTop = useCallback(() => {
-    scrollToItem(0);
-  }, [scrollToItem]);
+  // Scroll to top (available for future use)
+  // const scrollToTop = useCallback(() => {
+  //   scrollToItem(0);
+  // }, [scrollToItem]);
 
-  // Scroll to bottom
-  const scrollToBottom = useCallback(() => {
-    scrollToItem(items.length - 1);
-  }, [scrollToItem, items.length]);
+  // Scroll to bottom (available for future use)
+  // const scrollToBottom = useCallback(() => {
+  //   scrollToItem(items.length - 1);
+  // }, [scrollToItem, items.length]);
 
   return (
     <div

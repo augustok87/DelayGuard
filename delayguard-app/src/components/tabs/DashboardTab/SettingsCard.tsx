@@ -64,10 +64,11 @@ export function SettingsCard({
         
         {/* Delay Threshold Setting */}
         <div className={styles.setting}>
-          <label className={styles.label}>
+          <label htmlFor="delay-threshold" className={styles.label}>
             Delay Threshold (days)
           </label>
           <input
+            id="delay-threshold"
             type="number"
             className={styles.input}
             value={settings.delayThreshold}
@@ -83,10 +84,11 @@ export function SettingsCard({
         
         {/* Notification Template Setting */}
         <div className={styles.setting}>
-          <label className={styles.label}>
+          <label htmlFor="notification-template" className={styles.label}>
             Notification Template
           </label>
           <select
+            id="notification-template"
             className={styles.select}
             value={settings.notificationTemplate}
             onChange={(e) => handleTemplateChange(e.target.value)}
@@ -100,7 +102,7 @@ export function SettingsCard({
 
         {/* Notification Preferences */}
         <div className={styles.setting}>
-          <label className={styles.label}>Notification Preferences</label>
+          <label htmlFor="notification-preferences" className={styles.label}>Notification Preferences</label>
           <div className={styles.checkboxGroup}>
             <label className={styles.checkboxLabel}>
               <input

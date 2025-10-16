@@ -256,7 +256,7 @@ export class MonitoringService {
     const start = Date.now();
     
     try {
-      const result = await this.db.query('SELECT 1 as health_check');
+      await this.db.query('SELECT 1 as health_check');
       const responseTime = Date.now() - start;
       
       return {

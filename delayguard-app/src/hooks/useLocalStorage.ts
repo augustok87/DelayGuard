@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 export const useLocalStorage = <T>(key: string, initialValue: T) => {
   // Get from local storage then parse stored json or return initialValue

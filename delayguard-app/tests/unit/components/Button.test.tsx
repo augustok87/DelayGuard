@@ -107,7 +107,7 @@ describe('Button', () => {
     );
     
     const button = screen.getByRole('button', { name: /memo test/i });
-    const initialRenderCount = handleClick.mock.calls.length;
+    // const initialRenderCount = handleClick.mock.calls.length; // Available for future use
     
     // Re-render with same props
     rerender(

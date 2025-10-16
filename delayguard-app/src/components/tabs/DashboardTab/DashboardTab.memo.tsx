@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react';
-import { Card } from '../../ui/Card';
+// import { Card } from '../../ui/Card'; // Available for future use
 import { SettingsCard } from './SettingsCard';
 import { StatsCard } from './StatsCard';
 import { AppSettings, StatsData } from '../../../types';

@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { UIState, ModalState, ToastState, ThemeState, SidebarState } from '../../types/store';
-import { Toast } from '../../types/ui';
+import { UIState, ThemeState } from '../../types/store';
+// import { ModalState, ToastState, SidebarState } from '../../types/store'; // Available for future use
+// import { Toast } from '../../types/ui'; // Available for future use
 
 // Initial state
 const initialState: UIState = {

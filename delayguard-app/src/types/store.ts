@@ -1,5 +1,6 @@
 // Redux Store Types
-import { AppSettings, DelayAlert, Order, StatsData, Toast } from './index';
+import { AppSettings, DelayAlert, Order, Toast } from './index';
+// import { StatsData } from './index'; // Available for future use
 
 // Root State
 export interface RootState {

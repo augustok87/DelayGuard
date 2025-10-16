@@ -32,8 +32,16 @@ export const Modal: React.FC<ModalProps> = ({
   }, [onClose]);
 
   // Handle close button click
-  const handleCloseClick = useCallback((event: React.MouseEvent) => {
+  const handleCloseClick = useCallback((_event: React.MouseEvent) => {
     onClose();
+  }, [onClose]);
+
+  // Handle backdrop keyboard events
+  const handleBackdropKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClose();
+    }
   }, [onClose]);
 
   // Focus trap functionality
@@ -143,7 +151,15 @@ export const Modal: React.FC<ModalProps> = ({
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={styles.overlay} onClick={handleBackdropClick} data-testid="modal-backdrop">
+        <div
+          className={styles.overlay}
+          onClick={handleBackdropClick}
+          onKeyDown={handleBackdropKeyDown}
+          data-testid="modal-backdrop"
+          role="button"
+          tabIndex={0}
+          aria-label="Close modal"
+        >
       <div
         ref={modalRef}
         className={modalClasses}
@@ -165,6 +181,7 @@ export const Modal: React.FC<ModalProps> = ({
             onClick={handleCloseClick}
             aria-label="Close modal"
             type="button"
+            data-testid="modal-close-button"
           >
             <span aria-hidden="true">×</span>
           </button>
@@ -180,7 +197,7 @@ export const Modal: React.FC<ModalProps> = ({
               <div className={styles.actionButtons}>
                 {secondaryActions.map((action, index) => (
                   <button
-                    key={index}
+                     key={action.content || `action-${index}`}
                     className={`${styles.button} ${styles.secondary}`}
                     onClick={action.onAction}
                     disabled={action.disabled}

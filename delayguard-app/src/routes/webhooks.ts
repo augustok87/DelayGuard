@@ -1,7 +1,7 @@
 import Router from 'koa-router';
 import { query } from '../database/connection';
 import { addDelayCheckJob } from '../queue/setup';
-import { OrderUpdateWebhook } from '../types';
+// import { OrderUpdateWebhook } from '../types'; // Available for future use
 import crypto from 'crypto';
 
 const router = new Router();

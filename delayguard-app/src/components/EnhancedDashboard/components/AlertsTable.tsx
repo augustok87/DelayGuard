@@ -91,7 +91,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
       title: '',
       sortable: false,
       width: '50px',
-      render: (_: any, row: any) => (
+      render: (_: unknown, row: { id: string }) => (
         <input
           type="checkbox"
           data-testid="checkbox"
@@ -152,7 +152,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
       title: 'Actions',
       sortable: false,
       width: '150px',
-      render: (_: any, row: any) => (
+      render: (_: unknown, row: any) => (
         <div style={{ display: 'flex', gap: '8px' }}>
           <Button
             size="sm"
@@ -189,8 +189,9 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
       <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
         {/* Severity Filter */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '14px', fontWeight: '500' }}>Filter by Severity:</label>
+          <label htmlFor="severity-filter" style={{ fontSize: '14px', fontWeight: '500' }}>Filter by Severity:</label>
           <select
+            id="severity-filter"
             data-testid="select"
             value={severityFilter}
             onChange={(e) => {
@@ -215,8 +216,9 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
 
         {/* Search Input */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '14px', fontWeight: '500' }}>Search Order:</label>
+          <label htmlFor="order-search" style={{ fontSize: '14px', fontWeight: '500' }}>Search Order:</label>
           <input
+            id="order-search"
             type="text"
             data-testid="text-field"
             placeholder="Enter order number..."

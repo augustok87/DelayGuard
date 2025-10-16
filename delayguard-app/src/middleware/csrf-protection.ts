@@ -1,6 +1,6 @@
 import { Context, Next } from 'koa';
 import crypto from 'crypto';
-import { ValidationError } from '../types';
+// import { ValidationError } from '../types'; // Removed unused import
 
 /**
  * CSRF Token Configuration

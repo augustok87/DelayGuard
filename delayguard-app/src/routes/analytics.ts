@@ -1,6 +1,6 @@
 import Router from 'koa-router';
 import { AnalyticsService } from '../services/AnalyticsService';
-import { config } from '../server';
+// import { config } from '../server'; // Available for future use
 
 const router = new Router();
 const analyticsService = new AnalyticsService();

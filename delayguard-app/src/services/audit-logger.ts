@@ -1,6 +1,6 @@
 import { Context } from 'koa';
 import { EventEmitter } from 'events';
-import { AppConfig } from '../types';
+// import { AppConfig } from '../types'; // Available for future use
 
 /**
  * Security Event Types

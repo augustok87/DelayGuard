@@ -3,7 +3,7 @@ import { NotificationService } from '../../services/notification-service';
 import { EmailService } from '../../services/email-service';
 import { SMSService } from '../../services/sms-service';
 import { query } from '../../database/connection';
-import { AppConfig } from '../../types';
+// import { AppConfig } from '../../types'; // Available for future use
 
 interface NotificationJobData {
   orderId: number;
@@ -18,7 +18,7 @@ interface NotificationJobData {
 }
 
 export async function processNotification(job: Job<NotificationJobData>): Promise<void> {
-  const { orderId, delayDetails, shopDomain } = job.data;
+  const { orderId, delayDetails } = job.data;
 
   try {
     console.log(`📧 Processing notification for order ${orderId}`);

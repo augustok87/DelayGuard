@@ -1,6 +1,6 @@
 import { Context, Next } from 'koa';
 import IORedis from 'ioredis';
-import { RateLimitError } from '../types';
+// import { RateLimitError } from '../types'; // Removed unused import
 
 /**
  * Rate Limiting Configuration

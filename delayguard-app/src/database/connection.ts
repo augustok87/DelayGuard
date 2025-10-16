@@ -1,5 +1,5 @@
 import { Pool, PoolClient } from 'pg';
-import { AppConfig } from '../types';
+// import { AppConfig } from '../types'; // Removed unused import
 
 let pool: Pool;
 
