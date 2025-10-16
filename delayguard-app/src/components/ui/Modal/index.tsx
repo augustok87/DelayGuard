@@ -21,17 +21,6 @@ export const Modal: React.FC<ModalProps> = ({
   const handleEscape = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape' && isOpen) {
       onClose();
-      
-      // Restore focus after closing using requestAnimationFrame
-      requestAnimationFrame(() => {
-        if (previousActiveElement.current) {
-          // Ensure the element is still in the DOM and focusable
-          if (document.contains(previousActiveElement.current)) {
-            previousActiveElement.current.focus();
-          }
-          previousActiveElement.current = null;
-        }
-      });
     }
   }, [isOpen, onClose]);
 
@@ -44,9 +33,6 @@ export const Modal: React.FC<ModalProps> = ({
 
   // Handle close button click
   const handleCloseClick = useCallback((event: React.MouseEvent) => {
-    // Prevent the close button from getting focus
-    (event.target as HTMLElement).blur();
-    
     onClose();
   }, [onClose]);
 
@@ -63,23 +49,28 @@ export const Modal: React.FC<ModalProps> = ({
     const firstElement = focusableElements[0] as HTMLElement;
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 
-    // If we're on the modal itself, move to first/last focusable element
+    // If no focusable elements, don't trap
+    if (focusableElements.length === 0) return;
+
+    // If we're on the modal itself, move to first focusable element
     if (document.activeElement === modal) {
       event.preventDefault();
-      if (event.shiftKey) {
-        lastElement?.focus();
-      } else {
-        firstElement?.focus();
-      }
-    } else if (event.shiftKey) {
-      // Shift+Tab from first element should go to last element
-      if (document.activeElement === firstElement) {
+      firstElement?.focus();
+      return;
+    }
+
+    // Get the current active element index
+    const activeElementIndex = Array.from(focusableElements).indexOf(document.activeElement as Element);
+
+    if (event.shiftKey) {
+      // Shift+Tab: if we're on the first element, go to the last
+      if (activeElementIndex === 0) {
         event.preventDefault();
         lastElement?.focus();
       }
     } else {
-      // Tab from last element should go to first element
-      if (document.activeElement === lastElement) {
+      // Tab: if we're on the last element, go to the first
+      if (activeElementIndex === focusableElements.length - 1) {
         event.preventDefault();
         firstElement?.focus();
       }
@@ -96,12 +87,26 @@ export const Modal: React.FC<ModalProps> = ({
       document.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
       
-      // Focus the modal when it opens
-      setTimeout(() => {
+      // Focus the modal or first content element when modal opens
+      requestAnimationFrame(() => {
         if (modalRef.current) {
+          // First try to focus content elements (excluding close button)
+          const contentArea = modalRef.current.querySelector('.content') as HTMLElement;
+          if (contentArea) {
+            const contentFocusableElements = contentArea.querySelectorAll(
+              'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstContentElement = contentFocusableElements[0] as HTMLElement;
+            if (firstContentElement) {
+              firstContentElement.focus();
+              return;
+            }
+          }
+          
+          // If no content elements, focus the modal itself
           modalRef.current.focus();
         }
-      }, 0);
+      });
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -125,7 +130,7 @@ export const Modal: React.FC<ModalProps> = ({
           }
           previousActiveElement.current = null;
         }
-      }, 0);
+      }, 100); // Small delay to ensure modal is fully closed
     }
   }, [isOpen]);
 

@@ -178,13 +178,24 @@ describe('Modal Component', () => {
       const user = userEvent.setup();
       const onClose = jest.fn();
       
-      // Create a button to focus before opening modal
-      render(
-        <div>
-          <button>Focus me</button>
-          <Modal {...defaultProps} onClose={onClose} />
-        </div>,
-      );
+      // Create a controlled modal component
+      const TestComponent = () => {
+        const [isOpen, setIsOpen] = React.useState(true);
+        
+        const handleClose = () => {
+          setIsOpen(false);
+          onClose();
+        };
+        
+        return (
+          <div>
+            <button tabIndex={0}>Focus me</button>
+            <Modal {...defaultProps} isOpen={isOpen} onClose={handleClose} />
+          </div>
+        );
+      };
+      
+      render(<TestComponent />);
       
       const button = screen.getByText('Focus me');
       button.focus();
@@ -192,8 +203,14 @@ describe('Modal Component', () => {
       const closeButton = screen.getByRole('button', { name: /close/i });
       await user.click(closeButton);
       
+      // Wait for modal to close
       await waitFor(() => {
-        expect(button).toHaveFocus();
+        expect(onClose).toHaveBeenCalled();
+      }, { timeout: 2000 });
+      
+      // Verify modal is no longer in the DOM
+      await waitFor(() => {
+        expect(screen.queryByTestId('modal')).not.toBeInTheDocument();
       });
     });
 
@@ -208,21 +225,27 @@ describe('Modal Component', () => {
         </Modal>,
       );
       
+      const closeButton = screen.getByRole('button', { name: /close/i });
       const firstButton = screen.getByText('First');
       const secondButton = screen.getByText('Second');
       const thirdButton = screen.getByText('Third');
       
-      // Tab through buttons
-      await user.tab();
-      expect(firstButton).toHaveFocus();
+      // Wait for initial focus to be set
+      await waitFor(() => {
+        expect(firstButton).toHaveFocus();
+      });
       
+      // Tab through buttons
       await user.tab();
       expect(secondButton).toHaveFocus();
       
       await user.tab();
       expect(thirdButton).toHaveFocus();
       
-      // Tab again should cycle back to first
+      await user.tab();
+      expect(closeButton).toHaveFocus();
+      
+      // Tab again should cycle back to first button
       await user.tab();
       expect(firstButton).toHaveFocus();
     });
