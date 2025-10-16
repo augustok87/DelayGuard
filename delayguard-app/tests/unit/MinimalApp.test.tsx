@@ -48,6 +48,15 @@ describe('MinimalApp Component', () => {
     // Fast-forward the 1-second delay
     jest.advanceTimersByTime(1000);
     
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByText('DelayGuard')).toBeInTheDocument();
+    });
+    
+    // Open settings modal
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton);
+    
     await waitFor(() => {
       expect(screen.getByText('App Settings')).toBeInTheDocument();
       expect(screen.getByDisplayValue('2')).toBeInTheDocument();
@@ -59,6 +68,15 @@ describe('MinimalApp Component', () => {
     
     // Fast-forward the 1-second delay
     jest.advanceTimersByTime(1000);
+    
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByText('DelayGuard')).toBeInTheDocument();
+    });
+    
+    // Open settings modal
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton);
     
     await waitFor(() => {
       const thresholdInput = screen.getByDisplayValue('2');
@@ -74,6 +92,15 @@ describe('MinimalApp Component', () => {
     
     // Fast-forward the 1-second delay
     jest.advanceTimersByTime(1000);
+    
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByText('DelayGuard')).toBeInTheDocument();
+    });
+    
+    // Open settings modal
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton);
     
     await waitFor(() => {
       const templateSelect = screen.getByDisplayValue('Default Template');
@@ -147,6 +174,15 @@ describe('MinimalApp Component', () => {
     
     // Fast-forward the 1-second delay
     jest.advanceTimersByTime(1000);
+    
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByText('DelayGuard')).toBeInTheDocument();
+    });
+    
+    // Open settings modal first
+    const settingsButton = screen.getByTestId('settings-button');
+    fireEvent.click(settingsButton);
     
     await waitFor(() => {
       const saveButton = screen.getByText('Save Settings');

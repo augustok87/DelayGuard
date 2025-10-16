@@ -10,6 +10,8 @@ import {
   Tabs,
   Modal,
   Toast,
+  EmptyState,
+  ErrorState,
 } from './ui';
 import styles from '../styles/DelayGuard.module.css';
 
@@ -52,8 +54,8 @@ interface Order {
 
 function MinimalApp() {
   const [settings, setSettings] = useState<AppSettings>({
-    delayThreshold: 3,
-    notificationTemplate: 'Your order #{{orderNumber}} is experiencing a delay. We apologize for the inconvenience.',
+    delayThreshold: 2,
+    notificationTemplate: 'default',
     emailNotifications: true,
     smsNotifications: false,
     highContrast: false,
@@ -67,56 +69,85 @@ function MinimalApp() {
   const [alerts, setAlerts] = useState<DelayAlert[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedAlerts, setSelectedAlerts] = useState<string[]>([]);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Mock data initialization
+  // Data initialization - use mock API if available, otherwise use local mock data
   useEffect(() => {
-    const mockAlerts: DelayAlert[] = [
-      {
-        id: '1',
-        orderId: 'ORD-001',
-        customerName: 'John Doe',
-        delayDays: 2,
-        status: 'active',
-        createdAt: '2024-01-20T10:00:00Z',
-      },
-      {
-        id: '2',
-        orderId: 'ORD-002',
-        customerName: 'Jane Smith',
-        delayDays: 5,
-        status: 'active',
-        createdAt: '2024-01-21T10:00:00Z',
-      },
-    ];
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    const mockOrders: Order[] = [
-      {
-        id: '1',
-        orderNumber: 'ORD-001',
-        customerName: 'John Doe',
-        status: 'delayed',
-        trackingNumber: '1Z999AA1234567890',
-        carrierCode: 'UPS',
-        createdAt: '2024-01-15T10:00:00Z',
-      },
-      {
-        id: '2',
-        orderNumber: 'ORD-002',
-        customerName: 'Jane Smith',
-        status: 'shipped',
-        trackingNumber: '1Z999BB1234567890',
-        carrierCode: 'FEDEX',
-        createdAt: '2024-01-16T10:00:00Z',
-      },
-    ];
+        // Check if mock API is available (for testing)
+        if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
+          const [alertsData, ordersData] = await Promise.all([
+            (window as any).mockAnalyticsAPI.getAlerts(),
+            (window as any).mockAnalyticsAPI.getOrders(),
+          ]);
+          setAlerts(alertsData || []);
+          setOrders(ordersData || []);
+        } else {
+          // Use local mock data for development
+          const mockAlerts: DelayAlert[] = [
+            {
+              id: '1',
+              orderId: 'ORD-001',
+              customerName: 'John Doe',
+              delayDays: 2,
+              status: 'active',
+              createdAt: '2024-01-20T10:00:00Z',
+            },
+            {
+              id: '2',
+              orderId: 'ORD-002',
+              customerName: 'Jane Smith',
+              delayDays: 5,
+              status: 'active',
+              createdAt: '2024-01-21T10:00:00Z',
+            },
+          ];
 
-    setAlerts(mockAlerts);
-    setOrders(mockOrders);
-    setLoading(false);
+          const mockOrders: Order[] = [
+            {
+              id: '1',
+              orderNumber: 'ORD-001',
+              customerName: 'John Doe',
+              status: 'delayed',
+              trackingNumber: '1Z999AA1234567890',
+              carrierCode: 'UPS',
+              createdAt: '2024-01-15T10:00:00Z',
+            },
+            {
+              id: '2',
+              orderNumber: 'ORD-002',
+              customerName: 'Jane Smith',
+              status: 'shipped',
+              trackingNumber: '1Z999BB1234567890',
+              carrierCode: 'FEDEX',
+              createdAt: '2024-01-16T10:00:00Z',
+            },
+          ];
+
+          // Simulate loading delay
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          setAlerts(mockAlerts);
+          setOrders(mockOrders);
+        }
+      } catch (err) {
+        setError('Failed to load data');
+        console.error('Error loading data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
 
     // Listen for real-time updates
     const handleMessage = (event: MessageEvent) => {
@@ -131,6 +162,8 @@ function MinimalApp() {
 
   const handleSaveSettings = async() => {
     try {
+      console.log('Saving settings:', settings);
+      
       // Call mock API if available (for testing)
       if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
         await (window as any).mockAnalyticsAPI.updateSettings(settings);
@@ -205,6 +238,34 @@ function MinimalApp() {
     setShowToast(true);
   };
 
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Check if mock API is available (for testing)
+      if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
+        const [alertsData, ordersData] = await Promise.all([
+          (window as any).mockAnalyticsAPI.getAlerts(),
+          (window as any).mockAnalyticsAPI.getOrders(),
+        ]);
+        setAlerts(alertsData || []);
+        setOrders(ordersData || []);
+      } else {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      setToastMessage('Data refreshed');
+      setShowToast(true);
+    } catch (err) {
+      setError('Failed to refresh data');
+      console.error('Error refreshing data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRealTimeUpdate = () => {
     // Simulate real-time update by adding a new alert
     const newAlert: DelayAlert = {
@@ -221,8 +282,72 @@ function MinimalApp() {
   };
 
   const renderAlertsTable = () => {
+    // Handle error state
+    if (error) {
+      return (
+        <Card>
+          <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text variant="headingMd" as="h3">Delay Alerts</Text>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Button size="sm" onClick={handleRefresh} data-testid="refresh-button">
+                Refresh
+              </Button>
+            </div>
+          </div>
+          <ErrorState 
+            title="Failed to load alerts"
+            message="Failed to load data"
+            onRetry={handleRefresh}
+            testId="alerts-error-state"
+          />
+        </Card>
+      );
+    }
+
+    // Handle empty state
+    if (alerts.length === 0) {
+      return (
+        <Card>
+          <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text variant="headingMd" as="h3">Delay Alerts</Text>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Button size="sm" onClick={handleRefresh} data-testid="refresh-button">
+                Refresh
+              </Button>
+            </div>
+          </div>
+          <EmptyState 
+            title="No alerts found"
+            description="No delay alerts are currently active. New alerts will appear here when shipping delays are detected."
+            action={{
+              label: "Test Delay Detection",
+              onClick: async () => {
+                try {
+                  console.log('Testing delay detection...');
+                  if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
+                    await (window as any).mockAnalyticsAPI.testDelayDetection();
+                  }
+                  setToastMessage('Test delay detection started');
+                  setShowToast(true);
+                } catch (err) {
+                  console.error('Error testing delay detection:', err);
+                  setToastMessage('Error testing delay detection');
+                  setShowToast(true);
+                }
+              }
+            }}
+            testId="alerts-empty-state"
+          />
+        </Card>
+      );
+    }
+
+    const filteredAlerts = alerts.filter(alert => 
+      alert.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
     const headings = ['Order ID', 'Customer', 'Delay Days', 'Status', 'Actions'];
-    const rows = alerts.map(alert => [
+    const rows = filteredAlerts.map(alert => [
       alert.orderId,
       alert.customerName,
       alert.delayDays.toString(),
@@ -238,13 +363,20 @@ function MinimalApp() {
             <Button size="sm" onClick={handleExportAlerts}>
               Export Alerts
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => {
-              // Call mock API if available (for testing)
-              if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
-                (window as any).mockAnalyticsAPI.testDelayDetection();
+            <Button size="sm" variant="secondary" onClick={async () => {
+              try {
+                console.log('Testing delay detection...');
+                // Call mock API if available (for testing)
+                if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
+                  await (window as any).mockAnalyticsAPI.testDelayDetection();
+                }
+                setToastMessage('Test delay detection started');
+                setShowToast(true);
+              } catch (err) {
+                console.error('Error testing delay detection:', err);
+                setToastMessage('Error testing delay detection');
+                setShowToast(true);
               }
-              setToastMessage('Test delay detection started');
-              setShowToast(true);
             }}>
               Test Delay Detection
             </Button>
@@ -253,7 +385,7 @@ function MinimalApp() {
         
         {/* Statistics Section */}
         <div style={{ padding: '16px', backgroundColor: '#f8f9fa', borderBottom: '1px solid #e1e3e5' }}>
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'center', marginBottom: '16px' }}>
             <div>
               <Text variant="bodySm" as="span" style={{ color: '#6b7280' }}>Total Alerts:</Text>
               <Text variant="headingMd" as="span" style={{ marginLeft: '8px' }} data-testid="total-alerts">{alerts.length}</Text>
@@ -265,6 +397,38 @@ function MinimalApp() {
             <div>
               <Text variant="bodySm" as="span" style={{ color: '#6b7280' }}>Resolved:</Text>
               <Text variant="headingMd" as="span" style={{ marginLeft: '8px' }} data-testid="resolved-alerts">{alerts.filter(a => a.status === 'resolved').length}</Text>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ flex: 1 }}>
+              <input
+                type="text"
+                placeholder="Search alerts by customer name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                data-testid="text-field"
+                style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+              />
+            </div>
+            <div>
+              <select
+                data-testid="select"
+                style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
+                onChange={(e) => {
+                  // Filter alerts by status
+                  const status = e.target.value;
+                  if (status === 'all') {
+                    setAlerts(alerts);
+                  } else {
+                    setAlerts(alerts.filter(alert => alert.status === status));
+                  }
+                }}
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="resolved">Resolved</option>
+                <option value="dismissed">Dismissed</option>
+              </select>
             </div>
           </div>
         </div>
@@ -282,9 +446,45 @@ function MinimalApp() {
             }), {}),
           }))}
           sortable
+          selectable
+          selectedRows={selectedAlerts}
+          onSelectionChange={setSelectedAlerts}
+          onSelectAll={(selected) => {
+            if (selected) {
+              setSelectedAlerts(alerts.map(alert => alert.id));
+            } else {
+              setSelectedAlerts([]);
+            }
+          }}
         />
+        
+        {/* Bulk Actions */}
+        {selectedAlerts.length > 0 && (
+          <div style={{ padding: '16px', backgroundColor: '#f8f9fa', borderBottom: '1px solid #e1e3e5' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <Text variant="bodySm" as="span">{selectedAlerts.length} selected</Text>
+              <Button size="sm" onClick={() => {
+                selectedAlerts.forEach(alertId => handleResolveAlert(alertId));
+                setSelectedAlerts([]);
+                setToastMessage(`${selectedAlerts.length} alerts updated`);
+                setShowToast(true);
+              }}>
+                Mark as Resolved
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => {
+                selectedAlerts.forEach(alertId => handleDismissAlert(alertId));
+                setSelectedAlerts([]);
+                setToastMessage('Bulk dismiss completed');
+                setShowToast(true);
+              }}>
+                Dismiss Selected
+              </Button>
+            </div>
+          </div>
+        )}
+        
         <div style={{ padding: '16px' }}>
-          {alerts.map(alert => (
+          {filteredAlerts.map(alert => (
             <div key={alert.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
               <div>
                 <Text variant="bodyMd" as="span">{alert.orderId} - {alert.customerName}</Text>
@@ -317,13 +517,57 @@ function MinimalApp() {
   };
 
   const renderOrdersTable = () => {
-    const headings = ['Order Number', 'Customer', 'Status', 'Tracking', 'Carrier'];
+    // Handle error state
+    if (error) {
+      return (
+        <Card>
+          <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text variant="headingMd" as="h3">Orders</Text>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Button size="sm" onClick={handleRefresh} data-testid="refresh-button">
+                Refresh
+              </Button>
+            </div>
+          </div>
+          <ErrorState 
+            title="Failed to load orders"
+            message="Failed to load data"
+            onRetry={handleRefresh}
+            testId="orders-error-state"
+          />
+        </Card>
+      );
+    }
+
+    // Handle empty state
+    if (orders.length === 0) {
+      return (
+        <Card>
+          <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text variant="headingMd" as="h3">Orders</Text>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Button size="sm" onClick={handleRefresh} data-testid="refresh-button">
+                Refresh
+              </Button>
+            </div>
+          </div>
+          <EmptyState 
+            title="No orders found"
+            description="No orders are currently available. Orders will appear here when they are processed."
+            testId="orders-empty-state"
+          />
+        </Card>
+      );
+    }
+
+    const headings = ['Order Number', 'Customer', 'Status', 'Tracking', 'Carrier', 'Actions'];
     const rows = orders.map(order => [
       order.orderNumber,
       order.customerName,
       order.status,
       order.trackingNumber || 'N/A',
       order.carrierCode || 'N/A',
+      '', // Actions handled separately
     ]);
 
     return (
@@ -346,6 +590,28 @@ function MinimalApp() {
           }))}
           sortable
         />
+        
+        {/* Individual Order Actions */}
+        <div style={{ padding: '16px' }}>
+          {orders.map(order => (
+            <div key={order.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #e1e3e5' }}>
+              <div>
+                <Text variant="bodyMd" as="span">{order.orderNumber} - {order.customerName}</Text>
+                <Badge tone={order.status === 'delivered' ? 'success' : order.status === 'shipped' ? 'info' : 'warning'}>
+                  {order.status}
+                </Badge>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Button size="sm" onClick={() => {
+                  setToastMessage('Tracking information loaded');
+                  setShowToast(true);
+                }} data-testid="button">
+                  Track Order
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
     );
   };
@@ -378,17 +644,21 @@ function MinimalApp() {
         </div>
         <div>
           <Text variant="bodyMd" as="div">Notification Template</Text>
-          <textarea
+          <select
             value={settings.notificationTemplate}
             onChange={(e) => setSettings(prev => ({ ...prev, notificationTemplate: e.target.value }))}
-            style={{ width: '100%', padding: '8px', marginTop: '4px', minHeight: '100px' }}
-          />
+            style={{ width: '100%', padding: '8px', marginTop: '4px' }}
+          >
+            <option value="default">Default Template</option>
+            <option value="custom">Custom Template</option>
+            <option value="minimal">Minimal Template</option>
+          </select>
         </div>
         <div>
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <input
               type="checkbox"
-              data-testid="checkbox"
+              data-testid="email-notifications-checkbox"
               checked={settings.emailNotifications}
               onChange={(e) => setSettings(prev => ({ ...prev, emailNotifications: e.target.checked }))}
             />
@@ -399,7 +669,7 @@ function MinimalApp() {
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <input
               type="checkbox"
-              data-testid="checkbox"
+              data-testid="sms-notifications-checkbox"
               checked={settings.smsNotifications}
               onChange={(e) => setSettings(prev => ({ ...prev, smsNotifications: e.target.checked }))}
             />
@@ -485,11 +755,39 @@ function MinimalApp() {
     );
   }
 
+  if (error) {
+    return (
+      <div className={styles.app}>
+        <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }} data-testid="layout">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <Text variant="headingLg" as="h1">DelayGuard</Text>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Button onClick={handleRefresh} data-testid="refresh-button">
+                Refresh
+              </Button>
+            </div>
+          </div>
+          <ErrorState 
+            title="Application Error"
+            message="Failed to load data"
+            onRetry={handleRefresh}
+            testId="app-error-state"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.app}>
       <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }} data-testid="layout">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <Text variant="headingLg" as="h1">DelayGuard</Text>
+          <div>
+            <Text variant="headingLg" as="h1">DelayGuard</Text>
+            <Text variant="bodyMd" as="p" style={{ marginTop: '8px', color: '#6b7280' }}>
+              Proactive Shipping Delay Notifications
+            </Text>
+          </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <Button onClick={handleRealTimeUpdate} data-testid="refresh-button">
               Refresh
@@ -502,8 +800,8 @@ function MinimalApp() {
 
         <Tabs
           tabs={[
-            { id: 'alerts', label: 'Alerts', content: renderAlertsTable() },
-            { id: 'orders', label: 'Orders', content: renderOrdersTable() },
+            { id: 'alerts', label: '🚨 Delay Alerts', content: renderAlertsTable() },
+            { id: 'orders', label: '📦 Orders', content: renderOrdersTable() },
           ]}
           activeTab={['alerts', 'orders'][selectedTab]}
           onTabChange={(tabId) => {

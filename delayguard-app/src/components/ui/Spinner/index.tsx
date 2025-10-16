@@ -17,7 +17,7 @@ export const Spinner: React.FC<LoadingSpinnerProps> = ({
   ].filter(Boolean).join(' ');
 
   const content = (
-    <div className={spinnerClasses} {...props}>
+    <div className={spinnerClasses} data-testid="spinner" {...props}>
       <div className={styles.spinnerCircle} />
       {message && <span className={styles.message}>{message}</span>}
     </div>

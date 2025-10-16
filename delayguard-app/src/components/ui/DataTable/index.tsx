@@ -13,6 +13,10 @@ export const DataTable: React.FC<DataTableProps> = ({
   onRowClick,
   className = '',
   'aria-label': ariaLabel,
+  selectable = false,
+  selectedRows = [],
+  onSelectionChange,
+  onSelectAll,
   ...props
 }) => {
   const [sortColumn, setSortColumn] = React.useState<string | null>(null);
@@ -37,6 +41,32 @@ export const DataTable: React.FC<DataTableProps> = ({
       onRowClick(row);
     }
   }, [onRowClick]);
+
+  const handleRowSelect = useCallback((rowId: string, selected: boolean) => {
+    if (!onSelectionChange) return;
+    
+    const newSelection = selected
+      ? [...selectedRows, rowId]
+      : selectedRows.filter(id => id !== rowId);
+    
+    onSelectionChange(newSelection);
+  }, [selectedRows, onSelectionChange]);
+
+  const handleSelectAll = useCallback((selected: boolean) => {
+    if (!onSelectionChange || !onSelectAll) return;
+    
+    if (selected) {
+      const allIds = tableData.map(row => row.id);
+      onSelectionChange(allIds);
+    } else {
+      onSelectionChange([]);
+    }
+    
+    onSelectAll(selected);
+  }, [tableData, onSelectionChange, onSelectAll]);
+
+  const isAllSelected = tableData.length > 0 && selectedRows.length === tableData.length;
+  const isIndeterminate = selectedRows.length > 0 && selectedRows.length < tableData.length;
 
   const sortedData = useMemo(() => {
     if (!sortable || !sortColumn || !onSort) return tableData;
@@ -79,6 +109,20 @@ export const DataTable: React.FC<DataTableProps> = ({
       <table className={tableClasses} aria-label={ariaLabel} data-testid="data-table" {...props}>
         <thead>
           <tr>
+            {selectable && (
+              <th className={styles.headerCell} style={{ width: '40px' }}>
+                <input
+                  type="checkbox"
+                  data-testid="select-all-checkbox"
+                  checked={isAllSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = isIndeterminate;
+                  }}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  aria-label="Select all rows"
+                />
+              </th>
+            )}
             {columns.map((column) => {
               const isSorted = sortColumn === column.key;
               const headerClasses = [
@@ -150,6 +194,18 @@ export const DataTable: React.FC<DataTableProps> = ({
                   }
                 }}
               >
+                {selectable && (
+                  <td className={styles.dataCell} style={{ width: '40px' }}>
+                    <input
+                      type="checkbox"
+                      data-testid="checkbox"
+                      checked={selectedRows.includes(row.id)}
+                      onChange={(e) => handleRowSelect(row.id, e.target.checked)}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`Select row ${row.id}`}
+                    />
+                  </td>
+                )}
                 {columns.map((column) => {
                   const cellClasses = [
                     styles.dataCell,

@@ -138,6 +138,11 @@ export interface DataTableProps {
   onRowClick?: (row: DataTableRow) => void;
   className?: string;
   'aria-label'?: string;
+  // Bulk selection props
+  selectable?: boolean;
+  selectedRows?: string[];
+  onSelectionChange?: (selectedIds: string[]) => void;
+  onSelectAll?: (selected: boolean) => void;
 }
 
 export interface TabItem {

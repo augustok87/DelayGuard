@@ -19,6 +19,10 @@ export { Tabs } from './Tabs';
 export { DataTable } from './DataTable';
 export { Toast } from './Toast';
 
+// Common Components
+export { EmptyState } from '../common/EmptyState';
+export { ErrorState } from '../common/ErrorState';
+
 // Re-export types
 export type {
   ButtonProps,
