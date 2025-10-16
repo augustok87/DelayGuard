@@ -33,6 +33,13 @@ export class ErrorBoundary extends Component<Props, State> {
     }
   }
 
+  componentDidUpdate(prevProps: Props) {
+    // Reset error state when children change and no longer throw errors
+    if (this.state.hasError && prevProps.children !== this.props.children) {
+      this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    }
+  }
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -66,20 +73,21 @@ export class ErrorBoundary extends Component<Props, State> {
               </pre>
             </details>
           )}
-          <button 
-            onClick={() => this.setState({ hasError: false, error: undefined, errorInfo: undefined })}
-            style={{
-              marginTop: '1rem',
-              padding: '0.5rem 1rem',
-              backgroundColor: '#dc2626',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            Try again
-          </button>
+                 <button 
+                   type="button"
+                   onClick={() => this.setState({ hasError: false, error: undefined, errorInfo: undefined })}
+                   style={{
+                     marginTop: '1rem',
+                     padding: '0.5rem 1rem',
+                     backgroundColor: '#dc2626',
+                     color: 'white',
+                     border: 'none',
+                     borderRadius: '4px',
+                     cursor: 'pointer',
+                   }}
+                 >
+                   Try again
+                 </button>
         </div>
       );
     }

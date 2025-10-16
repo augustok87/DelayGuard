@@ -156,9 +156,9 @@ export const Modal: React.FC<ModalProps> = ({
           onClick={handleBackdropClick}
           onKeyDown={handleBackdropKeyDown}
           data-testid="modal-backdrop"
-          role="button"
-          tabIndex={0}
-          aria-label="Close modal"
+          role="presentation"
+          tabIndex={-1}
+          aria-label="Modal backdrop"
         >
       <div
         ref={modalRef}

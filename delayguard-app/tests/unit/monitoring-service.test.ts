@@ -331,7 +331,15 @@ describe('MonitoringService', () => {
       mockInfo.mockResolvedValue('used_memory:1048576\nused_memory_peak:2097152');
       mockDbsize.mockResolvedValue(100);
       mockSetex.mockResolvedValue('OK');
-      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+      
+      // Mock external APIs to be healthy
+      global.fetch = jest.fn().mockImplementation((url) => {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          url: url
+        });
+      });
 
       // Collect metrics first
       const metricsPromise = monitoringService.collectSystemMetrics();
