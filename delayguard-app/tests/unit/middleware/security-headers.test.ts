@@ -5,6 +5,9 @@ import { securityHeaders } from '../../../src/middleware/security-headers';
 const createMockContext = (): Context => {
   const ctx = {
     set: jest.fn(),
+    get: jest.fn().mockReturnValue('https'),
+    secure: true,
+    path: '/api/test',
     response: {
       headers: {},
     },

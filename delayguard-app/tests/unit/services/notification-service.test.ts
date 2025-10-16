@@ -20,11 +20,11 @@ describe('NotificationService', () => {
     
     // Create mock instances
     mockEmailServiceInstance = {
-      sendDelayNotification: jest.fn(),
+      sendDelayEmail: jest.fn(),
     } as any;
 
     mockSMSServiceInstance = {
-      sendDelayNotification: jest.fn(),
+      sendDelaySMS: jest.fn(),
     } as any;
 
     // Mock the constructors
@@ -39,58 +39,42 @@ describe('NotificationService', () => {
 
   describe('sendDelayNotification', () => {
     const mockOrderInfo: OrderInfo = {
-      orderId: 'order-123',
+      id: 'order-123',
+      orderNumber: 'ORD-001',
+      customerName: 'John Doe',
       customerEmail: 'customer@example.com',
       customerPhone: '+1234567890',
-      customerName: 'John Doe',
-      orderNumber: 'ORD-001',
-      totalAmount: 99.99,
-      currency: 'USD',
-      orderDate: new Date('2024-01-15'),
-      expectedDelivery: new Date('2024-01-18'),
-      shippingAddress: {
-        street: '123 Main St',
-        city: 'New York',
-        state: 'NY',
-        zipCode: '10001',
-        country: 'US',
-      },
-      items: [
-        {
-          id: 'item-1',
-          name: 'Test Product',
-          quantity: 1,
-          price: 99.99,
-        },
-      ],
+      shopDomain: 'test-shop.myshopify.com',
+      createdAt: new Date('2024-01-15'),
     };
 
     const mockDelayDetails: DelayDetails = {
-      delayDays: 3,
-      reason: 'Weather delay',
-      carrier: 'UPS',
+      estimatedDelivery: '2024-01-21',
       trackingNumber: '1Z999AA1234567890',
-      estimatedDelivery: new Date('2024-01-21'),
-      lastUpdate: new Date('2024-01-16'),
+      trackingUrl: 'https://www.ups.com/track?trackingNumber=1Z999AA1234567890',
+      delayDays: 3,
+      delayReason: 'Weather delay',
     };
 
     it('should send email notification successfully', async () => {
-      mockEmailServiceInstance.sendDelayNotification.mockResolvedValue(undefined);
+      mockEmailServiceInstance.sendDelayEmail.mockResolvedValue(undefined);
 
       await notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails);
 
-      expect(mockEmailServiceInstance.sendDelayNotification).toHaveBeenCalledWith(
+      expect(mockEmailServiceInstance.sendDelayEmail).toHaveBeenCalledWith(
+        mockOrderInfo.customerEmail,
         mockOrderInfo,
         mockDelayDetails
       );
     });
 
     it('should send SMS notification successfully', async () => {
-      mockSMSServiceInstance.sendDelayNotification.mockResolvedValue(undefined);
+      mockSMSServiceInstance.sendDelaySMS.mockResolvedValue(undefined);
 
       await notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails);
 
-      expect(mockSMSServiceInstance.sendDelayNotification).toHaveBeenCalledWith(
+      expect(mockSMSServiceInstance.sendDelaySMS).toHaveBeenCalledWith(
+        mockOrderInfo.customerPhone,
         mockOrderInfo,
         mockDelayDetails
       );
@@ -98,7 +82,7 @@ describe('NotificationService', () => {
 
     it('should handle email service errors gracefully', async () => {
       const error = new Error('Email service unavailable');
-      mockEmailServiceInstance.sendDelayNotification.mockRejectedValue(error);
+      mockEmailServiceInstance.sendDelayEmail.mockRejectedValue(error);
 
       await expect(
         notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails)
@@ -107,7 +91,7 @@ describe('NotificationService', () => {
 
     it('should handle SMS service errors gracefully', async () => {
       const error = new Error('SMS service unavailable');
-      mockSMSServiceInstance.sendDelayNotification.mockRejectedValue(error);
+      mockSMSServiceInstance.sendDelaySMS.mockRejectedValue(error);
 
       await expect(
         notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails)
@@ -118,8 +102,8 @@ describe('NotificationService', () => {
       const emailError = new Error('Email service unavailable');
       const smsError = new Error('SMS service unavailable');
       
-      mockEmailServiceInstance.sendDelayNotification.mockRejectedValue(emailError);
-      mockSMSServiceInstance.sendDelayNotification.mockRejectedValue(smsError);
+      mockEmailServiceInstance.sendDelayEmail.mockRejectedValue(emailError);
+      mockSMSServiceInstance.sendDelaySMS.mockRejectedValue(smsError);
 
       await expect(
         notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails)
@@ -146,12 +130,11 @@ describe('NotificationService', () => {
     it('should handle invalid order info', async () => {
       const invalidOrderInfo = {} as OrderInfo;
       const mockDelayDetails: DelayDetails = {
-        delayDays: 1,
-        reason: 'Test delay',
-        carrier: 'UPS',
+        estimatedDelivery: '2024-01-21',
         trackingNumber: '1234567890',
-        estimatedDelivery: new Date(),
-        lastUpdate: new Date(),
+        trackingUrl: 'https://www.ups.com/track?trackingNumber=1234567890',
+        delayDays: 1,
+        delayReason: 'Test delay',
       };
 
       await expect(
@@ -161,23 +144,13 @@ describe('NotificationService', () => {
 
     it('should handle invalid delay details', async () => {
       const mockOrderInfo: OrderInfo = {
-        orderId: 'order-123',
+        id: 'order-123',
+        orderNumber: 'ORD-001',
+        customerName: 'John Doe',
         customerEmail: 'customer@example.com',
         customerPhone: '+1234567890',
-        customerName: 'John Doe',
-        orderNumber: 'ORD-001',
-        totalAmount: 99.99,
-        currency: 'USD',
-        orderDate: new Date(),
-        expectedDelivery: new Date(),
-        shippingAddress: {
-          street: '123 Main St',
-          city: 'New York',
-          state: 'NY',
-          zipCode: '10001',
-          country: 'US',
-        },
-        items: [],
+        shopDomain: 'test-shop.myshopify.com',
+        createdAt: new Date(),
       };
 
       const invalidDelayDetails = {} as DelayDetails;
@@ -190,42 +163,31 @@ describe('NotificationService', () => {
 
   describe('Service Integration', () => {
     it('should call both services when both are available', async () => {
-      mockEmailServiceInstance.sendDelayNotification.mockResolvedValue(undefined);
-      mockSMSServiceInstance.sendDelayNotification.mockResolvedValue(undefined);
+      mockEmailServiceInstance.sendDelayEmail.mockResolvedValue(undefined);
+      mockSMSServiceInstance.sendDelaySMS.mockResolvedValue(undefined);
 
       const mockOrderInfo: OrderInfo = {
-        orderId: 'order-123',
+        id: 'order-123',
+        orderNumber: 'ORD-001',
+        customerName: 'John Doe',
         customerEmail: 'customer@example.com',
         customerPhone: '+1234567890',
-        customerName: 'John Doe',
-        orderNumber: 'ORD-001',
-        totalAmount: 99.99,
-        currency: 'USD',
-        orderDate: new Date(),
-        expectedDelivery: new Date(),
-        shippingAddress: {
-          street: '123 Main St',
-          city: 'New York',
-          state: 'NY',
-          zipCode: '10001',
-          country: 'US',
-        },
-        items: [],
+        shopDomain: 'test-shop.myshopify.com',
+        createdAt: new Date(),
       };
 
       const mockDelayDetails: DelayDetails = {
-        delayDays: 1,
-        reason: 'Test delay',
-        carrier: 'UPS',
+        estimatedDelivery: '2024-01-21',
         trackingNumber: '1234567890',
-        estimatedDelivery: new Date(),
-        lastUpdate: new Date(),
+        trackingUrl: 'https://www.ups.com/track?trackingNumber=1234567890',
+        delayDays: 1,
+        delayReason: 'Test delay',
       };
 
       await notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails);
 
-      expect(mockEmailServiceInstance.sendDelayNotification).toHaveBeenCalledTimes(1);
-      expect(mockSMSServiceInstance.sendDelayNotification).toHaveBeenCalledTimes(1);
+      expect(mockEmailServiceInstance.sendDelayEmail).toHaveBeenCalledTimes(1);
+      expect(mockSMSServiceInstance.sendDelaySMS).toHaveBeenCalledTimes(1);
     });
   });
 });

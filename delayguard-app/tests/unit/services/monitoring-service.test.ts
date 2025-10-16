@@ -14,16 +14,10 @@ describe('MonitoringService', () => {
     
     mockConfig = {
       database: {
-        host: 'localhost',
-        port: 5432,
-        database: 'test',
-        username: 'test',
-        password: 'test',
+        url: 'postgresql://test:test@localhost:5432/test',
       },
       redis: {
-        host: 'localhost',
-        port: 6379,
-        password: 'test',
+        url: 'redis://localhost:6379',
       },
       shopify: {
         apiKey: 'test',
@@ -50,7 +44,7 @@ describe('MonitoringService', () => {
     it('should perform all health checks successfully', async () => {
       const healthChecks = await monitoringService.performHealthChecks();
 
-      expect(healthChecks).toHaveLength(4); // database, redis, queue, external APIs
+      expect(healthChecks).toHaveLength(6); // database, redis, 3 external APIs, application
       expect(healthChecks.every(check => check.status === 'healthy')).toBe(true);
     });
 
@@ -111,7 +105,7 @@ describe('MonitoringService', () => {
         heapUsed: 1024 * 1024 * 40,
         external: 1024 * 1024 * 10,
         arrayBuffers: 1024 * 1024 * 5,
-      });
+      }) as any;
 
       const alerts = await monitoringService.checkAlerts();
 
@@ -135,7 +129,7 @@ describe('MonitoringService', () => {
         heapUsed: 1024 * 1024 * 3,
         external: 1024 * 1024 * 2,
         arrayBuffers: 1024 * 1024 * 1,
-      });
+      }) as any;
 
       const alerts = await monitoringService.checkAlerts();
 
@@ -150,9 +144,9 @@ describe('MonitoringService', () => {
     it('should return overall system status', async () => {
       const status = await monitoringService.getSystemStatus();
 
-      expect(status).toHaveProperty('overall');
+      expect(status).toHaveProperty('status');
       expect(status).toHaveProperty('checks');
-      expect(status.overall).toMatch(/healthy|degraded|unhealthy/);
+      expect(status.status).toMatch(/healthy|degraded|unhealthy/);
       expect(Array.isArray(status.checks)).toBe(true);
     });
 
@@ -163,7 +157,7 @@ describe('MonitoringService', () => {
 
       const status = await monitoringService.getSystemStatus();
 
-      expect(status.overall).toBe('degraded');
+      expect(status.status).toBe('degraded');
     });
 
     it('should return unhealthy status when critical checks fail', async () => {
@@ -173,7 +167,7 @@ describe('MonitoringService', () => {
 
       const status = await monitoringService.getSystemStatus();
 
-      expect(status.overall).toBe('unhealthy');
+      expect(status.status).toBe('unhealthy');
     });
   });
 
@@ -206,9 +200,9 @@ describe('MonitoringService', () => {
 
       const healthChecks = await monitoringService.performHealthChecks();
 
-      const apiCheck = healthChecks.find(check => check.name === 'External APIs');
-      expect(apiCheck?.status).toBe('unhealthy');
-      expect(apiCheck?.error).toBe('External API unavailable');
+      const apiChecks = healthChecks.filter(check => check.name === 'ShipEngine' || check.name === 'SendGrid' || check.name === 'Twilio');
+      expect(apiChecks.length).toBeGreaterThan(0);
+      expect(apiChecks.some(check => check.status === 'unhealthy')).toBe(true);
     });
   });
 });
