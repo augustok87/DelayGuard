@@ -49,6 +49,33 @@ export interface TestDelayDetectionResult {
   message?: string;
 }
 
+export interface AnalyticsMetrics {
+  totalOrders: number;
+  totalAlerts: number;
+  averageDelayDays: number;
+  performanceMetrics: {
+    averageResponseTime: number;
+    successRate: number;
+    errorRate: number;
+  };
+  revenueImpact: {
+    totalValue: number;
+    averageOrderValue: number;
+    potentialLoss: number;
+  };
+  notificationSuccessRate: {
+    email: number;
+    sms: number;
+  };
+}
+
+export interface RealTimeMetrics {
+  activeAlerts: number;
+  responseTime: number;
+  errorRate: number;
+  memoryUsage: number;
+}
+
 export class AnalyticsService {
   private baseUrl: string;
   private apiKey: string;
@@ -265,6 +292,76 @@ export class AnalyticsService {
       return await response.blob();
     } catch (error) {
       console.error('Error exporting alerts:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get analytics metrics for a specific shop and time range
+   */
+  async getAnalyticsMetrics(shopId: string, timeRange: '7d' | '30d' | '90d' | '1y'): Promise<AnalyticsMetrics> {
+    try {
+      const response = await fetch(`${this.baseUrl}/analytics?shop=${shopId}&timeRange=${timeRange}`, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch analytics metrics: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.data || data;
+    } catch (error) {
+      console.error('Error fetching analytics metrics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get real-time metrics for a specific shop
+   */
+  async getRealTimeMetrics(shopId: string): Promise<RealTimeMetrics> {
+    try {
+      const response = await fetch(`${this.baseUrl}/analytics/realtime?shop=${shopId}`, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch real-time metrics: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.data || data;
+    } catch (error) {
+      console.error('Error fetching real-time metrics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Clear analytics cache for a specific shop
+   */
+  async clearCache(shopId: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/analytics/cache?shop=${shopId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to clear analytics cache: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error clearing analytics cache:', error);
       throw error;
     }
   }

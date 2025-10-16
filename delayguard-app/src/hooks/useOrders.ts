@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useAsyncResource, useItemFilters } from './useAsyncResource';
 import { fetchOrders, updateOrder, deleteOrder } from '../store/slices/ordersSlice';
-import { Order, CreateOrderData, UpdateOrderData } from '../types';
+import { Order } from '../types';
 
 export const useOrders = () => {
   // Use the generic useAsyncResource hook
@@ -22,7 +22,7 @@ export const useOrders = () => {
       items: state.orders.items,
       loading: state.orders.loading,
       error: state.orders.error,
-    })
+    }),
   );
 
   // Use the generic filtering and sorting hook
@@ -32,7 +32,7 @@ export const useOrders = () => {
     sortItems: sortOrdersGeneric,
   } = useItemFilters<Order>(
     orders,
-    (order) => order.status
+    (order) => order.status,
   );
 
   const getProcessingOrders = useCallback(() => {

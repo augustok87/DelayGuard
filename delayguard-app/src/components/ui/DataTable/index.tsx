@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { DataTableProps, DataTableColumn, DataTableRow } from '../../../types/ui';
+import { DataTableProps, DataTableRow } from '../../../types/ui';
 import styles from './DataTable.module.css';
 
 export const DataTable: React.FC<DataTableProps> = ({

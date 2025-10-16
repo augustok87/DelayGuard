@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { TabsProps, TabItem } from '../../../types/ui';
+import { TabsProps } from '../../../types/ui';
 import styles from './Tabs.module.css';
 
 export const Tabs: React.FC<TabsProps> = ({
@@ -46,8 +46,6 @@ export const Tabs: React.FC<TabsProps> = ({
       }
     }
   }, [tabs, handleTabClick]);
-
-  const activeTabContent = tabs.find(tab => tab.id === currentActiveTab)?.content;
 
   const tabsClasses = [
     styles.tabs,

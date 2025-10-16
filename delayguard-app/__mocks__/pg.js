@@ -13,7 +13,7 @@ class MockPool {
     return client;
   }
 
-  async query(text, params) {
+  async query(_text, _params) {
     // Mock query execution
     return { 
       rows: [], 
@@ -31,11 +31,11 @@ class MockPool {
     return Promise.resolve();
   }
 
-  on(event, callback) {
+  on(_event, _callback) {
     return this;
   }
 
-  off(event, callback) {
+  off(_event, _callback) {
     return this;
   }
 }
@@ -116,11 +116,11 @@ class MockClient {
     return Promise.resolve();
   }
 
-  on(event, callback) {
+  on(_event, _callback) {
     return this;
   }
 
-  off(event, callback) {
+  off(_event, _callback) {
     return this;
   }
 }

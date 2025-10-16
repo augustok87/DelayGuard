@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   // React UI Components
   Button,
@@ -275,7 +275,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
             border: '1px solid #d1d5db',
             borderRadius: '4px',
             fontFamily: 'monospace',
-            fontSize: '12px'
+            fontSize: '12px',
           }}
         />
         {customCSSError && (
@@ -373,7 +373,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
               padding: '16px', 
               backgroundColor: theme.secondaryColor, 
               borderRadius: `${theme.borderRadius}px`,
-              margin: '16px 0'
+              margin: '16px 0',
             }}>
               <Text>This is how your theme will look with the current settings.</Text>
             </div>
@@ -384,7 +384,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
                 borderRadius: `${theme.borderRadius}px`,
                 padding: '8px 16px',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               Sample Button
@@ -422,7 +422,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
                           backgroundColor: color,
                           borderRadius: '4px',
                           cursor: 'pointer',
-                          border: '1px solid #d1d5db'
+                          border: '1px solid #d1d5db',
                         }}
                         onClick={() => {
                           setTheme(prev => ({
@@ -430,7 +430,7 @@ function ThemeCustomizer({ onThemeChange, initialTheme = defaultTheme }: ThemeCu
                             primaryColor: palette.colors[0],
                             secondaryColor: palette.colors[1],
                             accentColor: palette.colors[2],
-                            backgroundColor: palette.colors[3]
+                            backgroundColor: palette.colors[3],
                           }));
                           setShowColorSuggestions(false);
                           setToastMessage(`${palette.name} palette applied!`);

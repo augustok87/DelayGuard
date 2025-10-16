@@ -3,7 +3,7 @@
  * Provides automated backup, restore, and disaster recovery capabilities
  */
 
-import { createSpan, withSpan, getTracer, delayGuardMetrics } from '../observability/tracing';
+import { withSpan, getTracer, delayGuardMetrics } from '../observability/tracing';
 
 export interface BackupConfig {
   id: string;
@@ -105,7 +105,6 @@ export class BackupService {
         });
 
         let backupData: Buffer;
-        let checksum: string;
 
         switch (config.type) {
           case 'database':
@@ -125,7 +124,7 @@ export class BackupService {
         }
 
         // Calculate checksum
-        checksum = await this.calculateChecksum(backupData);
+        const checksum = await this.calculateChecksum(backupData);
 
         // Compress if enabled
         if (config.compression) {
@@ -373,11 +372,11 @@ export class BackupService {
     
     // Get all keys
     const keys = await redis.keys('*');
-    const data: Record<string, any> = {};
+    const data: Record<string, unknown> = {};
     
     for (const key of keys) {
       const type = await redis.type(key);
-      let value: any;
+      let value: unknown;
       
       switch (type) {
         case 'string':
@@ -410,10 +409,6 @@ export class BackupService {
    */
   private async backupFiles(): Promise<Buffer> {
     const fs = await import('fs/promises');
-    const path = await import('path');
-    const { createReadStream } = await import('fs');
-    const { pipeline } = await import('stream/promises');
-    const { createGzip } = await import('zlib');
     
     // Create tar archive of important files
     const files = [
@@ -517,7 +512,7 @@ export class BackupService {
     const algorithm = 'aes-256-gcm';
     
     const key = data.subarray(0, 32);
-    const iv = data.subarray(32, 48);
+    const _iv = data.subarray(32, 48);
     const authTag = data.subarray(48, 64);
     const encrypted = data.subarray(64);
     

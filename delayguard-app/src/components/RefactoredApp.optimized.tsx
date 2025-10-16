@@ -13,7 +13,7 @@ import {
   useOrderActions, 
   useSettingsActions, 
 } from '../hooks';
-import { AppSettings, DelayAlert, Order, StatsData } from '../types';
+import { AppSettings, StatsData } from '../types';
 import styles from './RefactoredApp.module.css';
 
 export function RefactoredAppOptimized() {

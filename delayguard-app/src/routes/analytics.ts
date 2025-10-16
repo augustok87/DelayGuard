@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { AnalyticsService } from '../services/analytics-service';
+import { AnalyticsService } from '../services/AnalyticsService';
 import { config } from '../server';
 
 const router = new Router();
@@ -184,7 +184,14 @@ router.get('/analytics/export', async(ctx) => {
   }
 });
 
-function convertToCSV(metrics: any): string {
+function convertToCSV(metrics: {
+  totalOrders: number;
+  totalAlerts: number;
+  averageDelayDays: number;
+  notificationSuccessRate: { email: number; sms: number };
+  revenueImpact: { totalValue: number; averageOrderValue: number; potentialLoss: number };
+  performanceMetrics: { averageResponseTime: number; successRate: number; errorRate: number };
+}): string {
   const headers = [
     'Metric',
     'Value',

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useAsyncResource, useItemFilters } from './useAsyncResource';
 import { fetchAlerts, updateAlert, deleteAlert } from '../store/slices/alertsSlice';
-import { DelayAlert, CreateAlertData, UpdateAlertData } from '../types';
+import { DelayAlert } from '../types';
 
 export const useDelayAlerts = () => {
   const {
@@ -18,7 +18,7 @@ export const useDelayAlerts = () => {
     updateAlert,
     deleteAlert,
     (state) => state.alerts,
-    undefined // createAlert not implemented yet
+    undefined, // createAlert not implemented yet
   );
 
   const {
@@ -29,7 +29,7 @@ export const useDelayAlerts = () => {
   } = useItemFilters<DelayAlert>(
     alerts,
     (alert) => alert.status,
-    (alert) => alert.priority || 'low'
+    (alert) => alert.priority || 'low',
   );
 
   // Alert-specific filtering and sorting

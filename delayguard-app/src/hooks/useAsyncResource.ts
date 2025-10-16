@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 
 /**
@@ -11,7 +11,7 @@ export function useAsyncResource<T>(
   updateAction: any,
   deleteAction: any,
   selector: (state: any) => { items: T[]; loading: boolean; error: string | null },
-  createAction?: any
+  createAction?: any,
 ) {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector(selector);
@@ -22,7 +22,7 @@ export function useAsyncResource<T>(
   }, [dispatch, fetchAction]);
 
   // Create new item
-  const createItem = useCallback(async (itemData: any) => {
+  const createItem = useCallback(async(itemData: any) => {
     try {
       if (createAction) {
         await dispatch(createAction(itemData)).unwrap();
@@ -37,7 +37,7 @@ export function useAsyncResource<T>(
   }, [dispatch, createAction, resourceName]);
 
   // Update existing item
-  const updateItem = useCallback(async (id: string, updates: any) => {
+  const updateItem = useCallback(async(id: string, updates: any) => {
     try {
       await dispatch(updateAction({ id, updates })).unwrap();
       return { success: true };
@@ -47,7 +47,7 @@ export function useAsyncResource<T>(
   }, [dispatch, updateAction]);
 
   // Delete existing item
-  const deleteItem = useCallback(async (id: string) => {
+  const deleteItem = useCallback(async(id: string) => {
     try {
       await dispatch(deleteAction(id)).unwrap();
       return { success: true };
@@ -78,7 +78,7 @@ export function useAsyncResource<T>(
 export function useItemFilters<T>(
   items: T[],
   getStatus: (item: T) => string,
-  getPriority?: (item: T) => string
+  getPriority?: (item: T) => string,
 ) {
   // Filter by status
   const getItemsByStatus = useCallback((status: string) => {
@@ -100,7 +100,7 @@ export function useItemFilters<T>(
       searchFields.some(field => {
         const value = item[field];
         return value && String(value).toLowerCase().includes(lowerSearchText);
-      })
+      }),
     );
   }, [items]);
 

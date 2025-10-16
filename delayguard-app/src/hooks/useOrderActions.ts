@@ -6,7 +6,7 @@ export const useOrderActions = () => {
   const { updateOrder, deleteOrder } = useOrders();
   const { showSuccessToast, showErrorToast, showInfoToast } = useToasts();
 
-  const trackOrder = useCallback(async(orderId: string) => {
+  const trackOrder = useCallback(async(_orderId: string) => {
     try {
       // In a real app, this would open tracking in a new window or modal
       showInfoToast('Opening tracking information...');
@@ -22,7 +22,7 @@ export const useOrderActions = () => {
     }
   }, [showInfoToast, showSuccessToast, showErrorToast]);
 
-  const viewOrderDetails = useCallback(async(orderId: string) => {
+  const viewOrderDetails = useCallback(async(_orderId: string) => {
     try {
       // In a real app, this would open order details in a modal or new page
       showInfoToast('Loading order details...');

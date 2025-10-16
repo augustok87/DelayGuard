@@ -33,12 +33,12 @@ class MockRedis {
     return this.data.get(key) || null;
   }
 
-  async set(key, value, ...args) {
+  async set(key, value, ..._args) {
     this.data.set(key, value);
     return 'OK';
   }
 
-  async setex(key, seconds, value) {
+  async setex(key, _seconds, value) {
     this.data.set(key, value);
     return 'OK';
   }
@@ -63,7 +63,7 @@ class MockRedis {
     return Array.from(this.data.keys()).filter(key => regex.test(key));
   }
 
-  async scan(cursor, options = {}) {
+  async scan(cursor, _options = {}) {
     return ['0', Array.from(this.data.keys())];
   }
 
@@ -106,7 +106,7 @@ class MockRedis {
     return sortedSet ? sortedSet.size : 0;
   }
 
-  async expire(key, seconds) {
+  async expire(key, _seconds) {
     return this.data.has(key) ? 1 : 0;
   }
 
@@ -166,11 +166,11 @@ class MockRedis {
     return pipeline;
   }
 
-  on(event, callback) {
+  on(_event, _callback) {
     return this;
   }
 
-  off(event, callback) {
+  off(_event, _callback) {
     return this;
   }
 }
