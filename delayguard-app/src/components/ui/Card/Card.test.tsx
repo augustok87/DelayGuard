@@ -66,7 +66,7 @@ describe('Card Component', () => {
     it('should render with different loading states', () => {
       const { rerender } = render(<Card>Normal card</Card>);
       
-      let card = screen.getByText('Normal card');
+      const card = screen.getByText('Normal card');
       expect(card).toHaveClass('cardContent');
       
       rerender(<Card loading>Loading card</Card>);

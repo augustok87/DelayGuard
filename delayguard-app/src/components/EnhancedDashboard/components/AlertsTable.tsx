@@ -202,7 +202,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
               border: '1px solid #ccc',
               borderRadius: '4px',
               fontSize: '14px',
-              minWidth: '120px'
+              minWidth: '120px',
             }}
           >
             <option value="">All Severities</option>
@@ -230,7 +230,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
               border: '1px solid #ccc',
               borderRadius: '4px',
               fontSize: '14px',
-              minWidth: '200px'
+              minWidth: '200px',
             }}
           />
         </div>
@@ -296,7 +296,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
           alignItems: 'center',
           marginTop: '1rem',
           padding: '1rem',
-          borderTop: '1px solid #eee'
+          borderTop: '1px solid #eee',
         }}>
           <div style={{ fontSize: '14px', color: '#666' }}>
             Showing {startIndex + 1}-{Math.min(endIndex, alerts.length)} of {alerts.length} alerts
@@ -314,7 +314,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
               display: 'flex', 
               alignItems: 'center', 
               padding: '0 12px',
-              fontSize: '14px'
+              fontSize: '14px',
             }}>
               Page {currentPage} of {totalPages}
             </span>

@@ -44,7 +44,7 @@ export const Modal: React.FC<ModalProps> = ({
     if (!modal) return;
 
     const focusableElements = modal.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstElement = focusableElements[0] as HTMLElement;
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
@@ -94,7 +94,7 @@ export const Modal: React.FC<ModalProps> = ({
           const contentArea = modalRef.current.querySelector('.content') as HTMLElement;
           if (contentArea) {
             const contentFocusableElements = contentArea.querySelectorAll(
-              'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+              'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
             );
             const firstContentElement = contentFocusableElements[0] as HTMLElement;
             if (firstContentElement) {

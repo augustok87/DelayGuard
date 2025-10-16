@@ -24,7 +24,7 @@ export function ErrorState({
   title = "Something went wrong",
   message = "Failed to load data",
   onRetry,
-  testId = 'error-state'
+  testId = 'error-state',
 }: ErrorStateProps) {
   return (
     <div 

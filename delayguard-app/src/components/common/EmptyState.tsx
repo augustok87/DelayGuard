@@ -30,7 +30,7 @@ export function EmptyState({
   description, 
   action, 
   icon, 
-  testId = 'empty-state' 
+  testId = 'empty-state', 
 }: EmptyStateProps) {
   return (
     <div 

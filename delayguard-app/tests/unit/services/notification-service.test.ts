@@ -33,7 +33,7 @@ describe('NotificationService', () => {
 
     notificationService = new NotificationService(
       mockEmailServiceInstance,
-      mockSMSServiceInstance
+      mockSMSServiceInstance,
     );
   });
 
@@ -56,7 +56,7 @@ describe('NotificationService', () => {
       delayReason: 'Weather delay',
     };
 
-    it('should send email notification successfully', async () => {
+    it('should send email notification successfully', async() => {
       mockEmailServiceInstance.sendDelayEmail.mockResolvedValue(undefined);
 
       await notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails);
@@ -64,11 +64,11 @@ describe('NotificationService', () => {
       expect(mockEmailServiceInstance.sendDelayEmail).toHaveBeenCalledWith(
         mockOrderInfo.customerEmail,
         mockOrderInfo,
-        mockDelayDetails
+        mockDelayDetails,
       );
     });
 
-    it('should send SMS notification successfully', async () => {
+    it('should send SMS notification successfully', async() => {
       mockSMSServiceInstance.sendDelaySMS.mockResolvedValue(undefined);
 
       await notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails);
@@ -76,29 +76,29 @@ describe('NotificationService', () => {
       expect(mockSMSServiceInstance.sendDelaySMS).toHaveBeenCalledWith(
         mockOrderInfo.customerPhone,
         mockOrderInfo,
-        mockDelayDetails
+        mockDelayDetails,
       );
     });
 
-    it('should handle email service errors gracefully', async () => {
+    it('should handle email service errors gracefully', async() => {
       const error = new Error('Email service unavailable');
       mockEmailServiceInstance.sendDelayEmail.mockRejectedValue(error);
 
       await expect(
-        notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails)
+        notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails),
       ).rejects.toThrow('Email service unavailable');
     });
 
-    it('should handle SMS service errors gracefully', async () => {
+    it('should handle SMS service errors gracefully', async() => {
       const error = new Error('SMS service unavailable');
       mockSMSServiceInstance.sendDelaySMS.mockRejectedValue(error);
 
       await expect(
-        notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails)
+        notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails),
       ).rejects.toThrow('SMS service unavailable');
     });
 
-    it('should handle both services failing', async () => {
+    it('should handle both services failing', async() => {
       const emailError = new Error('Email service unavailable');
       const smsError = new Error('SMS service unavailable');
       
@@ -106,7 +106,7 @@ describe('NotificationService', () => {
       mockSMSServiceInstance.sendDelaySMS.mockRejectedValue(smsError);
 
       await expect(
-        notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails)
+        notificationService.sendDelayNotification(mockOrderInfo, mockDelayDetails),
       ).rejects.toThrow();
     });
   });
@@ -127,7 +127,7 @@ describe('NotificationService', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle invalid order info', async () => {
+    it('should handle invalid order info', async() => {
       const invalidOrderInfo = {} as OrderInfo;
       const mockDelayDetails: DelayDetails = {
         estimatedDelivery: '2024-01-21',
@@ -138,11 +138,11 @@ describe('NotificationService', () => {
       };
 
       await expect(
-        notificationService.sendDelayNotification(invalidOrderInfo, mockDelayDetails)
+        notificationService.sendDelayNotification(invalidOrderInfo, mockDelayDetails),
       ).rejects.toThrow();
     });
 
-    it('should handle invalid delay details', async () => {
+    it('should handle invalid delay details', async() => {
       const mockOrderInfo: OrderInfo = {
         id: 'order-123',
         orderNumber: 'ORD-001',
@@ -156,13 +156,13 @@ describe('NotificationService', () => {
       const invalidDelayDetails = {} as DelayDetails;
 
       await expect(
-        notificationService.sendDelayNotification(mockOrderInfo, invalidDelayDetails)
+        notificationService.sendDelayNotification(mockOrderInfo, invalidDelayDetails),
       ).rejects.toThrow();
     });
   });
 
   describe('Service Integration', () => {
-    it('should call both services when both are available', async () => {
+    it('should call both services when both are available', async() => {
       mockEmailServiceInstance.sendDelayEmail.mockResolvedValue(undefined);
       mockSMSServiceInstance.sendDelaySMS.mockResolvedValue(undefined);
 

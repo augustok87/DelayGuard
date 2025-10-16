@@ -115,7 +115,7 @@ describe('CSRF Protection Middleware', () => {
   });
 
   describe('Safe Methods', () => {
-    it('should allow GET requests without CSRF token', async () => {
+    it('should allow GET requests without CSRF token', async() => {
       const middleware = APICSRFProtection.create({
         secret: 'test-secret',
         cookieName: '_csrf',
@@ -131,7 +131,7 @@ describe('CSRF Protection Middleware', () => {
       expect(ctx.throw).not.toHaveBeenCalled();
     });
 
-    it('should allow HEAD requests without CSRF token', async () => {
+    it('should allow HEAD requests without CSRF token', async() => {
       const middleware = APICSRFProtection.create({
         secret: 'test-secret',
         cookieName: '_csrf',
@@ -147,7 +147,7 @@ describe('CSRF Protection Middleware', () => {
       expect(ctx.throw).not.toHaveBeenCalled();
     });
 
-    it('should allow OPTIONS requests without CSRF token', async () => {
+    it('should allow OPTIONS requests without CSRF token', async() => {
       const middleware = APICSRFProtection.create({
         secret: 'test-secret',
         cookieName: '_csrf',
@@ -165,7 +165,7 @@ describe('CSRF Protection Middleware', () => {
   });
 
   describe('Unsafe Methods', () => {
-    it('should require CSRF token for POST requests', async () => {
+    it('should require CSRF token for POST requests', async() => {
       const middleware = APICSRFProtection.create({
         secret: 'test-secret',
         cookieName: '_csrf',
@@ -185,7 +185,7 @@ describe('CSRF Protection Middleware', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should require CSRF token for PUT requests', async () => {
+    it('should require CSRF token for PUT requests', async() => {
       const middleware = APICSRFProtection.create({
         secret: 'test-secret',
         cookieName: '_csrf',
@@ -205,7 +205,7 @@ describe('CSRF Protection Middleware', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should require CSRF token for DELETE requests', async () => {
+    it('should require CSRF token for DELETE requests', async() => {
       const middleware = APICSRFProtection.create({
         secret: 'test-secret',
         cookieName: '_csrf',
@@ -225,7 +225,7 @@ describe('CSRF Protection Middleware', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should require CSRF token for PATCH requests', async () => {
+    it('should require CSRF token for PATCH requests', async() => {
       const middleware = APICSRFProtection.create({
         secret: 'test-secret',
         cookieName: '_csrf',
@@ -247,7 +247,7 @@ describe('CSRF Protection Middleware', () => {
   });
 
   describe('CSRF Token Validation', () => {
-    it('should validate CSRF token from header', async () => {
+    it('should validate CSRF token from header', async() => {
       // Mock crypto.timingSafeEqual to return true for valid tokens
       (mockCrypto.timingSafeEqual as jest.Mock).mockReturnValue(true);
       
@@ -273,7 +273,7 @@ describe('CSRF Protection Middleware', () => {
       expect(ctx.throw).not.toHaveBeenCalled();
     });
 
-    it('should validate CSRF token from body', async () => {
+    it('should validate CSRF token from body', async() => {
       // Mock crypto.timingSafeEqual to return true for valid tokens
       (mockCrypto.timingSafeEqual as jest.Mock).mockReturnValue(true);
       
@@ -342,7 +342,7 @@ describe('CSRF Protection Middleware', () => {
       expect(ctx.throw).not.toHaveBeenCalled();
     });
 
-    it('should throw error for invalid CSRF token', async () => {
+    it('should throw error for invalid CSRF token', async() => {
       const middleware = APICSRFProtection.create({
         secret: 'test-secret',
         cookieName: '_csrf',
@@ -364,7 +364,7 @@ describe('CSRF Protection Middleware', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should throw error for missing CSRF token in both header and body', async () => {
+    it('should throw error for missing CSRF token in both header and body', async() => {
       const middleware = APICSRFProtection.create({
         secret: 'test-secret',
         cookieName: '_csrf',
@@ -430,7 +430,7 @@ describe('CSRF Protection Middleware', () => {
   });
 
   describe('Token Generation', () => {
-    it('should generate CSRF token for safe methods', async () => {
+    it('should generate CSRF token for safe methods', async() => {
       // Mock crypto.randomBytes to return a specific value
       const mockBuffer = Buffer.from('746573742d746f6b656e', 'hex'); // 'test-token' in hex
       (mockCrypto.randomBytes as jest.Mock).mockReturnValue(mockBuffer);
@@ -454,11 +454,11 @@ describe('CSRF Protection Middleware', () => {
           httpOnly: false,
           secure: true,
           sameSite: 'strict',
-        })
+        }),
       );
     });
 
-    it('should set CSRF token in state', async () => {
+    it('should set CSRF token in state', async() => {
       // Mock crypto.randomBytes to return a specific value
       const mockBuffer = Buffer.from('746573742d746f6b656e', 'hex'); // 'test-token' in hex
       (mockCrypto.randomBytes as jest.Mock).mockReturnValue(mockBuffer);
@@ -479,7 +479,7 @@ describe('CSRF Protection Middleware', () => {
   });
 
   describe('Cookie Configuration', () => {
-    it('should set secure cookie in production', async () => {
+    it('should set secure cookie in production', async() => {
       // Mock crypto.randomBytes to return a specific value
       const mockBuffer = Buffer.from('746573742d746f6b656e', 'hex'); // 'test-token' in hex
       (mockCrypto.randomBytes as jest.Mock).mockReturnValue(mockBuffer);
@@ -503,13 +503,13 @@ describe('CSRF Protection Middleware', () => {
         '746573742d746f6b656e',
         expect.objectContaining({
           secure: true,
-        })
+        }),
       );
 
       process.env.NODE_ENV = originalEnv;
     });
 
-    it('should set appropriate cookie options', async () => {
+    it('should set appropriate cookie options', async() => {
       // Mock crypto.randomBytes to return a specific value
       const mockBuffer = Buffer.from('746573742d746f6b656e', 'hex'); // 'test-token' in hex
       (mockCrypto.randomBytes as jest.Mock).mockReturnValue(mockBuffer);
@@ -532,13 +532,13 @@ describe('CSRF Protection Middleware', () => {
           httpOnly: false,
           sameSite: 'strict',
           maxAge: 86400000, // 24 hours
-        })
+        }),
       );
     });
   });
 
   describe('Error Handling', () => {
-    it('should handle errors from next()', async () => {
+    it('should handle errors from next()', async() => {
       const middleware = APICSRFProtection.create({
         secret: 'test-secret',
         cookieName: '_csrf',

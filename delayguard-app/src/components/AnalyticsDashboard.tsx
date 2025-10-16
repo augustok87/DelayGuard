@@ -63,14 +63,14 @@ function AnalyticsDashboard({ dateRange: propDateRange, onExport }: AnalyticsDas
   const [severityFilter, setSeverityFilter] = useState('all');
   const [alerts] = useState([
     { id: '1', order_number: 'ORD-001', customer_name: 'John Doe', delay_days: 3, severity: 'high' },
-    { id: '2', order_number: 'ORD-002', customer_name: 'Jane Smith', delay_days: 1, severity: 'medium' }
+    { id: '2', order_number: 'ORD-002', customer_name: 'Jane Smith', delay_days: 1, severity: 'medium' },
   ]);
 
   // Use the analytics service
 
   useEffect(() => {
     // Load initial data
-    const loadInitialData = async () => {
+    const loadInitialData = async() => {
       try {
         setLoading(true);
         setError(null);
@@ -401,7 +401,7 @@ function AnalyticsDashboard({ dateRange: propDateRange, onExport }: AnalyticsDas
                 {renderNotificationMetrics()}
                 {renderReasonBreakdown()}
               </div>
-            )
+            ),
           },
           { 
             id: 'alerts', 
@@ -427,12 +427,12 @@ function AnalyticsDashboard({ dateRange: propDateRange, onExport }: AnalyticsDas
                     { key: 'order_number', title: 'Order Number' },
                     { key: 'customer_name', title: 'Customer' },
                     { key: 'delay_days', title: 'Delay Days' },
-                    { key: 'severity', title: 'Severity' }
+                    { key: 'severity', title: 'Severity' },
                   ]}
                   data={filteredAlerts}
                 />
               </div>
-            )
+            ),
           },
         ]}
         activeTab="overview"

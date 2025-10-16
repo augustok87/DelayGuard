@@ -31,7 +31,7 @@ describe('AnalyticsService', () => {
         averageDelayDays: 2.5,
         notificationSuccessRate: { email: 95, sms: 90 },
         customerSatisfaction: 4.2,
-        resolutionTime: { average: 1.5, median: 1.0 }
+        resolutionTime: { average: 1.5, median: 1.0 },
       };
 
       await expect(analyticsService.exportData(mockData))

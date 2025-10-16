@@ -249,8 +249,8 @@ describe('MonitoringService', () => {
             duration: 60,
             severity: 'high',
             enabled: true,
-            channels: ['email', 'sms']
-          }]
+            channels: ['email', 'sms'],
+          }],
         });
 
       // Collect metrics first to populate the metrics array

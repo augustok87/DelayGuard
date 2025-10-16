@@ -34,7 +34,7 @@ export class SecurityHeadersMiddleware {
     // Content Security Policy with nonce
     const cspWithNonce = SecurityHeadersMiddleware.CSP_POLICY.replace(
       "script-src 'self' 'unsafe-inline'",
-      `script-src 'self' 'nonce-${nonce}'`
+      `script-src 'self' 'nonce-${nonce}'`,
     );
     ctx.set('Content-Security-Policy', cspWithNonce);
     

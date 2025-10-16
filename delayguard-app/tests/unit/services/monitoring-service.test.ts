@@ -60,14 +60,14 @@ describe('MonitoringService', () => {
   });
 
   describe('performHealthChecks', () => {
-    it('should perform all health checks successfully', async () => {
+    it('should perform all health checks successfully', async() => {
       const healthChecks = await monitoringService.performHealthChecks();
 
       expect(healthChecks).toHaveLength(6); // database, redis, 3 external APIs, application
       expect(healthChecks.every(check => check.status === 'healthy')).toBe(true);
     });
 
-    it('should detect unhealthy services', async () => {
+    it('should detect unhealthy services', async() => {
       // Mock Redis connection failure
       mockRedisInstance.ping = jest.fn().mockRejectedValue(new Error('Connection failed'));
 
@@ -78,10 +78,10 @@ describe('MonitoringService', () => {
       expect(redisCheck?.error).toBe('Connection failed');
     });
 
-    it('should detect degraded services', async () => {
+    it('should detect degraded services', async() => {
       // Mock slow database response
       mockPoolInstance.query = jest.fn().mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ rows: [] }), 2000))
+        new Promise(resolve => setTimeout(() => resolve({ rows: [] }), 2000)),
       );
 
       const healthChecks = await monitoringService.performHealthChecks();
@@ -93,7 +93,7 @@ describe('MonitoringService', () => {
   });
 
   describe('collectSystemMetrics', () => {
-    it('should collect comprehensive system metrics', async () => {
+    it('should collect comprehensive system metrics', async() => {
       const metrics = await monitoringService.collectSystemMetrics();
 
       expect(metrics).toHaveProperty('timestamp');
@@ -113,7 +113,7 @@ describe('MonitoringService', () => {
   });
 
   describe('checkAlerts', () => {
-    it('should check alert rules and generate alerts', async () => {
+    it('should check alert rules and generate alerts', async() => {
       // Mock alert rules in database
       mockPoolInstance.query = jest.fn().mockResolvedValue({
         rows: [{
@@ -125,8 +125,8 @@ describe('MonitoringService', () => {
           duration: 60,
           severity: 'high',
           enabled: true,
-          channels: ['email', 'sms']
-        }]
+          channels: ['email', 'sms'],
+        }],
       });
 
       // Mock high memory usage - heapUsed should be > 80% of total memory
@@ -143,7 +143,7 @@ describe('MonitoringService', () => {
       const originalOs = require('os');
       jest.doMock('os', () => ({
         ...originalOs,
-        totalmem: () => 1024 * 1024 * 50 // 50MB total memory (45/50 = 90% > 80%)
+        totalmem: () => 1024 * 1024 * 50, // 50MB total memory (45/50 = 90% > 80%)
       }));
 
       // Add some metrics to trigger the alert
@@ -162,7 +162,7 @@ describe('MonitoringService', () => {
       process.memoryUsage = originalProcess;
     });
 
-    it('should not generate alerts when metrics are within thresholds', async () => {
+    it('should not generate alerts when metrics are within thresholds', async() => {
       // Mock normal memory usage
       const originalProcess = process.memoryUsage;
       process.memoryUsage = jest.fn().mockReturnValue({
@@ -183,7 +183,7 @@ describe('MonitoringService', () => {
   });
 
   describe('getSystemStatus', () => {
-    it('should return overall system status', async () => {
+    it('should return overall system status', async() => {
       const status = await monitoringService.getSystemStatus();
 
       expect(status).toHaveProperty('status');
@@ -192,7 +192,7 @@ describe('MonitoringService', () => {
       expect(Array.isArray(status.checks)).toBe(true);
     });
 
-    it('should return degraded status when some checks fail', async () => {
+    it('should return degraded status when some checks fail', async() => {
       // Mock one service failure
       mockRedisInstance.ping = jest.fn().mockRejectedValue(new Error('Redis unavailable'));
 
@@ -201,7 +201,7 @@ describe('MonitoringService', () => {
       expect(status.status).toBe('unhealthy'); // Redis failure should make it unhealthy, not degraded
     });
 
-    it('should return unhealthy status when critical checks fail', async () => {
+    it('should return unhealthy status when critical checks fail', async() => {
       // Mock database failure
       mockPoolInstance.query = jest.fn().mockRejectedValue(new Error('Database unavailable'));
 
@@ -212,7 +212,7 @@ describe('MonitoringService', () => {
   });
 
   describe('error handling', () => {
-    it('should handle database errors gracefully', async () => {
+    it('should handle database errors gracefully', async() => {
       mockPoolInstance.query = jest.fn().mockRejectedValue(new Error('Database connection failed'));
 
       const healthChecks = await monitoringService.performHealthChecks();
@@ -222,7 +222,7 @@ describe('MonitoringService', () => {
       expect(dbCheck?.error).toBe('Database connection failed');
     });
 
-    it('should handle Redis errors gracefully', async () => {
+    it('should handle Redis errors gracefully', async() => {
       mockRedisInstance.ping = jest.fn().mockRejectedValue(new Error('Redis connection failed'));
 
       const healthChecks = await monitoringService.performHealthChecks();
@@ -232,7 +232,7 @@ describe('MonitoringService', () => {
       expect(redisCheck?.error).toBe('Redis connection failed');
     });
 
-    it('should handle external API errors gracefully', async () => {
+    it('should handle external API errors gracefully', async() => {
       // Mock fetch to simulate external API failure
       global.fetch = jest.fn().mockRejectedValue(new Error('External API unavailable'));
 

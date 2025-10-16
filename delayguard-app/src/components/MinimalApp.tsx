@@ -79,7 +79,7 @@ function MinimalApp() {
 
   // Data initialization - use mock API if available, otherwise use local mock data
   useEffect(() => {
-    const loadData = async () => {
+    const loadData = async() => {
       try {
         setLoading(true);
         setError(null);
@@ -238,7 +238,7 @@ function MinimalApp() {
     setShowToast(true);
   };
 
-  const handleRefresh = async () => {
+  const handleRefresh = async() => {
     try {
       setLoading(true);
       setError(null);
@@ -321,7 +321,7 @@ function MinimalApp() {
             description="No delay alerts are currently active. New alerts will appear here when shipping delays are detected."
             action={{
               label: "Test Delay Detection",
-              onClick: async () => {
+              onClick: async() => {
                 try {
                   console.log('Testing delay detection...');
                   if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
@@ -334,7 +334,7 @@ function MinimalApp() {
                   setToastMessage('Error testing delay detection');
                   setShowToast(true);
                 }
-              }
+              },
             }}
             testId="alerts-empty-state"
           />
@@ -343,7 +343,7 @@ function MinimalApp() {
     }
 
     const filteredAlerts = alerts.filter(alert => 
-      alert.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+      alert.customerName.toLowerCase().includes(searchTerm.toLowerCase()),
     );
     
     const headings = ['Order ID', 'Customer', 'Delay Days', 'Status', 'Actions'];
@@ -363,7 +363,7 @@ function MinimalApp() {
             <Button size="sm" onClick={handleExportAlerts}>
               Export Alerts
             </Button>
-            <Button size="sm" variant="secondary" onClick={async () => {
+            <Button size="sm" variant="secondary" onClick={async() => {
               try {
                 console.log('Testing delay detection...');
                 // Call mock API if available (for testing)

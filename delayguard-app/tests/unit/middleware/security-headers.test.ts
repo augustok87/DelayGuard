@@ -28,46 +28,46 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Content Security Policy (CSP)', () => {
-    it('should set comprehensive CSP headers', async () => {
+    it('should set comprehensive CSP headers', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Content-Security-Policy',
-        expect.stringContaining("default-src 'self'")
+        expect.stringContaining("default-src 'self'"),
       );
       expect(ctx.set).toHaveBeenCalledWith(
         'Content-Security-Policy',
-        expect.stringContaining("script-src 'self' 'nonce-")
+        expect.stringContaining("script-src 'self' 'nonce-"),
       );
       expect(ctx.set).toHaveBeenCalledWith(
         'Content-Security-Policy',
-        expect.stringContaining("style-src 'self' 'unsafe-inline'")
+        expect.stringContaining("style-src 'self' 'unsafe-inline'"),
       );
     });
 
-    it('should include nonce for inline scripts', async () => {
+    it('should include nonce for inline scripts', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Content-Security-Policy',
-        expect.stringContaining('nonce-')
+        expect.stringContaining('nonce-'),
       );
     });
   });
 
   describe('HTTP Strict Transport Security (HSTS)', () => {
-    it('should set HSTS header with proper values', async () => {
+    it('should set HSTS header with proper values', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Strict-Transport-Security',
-        'max-age=31536000; includeSubDomains; preload'
+        'max-age=31536000; includeSubDomains; preload',
       );
     });
   });
 
   describe('X-Frame-Options', () => {
-    it('should set X-Frame-Options to DENY', async () => {
+    it('should set X-Frame-Options to DENY', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith('X-Frame-Options', 'DENY');
@@ -75,7 +75,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('X-Content-Type-Options', () => {
-    it('should set X-Content-Type-Options to nosniff', async () => {
+    it('should set X-Content-Type-Options to nosniff', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith('X-Content-Type-Options', 'nosniff');
@@ -83,37 +83,37 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Referrer Policy', () => {
-    it('should set Referrer-Policy to strict-origin-when-cross-origin', async () => {
+    it('should set Referrer-Policy to strict-origin-when-cross-origin', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Referrer-Policy',
-        'strict-origin-when-cross-origin'
+        'strict-origin-when-cross-origin',
       );
     });
   });
 
   describe('Permissions Policy', () => {
-    it('should set Permissions-Policy with restrictive values', async () => {
+    it('should set Permissions-Policy with restrictive values', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Permissions-Policy',
-        expect.stringContaining('camera=()')
+        expect.stringContaining('camera=()'),
       );
       expect(ctx.set).toHaveBeenCalledWith(
         'Permissions-Policy',
-        expect.stringContaining('microphone=()')
+        expect.stringContaining('microphone=()'),
       );
       expect(ctx.set).toHaveBeenCalledWith(
         'Permissions-Policy',
-        expect.stringContaining('geolocation=()')
+        expect.stringContaining('geolocation=()'),
       );
     });
   });
 
   describe('X-XSS-Protection', () => {
-    it('should set X-XSS-Protection header', async () => {
+    it('should set X-XSS-Protection header', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith('X-XSS-Protection', '1; mode=block');
@@ -121,51 +121,51 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Cross-Origin Policies', () => {
-    it('should set Cross-Origin-Embedder-Policy', async () => {
+    it('should set Cross-Origin-Embedder-Policy', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Cross-Origin-Embedder-Policy',
-        'require-corp'
+        'require-corp',
       );
     });
 
-    it('should set Cross-Origin-Opener-Policy', async () => {
+    it('should set Cross-Origin-Opener-Policy', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Cross-Origin-Opener-Policy',
-        'same-origin'
+        'same-origin',
       );
     });
 
-    it('should set Cross-Origin-Resource-Policy', async () => {
+    it('should set Cross-Origin-Resource-Policy', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Cross-Origin-Resource-Policy',
-        'same-origin'
+        'same-origin',
       );
     });
   });
 
   describe('Cache Control', () => {
-    it('should set Cache-Control for API responses', async () => {
+    it('should set Cache-Control for API responses', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Cache-Control',
-        'no-store, no-cache, must-revalidate, proxy-revalidate'
+        'no-store, no-cache, must-revalidate, proxy-revalidate',
       );
     });
 
-    it('should set Pragma no-cache', async () => {
+    it('should set Pragma no-cache', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith('Pragma', 'no-cache');
     });
 
-    it('should set Expires header', async () => {
+    it('should set Expires header', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith('Expires', '0');
@@ -173,7 +173,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Server Information', () => {
-    it('should set X-Powered-By header', async () => {
+    it('should set X-Powered-By header', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith('X-Powered-By', 'DelayGuard');
@@ -181,13 +181,13 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Middleware Execution', () => {
-    it('should call next() after setting headers', async () => {
+    it('should call next() after setting headers', async() => {
       await securityHeaders(ctx, next);
 
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle errors from next()', async () => {
+    it('should handle errors from next()', async() => {
       const error = new Error('Test error');
       (next as jest.Mock).mockRejectedValueOnce(error);
 
@@ -196,7 +196,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Header Count', () => {
-    it('should set all required security headers', async () => {
+    it('should set all required security headers', async() => {
       await securityHeaders(ctx, next);
 
       // Count the number of times ctx.set was called
@@ -206,7 +206,7 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Environment-specific Headers', () => {
-    it('should set different headers in production', async () => {
+    it('should set different headers in production', async() => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
 
@@ -215,7 +215,7 @@ describe('Security Headers Middleware', () => {
       // In production, should have stricter CSP
       expect(ctx.set).toHaveBeenCalledWith(
         'Content-Security-Policy',
-        expect.stringContaining("default-src 'self'")
+        expect.stringContaining("default-src 'self'"),
       );
 
       process.env.NODE_ENV = originalEnv;

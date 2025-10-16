@@ -66,7 +66,7 @@ describe('ThemeCustomizer', () => {
     expect(mockOnThemeChange).toHaveBeenCalledWith(
       expect.objectContaining({
         primaryColor: '#ff0000',
-      })
+      }),
     );
   });
 
@@ -80,7 +80,7 @@ describe('ThemeCustomizer', () => {
     expect(mockOnThemeChange).toHaveBeenCalledWith(
       expect.objectContaining({
         borderRadius: 12,
-      })
+      }),
     );
   });
 
@@ -94,7 +94,7 @@ describe('ThemeCustomizer', () => {
     expect(mockOnThemeChange).toHaveBeenCalledWith(
       expect.objectContaining({
         fontFamily: 'Roboto, sans-serif',
-      })
+      }),
     );
   });
 
@@ -108,7 +108,7 @@ describe('ThemeCustomizer', () => {
     expect(mockOnThemeChange).toHaveBeenCalledWith(
       expect.objectContaining({
         darkMode: true,
-      })
+      }),
     );
   });
 

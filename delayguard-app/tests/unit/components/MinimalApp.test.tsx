@@ -11,14 +11,14 @@ jest.mock('../../../src/components', () => ({
     const tableColumns = columns || headings?.map((heading: any, index: number) => ({
       key: `col_${index}`,
       title: heading,
-      sortable: false
+      sortable: false,
     }));
     const tableData = data || rows?.map((row: any, index: number) => ({
       id: `row_${index}`,
       ...(Array.isArray(row) ? 
         row.reduce((acc, cell, cellIndex) => ({ ...acc, [`col_${cellIndex}`]: cell }), {}) :
         row
-      )
+      ),
     }));
 
     return (

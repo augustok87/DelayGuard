@@ -56,7 +56,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('XSS Protection', () => {
-    it('should sanitize XSS in request body', async () => {
+    it('should sanitize XSS in request body', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -71,7 +71,7 @@ describe('Input Sanitization Middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should sanitize XSS in query parameters', async () => {
+    it('should sanitize XSS in query parameters', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.query = {
@@ -86,7 +86,7 @@ describe('Input Sanitization Middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should sanitize XSS in headers', async () => {
+    it('should sanitize XSS in headers', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.headers = {
@@ -101,7 +101,7 @@ describe('Input Sanitization Middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle nested objects with XSS', async () => {
+    it('should handle nested objects with XSS', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -122,7 +122,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('SQL Injection Protection', () => {
-    it('should sanitize SQL injection in request body', async () => {
+    it('should sanitize SQL injection in request body', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -137,7 +137,7 @@ describe('Input Sanitization Middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should sanitize SQL injection in query parameters', async () => {
+    it('should sanitize SQL injection in query parameters', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.query = {
@@ -154,7 +154,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('NoSQL Injection Protection', () => {
-    it('should sanitize NoSQL injection in request body', async () => {
+    it('should sanitize NoSQL injection in request body', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -171,7 +171,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Path Traversal Protection', () => {
-    it('should sanitize path traversal in request body', async () => {
+    it('should sanitize path traversal in request body', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -186,7 +186,7 @@ describe('Input Sanitization Middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should sanitize path traversal in query parameters', async () => {
+    it('should sanitize path traversal in query parameters', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.query = {
@@ -203,7 +203,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Command Injection Protection', () => {
-    it('should sanitize command injection in request body', async () => {
+    it('should sanitize command injection in request body', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -220,7 +220,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Array Handling', () => {
-    it('should sanitize arrays of strings', async () => {
+    it('should sanitize arrays of strings', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -239,7 +239,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Nested Object Handling', () => {
-    it('should sanitize deeply nested objects', async () => {
+    it('should sanitize deeply nested objects', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -262,7 +262,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should handle null values', async () => {
+    it('should handle null values', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -279,7 +279,7 @@ describe('Input Sanitization Middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle non-string values', async () => {
+    it('should handle non-string values', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -298,7 +298,7 @@ describe('Input Sanitization Middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle empty objects', async () => {
+    it('should handle empty objects', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {};
@@ -312,7 +312,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Preset Configurations', () => {
-    it('should apply USER_INPUT preset correctly', async () => {
+    it('should apply USER_INPUT preset correctly', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = {
@@ -332,7 +332,7 @@ describe('Input Sanitization Middleware', () => {
       expect((ctx.request.body as any).command).toBe('ls; rm -rf /');
     });
 
-    it('should apply API_INPUT preset correctly', async () => {
+    it('should apply API_INPUT preset correctly', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.API_INPUT);
       
       ctx.request.body = {
@@ -355,7 +355,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle errors from next()', async () => {
+    it('should handle errors from next()', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       ctx.request.body = { test: 'value' };
@@ -365,7 +365,7 @@ describe('Input Sanitization Middleware', () => {
       await expect(middleware(ctx, next)).rejects.toThrow('Test error');
     });
 
-    it('should handle circular references gracefully', async () => {
+    it('should handle circular references gracefully', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       const circular: any = { test: 'value' };
@@ -386,7 +386,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Performance', () => {
-    it('should handle large objects efficiently', async () => {
+    it('should handle large objects efficiently', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       // Create a large object with many properties

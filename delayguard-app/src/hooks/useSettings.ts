@@ -20,7 +20,7 @@ export const useSettings = () => {
       items: [state.settings.data], // Wrap single settings object in array
       loading: state.settings.loading,
       error: state.settings.error,
-    })
+    }),
   );
 
   // Extract the single settings object

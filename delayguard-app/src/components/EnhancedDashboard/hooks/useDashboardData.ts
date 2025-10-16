@@ -46,7 +46,7 @@ export const useDashboardData = ({
     setLoading(true);
     
     // Call the analytics service for initial load
-    const loadInitialData = async () => {
+    const loadInitialData = async() => {
       try {
         const { AnalyticsService } = await import('../../../services/analytics-service');
         
@@ -55,7 +55,7 @@ export const useDashboardData = ({
           shopify: {
             apiKey: 'mock-key',
             apiSecret: 'mock-secret',
-            scopes: ['read_orders']
+            scopes: ['read_orders'],
           },
           database: { url: 'mock://localhost' },
           redis: { url: 'mock://localhost' },
@@ -64,8 +64,8 @@ export const useDashboardData = ({
           twilio: {
             accountSid: 'mock-account-sid',
             authToken: 'mock-auth-token',
-            phoneNumber: '+1234567890'
-          }
+            phoneNumber: '+1234567890',
+          },
         };
         
         const analyticsService = new AnalyticsService();
@@ -91,20 +91,20 @@ export const useDashboardData = ({
 
   // Real-time updates via WebSocket
   useEffect(() => {
-    const handleWebSocketMessage = async () => {
+    const handleWebSocketMessage = async() => {
       try {
         const { AnalyticsService } = await import('../../../services/analytics-service');
         const mockConfig = {
           shopify: {
             apiKey: 'mock-key',
             apiSecret: 'mock-secret',
-            scopes: ['read_orders']
+            scopes: ['read_orders'],
           },
           database: { url: 'mock://localhost' },
           redis: { url: 'mock://localhost' },
           shipengine: { apiKey: 'mock-key' },
           sendgrid: { apiKey: 'mock-key' },
-          twilio: { accountSid: 'mock-sid', authToken: 'mock-token', phoneNumber: '+1234567890' }
+          twilio: { accountSid: 'mock-sid', authToken: 'mock-token', phoneNumber: '+1234567890' },
         };
         const analyticsService = new AnalyticsService();
         
@@ -126,20 +126,20 @@ export const useDashboardData = ({
   }, []);
 
   // Event handlers
-  const handleSaveSettings = useCallback(async () => {
+  const handleSaveSettings = useCallback(async() => {
     try {
       const { AnalyticsService } = await import('../../../services/analytics-service');
       const mockConfig = {
         shopify: {
           apiKey: 'mock-key',
           apiSecret: 'mock-secret',
-          scopes: ['read_orders']
+          scopes: ['read_orders'],
         },
         database: { url: 'mock://localhost' },
         redis: { url: 'mock://localhost' },
         shipengine: { apiKey: 'mock-key' },
         sendgrid: { apiKey: 'mock-key' },
-        twilio: { accountSid: 'mock-sid', authToken: 'mock-token', phoneNumber: '+1234567890' }
+        twilio: { accountSid: 'mock-sid', authToken: 'mock-token', phoneNumber: '+1234567890' },
       };
       const analyticsService = new AnalyticsService();
       
@@ -186,20 +186,20 @@ export const useDashboardData = ({
     }
   }, [propOnAlertAction]);
 
-  const handleTest = useCallback(async () => {
+  const handleTest = useCallback(async() => {
     try {
       const { AnalyticsService } = await import('../../../services/analytics-service');
       const mockConfig = {
         shopify: {
           apiKey: 'mock-key',
           apiSecret: 'mock-secret',
-          scopes: ['read_orders']
+          scopes: ['read_orders'],
         },
         database: { url: 'mock://localhost' },
         redis: { url: 'mock://localhost' },
         shipengine: { apiKey: 'mock-key' },
         sendgrid: { apiKey: 'mock-key' },
-        twilio: { accountSid: 'mock-sid', authToken: 'mock-token', phoneNumber: '+1234567890' }
+        twilio: { accountSid: 'mock-sid', authToken: 'mock-token', phoneNumber: '+1234567890' },
       };
       const analyticsService = new AnalyticsService();
       
@@ -251,7 +251,7 @@ export const useDashboardData = ({
     setShowOrderDetails(true);
   }, []);
 
-  const handleRefresh = useCallback(async () => {
+  const handleRefresh = useCallback(async() => {
     setLoading(true);
     setError(null);
     
@@ -264,7 +264,7 @@ export const useDashboardData = ({
         shopify: {
           apiKey: 'mock-key',
           apiSecret: 'mock-secret',
-          scopes: ['read_orders']
+          scopes: ['read_orders'],
         },
         database: { url: 'mock://localhost' },
         redis: { url: 'mock://localhost' },
@@ -273,8 +273,8 @@ export const useDashboardData = ({
         twilio: {
           accountSid: 'mock-account-sid',
           authToken: 'mock-auth-token',
-          phoneNumber: '+1234567890'
-        }
+          phoneNumber: '+1234567890',
+        },
       };
       
       const analyticsService = new AnalyticsService();

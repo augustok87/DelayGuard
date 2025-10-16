@@ -149,7 +149,7 @@ function EnhancedDashboard({
              display: 'flex', 
              gap: '12px', 
              marginBottom: '24px',
-             alignItems: 'center'
+             alignItems: 'center',
            }}>
              <label htmlFor="start-date-input" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                <span style={{ fontSize: '14px', fontWeight: '500' }}>Start Date:</span>
@@ -158,7 +158,7 @@ function EnhancedDashboard({
                  type="date"
                  defaultValue=""
                  data-testid="start-date-input"
-                 onChange={async (e) => {
+                 onChange={async(e) => {
                    const startDate = e.target.value;
                    console.log('Start date changed:', startDate);
                    
@@ -169,7 +169,7 @@ function EnhancedDashboard({
                        shopify: {
                          apiKey: 'mock-key',
                          apiSecret: 'mock-secret',
-                         scopes: ['read_orders']
+                         scopes: ['read_orders'],
                        },
                        database: { url: 'mock://localhost' },
                        redis: { url: 'mock://localhost' },
@@ -178,15 +178,15 @@ function EnhancedDashboard({
                        twilio: {
                          accountSid: 'mock-account-sid',
                          authToken: 'mock-auth-token',
-                         phoneNumber: '+1234567890'
-                       }
+                         phoneNumber: '+1234567890',
+                       },
                      };
                      
                      const analyticsService = new AnalyticsService();
                      const endDateInput = document.querySelector('[data-testid="end-date-input"]') as HTMLInputElement;
                      await (analyticsService as any).getAlerts({
-                       startDate: startDate,
-                       endDate: endDateInput?.value || ''
+                       startDate,
+                       endDate: endDateInput?.value || '',
                      });
                    } catch (error) {
                      console.error('Failed to filter alerts by date:', error);
@@ -196,7 +196,7 @@ function EnhancedDashboard({
                    padding: '8px',
                    border: '1px solid #ccc',
                    borderRadius: '4px',
-                   fontSize: '14px'
+                   fontSize: '14px',
                  }}
                />
              </label>
@@ -207,7 +207,7 @@ function EnhancedDashboard({
                  type="date"
                  defaultValue=""
                  data-testid="end-date-input"
-                 onChange={async (e) => {
+                 onChange={async(e) => {
                    const endDate = e.target.value;
                    console.log('End date changed:', endDate);
                    
@@ -218,7 +218,7 @@ function EnhancedDashboard({
                        shopify: {
                          apiKey: 'mock-key',
                          apiSecret: 'mock-secret',
-                         scopes: ['read_orders']
+                         scopes: ['read_orders'],
                        },
                        database: { url: 'mock://localhost' },
                        redis: { url: 'mock://localhost' },
@@ -227,15 +227,15 @@ function EnhancedDashboard({
                        twilio: {
                          accountSid: 'mock-account-sid',
                          authToken: 'mock-auth-token',
-                         phoneNumber: '+1234567890'
-                       }
+                         phoneNumber: '+1234567890',
+                       },
                      };
                      
                      const analyticsService = new AnalyticsService();
                      const startDateInput = document.querySelector('[data-testid="start-date-input"]') as HTMLInputElement;
                      await (analyticsService as any).getAlerts({
                        startDate: startDateInput?.value || '',
-                       endDate: endDate
+                       endDate,
                      });
                    } catch (error) {
                      console.error('Failed to filter alerts by date:', error);
@@ -245,7 +245,7 @@ function EnhancedDashboard({
                    padding: '8px',
                    border: '1px solid #ccc',
                    borderRadius: '4px',
-                   fontSize: '14px'
+                   fontSize: '14px',
                  }}
                />
              </label>
