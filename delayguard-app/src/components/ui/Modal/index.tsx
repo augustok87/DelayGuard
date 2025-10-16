@@ -21,6 +21,17 @@ export const Modal: React.FC<ModalProps> = ({
   const handleEscape = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape' && isOpen) {
       onClose();
+      
+      // Restore focus after closing using requestAnimationFrame
+      requestAnimationFrame(() => {
+        if (previousActiveElement.current) {
+          // Ensure the element is still in the DOM and focusable
+          if (document.contains(previousActiveElement.current)) {
+            previousActiveElement.current.focus();
+          }
+          previousActiveElement.current = null;
+        }
+      });
     }
   }, [isOpen, onClose]);
 
@@ -28,8 +39,64 @@ export const Modal: React.FC<ModalProps> = ({
   const handleBackdropClick = useCallback((event: React.MouseEvent) => {
     if (event.target === event.currentTarget) {
       onClose();
+      
+      // Restore focus after closing using requestAnimationFrame
+      requestAnimationFrame(() => {
+        if (previousActiveElement.current) {
+          // Ensure the element is still in the DOM and focusable
+          if (document.contains(previousActiveElement.current)) {
+            previousActiveElement.current.focus();
+          }
+          previousActiveElement.current = null;
+        }
+      });
     }
   }, [onClose]);
+
+  // Handle close button click
+  const handleCloseClick = useCallback((event: React.MouseEvent) => {
+    // Prevent the close button from getting focus
+    (event.target as HTMLElement).blur();
+    
+    onClose();
+    
+    // Restore focus after closing using requestAnimationFrame
+    requestAnimationFrame(() => {
+      if (previousActiveElement.current) {
+        // Ensure the element is still in the DOM and focusable
+        if (document.contains(previousActiveElement.current)) {
+          previousActiveElement.current.focus();
+        }
+        previousActiveElement.current = null;
+      }
+    });
+  }, [onClose]);
+
+  // Focus trap functionality
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (!isOpen || event.key !== 'Tab') return;
+
+    const modal = modalRef.current;
+    if (!modal) return;
+
+    const focusableElements = modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0] as HTMLElement;
+    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+    if (event.shiftKey) {
+      if (document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement?.focus();
+      }
+    } else {
+      if (document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement?.focus();
+      }
+    }
+  }, [isOpen]);
 
   // Add/remove escape key listener and focus management
   useEffect(() => {
@@ -38,6 +105,7 @@ export const Modal: React.FC<ModalProps> = ({
       previousActiveElement.current = document.activeElement as HTMLElement;
       
       document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
       
       // Focus the modal when it opens
@@ -47,20 +115,15 @@ export const Modal: React.FC<ModalProps> = ({
         }
       }, 0);
     } else {
-      // Restore focus to the previously focused element
-      setTimeout(() => {
-        if (previousActiveElement.current) {
-          previousActiveElement.current.focus();
-        }
-      }, 0);
       document.body.style.overflow = 'unset';
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, handleEscape]);
+  }, [isOpen, handleEscape, handleKeyDown]);
 
   if (!isOpen) return null;
 
@@ -90,7 +153,7 @@ export const Modal: React.FC<ModalProps> = ({
           )}
           <button
             className={styles.closeButton}
-            onClick={onClose}
+            onClick={handleCloseClick}
             aria-label="Close modal"
             type="button"
           >

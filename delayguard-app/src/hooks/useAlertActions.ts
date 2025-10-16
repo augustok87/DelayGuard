@@ -3,7 +3,7 @@ import { useDelayAlerts } from './useDelayAlerts';
 import { useToasts } from './useToasts';
 
 export const useAlertActions = () => {
-  const { updateAlert, deleteAlert } = useDelayAlerts();
+  const { updateExistingAlert: updateAlert, deleteExistingAlert: deleteAlert } = useDelayAlerts();
   const { showSuccessToast, showErrorToast, showDeleteSuccessToast, showDeleteErrorToast } = useToasts();
 
   const resolveAlert = useCallback(async(alertId: string) => {

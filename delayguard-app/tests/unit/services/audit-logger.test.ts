@@ -427,10 +427,7 @@ describe('Audit Logger', () => {
       );
 
       // Wait a bit to ensure flush completes
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Explicitly flush to ensure events are processed
-      await auditLogger.flush();
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // The automatic flush should have already happened due to batch size
       expect(consoleSpy).toHaveBeenCalled();
@@ -557,7 +554,7 @@ describe('Audit Logger', () => {
       );
 
       // Wait a bit to ensure flush completes
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       expect(consoleLogSpy).toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalled();
@@ -720,7 +717,7 @@ describe('Audit Logger', () => {
       );
 
       // Wait a bit to ensure flush completes
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // The automatic flush should have already happened due to batch size = 1
       expect(consoleSpy).toHaveBeenCalled();
