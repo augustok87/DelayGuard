@@ -58,10 +58,31 @@ export const testAccessibility = async(container: HTMLElement) => {
   });
   
   // Check for proper input labels
-  inputs.forEach(input => {
+  inputs.forEach((input, index) => {
     const hasLabel = input.getAttribute('aria-label') || 
                     input.getAttribute('aria-labelledby') ||
-                    input.closest('label');
+                    input.closest('label') ||
+                    (input.getAttribute('id') && document.querySelector(`label[for="${input.getAttribute('id')}"]`));
+    
+    // Skip hidden inputs or inputs that are not visible
+    if (input.type === 'hidden' || input.style.display === 'none' || input.hidden) {
+      return;
+    }
+    
+    // Debug: log input details if no label found
+    if (!hasLabel) {
+      console.log(`Input ${index} has no label:`, {
+        type: input.type,
+        id: input.getAttribute('id'),
+        name: input.getAttribute('name'),
+        placeholder: input.getAttribute('placeholder'),
+        hasClosestLabel: !!input.closest('label'),
+        hasId: !!input.getAttribute('id'),
+        hasAriaLabel: !!input.getAttribute('aria-label'),
+        hasAriaLabelledBy: !!input.getAttribute('aria-labelledby'),
+      });
+    }
+    
     expect(hasLabel).toBeTruthy();
   });
   

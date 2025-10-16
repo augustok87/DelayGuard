@@ -151,9 +151,10 @@ function EnhancedDashboard({
              marginBottom: '24px',
              alignItems: 'center'
            }}>
-             <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+             <label htmlFor="start-date-input" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                <span style={{ fontSize: '14px', fontWeight: '500' }}>Start Date:</span>
                <input
+                 id="start-date-input"
                  type="date"
                  defaultValue=""
                  data-testid="start-date-input"
@@ -199,9 +200,10 @@ function EnhancedDashboard({
                  }}
                />
              </label>
-             <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+             <label htmlFor="end-date-input" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                <span style={{ fontSize: '14px', fontWeight: '500' }}>End Date:</span>
                <input
+                 id="end-date-input"
                  type="date"
                  defaultValue=""
                  data-testid="end-date-input"
