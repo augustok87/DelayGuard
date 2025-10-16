@@ -76,7 +76,7 @@ export const DataTable: React.FC<DataTableProps> = ({
 
   return (
     <div className={styles.tableContainer}>
-      <table className={tableClasses} aria-label={ariaLabel} {...props}>
+      <table className={tableClasses} aria-label={ariaLabel} data-testid="data-table" {...props}>
         <thead>
           <tr>
             {columns.map((column) => {

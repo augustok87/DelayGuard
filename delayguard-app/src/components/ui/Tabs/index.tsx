@@ -70,6 +70,7 @@ export const Tabs: React.FC<TabsProps> = ({
               aria-selected={isActive}
               aria-controls={`tabpanel-${tab.id}`}
               id={`tab-${tab.id}`}
+              data-testid={`tab-${tab.id}`}
             >
               {tab.icon && <span className={styles.tabIcon}>{tab.icon}</span>}
               <span className={styles.tabLabel}>{tab.label}</span>

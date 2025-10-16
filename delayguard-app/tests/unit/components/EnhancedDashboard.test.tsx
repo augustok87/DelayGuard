@@ -2,30 +2,124 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import EnhancedDashboard from '../../../src/components/EnhancedDashboard';
 
+// Mock UI Components
+jest.mock('../../../src/components/ui', () => ({
+  Button: ({ children, onClick, ...props }: any) => <button data-testid="button" onClick={onClick} {...props}>{children}</button>,
+  Card: ({ children, title, ...props }: any) => <div data-testid="card" data-title={title} {...props}>{children}</div>,
+  Text: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+  Modal: ({ children, title, isOpen, open, onClose, primaryAction, secondaryAction, ...props }: any) => {
+    const modalOpen = isOpen !== undefined ? isOpen : open;
+    return modalOpen ? (
+      <div data-testid="modal" {...props}>
+        <h2>{title}</h2>
+        <div>{children}</div>
+        <div>
+          {secondaryAction && <button onClick={secondaryAction.onAction}>{secondaryAction.content}</button>}
+          {primaryAction && <button onClick={primaryAction.onAction}>{primaryAction.content}</button>}
+        </div>
+      </div>
+    ) : null;
+  },
+  Tabs: ({ tabs, activeTab, onTabChange, ...props }: any) => {
+    const [currentTab, setCurrentTab] = React.useState(activeTab || tabs?.[0]?.id || '');
+    const handleTabClick = (tabId: string) => {
+      setCurrentTab(tabId);
+      if (onTabChange) {
+        onTabChange(tabId);
+      }
+    };
+    return (
+      <div data-testid="tabs" {...props}>
+        {tabs?.map((tab: any) => (
+          <button 
+            key={tab.id} 
+            data-testid={`tab-${tab.id}`}
+            onClick={() => handleTabClick(tab.id)}
+            aria-selected={currentTab === tab.id}
+            role="tab"
+          >
+            {tab.label}
+          </button>
+        ))}
+        {tabs?.map((tab: any) => (
+          <div key={`panel-${tab.id}`} hidden={currentTab !== tab.id}>
+            {currentTab === tab.id && tab.content}
+          </div>
+        ))}
+      </div>
+    );
+  },
+  DataTable: ({ columns, data, rows, onRowClick, ...props }: any) => {
+    const tableData = data || rows || [];
+    return (
+      <table data-testid="data-table" {...props}>
+        <thead>
+          <tr>
+            {columns?.map((column: any, index: number) => (
+              <th key={index}>{column.title}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {tableData?.map((row: any, index: number) => (
+            <tr 
+              key={index}
+              onClick={() => onRowClick && onRowClick(row)}
+              style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+            >
+              {columns?.map((column: any, colIndex: number) => (
+                <td key={colIndex}>
+                  {column.render ? column.render(row[column.key], row) : row[column.key]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  },
+  Badge: ({ children, tone, ...props }: any) => <span data-testid="badge" data-tone={tone} {...props}>{children}</span>,
+  Spinner: () => <div data-testid="spinner">Loading...</div>,
+  LoadingSpinner: () => <div data-testid="spinner">Loading...</div>,
+  Toast: ({ message, onDismiss, ...props }: any) => (
+    message ? (
+      <div data-testid="toast" {...props}>
+        <span>{message}</span>
+        <button onClick={onDismiss}>Dismiss</button>
+      </div>
+    ) : null
+  ),
+}));
+
 // Mock Web Components
 jest.mock('../../../src/components', () => ({
   Page: ({ children, title, ...props }: any) => <div data-testid="page" data-title={title} {...props}>{children}</div>,
   Card: ({ children, title, ...props }: any) => <div data-testid="card" data-title={title} {...props}>{children}</div>,
-  DataTable: ({ headings, rows, ...props }: any) => (
-    <table data-testid="data-table" {...props}>
-      <thead>
-        <tr>
-          {headings?.map((heading: any, index: number) => (
-            <th key={index}>{heading}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows?.map((row: any, index: number) => (
-          <tr key={index}>
-            {row?.map((cell: any, cellIndex: number) => (
-              <td key={cellIndex}>{cell}</td>
+  DataTable: ({ columns, data, rows, ...props }: any) => {
+    const tableData = data || rows || [];
+    return (
+      <table data-testid="data-table" {...props}>
+        <thead>
+          <tr>
+            {columns?.map((column: any, index: number) => (
+              <th key={index}>{column.title}</th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
-  ),
+        </thead>
+        <tbody>
+          {tableData?.map((row: any, index: number) => (
+            <tr key={index}>
+              {columns?.map((column: any, colIndex: number) => (
+                <td key={colIndex}>
+                  {column.render ? column.render(row[column.key], row) : row[column.key]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  },
   Button: ({ children, onClick, ...props }: any) => <button data-testid="button" onClick={onClick} {...props}>{children}</button>,
   Badge: ({ children, status, ...props }: any) => <span data-testid="badge" data-status={status} {...props}>{children}</span>,
   TextField: ({ label, value, onChange, ...props }: any) => (
@@ -151,9 +245,9 @@ jest.mock('../../../src/services/analytics-service', () => ({
 
 describe('EnhancedDashboard', () => {
   const mockSettings = {
-    delayThresholdDays: 3,
-    emailEnabled: true,
-    smsEnabled: false,
+    delayThreshold: 3,
+    emailNotifications: true,
+    smsNotifications: false,
     notificationTemplate: 'default',
     autoResolveDays: 7,
     enableAnalytics: true,
@@ -162,24 +256,24 @@ describe('EnhancedDashboard', () => {
   const mockAlerts = [
     {
       id: 1,
-      order_number: 'ORD-001',
-      customer_name: 'John Doe',
-      customer_email: 'john@example.com',
-      delay_days: 3,
-      delay_reason: 'Weather Delay',
+      orderId: 'ORD-001',
+      customerName: 'John Doe',
+      customerEmail: 'john@example.com',
+      delayDays: 3,
+      delayReason: 'Weather Delay',
       severity: 'high',
-      created_at: '2024-01-15T10:00:00Z',
+      createdAt: '2024-01-15T10:00:00Z',
       status: 'active',
     },
     {
       id: 2,
-      order_number: 'ORD-002',
-      customer_name: 'Jane Smith',
-      customer_email: 'jane@example.com',
-      delay_days: 1,
-      delay_reason: 'Carrier Issue',
+      orderId: 'ORD-002',
+      customerName: 'Jane Smith',
+      customerEmail: 'jane@example.com',
+      delayDays: 1,
+      delayReason: 'Carrier Issue',
       severity: 'medium',
-      created_at: '2024-01-15T11:00:00Z',
+      createdAt: '2024-01-15T11:00:00Z',
       status: 'resolved',
     },
   ];
@@ -187,19 +281,25 @@ describe('EnhancedDashboard', () => {
   const mockOrders = [
     {
       id: 1,
-      order_number: 'ORD-001',
-      customer_name: 'John Doe',
-      total_value: 299.99,
-      created_at: '2024-01-10T10:00:00Z',
+      orderNumber: 'ORD-001',
+      customerName: 'John Doe',
+      totalAmount: 299.99,
+      createdAt: '2024-01-10T10:00:00Z',
       status: 'shipped',
+      carrierCode: 'UPS',
+      trackingNumber: '1Z999AA1234567890',
+      currency: 'USD',
     },
     {
       id: 2,
-      order_number: 'ORD-002',
-      customer_name: 'Jane Smith',
-      total_value: 149.99,
-      created_at: '2024-01-12T14:00:00Z',
+      orderNumber: 'ORD-002',
+      customerName: 'Jane Smith',
+      totalAmount: 149.99,
+      createdAt: '2024-01-12T14:00:00Z',
       status: 'delivered',
+      carrierCode: 'FedEx',
+      trackingNumber: '1234567890123456',
+      currency: 'USD',
     },
   ];
 
@@ -324,7 +424,7 @@ describe('EnhancedDashboard', () => {
     await waitFor(() => {
       expect(mockAnalyticsAPI.updateSettings).toHaveBeenCalledWith(
         expect.objectContaining({
-          delayThresholdDays: 5,
+          delayThreshold: 5,
         }),
       );
     });
@@ -418,7 +518,7 @@ describe('EnhancedDashboard', () => {
     });
 
     // Set date range
-    const startDateInput = screen.getByDisplayValue('');
+    const startDateInput = screen.getByTestId('start-date-input');
     fireEvent.change(startDateInput, { target: { value: '2024-01-01' } });
 
     await waitFor(() => {
@@ -439,11 +539,11 @@ describe('EnhancedDashboard', () => {
 
     // Check if statistics are displayed
     expect(screen.getByText('2')).toBeInTheDocument(); // total alerts
-    expect(screen.getByText('1')).toBeInTheDocument(); // active alerts
-    expect(screen.getByText('1')).toBeInTheDocument(); // resolved alerts
+    const ones = screen.getAllByText('1');
+    expect(ones).toHaveLength(2); // active alerts and resolved alerts
   });
 
-  it('should handle responsive design', () => {
+  it('should handle responsive design', async() => {
     // Mock window.innerWidth
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
@@ -453,8 +553,10 @@ describe('EnhancedDashboard', () => {
 
     render(<EnhancedDashboard />);
 
-    // Check if responsive layout is applied
-    expect(screen.getByTestId('layout')).toBeInTheDocument();
+    // Wait for the component to finish loading
+    await waitFor(() => {
+      expect(screen.getByTestId('layout')).toBeInTheDocument();
+    });
   });
 
   it('should handle keyboard navigation', async() => {
@@ -521,13 +623,13 @@ describe('EnhancedDashboard', () => {
     // Simulate real-time update
     const newAlert = {
       id: 3,
-      order_number: 'ORD-003',
-      customer_name: 'Bob Johnson',
-      customer_email: 'bob@example.com',
-      delay_days: 2,
-      delay_reason: 'Customs Hold',
+      orderId: 'ORD-003',
+      customerName: 'Bob Johnson',
+      customerEmail: 'bob@example.com',
+      delayDays: 2,
+      delayReason: 'Customs Hold',
       severity: 'medium',
-      created_at: '2024-01-15T12:00:00Z',
+      createdAt: '2024-01-15T12:00:00Z',
       status: 'active',
     };
 

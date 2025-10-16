@@ -58,6 +58,7 @@ export const Modal: React.FC<ModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
+        data-testid="modal"
         {...props}
       >
         <div className={styles.header}>

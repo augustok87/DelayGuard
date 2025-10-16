@@ -274,7 +274,7 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }} data-testid="analytics-dashboard">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <Text variant="headingLg" as="h1">Analytics Dashboard</Text>
         <Button onClick={() => setShowExportModal(true)}>

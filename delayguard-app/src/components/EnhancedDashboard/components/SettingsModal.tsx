@@ -22,11 +22,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onConnect,
   onSettingsChange,
 }) => {
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+
   const handleInputChange = (field: keyof AppSettings, value: string | number | boolean) => {
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    
     onSettingsChange({
       ...settings,
       [field]: value,
     });
+  };
+
+  const validateSettings = (settingsToValidate: AppSettings): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (settingsToValidate.delayThreshold <= 0) {
+      newErrors.delayThreshold = 'Delay threshold must be positive';
+    }
+
+    if (settingsToValidate.autoResolveDays && settingsToValidate.autoResolveDays <= 0) {
+      newErrors.autoResolveDays = 'Auto-resolve days must be positive';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = () => {
+    if (validateSettings(settings)) {
+      onSave();
+    }
   };
 
   return (
@@ -35,8 +63,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       onClose={onClose}
       title="Settings"
       primaryAction={{
-        content: 'Save',
-        onAction: onSave,
+        content: 'Save Settings',
+        onAction: handleSave,
       }}
       secondaryActions={[
         {
@@ -63,10 +91,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 width: '100%',
                 padding: '8px',
                 marginTop: '5px',
-                border: '1px solid #ccc',
+                border: errors.delayThreshold ? '1px solid #ff0000' : '1px solid #ccc',
                 borderRadius: '4px',
               }}
             />
+            {errors.delayThreshold && (
+              <Text variant="bodySm" as="span" style={{ color: '#ff0000', marginTop: '4px' }}>
+                {errors.delayThreshold}
+              </Text>
+            )}
           </div>
           <div style={{ marginBottom: '15px' }}>
             <label htmlFor="autoResolve">
@@ -151,7 +184,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
           <Button onClick={onTest} variant="secondary">
-            Test
+            Test Delay Detection
           </Button>
           <Button onClick={onConnect} variant="secondary">
             Connect

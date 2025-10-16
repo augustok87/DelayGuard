@@ -66,6 +66,8 @@ export interface DelayAlert {
   customerEmail?: string;
   trackingNumber?: string;
   carrierCode?: string;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  delayReason?: string;
   priority?: 'low' | 'medium' | 'high' | 'critical';
 }
 

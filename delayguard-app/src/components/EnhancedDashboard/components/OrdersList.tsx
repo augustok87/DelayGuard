@@ -5,23 +5,32 @@ import { Order } from '../../../types';
 
 interface OrdersListProps {
   orders: Order[];
+  onOrderClick?: (order: Order) => void;
 }
 
-export const OrdersList: React.FC<OrdersListProps> = ({ orders }) => {
+export const OrdersList: React.FC<OrdersListProps> = ({ orders, onOrderClick }) => {
+  const handleRowClick = (row: any) => {
+    if (onOrderClick) {
+      onOrderClick(row as Order);
+    }
+  };
   const columns = [
     {
       key: 'orderNumber',
       title: 'Order #',
       sortable: true,
       width: '120px',
-      render: (value: string) => <Text variant="bodyMd" as="span">{value}</Text>,
+      render: (value: string) => {
+        console.log('Order number value:', value);
+        return <Text variant="bodyMd" as="span">{value || 'N/A'}</Text>;
+      },
     },
     {
       key: 'customerName',
       title: 'Customer',
       sortable: true,
       width: '150px',
-      render: (value: string) => <Text variant="bodyMd" as="span">{value}</Text>,
+      render: (value: string) => <Text variant="bodyMd" as="span">{value || 'N/A'}</Text>,
     },
     {
       key: 'createdAt',
@@ -57,28 +66,32 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders }) => {
       title: 'Carrier',
       sortable: true,
       width: '100px',
-      render: (value: string) => <Text variant="bodyMd" as="span">{value}</Text>,
+      render: (value: string) => <Text variant="bodyMd" as="span">{value || 'N/A'}</Text>,
     },
     {
       key: 'trackingNumber',
       title: 'Tracking',
       sortable: true,
       width: '120px',
-      render: (value: string) => <Text variant="bodyMd" as="span">{value}</Text>,
+      render: (value: string) => <Text variant="bodyMd" as="span">{value || 'N/A'}</Text>,
     },
   ];
 
-  const rows = orders.map(order => ({
-    id: order.id,
-    orderNumber: order.orderNumber,
-    customerName: order.customerName,
-    createdAt: order.createdAt,
-    totalAmount: order.totalAmount,
-    status: order.status,
-    carrierCode: order.carrierCode,
-    trackingNumber: order.trackingNumber,
-    currency: order.currency,
-  }));
+  const rows = orders.map(order => {
+    console.log('Order data:', order);
+    const row = {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      createdAt: order.createdAt,
+      totalAmount: order.totalAmount,
+      status: order.status,
+      carrierCode: order.carrierCode,
+      trackingNumber: order.trackingNumber,
+      currency: order.currency,
+    };
+    return row;
+  });
 
   return (
     <Card title="Recent Orders">
@@ -87,6 +100,7 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders }) => {
         rows={rows}
         sortable
         onSort={() => {}}
+        onRowClick={handleRowClick}
       />
     </Card>
   );
