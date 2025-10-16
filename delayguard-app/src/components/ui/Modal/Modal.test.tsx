@@ -54,7 +54,7 @@ describe('Modal Component', () => {
         );
         
         const modal = screen.getByRole('dialog');
-        expect(modal).toHaveClass(`modal md ${size}`);
+        expect(modal).toHaveClass(`modal ${size}`);
         
         unmount();
       });

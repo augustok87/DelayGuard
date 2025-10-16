@@ -182,7 +182,7 @@ function EnhancedDashboard({
                        }
                      };
                      
-                     const analyticsService = new AnalyticsService(mockConfig);
+                     const analyticsService = new AnalyticsService();
                      const endDateInput = document.querySelector('[data-testid="end-date-input"]') as HTMLInputElement;
                      await (analyticsService as any).getAlerts({
                        startDate: startDate,
@@ -231,7 +231,7 @@ function EnhancedDashboard({
                        }
                      };
                      
-                     const analyticsService = new AnalyticsService(mockConfig);
+                     const analyticsService = new AnalyticsService();
                      const startDateInput = document.querySelector('[data-testid="start-date-input"]') as HTMLInputElement;
                      await (analyticsService as any).getAlerts({
                        startDate: startDateInput?.value || '',

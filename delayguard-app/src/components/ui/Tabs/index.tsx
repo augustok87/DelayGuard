@@ -55,7 +55,7 @@ export const Tabs: React.FC<TabsProps> = ({
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={tabsClasses} {...props}>
+    <div className={tabsClasses} data-testid="tabs" {...props}>
       <div className={`tabs ${className}`} role="tablist" aria-label={ariaLabel}>
         {tabs.map((tab) => {
           const isActive = isExplicitlyUndefined ? false : tab.id === currentActiveTab;

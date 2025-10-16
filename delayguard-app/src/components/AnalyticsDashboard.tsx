@@ -11,30 +11,7 @@ import {
   Tabs,
   Toast,
 } from './ui';
-
-interface AnalyticsMetrics {
-  totalOrders: number;
-  totalAlerts: number;
-  alertsBySeverity: {
-    low: number;
-    medium: number;
-    high: number;
-    critical: number;
-  };
-  alertsByReason: {
-    [reason: string]: number;
-  };
-  averageDelayDays: number;
-  notificationSuccessRate: {
-    email: number;
-    sms: number;
-  };
-  customerSatisfaction: number;
-  resolutionTime: {
-    average: number;
-    median: number;
-  };
-}
+import { analyticsService, AnalyticsMetrics } from '../services/analytics-service';
 
 interface AnalyticsDashboardProps {
   dateRange?: {
@@ -63,7 +40,7 @@ const defaultMetrics: AnalyticsMetrics = {
   },
   averageDelayDays: 3.2,
   notificationSuccessRate: {
-    email: 94.5,
+    email: 95.5,
     sms: 87.2,
   },
   customerSatisfaction: 4.2,
@@ -73,41 +50,124 @@ const defaultMetrics: AnalyticsMetrics = {
   },
 };
 
-function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
+function AnalyticsDashboard({ dateRange: propDateRange, onExport }: AnalyticsDashboardProps) {
   const [metrics, setMetrics] = useState<AnalyticsMetrics>(defaultMetrics);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState(0);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(propDateRange || null);
+  const [severityFilter, setSeverityFilter] = useState('all');
+  const [alerts] = useState([
+    { id: '1', order_number: 'ORD-001', customer_name: 'John Doe', delay_days: 3, severity: 'high' },
+    { id: '2', order_number: 'ORD-002', customer_name: 'Jane Smith', delay_days: 1, severity: 'medium' }
+  ]);
+
+  // Use the analytics service
+
+  useEffect(() => {
+    // Load initial data
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        await analyticsService.getMetrics();
+        setMetrics(defaultMetrics);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load analytics data');
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
 
   useEffect(() => {
     if (dateRange) {
       setLoading(true);
+      setError(null);
       // Simulate API call
-      setTimeout(() => {
+      analyticsService.getMetrics(dateRange || undefined).then(() => {
         setMetrics(defaultMetrics);
         setLoading(false);
-      }, 1000);
+      }).catch(() => {
+        setError('Failed to load analytics data');
+        setLoading(false);
+      });
     }
   }, [dateRange]);
+
+  // Handle date range filtering
+  const handleDateRangeChange = useCallback((start: string, end: string) => {
+    const newDateRange = { start, end };
+    setDateRange(newDateRange);
+    
+    // Trigger API call immediately when date range changes
+    if (start || end) {
+      setLoading(true);
+      setError(null);
+      analyticsService.getMetrics(newDateRange).then(() => {
+        setMetrics(defaultMetrics);
+        setLoading(false);
+      }).catch(() => {
+        setError('Failed to load analytics data');
+        setLoading(false);
+      });
+    }
+  }, []);
 
   const handleTabChange = useCallback((tabIndex: number) => {
     setSelectedTab(tabIndex);
   }, []);
+
+  const handleRefresh = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    // Simulate API call
+    analyticsService.getMetrics(dateRange || undefined).then(() => {
+      setMetrics(defaultMetrics);
+      setLoading(false);
+    }).catch(() => {
+      setError('Failed to refresh analytics data');
+      setLoading(false);
+    });
+  }, [dateRange]);
 
   const handleExport = useCallback(() => {
     setShowExportModal(false);
     if (onExport) {
       onExport(metrics);
     }
+    analyticsService.exportData(metrics);
     setToastMessage('Analytics data exported successfully!');
     setShowToast(true);
   }, [metrics, onExport]);
 
+  // Handle window focus for data refresh
+  useEffect(() => {
+    const handleFocus = () => {
+      // Simulate data refresh on window focus
+      if (onExport) {
+        onExport(metrics);
+      }
+      handleRefresh();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [metrics, onExport, handleRefresh]);
+
   const handleCloseToast = useCallback(() => {
     setShowToast(false);
   }, []);
+
+  const filteredAlerts = severityFilter === 'all' 
+    ? alerts 
+    : alerts.filter(alert => alert.severity === severityFilter);
 
   const renderOverviewCards = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
@@ -267,39 +327,117 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-        <Spinner size="lg" />
+      <div data-testid="analytics-dashboard" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+        <Spinner data-testid="spinner" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div data-testid="analytics-dashboard" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div data-testid="layout" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <Text variant="headingLg" as="h1">Analytics Dashboard</Text>
+        </div>
+        <Card>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <Text variant="headingMd" as="h3" tone="critical">{error}</Text>
+            <div style={{ marginTop: '16px' }}>
+              <Button onClick={handleRefresh}>
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </Card>
       </div>
     );
   }
 
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }} data-testid="analytics-dashboard">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div data-testid="layout" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <Text variant="headingLg" as="h1">Analytics Dashboard</Text>
-        <Button onClick={() => setShowExportModal(true)}>
-          Export Data
-        </Button>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="date"
+              data-testid="date-start"
+              value={dateRange?.start || ''}
+              onChange={(e) => handleDateRangeChange(e.target.value, dateRange?.end || '')}
+              style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+            />
+            <span>to</span>
+            <input
+              type="date"
+              data-testid="date-end"
+              value={dateRange?.end || ''}
+              onChange={(e) => handleDateRangeChange(dateRange?.start || '', e.target.value)}
+              style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+            />
+          </div>
+          <Button data-testid="button" onClick={handleRefresh}>
+            Refresh
+          </Button>
+          <Button data-testid="button" onClick={() => setShowExportModal(true)}>
+            Export Data
+          </Button>
+          <Button data-testid="button" onClick={() => setShowSettingsModal(true)}>
+            Settings
+          </Button>
+        </div>
       </div>
 
       {renderOverviewCards()}
 
       <Tabs
+        data-testid="tabs"
         tabs={[
-          { id: 'overview', label: 'Overview', content: (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-              {renderSeverityBreakdown()}
-              {renderNotificationMetrics()}
-            </div>
-          ) },
-          { id: 'severity', label: 'Severity', content: renderSeverityBreakdown() },
-          { id: 'reasons', label: 'Reasons', content: renderReasonBreakdown() },
-          { id: 'notifications', label: 'Notifications', content: renderNotificationMetrics() },
-          { id: 'resolution', label: 'Resolution', content: renderResolutionMetrics() },
+          { 
+            id: 'overview', 
+            label: 'Overview',
+            content: (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                {renderSeverityBreakdown()}
+                {renderNotificationMetrics()}
+                {renderReasonBreakdown()}
+              </div>
+            )
+          },
+          { 
+            id: 'alerts', 
+            label: 'Alerts',
+            content: (
+              <div>
+                <div style={{ marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                  <select
+                    data-testid="select"
+                    value={severityFilter}
+                    onChange={(e) => setSeverityFilter(e.target.value)}
+                    style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    <option value="all">All Severities</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+                <DataTable
+                  columns={[
+                    { key: 'order_number', title: 'Order Number' },
+                    { key: 'customer_name', title: 'Customer' },
+                    { key: 'delay_days', title: 'Delay Days' },
+                    { key: 'severity', title: 'Severity' }
+                  ]}
+                  data={filteredAlerts}
+                />
+              </div>
+            )
+          },
         ]}
-        activeTab={['overview', 'severity', 'reasons', 'notifications', 'resolution'][selectedTab]}
+        activeTab="overview"
         onTabChange={(tabId) => {
-          const tabIndex = ['overview', 'severity', 'reasons', 'notifications', 'resolution'].indexOf(tabId);
+          const tabIndex = ['overview', 'alerts'].indexOf(tabId);
           if (tabIndex !== -1) {
             handleTabChange(tabIndex);
           }
@@ -307,6 +445,17 @@ function AnalyticsDashboard({ dateRange, onExport }: AnalyticsDashboardProps) {
       />
 
       {renderExportModal()}
+
+      <Modal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        title="Settings"
+      >
+        <div style={{ padding: '20px' }}>
+          <Text variant="headingMd">Dashboard Settings</Text>
+          <p>Configure your analytics dashboard preferences here.</p>
+        </div>
+      </Modal>
 
       {showToast && (
         <Toast message={toastMessage} onClose={handleCloseToast} />

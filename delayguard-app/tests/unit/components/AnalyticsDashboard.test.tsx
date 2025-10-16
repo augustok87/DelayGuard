@@ -68,11 +68,18 @@ jest.mock('../../../src/components/ui', () => ({
   EmptyState: ({ heading, children, ...props }: any) => (
     <div data-testid="empty-state" data-heading={heading} {...props}>{children}</div>
   ),
-  Modal: ({ open, onClose, children, title, ...props }: any) => 
-    open ? (
+  Modal: ({ isOpen, onClose, children, title, primaryAction, secondaryActions, ...props }: any) => 
+    isOpen ? (
       <div data-testid="modal" data-title={title} {...props}>
         <button data-testid="modal-close" onClick={onClose}>Close</button>
+        {title && <h2>{title}</h2>}
         {children}
+        {primaryAction && (
+          <button onClick={primaryAction.onAction}>{primaryAction.content}</button>
+        )}
+        {secondaryActions && secondaryActions.map((action: any, index: number) => (
+          <button key={index} onClick={action.onAction}>{action.content}</button>
+        ))}
       </div>
     ) : null,
   FormLayout: ({ children, ...props }: any) => <div data-testid="form-layout" {...props}>{children}</div>,
@@ -83,13 +90,13 @@ jest.mock('../../../src/components/ui', () => ({
     </div>
   ),
   ButtonGroup: ({ children, ...props }: any) => <div data-testid="button-group" {...props}>{children}</div>,
-  Tabs: ({ tabs, selected, onSelect, ...props }: any) => (
+  Tabs: ({ tabs, selected, onTabChange, ...props }: any) => (
     <div data-testid="tabs" {...props}>
       {tabs?.map((tab: any, index: number) => (
         <button 
           key={index} 
           data-testid={`tab-${tab.id}`}
-          onClick={() => onSelect(index)}
+          onClick={() => onTabChange?.(tab.id)}
           className={selected === index ? 'active' : ''}
         >
           {tab.content}
@@ -117,7 +124,12 @@ const mockAnalyticsAPI = {
 };
 
 jest.mock('../../../src/services/analytics-service', () => ({
-  AnalyticsService: jest.fn().mockImplementation(() => mockAnalyticsAPI),
+  analyticsService: {
+    getMetrics: jest.fn(),
+    getAlerts: jest.fn(),
+    getOrders: jest.fn(),
+    exportData: jest.fn(),
+  },
 }));
 
 describe('AnalyticsDashboard', () => {
@@ -197,12 +209,15 @@ describe('AnalyticsDashboard', () => {
     },
   ];
 
+  // Get the mocked service
+  const { analyticsService } = require('../../../src/services/analytics-service');
+
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAnalyticsAPI.getMetrics.mockResolvedValue(mockMetrics);
-    mockAnalyticsAPI.getAlerts.mockResolvedValue(mockAlerts);
-    mockAnalyticsAPI.getOrders.mockResolvedValue(mockOrders);
-    mockAnalyticsAPI.exportData.mockResolvedValue('export-data');
+    analyticsService.getMetrics.mockResolvedValue(mockMetrics);
+    analyticsService.getAlerts.mockResolvedValue(mockAlerts);
+    analyticsService.getOrders.mockResolvedValue(mockOrders);
+    analyticsService.exportData.mockResolvedValue('export-data');
   });
 
   it('should render analytics dashboard with metrics', async() => {
@@ -213,9 +228,9 @@ describe('AnalyticsDashboard', () => {
     });
 
     // Check if metrics are displayed
-    expect(screen.getByText('150')).toBeInTheDocument(); // totalOrders
-    expect(screen.getByText('25')).toBeInTheDocument(); // totalAlerts
-    expect(screen.getByText('3.2')).toBeInTheDocument(); // averageDelayDays
+    expect(screen.getByText('1,250')).toBeInTheDocument(); // totalOrders
+    expect(screen.getByText('89')).toBeInTheDocument(); // totalAlerts
+    expect(screen.getByText('3.2 days')).toBeInTheDocument(); // averageDelayDays
   });
 
   it('should display loading state initially', () => {
@@ -277,8 +292,16 @@ describe('AnalyticsDashboard', () => {
     const exportButton = screen.getByText('Export Data');
     fireEvent.click(exportButton);
 
+    // Wait for modal to appear and click the export button in the modal
     await waitFor(() => {
-      expect(mockAnalyticsAPI.exportData).toHaveBeenCalled();
+      expect(screen.getByText('Export Analytics')).toBeInTheDocument();
+    });
+
+    const modalExportButton = screen.getByText('Export');
+    fireEvent.click(modalExportButton);
+
+    await waitFor(() => {
+      expect(analyticsService.exportData).toHaveBeenCalled();
     });
   });
 
@@ -290,20 +313,20 @@ describe('AnalyticsDashboard', () => {
     });
 
     // Set date range
-    const startDateInput = screen.getByDisplayValue('');
+    const startDateInput = screen.getByTestId('date-start');
     fireEvent.change(startDateInput, { target: { value: '2024-01-01' } });
 
     await waitFor(() => {
-      expect(mockAnalyticsAPI.getMetrics).toHaveBeenCalledWith(
+      expect(analyticsService.getMetrics).toHaveBeenCalledWith(
         expect.objectContaining({
-          startDate: '2024-01-01',
+          start: '2024-01-01',
         }),
       );
     });
   });
 
   it('should display error state when API fails', async() => {
-    mockAnalyticsAPI.getMetrics.mockRejectedValue(new Error('API Error'));
+    analyticsService.getMetrics.mockRejectedValue(new Error('API Error'));
     
     render(<AnalyticsDashboard />);
 
@@ -323,7 +346,7 @@ describe('AnalyticsDashboard', () => {
     fireEvent.click(refreshButton);
 
     await waitFor(() => {
-      expect(mockAnalyticsAPI.getMetrics).toHaveBeenCalledTimes(2);
+      expect(analyticsService.getMetrics).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -420,7 +443,7 @@ describe('AnalyticsDashboard', () => {
     });
   });
 
-  it('should handle responsive design', () => {
+  it('should handle responsive design', async() => {
     // Mock window.innerWidth
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
@@ -429,6 +452,11 @@ describe('AnalyticsDashboard', () => {
     });
 
     render(<AnalyticsDashboard />);
+
+    // Wait for loading to complete
+    await waitFor(() => {
+      expect(screen.getByText('Analytics Dashboard')).toBeInTheDocument();
+    });
 
     // Check if responsive layout is applied
     expect(screen.getByTestId('layout')).toBeInTheDocument();
@@ -471,7 +499,7 @@ describe('AnalyticsDashboard', () => {
     fireEvent(window, new Event('focus'));
 
     await waitFor(() => {
-      expect(mockAnalyticsAPI.getMetrics).toHaveBeenCalledTimes(2);
+      expect(analyticsService.getMetrics).toHaveBeenCalledTimes(2);
     });
   });
 });

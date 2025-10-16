@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { ModalProps } from '../../../types/ui';
 import styles from './Modal.module.css';
 
@@ -14,6 +14,9 @@ export const Modal: React.FC<ModalProps> = ({
   className = '',
   ...props
 }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
   // Handle escape key
   const handleEscape = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape' && isOpen) {
@@ -28,12 +31,28 @@ export const Modal: React.FC<ModalProps> = ({
     }
   }, [onClose]);
 
-  // Add/remove escape key listener
+  // Add/remove escape key listener and focus management
   useEffect(() => {
     if (isOpen) {
+      // Store the currently focused element
+      previousActiveElement.current = document.activeElement as HTMLElement;
+      
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
+      
+      // Focus the modal when it opens
+      setTimeout(() => {
+        if (modalRef.current) {
+          modalRef.current.focus();
+        }
+      }, 0);
     } else {
+      // Restore focus to the previously focused element
+      setTimeout(() => {
+        if (previousActiveElement.current) {
+          previousActiveElement.current.focus();
+        }
+      }, 0);
       document.body.style.overflow = 'unset';
     }
 
@@ -52,13 +71,15 @@ export const Modal: React.FC<ModalProps> = ({
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={styles.overlay} onClick={handleBackdropClick}>
+    <div className={styles.overlay} onClick={handleBackdropClick} data-testid="modal-backdrop">
       <div
+        ref={modalRef}
         className={modalClasses}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         data-testid="modal"
+        tabIndex={-1}
         {...props}
       >
         <div className={styles.header}>

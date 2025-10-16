@@ -22,7 +22,7 @@ describe('Audit Logger', () => {
 
   beforeEach(() => {
     auditLogger = new AuditLogger({
-      enableConsoleLogging: false,
+      enableConsoleLogging: true,
       enableFileLogging: false,
       enableDatabaseLogging: false,
       enableExternalLogging: false,

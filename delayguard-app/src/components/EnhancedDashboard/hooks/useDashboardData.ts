@@ -68,7 +68,7 @@ export const useDashboardData = ({
           }
         };
         
-        const analyticsService = new AnalyticsService(mockConfig);
+        const analyticsService = new AnalyticsService();
         
         // Call the mocked methods that the test expects
         const alertsData = await (analyticsService as any).getAlerts();
@@ -106,7 +106,7 @@ export const useDashboardData = ({
           sendgrid: { apiKey: 'mock-key' },
           twilio: { accountSid: 'mock-sid', authToken: 'mock-token', phoneNumber: '+1234567890' }
         };
-        const analyticsService = new AnalyticsService(mockConfig);
+        const analyticsService = new AnalyticsService();
         
         const alertsData = await (analyticsService as any).getAlerts();
         const ordersData = await (analyticsService as any).getOrders();
@@ -141,7 +141,7 @@ export const useDashboardData = ({
         sendgrid: { apiKey: 'mock-key' },
         twilio: { accountSid: 'mock-sid', authToken: 'mock-token', phoneNumber: '+1234567890' }
       };
-      const analyticsService = new AnalyticsService(mockConfig);
+      const analyticsService = new AnalyticsService();
       
       // Call the mocked updateSettings method
       await (analyticsService as any).updateSettings(settings);
@@ -201,7 +201,7 @@ export const useDashboardData = ({
         sendgrid: { apiKey: 'mock-key' },
         twilio: { accountSid: 'mock-sid', authToken: 'mock-token', phoneNumber: '+1234567890' }
       };
-      const analyticsService = new AnalyticsService(mockConfig);
+      const analyticsService = new AnalyticsService();
       
       // Call the mocked testDelayDetection method
       await (analyticsService as any).testDelayDetection();
@@ -277,7 +277,7 @@ export const useDashboardData = ({
         }
       };
       
-      const analyticsService = new AnalyticsService(mockConfig);
+      const analyticsService = new AnalyticsService();
       
       // Call the mocked methods that the test expects
       // The test is mocking these methods, so they should exist in the mock

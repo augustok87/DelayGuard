@@ -3,7 +3,7 @@ import { AnalyticsService } from '../services/analytics-service';
 import { config } from '../server';
 
 const router = new Router();
-const analyticsService = new AnalyticsService(config);
+const analyticsService = new AnalyticsService();
 
 // Get analytics metrics
 router.get('/analytics', async(ctx) => {
