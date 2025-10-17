@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delay Alerts Management - DelayGuard</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .screenshot-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .content {
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="screenshot-container">
+        <div class="header">
+            <h1>DelayGuard</h1>
+            <p>Delay Alerts Management</p>
+        </div>
+        <div class="content">
+            
+            <div style="padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                <h2 style="color: #333; margin-bottom: 20px; font-size: 24px;">Delay Alerts Management</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">All Alerts</button>
+                    <button style="background: #f8f9fa; color: #333; border: 1px solid #ddd; padding: 8px 16px; border-radius: 5px; cursor: pointer;">High Priority</button>
+                    <button style="background: #f8f9fa; color: #333; border: 1px solid #ddd; padding: 8px 16px; border-radius: 5px; cursor: pointer;">Resolved</button>
+                </div>
+                <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                    <div style="background: #f8f9fa; padding: 15px; border-bottom: 1px solid #ddd; display: grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr; gap: 10px; font-weight: 600; color: #333;">
+                        <div>Status</div>
+                        <div>Order</div>
+                        <div>Delay</div>
+                        <div>Customer</div>
+                        <div>Actions</div>
+                    </div>
+                    <div style="padding: 15px; border-bottom: 1px solid #eee; display: grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr; gap: 10px; align-items: center;">
+                        <div style="background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; text-align: center;">High</div>
+                        <div style="color: #333;">#12345 - FedEx</div>
+                        <div style="color: #d32f2f;">+2 days</div>
+                        <div style="color: #666;">John Doe</div>
+                        <div><button style="background: #667eea; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">View</button></div>
+                    </div>
+                    <div style="padding: 15px; border-bottom: 1px solid #eee; display: grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr; gap: 10px; align-items: center;">
+                        <div style="background: #fff3e0; color: #ef6c00; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; text-align: center;">Medium</div>
+                        <div style="color: #333;">#12346 - UPS</div>
+                        <div style="color: #f57c00;">+1 day</div>
+                        <div style="color: #666;">Jane Smith</div>
+                        <div><button style="background: #667eea; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">View</button></div>
+                    </div>
+                </div>
+            </div>
+        
+        </div>
+    </div>
+</body>
+</html>
+    

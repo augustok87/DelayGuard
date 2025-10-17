@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DelayGuard - Screenshot Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .screenshot-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .screenshot-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .screenshot-preview {
+            width: 100%;
+            height: 200px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #667eea;
+            border: 2px dashed #dee2e6;
+        }
+
+        .screenshot-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .screenshot-desc {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            box-shadow: 0 10px 25px rgba(108, 117, 125, 0.3);
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .screenshot-demo {
+            width: 100%;
+            height: 300px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #666;
+            border: 2px dashed #dee2e6;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 DelayGuard Screenshot Generator</h1>
+            <p>Generate professional screenshots for Shopify App Store submission</p>
+        </div>
+
+        <div class="content">
+            <div class="screenshot-grid">
+                <div class="screenshot-card" data-screenshot="dashboard">
+                    <div class="screenshot-preview">📊</div>
+                    <div class="screenshot-title">Dashboard Overview</div>
+                    <div class="screenshot-desc">Main dashboard showing delay alerts, statistics, and key metrics</div>
+                </div>
+
+                <div class="screenshot-card" data-screenshot="alerts">
+                    <div class="screenshot-preview">🚨</div>
+                    <div class="screenshot-title">Delay Alerts</div>
+                    <div class="screenshot-desc">Comprehensive alerts management with filtering and bulk actions</div>
+                </div>
+
+                <div class="screenshot-card" data-screenshot="orders">
+                    <div class="screenshot-preview">📦</div>
+                    <div class="screenshot-title">Order Tracking</div>
+                    <div class="screenshot-desc">Real-time order tracking with carrier integration and status updates</div>
+                </div>
+
+                <div class="screenshot-card" data-screenshot="settings">
+                    <div class="screenshot-preview">⚙️</div>
+                    <div class="screenshot-title">Settings & Configuration</div>
+                    <div class="screenshot-desc">Customizable notification settings and delay thresholds</div>
+                </div>
+
+                <div class="screenshot-card" data-screenshot="analytics">
+                    <div class="screenshot-preview">📈</div>
+                    <div class="screenshot-title">Analytics & Reports</div>
+                    <div class="screenshot-desc">Detailed analytics dashboard with performance insights</div>
+                </div>
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-title">Professional Design</div>
+                    <div class="feature-desc">High-quality screenshots with consistent branding</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-title">Responsive Layout</div>
+                    <div class="feature-desc">Optimized for all device sizes and screen resolutions</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Instant Generation</div>
+                    <div class="feature-desc">Generate all screenshots with a single click</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-title">App Store Ready</div>
+                    <div class="feature-desc">Meets all Shopify App Store requirements</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn" onclick="generateScreenshots()">📸 Generate All Screenshots</button>
+                <button class="btn btn-secondary" onclick="previewScreenshots()">👁️ Preview Screenshots</button>
+            </div>
+
+            <div id="status" class="status"></div>
+
+            <div id="screenshot-demo" class="screenshot-demo" style="display: none;">
+                <div>
+                    <h3>📸 Screenshot Preview</h3>
+                    <p>Click "Generate All Screenshots" to create professional screenshots for the Shopify App Store</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const screenshots = [
+            {
+                id: 'dashboard',
+                title: 'Dashboard Overview',
+                description: 'Main dashboard showing delay alerts, statistics, and key metrics',
+                icon: '📊',
+                content: `
+                    <div style="padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <h2 style="color: #333; margin-bottom: 20px;">DelayGuard Dashboard</h2>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 2rem; color: #1976d2;">12</div>
+                                <div style="color: #666; font-size: 0.9rem;">Active Alerts</div>
+                            </div>
+                            <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 2rem; color: #7b1fa2;">156</div>
+                                <div style="color: #666; font-size: 0.9rem;">Orders Tracked</div>
+                            </div>
+                            <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 2rem; color: #388e3c;">98%</div>
+                                <div style="color: #666; font-size: 0.9rem;">Success Rate</div>
+                            </div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <h3 style="color: #333; margin-bottom: 10px;">Recent Alerts</h3>
+                            <div style="color: #666; font-size: 0.9rem;">• Order #12345 - Delayed by 2 days</div>
+                            <div style="color: #666; font-size: 0.9rem;">• Order #12346 - Weather delay</div>
+                            <div style="color: #666; font-size: 0.9rem;">• Order #12347 - Carrier issue</div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'alerts',
+                title: 'Delay Alerts',
+                description: 'Comprehensive alerts management with filtering and bulk actions',
+                icon: '🚨',
+                content: `
+                    <div style="padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <h2 style="color: #333; margin-bottom: 20px;">Delay Alerts Management</h2>
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                            <button style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 5px;">All Alerts</button>
+                            <button style="background: #f8f9fa; color: #333; border: 1px solid #ddd; padding: 8px 16px; border-radius: 5px;">High Priority</button>
+                            <button style="background: #f8f9fa; color: #333; border: 1px solid #ddd; padding: 8px 16px; border-radius: 5px;">Resolved</button>
+                        </div>
+                        <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                            <div style="background: #f8f9fa; padding: 15px; border-bottom: 1px solid #ddd; display: grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr; gap: 10px; font-weight: 600; color: #333;">
+                                <div>Status</div>
+                                <div>Order</div>
+                                <div>Delay</div>
+                                <div>Customer</div>
+                                <div>Actions</div>
+                            </div>
+                            <div style="padding: 15px; border-bottom: 1px solid #eee; display: grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr; gap: 10px; align-items: center;">
+                                <div style="background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; text-align: center;">High</div>
+                                <div style="color: #333;">#12345 - FedEx</div>
+                                <div style="color: #d32f2f;">+2 days</div>
+                                <div style="color: #666;">John Doe</div>
+                                <div><button style="background: #667eea; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">View</button></div>
+                            </div>
+                            <div style="padding: 15px; border-bottom: 1px solid #eee; display: grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr; gap: 10px; align-items: center;">
+                                <div style="background: #fff3e0; color: #ef6c00; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; text-align: center;">Medium</div>
+                                <div style="color: #333;">#12346 - UPS</div>
+                                <div style="color: #f57c00;">+1 day</div>
+                                <div style="color: #666;">Jane Smith</div>
+                                <div><button style="background: #667eea; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">View</button></div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'orders',
+                title: 'Order Tracking',
+                description: 'Real-time order tracking with carrier integration and status updates',
+                icon: '📦',
+                content: `
+                    <div style="padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <h2 style="color: #333; margin-bottom: 20px;">Order Tracking</h2>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <input type="text" placeholder="Enter tracking number..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                <button style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px;">Track</button>
+                            </div>
+                        </div>
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
+                            <h3 style="color: #333; margin-bottom: 15px;">Order #12345 - FedEx</h3>
+                            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                <div style="width: 12px; height: 12px; background: #4caf50; border-radius: 50%; margin-right: 10px;"></div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; color: #333;">Delivered</div>
+                                    <div style="color: #666; font-size: 0.9rem;">Delivered to customer on Oct 15, 2024</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                <div style="width: 12px; height: 12px; background: #4caf50; border-radius: 50%; margin-right: 10px;"></div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; color: #333;">Out for Delivery</div>
+                                    <div style="color: #666; font-size: 0.9rem;">Package is out for delivery on Oct 15, 2024</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                <div style="width: 12px; height: 12px; background: #4caf50; border-radius: 50%; margin-right: 10px;"></div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; color: #333;">In Transit</div>
+                                    <div style="color: #666; font-size: 0.9rem;">Package is in transit from sorting facility</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'settings',
+                title: 'Settings & Configuration',
+                description: 'Customizable notification settings and delay thresholds',
+                icon: '⚙️',
+                content: `
+                    <div style="padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <h2 style="color: #333; margin-bottom: 20px;">Settings & Configuration</h2>
+                        <div style="margin-bottom: 25px;">
+                            <h3 style="color: #333; margin-bottom: 15px;">Delay Thresholds</h3>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 10px;">
+                                    <label style="display: block; margin-bottom: 5px; color: #333;">High Priority Delay (days)</label>
+                                    <input type="number" value="2" style="width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <label style="display: block; margin-bottom: 5px; color: #333;">Medium Priority Delay (days)</label>
+                                    <input type="number" value="1" style="width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 25px;">
+                            <h3 style="color: #333; margin-bottom: 15px;">Notifications</h3>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="color: #333;">Email Notifications</span>
+                                    <input type="checkbox" checked style="transform: scale(1.2);">
+                                </div>
+                                <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="color: #333;">SMS Notifications</span>
+                                    <input type="checkbox" checked style="transform: scale(1.2);">
+                                </div>
+                                <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="color: #333;">Push Notifications</span>
+                                    <input type="checkbox" style="transform: scale(1.2);">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <button style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-right: 10px;">Save Settings</button>
+                            <button style="background: #f8f9fa; color: #333; border: 1px solid #ddd; padding: 10px 20px; border-radius: 5px;">Reset</button>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'analytics',
+                title: 'Analytics & Reports',
+                description: 'Detailed analytics dashboard with performance insights',
+                icon: '📈',
+                content: `
+                    <div style="padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <h2 style="color: #333; margin-bottom: 20px;">Analytics & Reports</h2>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                                <h3 style="color: #333; margin-bottom: 10px;">Delay Trends</h3>
+                                <div style="height: 100px; background: linear-gradient(45deg, #667eea, #764ba2); border-radius: 5px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                    📊 Chart Placeholder
+                                </div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                                <h3 style="color: #333; margin-bottom: 10px;">Carrier Performance</h3>
+                                <div style="margin-bottom: 8px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span style="color: #333;">FedEx</span>
+                                        <span style="color: #4caf50;">98%</span>
+                                    </div>
+                                    <div style="background: #e0e0e0; height: 8px; border-radius: 4px;">
+                                        <div style="background: #4caf50; height: 100%; width: 98%; border-radius: 4px;"></div>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span style="color: #333;">UPS</span>
+                                        <span style="color: #ff9800;">85%</span>
+                                    </div>
+                                    <div style="background: #e0e0e0; height: 8px; border-radius: 4px;">
+                                        <div style="background: #ff9800; height: 100%; width: 85%; border-radius: 4px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <h3 style="color: #333; margin-bottom: 10px;">Key Metrics</h3>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: 600; color: #667eea;">156</div>
+                                    <div style="color: #666; font-size: 0.9rem;">Total Orders</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: 600; color: #4caf50;">12</div>
+                                    <div style="color: #666; font-size: 0.9rem;">Delays Detected</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: 600; color: #ff9800;">92%</div>
+                                    <div style="color: #666; font-size: 0.9rem;">Accuracy Rate</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: 600; color: #9c27b0;">2.3h</div>
+                                    <div style="color: #666; font-size: 0.9rem;">Avg Response Time</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function generateScreenshots() {
+            showStatus('🎨 Generating professional screenshots...', 'info');
+            
+            // Simulate screenshot generation
+            setTimeout(() => {
+                screenshots.forEach((screenshot, index) => {
+                    setTimeout(() => {
+                        // Create a canvas element for each screenshot
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 1200;
+                        canvas.height = 800;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Set background
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Add header
+                        ctx.fillStyle = '#667eea';
+                        ctx.fillRect(0, 0, canvas.width, 80);
+                        
+                        // Add title
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('DelayGuard', canvas.width / 2, 50);
+                        
+                        // Add content area
+                        ctx.fillStyle = '#f8f9fa';
+                        ctx.fillRect(50, 100, canvas.width - 100, canvas.height - 150);
+                        
+                        // Add screenshot content
+                        ctx.fillStyle = '#333333';
+                        ctx.font = '24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                        ctx.textAlign = 'left';
+                        ctx.fillText(screenshot.title, 80, 150);
+                        
+                        // Add description
+                        ctx.fillStyle = '#666666';
+                        ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                        ctx.fillText(screenshot.description, 80, 180);
+                        
+                        // Add icon
+                        ctx.font = '48px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(screenshot.icon, canvas.width - 100, 200);
+                        
+                        // Convert to blob and download
+                        canvas.toBlob((blob) => {
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `delayguard-${screenshot.id}-screenshot.png`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        }, 'image/png');
+                        
+                    }, index * 500);
+                });
+                
+                setTimeout(() => {
+                    showStatus('✅ All screenshots generated successfully! Check your downloads folder.', 'success');
+                }, screenshots.length * 500 + 1000);
+                
+            }, 1000);
+        }
+
+        function previewScreenshots() {
+            const demo = document.getElementById('screenshot-demo');
+            demo.style.display = 'block';
+            demo.innerHTML = `
+                <div style="text-align: center;">
+                    <h3 style="color: #333; margin-bottom: 20px;">📸 Screenshot Preview</h3>
+                    <p style="color: #666; margin-bottom: 20px;">Professional screenshots will be generated with:</p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
+                        ${screenshots.map(screenshot => `
+                            <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <div style="font-size: 2rem; margin-bottom: 10px;">${screenshot.icon}</div>
+                                <div style="font-weight: 600; color: #333; margin-bottom: 5px;">${screenshot.title}</div>
+                                <div style="color: #666; font-size: 0.9rem;">${screenshot.description}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="generateScreenshots()" style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 6px; margin-top: 20px; cursor: pointer; font-weight: 600;">
+                        🚀 Generate Screenshots Now
+                    </button>
+                </div>
+            `;
+        }
+
+        // Add click handlers to screenshot cards
+        document.querySelectorAll('.screenshot-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const screenshotId = card.dataset.screenshot;
+                const screenshot = screenshots.find(s => s.id === screenshotId);
+                if (screenshot) {
+                    const demo = document.getElementById('screenshot-demo');
+                    demo.style.display = 'block';
+                    demo.innerHTML = `
+                        <div style="text-align: center;">
+                            <h3 style="color: #333; margin-bottom: 20px;">${screenshot.icon} ${screenshot.title}</h3>
+                            <p style="color: #666; margin-bottom: 20px;">${screenshot.description}</p>
+                            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px 0;">
+                                ${screenshot.content}
+                            </div>
+                            <button onclick="generateScreenshots()" style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                📸 Generate This Screenshot
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

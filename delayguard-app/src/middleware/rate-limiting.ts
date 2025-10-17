@@ -103,7 +103,11 @@ export class RateLimitingMiddleware {
       }
 
     } catch (error) {
-      logError(error, { component: 'rate-limiting', action: 'middleware' });
+      logError(
+        error instanceof Error ? error.message : 'Unknown error in rate limiting middleware',
+        error instanceof Error ? error : undefined,
+        { component: 'rate-limiting', action: 'middleware' }
+      );
       // Continue without rate limiting if Redis fails
       await next();
     }

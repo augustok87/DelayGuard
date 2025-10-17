@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings & Configuration - DelayGuard</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .screenshot-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .content {
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="screenshot-container">
+        <div class="header">
+            <h1>DelayGuard</h1>
+            <p>Settings & Configuration</p>
+        </div>
+        <div class="content">
+            
+            <div style="padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                <h2 style="color: #333; margin-bottom: 20px; font-size: 24px;">Settings & Configuration</h2>
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #333; margin-bottom: 15px;">Delay Thresholds</h3>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; color: #333;">High Priority Delay (days)</label>
+                            <input type="number" value="2" style="width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; color: #333;">Medium Priority Delay (days)</label>
+                            <input type="number" value="1" style="width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #333; margin-bottom: 15px;">Notifications</h3>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                            <span style="color: #333;">Email Notifications</span>
+                            <input type="checkbox" checked style="transform: scale(1.2);">
+                        </div>
+                        <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                            <span style="color: #333;">SMS Notifications</span>
+                            <input type="checkbox" checked style="transform: scale(1.2);">
+                        </div>
+                        <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                            <span style="color: #333;">Push Notifications</span>
+                            <input type="checkbox" style="transform: scale(1.2);">
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <button style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-right: 10px; cursor: pointer;">Save Settings</button>
+                    <button style="background: #f8f9fa; color: #333; border: 1px solid #ddd; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Reset</button>
+                </div>
+            </div>
+        
+        </div>
+    </div>
+</body>
+</html>
+    

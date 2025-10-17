@@ -465,7 +465,9 @@ describe('useDebouncedCallback', () => {
 
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith('arg1');
-    expect(consoleSpy).toHaveBeenCalledWith('Debounced callback promise rejection:', expect.any(Error));
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('ERROR: Promise error'),
+    );
     
     consoleSpy.mockRestore();
   }, 15000); // Increase timeout for this test

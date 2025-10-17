@@ -151,8 +151,7 @@ describe('useLocalStorage', () => {
 
     expect(result.current[0]).toBe('fallback');
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error reading localStorage key "test-key":',
-      expect.any(Error),
+      expect.stringContaining('WARN: Error reading localStorage key "test-key"'),
     );
 
     consoleSpy.mockRestore();
@@ -171,8 +170,7 @@ describe('useLocalStorage', () => {
     });
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error setting localStorage key "test-key":',
-      expect.any(Error),
+      expect.stringContaining('WARN: Error setting localStorage key "test-key"'),
     );
 
     consoleSpy.mockRestore();
@@ -191,8 +189,7 @@ describe('useLocalStorage', () => {
     });
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error removing localStorage key "test-key":',
-      expect.any(Error),
+      expect.stringContaining('WARN: Error removing localStorage key "test-key"'),
     );
 
     consoleSpy.mockRestore();
@@ -206,8 +203,7 @@ describe('useLocalStorage', () => {
 
     expect(result.current[0]).toBe('fallback');
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error reading localStorage key "test-key":',
-      expect.any(Error),
+      expect.stringContaining('WARN: Error reading localStorage key "test-key"'),
     );
 
     consoleSpy.mockRestore();
@@ -336,8 +332,7 @@ describe('useSessionStorage', () => {
 
     expect(result.current[0]).toBe('fallback');
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error reading sessionStorage key "test-key":',
-      expect.any(Error),
+      expect.stringContaining('WARN: Error reading sessionStorage key "test-key"'),
     );
 
     consoleSpy.mockRestore();
@@ -356,8 +351,7 @@ describe('useSessionStorage', () => {
     });
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error setting sessionStorage key "test-key":',
-      expect.any(Error),
+      expect.stringContaining('WARN: Error setting sessionStorage key "test-key"'),
     );
 
     consoleSpy.mockRestore();
@@ -376,8 +370,7 @@ describe('useSessionStorage', () => {
     });
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error removing sessionStorage key "test-key":',
-      expect.any(Error),
+      expect.stringContaining('WARN: Error removing sessionStorage key "test-key"'),
     );
 
     consoleSpy.mockRestore();
