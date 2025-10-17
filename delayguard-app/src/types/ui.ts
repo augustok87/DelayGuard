@@ -199,25 +199,28 @@ export interface NavigationProps {
 
 // Feature Component Types
 export interface DashboardTabProps {
+  shop: string | null;
   settings: AppSettings;
+  stats: StatsData;
   onSettingsChange: (settings: AppSettings) => void;
   onSaveSettings: () => void;
-  onTestDelay: () => void;
-  loading?: boolean;
+  onTestDelayDetection: () => void;
+  onConnectShopify: () => void;
+  loading: boolean;
   className?: string;
 }
 
 export interface AlertsTabProps {
   alerts: DelayAlert[];
   onAlertAction: (alertId: string, action: string) => void;
-  loading?: boolean;
+  loading: boolean;
   className?: string;
 }
 
 export interface OrdersTabProps {
   orders: Order[];
   onOrderAction: (orderId: string, action: string) => void;
-  loading?: boolean;
+  loading: boolean;
   className?: string;
 }
 

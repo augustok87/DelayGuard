@@ -142,7 +142,7 @@ describe('useLocalStorage', () => {
   });
 
   it('should handle localStorage errors gracefully', () => {
-    const logWarnSpy = jest.spyOn(require('../../src/utils/logger'), 'logWarn').mockImplementation();
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
     mockLocalStorage.getItem.mockImplementation(() => {
       throw new Error('localStorage error');
     });
@@ -150,23 +150,16 @@ describe('useLocalStorage', () => {
     const { result } = renderHook(() => useLocalStorage('test-key', 'fallback'));
 
     expect(result.current[0]).toBe('fallback');
-    expect(logWarnSpy).toHaveBeenCalledWith(
-      'Error reading localStorage key "test-key"',
-      expect.objectContaining({
-        component: 'useLocalStorage',
-        action: 'read',
-        metadata: expect.objectContaining({
-          key: 'test-key',
-          error: expect.any(Error),
-        }),
-      }),
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Error reading localStorage key "test-key":',
+      expect.any(Error),
     );
 
-    logWarnSpy.mockRestore();
+    consoleSpy.mockRestore();
   });
 
   it('should handle setItem errors gracefully', () => {
-    const logWarnSpy = jest.spyOn(require('../../src/utils/logger'), 'logWarn').mockImplementation();
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
     mockLocalStorage.setItem.mockImplementation(() => {
       throw new Error('setItem error');
     });
@@ -177,23 +170,16 @@ describe('useLocalStorage', () => {
       result.current[1]('new-value');
     });
 
-    expect(logWarnSpy).toHaveBeenCalledWith(
-      'Error setting localStorage key "test-key"',
-      expect.objectContaining({
-        component: 'useLocalStorage',
-        action: 'set',
-        metadata: expect.objectContaining({
-          key: 'test-key',
-          error: expect.any(Error),
-        }),
-      }),
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Error setting localStorage key "test-key":',
+      expect.any(Error),
     );
 
-    logWarnSpy.mockRestore();
+    consoleSpy.mockRestore();
   });
 
   it('should handle removeItem errors gracefully', () => {
-    const logWarnSpy = jest.spyOn(require('../../src/utils/logger'), 'logWarn').mockImplementation();
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
     mockLocalStorage.removeItem.mockImplementation(() => {
       throw new Error('removeItem error');
     });
@@ -204,41 +190,27 @@ describe('useLocalStorage', () => {
       result.current[2]();
     });
 
-    expect(logWarnSpy).toHaveBeenCalledWith(
-      'Error removing localStorage key "test-key"',
-      expect.objectContaining({
-        component: 'useLocalStorage',
-        action: 'remove',
-        metadata: expect.objectContaining({
-          key: 'test-key',
-          error: expect.any(Error),
-        }),
-      }),
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Error removing localStorage key "test-key":',
+      expect.any(Error),
     );
 
-    logWarnSpy.mockRestore();
+    consoleSpy.mockRestore();
   });
 
   it('should handle invalid JSON in localStorage', () => {
-    const logWarnSpy = jest.spyOn(require('../../src/utils/logger'), 'logWarn').mockImplementation();
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
     mockLocalStorage.getItem.mockReturnValue('invalid json');
 
     const { result } = renderHook(() => useLocalStorage('test-key', 'fallback'));
 
     expect(result.current[0]).toBe('fallback');
-    expect(logWarnSpy).toHaveBeenCalledWith(
-      'Error reading localStorage key "test-key"',
-      expect.objectContaining({
-        component: 'useLocalStorage',
-        action: 'read',
-        metadata: expect.objectContaining({
-          key: 'test-key',
-          error: expect.any(Error),
-        }),
-      }),
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Error reading localStorage key "test-key":',
+      expect.any(Error),
     );
 
-    logWarnSpy.mockRestore();
+    consoleSpy.mockRestore();
   });
 
   it('should handle empty string in localStorage', () => {

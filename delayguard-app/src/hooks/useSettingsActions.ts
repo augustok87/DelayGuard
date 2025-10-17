@@ -35,15 +35,9 @@ export const useSettingsActions = () => {
         return { success: false, error: validation.errors.join(', ') };
       }
 
-      const result = await updateSettings('settings', settings);
-
-      if (result.success) {
-        showSaveSuccessToast();
-      } else {
-        showSaveErrorToast();
-      }
-
-      return result;
+      await updateSettings(settings);
+      showSaveSuccessToast();
+      return { success: true };
     } catch (error) {
       showErrorToast('An unexpected error occurred while saving settings');
       return { success: false, error: 'An unexpected error occurred' };
@@ -52,15 +46,9 @@ export const useSettingsActions = () => {
 
   const resetToDefaults = useCallback(async() => {
     try {
-      const result = await resetSettings();
-
-      if (result.success) {
-        showSuccessToast('Settings reset to defaults successfully!');
-      } else {
-        showErrorToast(result.error || 'Failed to reset settings');
-      }
-
-      return result;
+      await resetSettings();
+      showSuccessToast('Settings reset to defaults successfully!');
+      return { success: true };
     } catch (error) {
       showErrorToast('An unexpected error occurred while resetting settings');
       return { success: false, error: 'An unexpected error occurred' };
@@ -69,15 +57,9 @@ export const useSettingsActions = () => {
 
   const applySettingsPreset = useCallback(async(preset: 'conservative' | 'balanced' | 'aggressive') => {
     try {
-      const result = await applyPreset(preset);
-
-      if (result.success) {
-        showSuccessToast(`${preset.charAt(0).toUpperCase() + preset.slice(1)} preset applied successfully!`);
-      } else {
-        showErrorToast(result.error || 'Failed to apply preset');
-      }
-
-      return result;
+      await applyPreset(preset);
+      showSuccessToast(`${preset.charAt(0).toUpperCase() + preset.slice(1)} preset applied successfully!`);
+      return { success: true };
     } catch (error) {
       showErrorToast('An unexpected error occurred while applying preset');
       return { success: false, error: 'An unexpected error occurred' };
@@ -144,13 +126,7 @@ export const useSettingsActions = () => {
   const importSettingsFromFile = useCallback(async(file: File) => {
     try {
       const result = await importSettings(file);
-
-      if (result.success) {
-        showSuccessToast('Settings imported successfully!');
-      } else {
-        showErrorToast(result.error || 'Failed to import settings');
-      }
-
+      showSuccessToast('Settings imported successfully!');
       return result;
     } catch (error) {
       showErrorToast('An unexpected error occurred while importing settings');

@@ -15,9 +15,9 @@ export const useOrders = () => {
     refreshItems: refreshOrders,
   } = useAsyncResource<Order>(
     'orders',
-    fetchOrders,
-    updateOrder,
-    deleteOrder,
+    fetchOrders as any,
+    updateOrder as any,
+    deleteOrder as any,
     (state) => ({
       items: state.orders.items,
       loading: state.orders.loading,

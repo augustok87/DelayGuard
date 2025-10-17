@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg';
+import { Pool, PoolClient, QueryResult } from 'pg';
 // import { AppConfig } from '../types'; // Removed unused import
 import { logInfo, logError } from '../utils/logger';
 
@@ -22,7 +22,7 @@ export async function setupDatabase(): Promise<void> {
     // Run migrations
     await runMigrations();
   } catch (error) {
-    logError(error, { component: 'database', action: 'connection' });
+    logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'database', action: 'connection' });
     throw error;
   }
 }
@@ -34,11 +34,11 @@ export async function getDatabaseClient(): Promise<PoolClient> {
   return pool.connect();
 }
 
-export async function query(text: string, params?: unknown[]): Promise<unknown[]> {
+export async function query<T = unknown>(text: string, params?: unknown[]): Promise<T[]> {
   const client = await getDatabaseClient();
   try {
     const result = await client.query(text, params);
-    return result;
+    return result.rows as T[];
   } finally {
     client.release();
   }
@@ -136,7 +136,7 @@ async function runMigrations(): Promise<void> {
 
     logInfo('Database migrations completed', { component: 'database' });
   } catch (error) {
-    logError(error, { component: 'database', action: 'migration' });
+    logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'database', action: 'migration' });
     throw error;
   } finally {
     client.release();

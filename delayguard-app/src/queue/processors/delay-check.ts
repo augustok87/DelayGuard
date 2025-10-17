@@ -26,11 +26,11 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
       [orderId],
     );
 
-    if (orderResult.rows.length === 0) {
+    if (orderResult.length === 0) {
       throw new Error(`Order ${orderId} not found`);
     }
 
-    const order = orderResult.rows[0];
+    const order = orderResult[0] as { id: string; order_number: string; customer_name: string; customer_email: string; tracking_number: string; carrier_code: string };
 
     // Initialize services
     const carrierService = new CarrierService();

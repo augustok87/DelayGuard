@@ -116,7 +116,7 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'getAlerts' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'getAlerts' });
       throw error;
     }
   }
@@ -148,7 +148,7 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'getOrders' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'getOrders' });
       throw error;
     }
   }
@@ -171,7 +171,7 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'getMetrics' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'getMetrics' });
       throw error;
     }
   }
@@ -194,7 +194,7 @@ export class AnalyticsService {
         throw new Error(`Failed to update settings: ${response.statusText}`);
       }
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'updateSettings' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'updateSettings' });
       throw error;
     }
   }
@@ -218,7 +218,7 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'testDelayDetection' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'testDelayDetection' });
       throw error;
     }
   }
@@ -240,7 +240,7 @@ export class AnalyticsService {
         throw new Error(`Failed to resolve alert: ${response.statusText}`);
       }
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'resolveAlert' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'resolveAlert' });
       throw error;
     }
   }
@@ -262,7 +262,7 @@ export class AnalyticsService {
         throw new Error(`Failed to dismiss alert: ${response.statusText}`);
       }
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'dismissAlert' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'dismissAlert' });
       throw error;
     }
   }
@@ -293,7 +293,7 @@ export class AnalyticsService {
 
       return await response.blob();
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'exportAlerts' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'exportAlerts' });
       throw error;
     }
   }
@@ -317,7 +317,7 @@ export class AnalyticsService {
       const data = await response.json();
       return data.data || data;
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'getAnalyticsMetrics' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'getAnalyticsMetrics' });
       throw error;
     }
   }
@@ -341,7 +341,7 @@ export class AnalyticsService {
       const data = await response.json();
       return data.data || data;
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'getRealTimeMetrics' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'getRealTimeMetrics' });
       throw error;
     }
   }
@@ -363,7 +363,7 @@ export class AnalyticsService {
         throw new Error(`Failed to clear analytics cache: ${response.statusText}`);
       }
     } catch (error) {
-      logError(error, { component: 'AnalyticsService', action: 'clearCache' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'clearCache' });
       throw error;
     }
   }

@@ -195,7 +195,7 @@ function EnhancedDashboard({
                      });
                    } catch (error) {
                      // Use proper error handling instead of console.error
-                     logError(error, { component: 'EnhancedDashboard', action: 'filterAlertsByDate' });
+                     logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'EnhancedDashboard', action: 'filterAlertsByDate' });
                      // TODO: Implement proper error handling with user feedback
                    }
                  }}
@@ -252,7 +252,7 @@ function EnhancedDashboard({
                      });
                    } catch (error) {
                      // Use proper error handling instead of console.error
-                     logError(error, { component: 'EnhancedDashboard', action: 'filterAlertsByDate' });
+                     logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'EnhancedDashboard', action: 'filterAlertsByDate' });
                      // TODO: Implement proper error handling with user feedback
                    }
                  }}

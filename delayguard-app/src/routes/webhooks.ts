@@ -99,12 +99,12 @@ async function processOrderUpdate(shopDomain: string, orderData: any): Promise<v
       [shopDomain],
     );
 
-    if (shopResult.rows.length === 0) {
+    if (shopResult.length === 0) {
       console.log(`Shop ${shopDomain} not found, skipping order update`);
       return;
     }
 
-    const shopId = shopResult.rows[0].id;
+    const shopId = shopResult[0].id;
 
     // Upsert order
     await query(`
@@ -143,7 +143,7 @@ async function processOrderUpdate(shopDomain: string, orderData: any): Promise<v
       [shopId, orderData.id.toString()],
     );
 
-    const orderId = orderResult.rows[0].id;
+    const orderId = orderResult[0].id;
 
     // Process fulfillments if they exist
     if (orderData.fulfillments && orderData.fulfillments.length > 0) {
@@ -168,12 +168,12 @@ async function processFulfillmentUpdate(shopDomain: string, fulfillmentData: any
       [shopDomain],
     );
 
-    if (shopResult.rows.length === 0) {
+    if (shopResult.length === 0) {
       console.log(`Shop ${shopDomain} not found, skipping fulfillment update`);
       return;
     }
 
-    const shopId = shopResult.rows[0].id;
+    const shopId = shopResult[0].id;
 
     // Get order ID
     const orderResult = await query(
@@ -181,12 +181,12 @@ async function processFulfillmentUpdate(shopDomain: string, fulfillmentData: any
       [shopId, fulfillmentData.order_id.toString()],
     );
 
-    if (orderResult.rows.length === 0) {
+    if (orderResult.length === 0) {
       console.log(`Order ${fulfillmentData.order_id} not found for fulfillment update`);
       return;
     }
 
-    const orderId = orderResult.rows[0].id;
+    const orderId = orderResult[0].id;
 
     // Process the fulfillment
     await processFulfillment(orderId, fulfillmentData);
@@ -207,12 +207,12 @@ async function processOrderPaid(shopDomain: string, orderData: any): Promise<voi
       [shopDomain],
     );
 
-    if (shopResult.rows.length === 0) {
+    if (shopResult.length === 0) {
       console.log(`Shop ${shopDomain} not found, skipping order paid`);
       return;
     }
 
-    const shopId = shopResult.rows[0].id;
+    const shopId = shopResult[0].id;
 
     // Update order status to paid
     await query(
@@ -263,12 +263,12 @@ async function processFulfillment(orderId: number, fulfillmentData: any): Promis
         [orderId],
       );
 
-      if (shopResult.rows.length > 0) {
+      if (shopResult.length > 0) {
         await addDelayCheckJob({
           orderId,
           trackingNumber: fulfillmentData.tracking_info.number,
           carrierCode: fulfillmentData.tracking_info.company,
-          shopDomain: shopResult.rows[0].shop_domain,
+          shopDomain: shopResult[0].shop_domain,
         });
 
         console.log(`🔍 Delay check job added for tracking ${fulfillmentData.tracking_info.number}`);

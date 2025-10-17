@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { DashboardTabProps, AlertsTabProps, OrdersTabProps } from '../../types/ui';
 
 // Lazy load tab components with proper typing
 export const LazyDashboardTab = lazy(() => import('./DashboardTab/DashboardTab.memo').then(module => ({ default: module.DashboardTab })));
@@ -13,19 +14,19 @@ export const LazySettingsCard = lazy(() => import('./DashboardTab/SettingsCard')
 export const LazyStatsCard = lazy(() => import('./DashboardTab/StatsCard').then(module => ({ default: module.StatsCard })));
 
 // Wrapper components with Suspense
-export const DashboardTabWithSuspense = (props: Record<string, unknown>) => (
+export const DashboardTabWithSuspense: React.FC<DashboardTabProps> = (props) => (
   <Suspense fallback={<LoadingSpinner message="Loading Dashboard..." />}>
     <LazyDashboardTab {...props} />
   </Suspense>
 );
 
-export const AlertsTabWithSuspense = (props: Record<string, unknown>) => (
+export const AlertsTabWithSuspense: React.FC<AlertsTabProps> = (props) => (
   <Suspense fallback={<LoadingSpinner message="Loading Alerts..." />}>
     <LazyAlertsTab {...props} />
   </Suspense>
 );
 
-export const OrdersTabWithSuspense = (props: Record<string, unknown>) => (
+export const OrdersTabWithSuspense: React.FC<OrdersTabProps> = (props) => (
   <Suspense fallback={<LoadingSpinner message="Loading Orders..." />}>
     <LazyOrdersTab {...props} />
   </Suspense>

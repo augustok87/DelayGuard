@@ -75,8 +75,17 @@ export const DataTable: React.FC<DataTableProps> = ({
       const aValue = a[sortColumn];
       const bValue = b[sortColumn];
       
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      // Handle null/undefined values
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return sortDirection === 'asc' ? -1 : 1;
+      if (bValue == null) return sortDirection === 'asc' ? 1 : -1;
+      
+      // Convert to comparable values
+      const aComparable = typeof aValue === 'string' ? aValue.toLowerCase() : aValue;
+      const bComparable = typeof bValue === 'string' ? bValue.toLowerCase() : bValue;
+      
+      if (aComparable < bComparable) return sortDirection === 'asc' ? -1 : 1;
+      if (aComparable > bComparable) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
   }, [sortable, tableData, sortColumn, sortDirection, onSort]);
@@ -216,7 +225,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                     <td key={column.key} className={cellClasses}>
                       {column.render
                         ? column.render(row[column.key], row)
-                        : row[column.key]}
+                        : String(row[column.key] ?? '')}
                     </td>
                   );
                 })}

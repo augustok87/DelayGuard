@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { logErrorWithError, logError } from '../utils/logger';
+import { logError } from '../utils/logger';
 
 export const useDebounce = <T>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -31,30 +31,14 @@ export const useDebouncedCallback = <T extends (...args: unknown[]) => unknown>(
     debounceTimerRef.current = setTimeout(async() => {
       try {
         const result = callback(...args);
-        // Handle promises properly
-        if (result && typeof result === 'object' && 'then' in result && typeof result.then === 'function') {
+        // Handle promises
+        if (result && typeof result === 'object' && 'catch' in result && typeof result.catch === 'function') {
           (result as Promise<unknown>).catch((error: unknown) => {
-            if (error instanceof Error) {
-              logErrorWithError(error, { component: 'useDebounce', action: 'callback' });
-            } else {
-              logError('Promise rejected with non-Error value', { 
-                component: 'useDebounce', 
-                action: 'callback',
-                metadata: { error }
-              });
-            }
+            logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'useDebounce', action: 'callback' });
           });
         }
       } catch (error) {
-        if (error instanceof Error) {
-          logErrorWithError(error, { component: 'useDebounce', action: 'callback' });
-        } else {
-          logError('Callback threw non-Error value', { 
-            component: 'useDebounce', 
-            action: 'callback',
-            metadata: { error }
-          });
-        }
+        logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'useDebounce', action: 'callback' });
       }
     }, delay);
   }, [callback, delay]);

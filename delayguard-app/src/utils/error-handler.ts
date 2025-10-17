@@ -11,6 +11,7 @@ export interface ErrorContext {
   userId?: string;
   requestId?: string;
   resourceName?: string;
+  service?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -160,7 +161,7 @@ export function handleError(error: unknown, context: ErrorContext = {}): ErrorRe
   }
 
   if (error instanceof Error) {
-    logger.error(`Unexpected Error: ${error.message}`, error, context);
+    logger.error(`Unexpected Error: ${error.message}`, error, context as Record<string, unknown>);
 
     return {
       success: false,
@@ -175,7 +176,7 @@ export function handleError(error: unknown, context: ErrorContext = {}): ErrorRe
 
   // Handle non-Error objects
   const errorMessage = typeof error === 'string' ? error : 'An unknown error occurred';
-  logger.error(`Unknown Error: ${errorMessage}`, undefined, context);
+  logger.error(`Unknown Error: ${errorMessage}`, undefined, context as Record<string, unknown>);
 
   return {
     success: false,

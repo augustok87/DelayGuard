@@ -361,7 +361,7 @@ export class BackupService {
       ORDER BY table_name, ordinal_position
     `);
 
-    return Buffer.from(JSON.stringify(dump.rows, null, 2));
+    return Buffer.from(JSON.stringify(dump, null, 2));
   }
 
   /**

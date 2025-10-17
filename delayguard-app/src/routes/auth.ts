@@ -82,13 +82,13 @@ router.get('/shop', async(ctx) => {
       [shop],
     );
 
-    if (result.rows.length === 0) {
+    if (result.length === 0) {
       ctx.status = 404;
       ctx.body = { error: 'Shop not found' };
       return;
     }
 
-    ctx.body = result.rows[0];
+    ctx.body = result[0];
   } catch (error) {
     console.error('Error fetching shop information:', error);
     ctx.status = 500;

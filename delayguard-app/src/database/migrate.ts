@@ -8,7 +8,7 @@ async function migrate() {
     logInfo('Database migrations completed successfully', { component: 'database' });
     process.exit(0);
   } catch (error) {
-    logError(error, { component: 'database', action: 'migration' });
+    logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'database', action: 'migration' });
     process.exit(1);
   }
 }

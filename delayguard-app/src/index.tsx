@@ -20,5 +20,5 @@ if (container) {
     </AppProvider>,
   );
 } else {
-  logError('Root element not found', { component: 'index' });
+  logError('Root element not found', undefined, { component: 'index' });
 }

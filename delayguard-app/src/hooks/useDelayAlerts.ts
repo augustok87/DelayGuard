@@ -1,47 +1,61 @@
 import { useCallback } from 'react';
-import { useAsyncResource } from './useAsyncResource';
+import { useAsyncResource, useItemFilters } from './useAsyncResource';
 import { fetchAlerts, updateAlert, deleteAlert } from '../store/slices/alertsSlice';
 import { DelayAlert } from '../types';
 
 export const useDelayAlerts = () => {
-  const [state, actions] = useAsyncResource<DelayAlert[]>(
-    () => fetchAlerts(),
-    {
-      cacheKey: 'delay-alerts',
-      cacheTTL: 5 * 60 * 1000, // 5 minutes
-      retryAttempts: 3,
-      backgroundRefresh: true,
-      backgroundRefreshInterval: 30 * 1000, // 30 seconds
-    }
+  const {
+    items: alerts,
+    loading,
+    error,
+    createItem: createNewAlert,
+    updateItem: updateExistingAlert,
+    deleteItem: deleteExistingAlert,
+    refreshItems: refreshAlerts,
+  } = useAsyncResource<DelayAlert>(
+    'alert',
+    fetchAlerts as any,
+    updateAlert as any,
+    deleteAlert as any,
+    (state) => state.alerts,
+    undefined, // createAlert not implemented yet
   );
 
-  const { data: alerts = [], loading, error } = state;
-  const { refetch: refreshAlerts, mutate: setAlerts } = actions;
+  const {
+    getItemsByStatus: getAlertsByStatus,
+    getItemsByPriority: getAlertsByPriority,
+    searchItems: searchAlerts,
+    sortItems: sortAlerts,
+  } = useItemFilters<DelayAlert>(
+    alerts,
+    (alert) => alert.status,
+    (alert) => alert.priority || 'low',
+  );
 
   // Alert-specific filtering and sorting
   const getActiveAlerts = useCallback(() => {
-    return alerts.filter(alert => alert.status === 'active');
-  }, [alerts]);
+    return getAlertsByStatus('active');
+  }, [getAlertsByStatus]);
 
   const getResolvedAlerts = useCallback(() => {
-    return alerts.filter(alert => alert.status === 'resolved');
-  }, [alerts]);
+    return getAlertsByStatus('resolved');
+  }, [getAlertsByStatus]);
 
   const getDismissedAlerts = useCallback(() => {
-    return alerts.filter(alert => alert.status === 'dismissed');
-  }, [alerts]);
+    return getAlertsByStatus('dismissed');
+  }, [getAlertsByStatus]);
 
   const getHighPriorityAlerts = useCallback(() => {
-    return alerts.filter(alert => alert.priority === 'high');
-  }, [alerts]);
+    return getAlertsByPriority('high');
+  }, [getAlertsByPriority]);
 
   const getMediumPriorityAlerts = useCallback(() => {
-    return alerts.filter(alert => alert.priority === 'medium');
-  }, [alerts]);
+    return getAlertsByPriority('medium');
+  }, [getAlertsByPriority]);
 
   const getLowPriorityAlerts = useCallback(() => {
-    return alerts.filter(alert => alert.priority === 'low');
-  }, [alerts]);
+    return getAlertsByPriority('low');
+  }, [getAlertsByPriority]);
 
   const getAlertsByDelayDays = useCallback((minDays: number, maxDays?: number) => {
     return alerts.filter(alert => {
@@ -54,34 +68,21 @@ export const useDelayAlerts = () => {
 
   // Search alerts by specific fields
   const searchAlertsByOrderNumber = useCallback((orderNumber: string) => {
-    return alerts.filter(alert => 
-      alert.orderId.toLowerCase().includes(orderNumber.toLowerCase())
-    );
-  }, [alerts]);
+    return searchAlerts(orderNumber, ['orderId']);
+  }, [searchAlerts]);
 
   const searchAlertsByCustomerName = useCallback((customerName: string) => {
-    return alerts.filter(alert => 
-      alert.customerName.toLowerCase().includes(customerName.toLowerCase())
-    );
-  }, [alerts]);
+    return searchAlerts(customerName, ['customerName']);
+  }, [searchAlerts]);
 
   // Sort alerts by specific fields
   const sortAlertsByDate = useCallback((direction: 'asc' | 'desc' = 'desc') => {
-    return [...alerts].sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return direction === 'asc' ? dateA - dateB : dateB - dateA;
-    });
-  }, [alerts]);
+    return sortAlerts('createdAt', direction);
+  }, [sortAlerts]);
 
   const sortAlertsByPriority = useCallback((direction: 'asc' | 'desc' = 'desc') => {
-    const priorityOrder = { high: 3, medium: 2, low: 1 };
-    return [...alerts].sort((a, b) => {
-      const priorityA = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
-      const priorityB = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
-      return direction === 'asc' ? priorityA - priorityB : priorityB - priorityA;
-    });
-  }, [alerts]);
+    return sortAlerts('priority', direction);
+  }, [sortAlerts]);
 
   // Statistics
   const getAlertStats = useCallback(() => {
@@ -111,26 +112,6 @@ export const useDelayAlerts = () => {
     };
   }, [alerts, getActiveAlerts, getResolvedAlerts, getDismissedAlerts]);
 
-  // CRUD operations
-  const createNewAlert = useCallback((alert: Omit<DelayAlert, 'id' | 'createdAt'>) => {
-    const newAlert: DelayAlert = {
-      ...alert,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-    setAlerts([...alerts, newAlert]);
-  }, [alerts, setAlerts]);
-
-  const updateExistingAlert = useCallback((id: string, updates: Partial<DelayAlert>) => {
-    setAlerts(alerts.map(alert => 
-      alert.id === id ? { ...alert, ...updates } : alert
-    ));
-  }, [alerts, setAlerts]);
-
-  const deleteExistingAlert = useCallback((id: string) => {
-    setAlerts(alerts.filter(alert => alert.id !== id));
-  }, [alerts, setAlerts]);
-
   return {
     alerts,
     loading,
@@ -142,6 +123,7 @@ export const useDelayAlerts = () => {
     getActiveAlerts,
     getResolvedAlerts,
     getDismissedAlerts,
+    getAlertsByPriority,
     getHighPriorityAlerts,
     getMediumPriorityAlerts,
     getLowPriorityAlerts,

@@ -12,7 +12,7 @@ interface OrdersListProps {
 export const OrdersList: React.FC<OrdersListProps> = ({ orders, onOrderClick }) => {
   const handleRowClick = (row: DataTableRow) => {
     if (onOrderClick) {
-      onOrderClick(row as Order);
+      onOrderClick(row as unknown as Order);
     }
   };
   const columns = [
@@ -21,9 +21,9 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, onOrderClick }) 
       title: 'Order #',
       sortable: true,
       width: '120px',
-      render: (value: string) => {
+      render: (value: unknown) => {
         logInfo('Order number value', { value });
-        return <Text variant="bodyMd" as="span">{value || 'N/A'}</Text>;
+        return <Text variant="bodyMd" as="span">{String(value) || 'N/A'}</Text>;
       },
     },
     {
@@ -31,50 +31,56 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, onOrderClick }) 
       title: 'Customer',
       sortable: true,
       width: '150px',
-      render: (value: string) => <Text variant="bodyMd" as="span">{value || 'N/A'}</Text>,
+      render: (value: unknown) => <Text variant="bodyMd" as="span">{String(value) || 'N/A'}</Text>,
     },
     {
       key: 'createdAt',
       title: 'Order Date',
       sortable: true,
       width: '120px',
-      render: (value: string) => <Text variant="bodyMd" as="span">{new Date(value).toLocaleDateString()}</Text>,
+      render: (value: unknown) => <Text variant="bodyMd" as="span">{new Date(String(value)).toLocaleDateString()}</Text>,
     },
     {
       key: 'totalAmount',
       title: 'Total Amount',
       sortable: true,
       width: '140px',
-      render: (value: number, row: DataTableRow) => (
-        <Text variant="bodyMd" as="span">
-          {value ? `$${value.toFixed(2)} ${row.currency || 'USD'}` : 'N/A'}
-        </Text>
-      ),
+      render: (value: unknown, row: DataTableRow) => {
+        const numValue = Number(value);
+        return (
+          <Text variant="bodyMd" as="span">
+            {numValue ? `$${numValue.toFixed(2)} ${row.currency || 'USD'}` : 'N/A'}
+          </Text>
+        );
+      },
     },
     {
       key: 'status',
       title: 'Status',
       sortable: true,
       width: '100px',
-      render: (value: string) => (
-        <Badge tone={value === 'delivered' ? 'success' : value === 'shipped' ? 'info' : 'warning'}>
-          {value}
-        </Badge>
-      ),
+      render: (value: unknown) => {
+        const strValue = String(value);
+        return (
+          <Badge tone={strValue === 'delivered' ? 'success' : strValue === 'shipped' ? 'info' : 'warning'}>
+            {strValue}
+          </Badge>
+        );
+      },
     },
     {
       key: 'carrierCode',
       title: 'Carrier',
       sortable: true,
       width: '100px',
-      render: (value: string) => <Text variant="bodyMd" as="span">{value || 'N/A'}</Text>,
+      render: (value: unknown) => <Text variant="bodyMd" as="span">{String(value) || 'N/A'}</Text>,
     },
     {
       key: 'trackingNumber',
       title: 'Tracking',
       sortable: true,
       width: '120px',
-      render: (value: string) => <Text variant="bodyMd" as="span">{value || 'N/A'}</Text>,
+      render: (value: unknown) => <Text variant="bodyMd" as="span">{String(value) || 'N/A'}</Text>,
     },
   ];
 

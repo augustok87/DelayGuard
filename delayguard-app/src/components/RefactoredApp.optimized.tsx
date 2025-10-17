@@ -44,7 +44,7 @@ export function RefactoredAppOptimized() {
 
   // Combined loading state
   const loading = useMemo(() => 
-    alertsLoading || ordersLoading || settingsLoading,
+    Boolean(alertsLoading || ordersLoading || settingsLoading),
     [alertsLoading, ordersLoading, settingsLoading],
   );
 
@@ -77,7 +77,7 @@ export function RefactoredAppOptimized() {
     }
   }, [connectToShopify]);
 
-  const handleAlertAction = useCallback(async(alertId: string, action: 'resolve' | 'dismiss') => {
+  const handleAlertAction = useCallback(async(alertId: string, action: string) => {
     if (action === 'resolve') {
       await resolveAlert(alertId);
     } else {
@@ -85,7 +85,7 @@ export function RefactoredAppOptimized() {
     }
   }, [resolveAlert, dismissAlert]);
 
-  const handleOrderAction = useCallback(async(orderId: string, action: 'track' | 'view') => {
+  const handleOrderAction = useCallback(async(orderId: string, action: string) => {
     if (action === 'track') {
       await trackOrder(orderId);
     } else {
@@ -111,7 +111,7 @@ export function RefactoredAppOptimized() {
               shop={shop}
               settings={settings}
               stats={stats}
-              loading={loading}
+              loading={Boolean(loading ?? false)}
               onSaveSettings={handleSaveSettings}
               onTestDelayDetection={handleTestDelayDetection}
               onConnectShopify={handleConnectShopify}
@@ -124,7 +124,7 @@ export function RefactoredAppOptimized() {
           <div data-testid="alerts-tab">
             <AlertsTabWithSuspense
               alerts={alerts}
-              loading={loading}
+              loading={Boolean(loading ?? false)}
               onAlertAction={handleAlertAction}
             />
           </div>
@@ -134,7 +134,7 @@ export function RefactoredAppOptimized() {
           <div data-testid="orders-tab">
             <OrdersTabWithSuspense
               orders={orders}
-              loading={loading}
+              loading={Boolean(loading ?? false)}
               onOrderAction={handleOrderAction}
             />
           </div>

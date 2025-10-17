@@ -114,7 +114,7 @@ export class DelayDetectionService implements IDelayDetectionService {
       return enhancedResult;
 
     } catch (error) {
-      logError(error, { component: 'delay-detection-service', action: 'detectDelay' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'delay-detection-service', action: 'detectDelay' });
       return {
         isDelayed: false,
         error: error instanceof Error ? error.message : 'Unknown error',

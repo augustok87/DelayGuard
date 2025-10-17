@@ -75,7 +75,7 @@ export const useAsync = <T, Args extends unknown[] = unknown[]>(
 
   useEffect(() => {
     if (immediate) {
-      execute();
+      execute(...([] as unknown as Args));
     }
   }, [execute, immediate]);
 
@@ -90,7 +90,7 @@ export const useAsyncCallback = <T extends (...args: unknown[]) => Promise<unkno
   asyncFunction: T,
   deps: React.DependencyList = [],
 ) => {
-  const [state, setState] = useState<UseAsyncState<Awaited<ReturnType<T>>>>({
+  const [state, setState] = useState<UseAsyncState<unknown>>({
     data: null,
     loading: false,
     error: null,

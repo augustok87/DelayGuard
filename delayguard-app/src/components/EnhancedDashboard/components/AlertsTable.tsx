@@ -1,7 +1,7 @@
 // AlertsTable component for displaying delay alerts
 import React, { useState } from 'react';
 import { Card, DataTable, Text, Button, Badge } from '../../ui';
-import { DelayAlert } from '../../../types';
+import { DelayAlert, DataTableRow } from '../../../types';
 
 interface AlertsTableProps {
   alerts: DelayAlert[];
@@ -105,72 +105,84 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
       title: 'Order ID',
       sortable: true,
       width: '120px',
-      render: (value: string) => <Text variant="bodyMd" as="span">{value}</Text>,
+      render: (value: unknown) => <Text variant="bodyMd" as="span">{String(value)}</Text>,
     },
     {
       key: 'customerName',
       title: 'Customer',
       sortable: true,
       width: '150px',
-      render: (value: string) => <Text variant="bodyMd" as="span">{value}</Text>,
+      render: (value: unknown) => <Text variant="bodyMd" as="span">{String(value)}</Text>,
     },
     {
       key: 'delayDays',
       title: 'Delay Days',
       sortable: true,
       width: '100px',
-      render: (value: number) => (
-        <Badge tone={value > 5 ? 'critical' : value > 2 ? 'warning' : 'info'}>
-          {value} days
-        </Badge>
-      ),
+      render: (value: unknown) => {
+        const numValue = Number(value);
+        return (
+          <Badge tone={numValue > 5 ? 'critical' : numValue > 2 ? 'warning' : 'info'}>
+            {numValue} days
+          </Badge>
+        );
+      },
     },
     {
       key: 'priority',
       title: 'Priority',
       sortable: true,
       width: '100px',
-      render: (value: string) => (
-        <Badge tone={value === 'high' ? 'critical' : value === 'medium' ? 'warning' : 'info'}>
-          {value}
-        </Badge>
-      ),
+      render: (value: unknown) => {
+        const strValue = String(value);
+        return (
+          <Badge tone={strValue === 'high' ? 'critical' : strValue === 'medium' ? 'warning' : 'info'}>
+            {strValue}
+          </Badge>
+        );
+      },
     },
     {
       key: 'status',
       title: 'Status',
       sortable: true,
       width: '100px',
-      render: (value: string) => (
-        <Badge tone={value === 'active' ? 'warning' : 'success'}>
-          {value}
-        </Badge>
-      ),
+      render: (value: unknown) => {
+        const strValue = String(value);
+        return (
+          <Badge tone={strValue === 'active' ? 'warning' : 'success'}>
+            {strValue}
+          </Badge>
+        );
+      },
     },
     {
       key: 'actions',
       title: 'Actions',
       sortable: false,
       width: '150px',
-      render: (_: unknown, row: DelayAlert) => (
+      render: (_: unknown, row: DataTableRow) => {
+        const alert = row as unknown as DelayAlert;
+        return (
         <div style={{ display: 'flex', gap: '8px' }}>
           <Button
             size="sm"
             variant="primary"
-            onClick={() => onResolve(row.id)}
-            disabled={row.status === 'resolved'}
+            onClick={() => onResolve(alert.id)}
+            disabled={alert.status === 'resolved'}
           >
             Resolve
           </Button>
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => onDismiss(row.id)}
+            onClick={() => onDismiss(alert.id)}
           >
             Dismiss
           </Button>
         </div>
-      ),
+        );
+      },
     },
   ];
 

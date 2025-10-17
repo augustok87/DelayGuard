@@ -8,15 +8,15 @@ export const useModals = () => {
   const modals = useAppSelector(state => state.ui.modals);
 
   const openSettingsModal = useCallback((data?: AppSettings) => {
-    dispatch(openModal({ key: 'settings', data }));
+    dispatch(openModal({ key: 'settings', data: data as unknown as Record<string, unknown> }));
   }, [dispatch]);
 
   const openAlertDetailsModal = useCallback((alertData: DelayAlert) => {
-    dispatch(openModal({ key: 'alertDetails', data: alertData }));
+    dispatch(openModal({ key: 'alertDetails', data: alertData as unknown as Record<string, unknown> }));
   }, [dispatch]);
 
   const openOrderTrackingModal = useCallback((orderData: Order) => {
-    dispatch(openModal({ key: 'orderTracking', data: orderData }));
+    dispatch(openModal({ key: 'orderTracking', data: orderData as unknown as Record<string, unknown> }));
   }, [dispatch]);
 
   const closeCurrentModal = useCallback((key: string) => {

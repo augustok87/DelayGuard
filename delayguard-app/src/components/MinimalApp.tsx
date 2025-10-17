@@ -155,7 +155,7 @@ function MinimalApp() {
         }
       } catch (err) {
         setError('Failed to load data');
-        logError(err, { component: 'MinimalApp', action: 'loadData' });
+        logError('Failed to load data', err instanceof Error ? err : new Error(String(err)), { component: 'MinimalApp', action: 'loadData' });
       } finally {
         setLoading(false);
       }
@@ -187,7 +187,7 @@ function MinimalApp() {
       setToastMessage('Settings saved successfully!');
       setShowToast(true);
     } catch (error) {
-      logError(error, { component: 'MinimalApp', action: 'saveSettings' });
+      logError('Failed to save settings', error instanceof Error ? error : new Error(String(error)), { component: 'MinimalApp', action: 'saveSettings' });
       setToastMessage('Failed to save settings');
       setShowToast(true);
     }
@@ -274,7 +274,7 @@ function MinimalApp() {
       setShowToast(true);
     } catch (err) {
       setError('Failed to refresh data');
-      logError(err, { component: 'MinimalApp', action: 'refreshData' });
+      logError('Failed to refresh data', err instanceof Error ? err : new Error(String(err)), { component: 'MinimalApp', action: 'refreshData' });
     } finally {
       setLoading(false);
     }
@@ -344,7 +344,7 @@ function MinimalApp() {
                   setToastMessage('Test delay detection started');
                   setShowToast(true);
                 } catch (err) {
-                  logError(err, { component: 'MinimalApp', action: 'testDelayDetection' });
+                  logError('Error testing delay detection', err instanceof Error ? err : new Error(String(err)), { component: 'MinimalApp', action: 'testDelayDetection' });
                   setToastMessage('Error testing delay detection');
                   setShowToast(true);
                 }
@@ -387,7 +387,7 @@ function MinimalApp() {
                 setToastMessage('Test delay detection started');
                 setShowToast(true);
               } catch (err) {
-                logError(err, { component: 'MinimalApp', action: 'testDelayDetection' });
+                logError('Error testing delay detection', err instanceof Error ? err : new Error(String(err)), { component: 'MinimalApp', action: 'testDelayDetection' });
                 setToastMessage('Error testing delay detection');
                 setShowToast(true);
               }

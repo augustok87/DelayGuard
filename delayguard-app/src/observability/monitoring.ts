@@ -300,7 +300,7 @@ export class SystemMetricsService {
         WHERE state = 'active'
       `);
       
-      const row = result.rows[0];
+      const row = result[0] as { connections: string; max_connections: string; slow_queries: string };
       return {
         connections: parseInt(row.connections),
         maxConnections: parseInt(row.max_connections),
@@ -512,7 +512,7 @@ export class AlertingService {
     try {
       const { query } = await import('../database/connection');
       const result = await query('SELECT count(*) as connections FROM pg_stat_activity WHERE state = \'active\'');
-      const connections = parseInt(result.rows[0].connections);
+      const connections = parseInt((result[0] as { connections: string }).connections);
       return connections > threshold;
     } catch (error) {
       return false;

@@ -32,11 +32,11 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       [orderId],
     );
 
-    if (orderResult.rows.length === 0) {
+    if (orderResult.length === 0) {
       throw new Error(`Order ${orderId} not found`);
     }
 
-    const order = orderResult.rows[0];
+    const order = orderResult[0] as { id: string; order_number: string; customer_name: string; customer_email: string; tracking_number: string; carrier_code: string };
 
     // Check if notifications are already sent
     const alertResult = await query(
@@ -44,11 +44,11 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       [orderId],
     );
 
-    if (alertResult.rows.length === 0) {
+    if (alertResult.length === 0) {
       throw new Error(`No delay alert found for order ${orderId}`);
     }
 
-    const alert = alertResult.rows[0];
+    const alert = alertResult[0] as { email_sent: boolean; sms_sent: boolean };
 
     // Initialize services
     const emailService = new EmailService(process.env.SENDGRID_API_KEY!);

@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
     });
     
     // Log error using logger
-    logError(error, { 
+    logError('Error caught by ErrorBoundary', error, { 
       component: 'ErrorBoundary', 
       action: 'componentDidCatch',
       metadata: { errorInfo }, 

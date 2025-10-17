@@ -5,10 +5,19 @@ import { mockAlerts, mockOrders, mockSettings, mockStats } from '../mockData';
 import { logError } from '../../../utils/logger';
 
 interface AnalyticsServiceInterface {
-  getAlerts(): Promise<DelayAlert[]>;
-  getOrders(): Promise<Order[]>;
+  getAlerts(filters?: {
+    startDate?: string;
+    endDate?: string;
+    status?: string;
+    search?: string;
+  }): Promise<DelayAlert[]>;
+  getOrders(filters?: {
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+  }): Promise<Order[]>;
   updateSettings(settings: AppSettings): Promise<void>;
-  testDelayDetection(): Promise<void>;
+  testDelayDetection(): Promise<{ success: boolean; message?: string }>;
 }
 
 interface UseDashboardDataProps {
@@ -81,14 +90,14 @@ export const useDashboardData = ({
         const analyticsService = new AnalyticsService();
         
         // Call the mocked methods that the test expects
-        const alertsData = await (analyticsService as AnalyticsServiceInterface).getAlerts();
-        const ordersData = await (analyticsService as AnalyticsServiceInterface).getOrders();
+        const alertsData = await (analyticsService as unknown as AnalyticsServiceInterface).getAlerts();
+        const ordersData = await (analyticsService as unknown as AnalyticsServiceInterface).getOrders();
         
         setAlerts(alertsData || mockAlerts);
         setOrders(ordersData || mockOrders);
         setLoading(false);
       } catch (error) {
-        logError(error, { component: 'useDashboardData', action: 'loadInitialData' });
+        logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'useDashboardData', action: 'loadInitialData' });
         setError('Failed to load alerts');
         setAlerts(mockAlerts);
         setOrders(mockOrders);
@@ -121,13 +130,13 @@ export const useDashboardData = ({
         };
         const analyticsService = new AnalyticsService();
         
-        const alertsData = await (analyticsService as AnalyticsServiceInterface).getAlerts();
-        const ordersData = await (analyticsService as AnalyticsServiceInterface).getOrders();
+        const alertsData = await (analyticsService as unknown as AnalyticsServiceInterface).getAlerts();
+        const ordersData = await (analyticsService as unknown as AnalyticsServiceInterface).getOrders();
         
         setAlerts(alertsData || mockAlerts);
         setOrders(ordersData || mockOrders);
       } catch (error) {
-        logError(error, { component: 'useDashboardData', action: 'updateRealTimeData' });
+        logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'useDashboardData', action: 'updateRealTimeData' });
       }
     };
 
@@ -159,7 +168,7 @@ export const useDashboardData = ({
       const analyticsService = new AnalyticsService();
       
       // Call the mocked updateSettings method
-      await (analyticsService as AnalyticsServiceInterface).updateSettings(settings);
+      await (analyticsService as unknown as AnalyticsServiceInterface).updateSettings(settings);
       
       if (propOnSave) {
         propOnSave();
@@ -170,7 +179,7 @@ export const useDashboardData = ({
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (error) {
-      logError(error, { component: 'useDashboardData', action: 'saveSettings' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'useDashboardData', action: 'saveSettings' });
       setToastMessage('Failed to save settings');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -221,7 +230,7 @@ export const useDashboardData = ({
       const analyticsService = new AnalyticsService();
       
       // Call the mocked testDelayDetection method
-      await (analyticsService as AnalyticsServiceInterface).testDelayDetection();
+      await (analyticsService as unknown as AnalyticsServiceInterface).testDelayDetection();
       
       if (propOnTest) {
         propOnTest();
@@ -231,7 +240,7 @@ export const useDashboardData = ({
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (error) {
-      logError(error, { component: 'useDashboardData', action: 'testDelayDetection' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'useDashboardData', action: 'testDelayDetection' });
       setToastMessage('Delay detection test failed');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -300,8 +309,8 @@ export const useDashboardData = ({
       
       // Call the mocked methods that the test expects
       // The test is mocking these methods, so they should exist in the mock
-      const alertsData = await (analyticsService as AnalyticsServiceInterface).getAlerts();
-      const ordersData = await (analyticsService as AnalyticsServiceInterface).getOrders();
+      const alertsData = await (analyticsService as unknown as AnalyticsServiceInterface).getAlerts();
+      const ordersData = await (analyticsService as unknown as AnalyticsServiceInterface).getOrders();
       
       setAlerts(alertsData || mockAlerts);
       setOrders(ordersData || mockOrders);
@@ -310,7 +319,7 @@ export const useDashboardData = ({
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (error) {
-      logError(error, { component: 'useDashboardData', action: 'refreshData' });
+      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'useDashboardData', action: 'refreshData' });
       setError('Failed to refresh data');
       setLoading(false);
     }

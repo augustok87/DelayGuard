@@ -1,63 +1,49 @@
-import { useCallback, useMemo } from 'react';
-import { useAsyncResource } from './useAsyncResource';
+import { useCallback, useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchSettings, saveSettings, resetSettings } from '../store/slices/settingsSlice';
 import { AppSettings } from '../types';
 
 export const useSettings = () => {
-  // Use the generic useAsyncResource hook for settings
-  const {
-    items: settingsArray,
-    loading,
-    error,
-    updateItem: updateAppSettings,
-    refreshItems: refreshSettings,
-  } = useAsyncResource<AppSettings>(
-    'settings',
-    fetchSettings,
-    saveSettings,
-    resetSettings, // Using resetSettings as delete action
-    (state) => ({
-      items: [state.settings.data], // Wrap single settings object in array
-      loading: state.settings.loading,
-      error: state.settings.error,
-    }),
-  );
+  const dispatch = useAppDispatch();
+  const { data: settings, loading, error } = useAppSelector(state => state.settings);
 
-  // Extract the single settings object
-  const settings = useMemo(() => settingsArray[0] || {}, [settingsArray]);
+  // Load settings on mount
+  useEffect(() => {
+    dispatch(fetchSettings());
+  }, [dispatch]);
 
   // Individual setting updates
   const updateDelayThreshold = useCallback(async(threshold: number) => {
-    return updateAppSettings('settings', { delayThreshold: threshold });
-  }, [updateAppSettings]);
+    return dispatch(saveSettings({ ...settings, delayThreshold: threshold }));
+  }, [dispatch, settings]);
 
   const updateNotificationTemplate = useCallback(async(template: string) => {
-    return updateAppSettings('settings', { notificationTemplate: template });
-  }, [updateAppSettings]);
+    return dispatch(saveSettings({ ...settings, notificationTemplate: template }));
+  }, [dispatch, settings]);
 
   const toggleEmailNotifications = useCallback(async() => {
-    return updateAppSettings('settings', { emailNotifications: !settings.emailNotifications });
-  }, [updateAppSettings, settings.emailNotifications]);
+    return dispatch(saveSettings({ ...settings, emailNotifications: !settings.emailNotifications }));
+  }, [dispatch, settings]);
 
   const toggleSmsNotifications = useCallback(async() => {
-    return updateAppSettings('settings', { smsNotifications: !settings.smsNotifications });
-  }, [updateAppSettings, settings.smsNotifications]);
+    return dispatch(saveSettings({ ...settings, smsNotifications: !settings.smsNotifications }));
+  }, [dispatch, settings]);
 
   const updateTheme = useCallback(async(theme: 'light' | 'dark') => {
-    return updateAppSettings('settings', { theme });
-  }, [updateAppSettings]);
+    return dispatch(saveSettings({ ...settings, theme }));
+  }, [dispatch, settings]);
 
   const updateLanguage = useCallback(async(language: string) => {
-    return updateAppSettings('settings', { language });
-  }, [updateAppSettings]);
+    return dispatch(saveSettings({ ...settings, language }));
+  }, [dispatch, settings]);
 
   const updateAutoResolveDays = useCallback(async(days: number) => {
-    return updateAppSettings('settings', { autoResolveDays: days });
-  }, [updateAppSettings]);
+    return dispatch(saveSettings({ ...settings, autoResolveDays: days }));
+  }, [dispatch, settings]);
 
   const toggleAnalytics = useCallback(async() => {
-    return updateAppSettings('settings', { enableAnalytics: !settings.enableAnalytics });
-  }, [updateAppSettings, settings.enableAnalytics]);
+    return dispatch(saveSettings({ ...settings, enableAnalytics: !settings.enableAnalytics }));
+  }, [dispatch, settings]);
 
   // Validation
   const validateSettings = useCallback((settingsToValidate: AppSettings) => {
@@ -111,8 +97,8 @@ export const useSettings = () => {
       },
     };
 
-    return updateAppSettings('settings', presets[preset]);
-  }, [updateAppSettings]);
+    return dispatch(saveSettings({ ...settings, ...presets[preset] }));
+  }, [dispatch, settings]);
 
   // Export/Import settings
   const exportSettings = useCallback(() => {
@@ -136,11 +122,26 @@ export const useSettings = () => {
         return { success: false, error: validation.errors.join(', ') };
       }
 
-      return updateAppSettings('settings', importedSettings);
+      return dispatch(saveSettings(importedSettings));
     } catch (err) {
       return { success: false, error: 'Invalid settings file' };
     }
-  }, [updateAppSettings, validateSettings]);
+  }, [dispatch, validateSettings]);
+
+  // Bulk update
+  const updateSettings = useCallback(async(newSettings: Partial<AppSettings>) => {
+    return dispatch(saveSettings({ ...settings, ...newSettings }));
+  }, [dispatch, settings]);
+
+  // Reset to defaults
+  const resetToDefaults = useCallback(async() => {
+    return dispatch(resetSettings());
+  }, [dispatch]);
+
+  // Refresh settings
+  const refreshSettings = useCallback(async() => {
+    return dispatch(fetchSettings());
+  }, [dispatch]);
 
   return {
     // Data
@@ -149,8 +150,8 @@ export const useSettings = () => {
     error,
     
     // Actions
-    updateSettings: updateAppSettings,
-    resetSettings: () => updateAppSettings('settings', {}), // Reset to defaults
+    updateSettings,
+    resetSettings: resetToDefaults,
     refreshSettings,
     
     // Individual updates
