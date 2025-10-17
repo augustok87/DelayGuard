@@ -1,244 +1,242 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { logInfo, logError } from '../utils/logger';
+/**
+ * World-Class Performance Monitoring Hook
+ * 
+ * Features:
+ * - Automatic performance measurement
+ * - Memory usage tracking
+ * - Render performance monitoring
+ * - Custom metrics collection
+ * - Performance alerts
+ * - Integration with logging system
+ */
 
-interface PerformanceMetrics {
+import { useEffect, useRef, useCallback, useState } from 'react';
+import { logPerformance, logWarn, LogContext } from '../utils/logger';
+
+export interface PerformanceMetrics {
   renderTime: number;
-  componentMountTime: number;
   memoryUsage?: number;
-  fps?: number;
+  customMetrics: Record<string, number>;
+  timestamp: number;
 }
 
-interface UsePerformanceOptions {
-  trackRenderTime?: boolean;
-  trackMemoryUsage?: boolean;
-  trackFPS?: boolean;
-  logToConsole?: boolean;
-  onMetricsUpdate?: (metrics: PerformanceMetrics) => void;
+export interface PerformanceConfig {
+  enableMemoryTracking?: boolean;
+  enableRenderTracking?: boolean;
+  performanceThreshold?: number; // ms
+  memoryThreshold?: number; // MB
+  logLevel?: 'debug' | 'info' | 'warn' | 'error';
 }
+
+export interface PerformanceAlert {
+  type: 'render' | 'memory' | 'custom';
+  message: string;
+  value: number;
+  threshold: number;
+  timestamp: number;
+}
+
+const DEFAULT_CONFIG: Required<PerformanceConfig> = {
+  enableMemoryTracking: true,
+  enableRenderTracking: true,
+  performanceThreshold: 100, // 100ms
+  memoryThreshold: 50, // 50MB
+  logLevel: 'warn',
+};
 
 export const usePerformance = (
   componentName: string,
-  options: UsePerformanceOptions = {},
+  config: PerformanceConfig = {}
 ) => {
-  const {
-    trackRenderTime = true,
-    trackMemoryUsage = false,
-    trackFPS = false,
-    logToConsole = false,
-    onMetricsUpdate,
-  } = options;
+  const mergedConfig = { ...DEFAULT_CONFIG, ...config };
+  const renderStartTime = useRef<number>(0);
+  const customMetrics = useRef<Record<string, number>>({});
+  const [alerts, setAlerts] = useState<PerformanceAlert[]>([]);
+  const renderCount = useRef(0);
 
-  const mountTimeRef = useRef<number>(0);
-  const renderStartTimeRef = useRef<number>(0);
-  const frameCountRef = useRef<number>(0);
-  const lastTimeRef = useRef<number>(0);
-  const animationFrameRef = useRef<number>(0);
-
-  // Track component mount time
+  // Track render start
   useEffect(() => {
-    mountTimeRef.current = performance.now();
-    
-    return () => {
-      const totalMountTime = performance.now() - mountTimeRef.current;
-      if (logToConsole) {
-        logInfo(`${componentName} total mount time: ${totalMountTime.toFixed(2)}ms`, { 
-          component: 'usePerformance', 
-          action: 'mount',
-          metadata: { componentName, totalMountTime }, 
-        });
-      }
-    };
-  }, [componentName, logToConsole]);
+    if (mergedConfig.enableRenderTracking) {
+      renderStartTime.current = performance.now();
+      renderCount.current += 1;
+    }
+  });
 
-  // Track memory usage
+  // Track render end and performance
   useEffect(() => {
-    if (!trackMemoryUsage) return;
-
-    const checkMemory = () => {
-      if ('memory' in performance) {
-        const memory = (performance as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
-        const memoryUsage = memory.usedJSHeapSize / 1024 / 1024; // MB
-        
-        if (logToConsole) {
-          logInfo(`${componentName} memory usage: ${memoryUsage.toFixed(2)}MB`, { 
-            component: 'usePerformance', 
-            action: 'memory',
-            metadata: { componentName, memoryUsage }, 
-          });
-        }
-
-        if (onMetricsUpdate) {
-          onMetricsUpdate({
-            renderTime: 0,
-            componentMountTime: 0,
-            memoryUsage,
-          });
-        }
-      }
-    };
-
-    // Check memory immediately and then periodically
-    checkMemory();
-    const interval = setInterval(checkMemory, 100);
-    
-    return () => clearInterval(interval);
-  }, [componentName, trackMemoryUsage, logToConsole, onMetricsUpdate]);
-
-  // Track render time
-  const trackRender = useCallback(() => {
-    if (!trackRenderTime) return;
-
-    renderStartTimeRef.current = performance.now();
-    
-    return () => {
-      const renderTime = performance.now() - renderStartTimeRef.current;
+    if (mergedConfig.enableRenderTracking && renderStartTime.current > 0) {
+      const renderTime = performance.now() - renderStartTime.current;
       
-      const metrics: PerformanceMetrics = {
-        renderTime,
-        componentMountTime: performance.now() - mountTimeRef.current,
+      // Log performance
+      const context: LogContext = {
+        component: componentName,
+        action: 'render',
+        metadata: {
+          renderTime,
+          renderCount: renderCount.current,
+        },
       };
 
-      if (trackMemoryUsage && 'memory' in performance) {
-        const memory = (performance as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
-        metrics.memoryUsage = memory.usedJSHeapSize / 1024 / 1024; // MB
-      }
-
-      if (logToConsole) {
-        logInfo(`${componentName} render time: ${renderTime.toFixed(2)}ms`, { 
-          component: 'usePerformance', 
-          action: 'render',
-          metadata: { componentName, renderTime }, 
-        });
-      }
-
-      if (onMetricsUpdate) {
-        onMetricsUpdate(metrics);
-      }
-    };
-  }, [componentName, trackRenderTime, trackMemoryUsage, logToConsole, onMetricsUpdate]);
-
-  // Track FPS
-  useEffect(() => {
-    if (!trackFPS) return;
-
-    const measureFPS = () => {
-      const now = performance.now();
-      frameCountRef.current++;
-
-      if (now - lastTimeRef.current >= 1000) {
-        const fps = Math.round((frameCountRef.current * 1000) / (now - lastTimeRef.current));
+      if (renderTime > mergedConfig.performanceThreshold) {
+        logWarn(`Slow render detected in ${componentName}`, context);
         
-        if (logToConsole) {
-          logInfo(`${componentName} FPS: ${fps}`, { 
-            component: 'usePerformance', 
-            action: 'fps',
-            metadata: { componentName, fps }, 
-          });
-        }
-
-        if (onMetricsUpdate) {
-          onMetricsUpdate({
-            renderTime: 0,
-            componentMountTime: 0,
-            fps,
-          });
-        }
-
-        frameCountRef.current = 0;
-        lastTimeRef.current = now;
+        // Add alert
+        setAlerts(prev => [...prev, {
+          type: 'render',
+          message: `Slow render: ${renderTime.toFixed(2)}ms`,
+          value: renderTime,
+          threshold: mergedConfig.performanceThreshold,
+          timestamp: Date.now(),
+        }]);
+      } else {
+        logPerformance(`Render completed in ${componentName}`, renderTime, context);
       }
+    }
+  });
 
-      animationFrameRef.current = requestAnimationFrame(measureFPS);
+  // Memory tracking
+  useEffect(() => {
+    if (mergedConfig.enableMemoryTracking && 'memory' in performance) {
+      const memoryInfo = (performance as any).memory;
+      if (memoryInfo) {
+        const memoryUsageMB = memoryInfo.usedJSHeapSize / (1024 * 1024);
+        
+        const context: LogContext = {
+          component: componentName,
+          action: 'memory',
+          metadata: {
+            memoryUsageMB,
+            totalJSHeapSize: memoryInfo.totalJSHeapSize / (1024 * 1024),
+            jsHeapSizeLimit: memoryInfo.jsHeapSizeLimit / (1024 * 1024),
+          },
+        };
+
+        if (memoryUsageMB > mergedConfig.memoryThreshold) {
+          logWarn(`High memory usage detected in ${componentName}`, context);
+          
+          // Add alert
+          setAlerts(prev => [...prev, {
+            type: 'memory',
+            message: `High memory usage: ${memoryUsageMB.toFixed(2)}MB`,
+            value: memoryUsageMB,
+            threshold: mergedConfig.memoryThreshold,
+            timestamp: Date.now(),
+          }]);
+        } else {
+          logPerformance(`Memory usage in ${componentName}`, memoryUsageMB, context);
+        }
+      }
+    }
+  }, [componentName, mergedConfig.enableMemoryTracking, mergedConfig.memoryThreshold]);
+
+  // Custom metric tracking
+  const trackMetric = useCallback((name: string, value: number) => {
+    customMetrics.current[name] = value;
+    
+    const context: LogContext = {
+      component: componentName,
+      action: 'custom_metric',
+      metadata: {
+        metricName: name,
+        metricValue: value,
+      },
     };
 
-    lastTimeRef.current = performance.now();
-    animationFrameRef.current = requestAnimationFrame(measureFPS);
+    logPerformance(`Custom metric: ${name}`, value, context);
+  }, [componentName]);
 
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+  // Time a function execution
+  const timeFunction = useCallback(<T extends (...args: any[]) => any>(
+    fn: T,
+    name: string
+  ): T => {
+    return ((...args: Parameters<T>) => {
+      const start = performance.now();
+      const result = fn(...args);
+      const duration = performance.now() - start;
+      
+      trackMetric(`${name}_duration`, duration);
+      
+      return result;
+    }) as T;
+  }, [trackMetric]);
+
+  // Time an async function execution
+  const timeAsyncFunction = useCallback(<T extends (...args: any[]) => Promise<any>>(
+    fn: T,
+    name: string
+  ): T => {
+    return (async (...args: Parameters<T>) => {
+      const start = performance.now();
+      try {
+        const result = await fn(...args);
+        const duration = performance.now() - start;
+        trackMetric(`${name}_duration`, duration);
+        return result;
+      } catch (error) {
+        const duration = performance.now() - start;
+        trackMetric(`${name}_error_duration`, duration);
+        throw error;
       }
+    }) as T;
+  }, [trackMetric]);
+
+  // Get current metrics
+  const getMetrics = useCallback((): PerformanceMetrics => {
+    const memoryInfo = (performance as any).memory;
+    return {
+      renderTime: renderStartTime.current > 0 ? performance.now() - renderStartTime.current : 0,
+      memoryUsage: memoryInfo ? memoryInfo.usedJSHeapSize / (1024 * 1024) : undefined,
+      customMetrics: { ...customMetrics.current },
+      timestamp: Date.now(),
     };
-  }, [componentName, trackFPS, logToConsole, onMetricsUpdate]);
+  }, []);
+
+  // Clear alerts
+  const clearAlerts = useCallback(() => {
+    setAlerts([]);
+  }, []);
+
+  // Clear custom metrics
+  const clearMetrics = useCallback(() => {
+    customMetrics.current = {};
+  }, []);
 
   return {
-    trackRender: () => trackRender(),
+    trackMetric,
+    timeFunction,
+    timeAsyncFunction,
+    getMetrics,
+    alerts,
+    clearAlerts,
+    clearMetrics,
+    renderCount: renderCount.current,
   };
 };
 
-// Hook for measuring component performance
-export const useComponentPerformance = (
-  componentName: string,
-  dependencies: unknown[] = [],
-) => {
-  const { trackRender } = usePerformance(componentName, {
-    trackRenderTime: true,
-    logToConsole: true, // Always log in tests
-  });
+// Hook for measuring component mount/unmount performance
+export const useMountPerformance = (componentName: string) => {
+  const mountTime = useRef<number>(0);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const cleanup = trackRender();
-    return cleanup;
-  }, dependencies);
-
-  return trackRender;
-};
-
-// Hook for measuring async operations
-export const useAsyncPerformance = () => {
-  const measureAsync = useCallback(async <T>(
-    operation: () => Promise<T>,
-    operationName: string,
-  ): Promise<T> => {
-    const startTime = performance.now();
+    mountTime.current = performance.now();
+    setIsMounted(true);
     
-    try {
-      const result = await operation();
-      const endTime = performance.now();
-      const duration = endTime - startTime;
+    return () => {
+      const unmountTime = performance.now();
+      const mountDuration = unmountTime - mountTime.current;
       
-      logInfo(`${operationName} completed in ${duration.toFixed(2)}ms`, { 
-        component: 'usePerformance', 
-        action: 'operation',
-        metadata: { operationName, duration }, 
+      logPerformance(`Component ${componentName} lifecycle`, mountDuration, {
+        component: componentName,
+        action: 'lifecycle',
+        metadata: {
+          mountDuration,
+          isMounted,
+        },
       });
-      return result;
-    } catch (error) {
-      const endTime = performance.now();
-      const duration = endTime - startTime;
-      
-      logError(error, { 
-        component: 'usePerformance', 
-        action: 'operation',
-        metadata: { operationName, duration }, 
-      });
-      throw error;
-    }
-  }, []);
+    };
+  }, [componentName, isMounted]);
 
-  return { measureAsync };
-};
-
-// Hook for measuring bundle size impact
-export const useBundleSize = () => {
-  const measureBundleSize = useCallback((componentName: string) => {
-    if (process.env.NODE_ENV === 'development') {
-      const startTime = performance.now();
-      
-      return () => {
-        const endTime = performance.now();
-        const loadTime = endTime - startTime;
-        
-        logInfo(`${componentName} bundle load time: ${loadTime.toFixed(2)}ms`, { 
-          component: 'usePerformance', 
-          action: 'bundle',
-          metadata: { componentName, loadTime }, 
-        });
-      };
-    }
-    
-    return () => {};
-  }, []);
-
-  return { measureBundleSize };
+  return { isMounted, mountTime: mountTime.current };
 };

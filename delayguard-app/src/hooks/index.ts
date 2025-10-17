@@ -17,4 +17,4 @@ export { useSettingsActions } from './useSettingsActions';
 export { useDebounce, useDebouncedCallback } from './useDebounce';
 export { useLocalStorage, useSessionStorage } from './useLocalStorage';
 export { useAsync, useAsyncCallback } from './useAsync';
-export { usePerformance, useComponentPerformance, useAsyncPerformance, useBundleSize } from './usePerformance';
+export { usePerformance, useMountPerformance } from './usePerformance';

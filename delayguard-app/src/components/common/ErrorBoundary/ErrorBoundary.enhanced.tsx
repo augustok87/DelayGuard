@@ -1,58 +1,178 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { logError, logInfo } from '../../../utils/logger';
-import { Button } from '../../ui/Button';
+import { logErrorWithError, logUserAction } from '../../../utils/logger';
+import { ErrorBoundaryState } from '../../../types/ui';
 import styles from './ErrorBoundary.module.css';
 
-interface Props {
+interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   onRetry?: () => void;
-  showRetry?: boolean;
-  showDetails?: boolean;
+  maxRetries?: number;
+  retryDelay?: number;
+  showRetryButton?: boolean;
+  showReloadButton?: boolean;
+  showErrorDetails?: boolean;
+  enableErrorReporting?: boolean;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
+  error?: Error;
+  errorInfo?: ErrorInfo;
   retryCount: number;
+  isRetrying: boolean;
+  lastErrorTime?: number;
 }
 
-export class EnhancedErrorBoundary extends Component<Props, State> {
-  private retryTimeoutId: NodeJS.Timeout | null = null;
+export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  private retryTimeoutId?: NodeJS.Timeout;
 
-  constructor(props: Props) {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
+    this.state = { 
+      hasError: false, 
       retryCount: 0,
+      isRetrying: false,
     };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
-    return {
-      hasError: true,
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { 
+      hasError: true, 
       error,
+      lastErrorTime: Date.now(),
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    this.setState({
-      error,
-      errorInfo,
+    const { onError, enableErrorReporting = true } = this.props;
+    const { retryCount } = this.state;
+
+    // Log the error with comprehensive context
+    logErrorWithError(error, {
+      component: 'EnhancedErrorBoundary',
+      action: 'componentDidCatch',
+      metadata: {
+        errorInfo,
+        retryCount,
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        timestamp: new Date().toISOString(),
+      },
     });
 
-    // Log error to external service
-    this.logError(error, errorInfo);
-
-    // Call custom error handler
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+    // Call custom error handler if provided
+    if (onError) {
+      onError(error, errorInfo);
     }
+
+    // Send to error reporting service if enabled
+    if (enableErrorReporting) {
+      this.reportError(error, errorInfo);
+    }
+
+    // Update state with error info
+    this.setState({ errorInfo });
   }
+
+  private reportError = (error: Error, errorInfo: ErrorInfo) => {
+    // In production, this would send to Sentry, LogRocket, Bugsnag, etc.
+    const errorReport = {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      retryCount: this.state.retryCount,
+    };
+
+    // Placeholder for external error reporting
+    console.error('Error Report:', errorReport);
+  };
+
+  private handleRetry = () => {
+    const { maxRetries = 3, retryDelay = 1000, onRetry } = this.props;
+    const { retryCount } = this.state;
+
+    if (retryCount >= maxRetries) {
+      logUserAction('Max retries exceeded', {
+        component: 'EnhancedErrorBoundary',
+        action: 'retry_exceeded',
+        metadata: { retryCount, maxRetries },
+      });
+      return;
+    }
+
+    this.setState({ isRetrying: true });
+
+    // Log retry attempt
+    logUserAction('Error boundary retry initiated', {
+      component: 'EnhancedErrorBoundary',
+      action: 'retry',
+      metadata: { retryCount: retryCount + 1, maxRetries },
+    });
+
+    // Call custom retry handler if provided
+    if (onRetry) {
+      onRetry();
+    }
+
+    // Delay retry to avoid immediate re-failure
+    this.retryTimeoutId = setTimeout(() => {
+      this.setState(prevState => ({
+        hasError: false,
+        error: undefined,
+        errorInfo: undefined,
+        retryCount: prevState.retryCount + 1,
+        isRetrying: false,
+      }));
+    }, retryDelay);
+  };
+
+  private handleReload = () => {
+    logUserAction('Page reload initiated from error boundary', {
+      component: 'EnhancedErrorBoundary',
+      action: 'reload',
+      metadata: { retryCount: this.state.retryCount },
+    });
+    window.location.reload();
+  };
+
+  private generateErrorReport = () => {
+    const { error, errorInfo, retryCount } = this.state;
+    const errorReport = {
+      error: {
+        message: error?.message,
+        stack: error?.stack,
+      },
+      errorInfo: {
+        componentStack: errorInfo?.componentStack,
+      },
+      context: {
+        retryCount,
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        timestamp: new Date().toISOString(),
+        memoryUsage: (performance as any).memory?.usedJSHeapSize,
+      },
+    };
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2))
+      .then(() => {
+        logUserAction('Error report copied to clipboard', {
+          component: 'EnhancedErrorBoundary',
+          action: 'copy_error_report',
+        });
+        alert('Error report copied to clipboard');
+      })
+      .catch(() => {
+        // Fallback: show in alert
+        alert(JSON.stringify(errorReport, null, 2));
+      });
+  };
 
   componentWillUnmount() {
     if (this.retryTimeoutId) {
@@ -60,145 +180,92 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
     }
   }
 
-  private logError = (error: Error, errorInfo: ErrorInfo) => {
-    // In a real app, this would send to an error tracking service
-    logError(error, { 
-      component: 'ErrorBoundary.enhanced', 
-      action: 'logError',
-      metadata: { errorInfo }, 
-    });
-    
-    // Example: Send to error tracking service
-    // errorTrackingService.captureException(error, {
-    //   extra: errorInfo,
-    //   tags: { component: 'ErrorBoundary' }
-    // });
-  };
-
-  private handleRetry = () => {
-    const { retryCount } = this.state;
-    const maxRetries = 3;
-
-    if (retryCount < maxRetries) {
-      this.setState(prevState => ({
-        hasError: false,
-        error: null,
-        errorInfo: null,
-        retryCount: prevState.retryCount + 1,
-      }));
-
-      // Call custom retry handler
-      if (this.props.onRetry) {
-        this.props.onRetry();
-      }
-    } else {
-      // Max retries reached, show permanent error
-      this.setState({
-        hasError: true,
-        error: new Error('Maximum retry attempts reached. Please refresh the page.'),
-        errorInfo: null,
-      });
-    }
-  };
-
-  private handleRefresh = () => {
-    window.location.reload();
-  };
-
-  private handleReportError = () => {
-    const { error, errorInfo } = this.state;
-    
-    if (error) {
-      // In a real app, this would open a bug report form or send to support
-      const errorReport = {
-        message: error.message,
-        stack: error.stack,
-        componentStack: errorInfo?.componentStack,
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-        url: window.location.href,
-      };
-
-      logInfo('Error report generated', { 
-        component: 'ErrorBoundary.enhanced', 
-        action: 'generateErrorReport',
-        metadata: { errorReport }, 
-      });
-      
-      // Example: Open bug report form
-      // window.open(`/bug-report?error=${encodeURIComponent(JSON.stringify(errorReport))}`);
-    }
-  };
-
   render() {
-    if (this.state.hasError) {
-      const { error, retryCount } = this.state;
-      const { fallback, showRetry = true, showDetails = false } = this.props;
-      const maxRetries = 3;
+    const { 
+      children, 
+      fallback, 
+      showRetryButton = true, 
+      showReloadButton = true,
+      showErrorDetails = false,
+      maxRetries = 3,
+    } = this.props;
+    const { hasError, error, retryCount, isRetrying } = this.state;
 
+    if (hasError) {
       if (fallback) {
         return fallback;
       }
 
+      const canRetry = retryCount < maxRetries;
+      const isRetryExceeded = retryCount >= maxRetries;
+
       return (
-        <div className={styles.errorBoundary}>
-          <div className={styles.errorContent}>
-            <div className={styles.errorIcon}>⚠️</div>
-            <h2 className={styles.errorTitle}>
-              {retryCount >= maxRetries ? 'Something went wrong' : 'Oops! Something went wrong'}
-            </h2>
-            <p className={styles.errorMessage}>
-              {retryCount >= maxRetries 
-                ? 'We\'ve tried to fix this issue but it keeps happening. Please refresh the page or contact support.'
-                : 'We encountered an unexpected error. Don\'t worry, your data is safe.'
-              }
-            </p>
-            
-            {showDetails && error && (
-              <details className={styles.errorDetails}>
-                <summary>Error Details</summary>
-                <pre className={styles.errorStack}>
-                  {error.message}
-                  {error.stack && `\n\n${error.stack}`}
-                </pre>
-              </details>
-            )}
-
-            <div className={styles.errorActions}>
-              {showRetry && retryCount < maxRetries && (
-                <Button
-                  variant="primary"
-                  onClick={this.handleRetry}
-                >
-                  Try Again ({maxRetries - retryCount} attempts left)
-                </Button>
-              )}
-              
-              <Button
-                variant="secondary"
-                onClick={this.handleRefresh}
-              >
-                Refresh Page
-              </Button>
-              
-              <Button
-                variant="secondary"
-                onClick={this.handleReportError}
-              >
-                Report Issue
-              </Button>
-            </div>
-
-            {retryCount > 0 && (
-              <p className={styles.retryInfo}>
-                Retry attempt {retryCount} of {maxRetries}
-              </p>
-            )}
+        <div className={styles.errorFallback}>
+          <div className={styles.errorIcon}>
+            {isRetryExceeded ? '🚫' : '⚠️'}
           </div>
+          
+          <h2 className={styles.errorTitle}>
+            {isRetryExceeded ? 'Maximum Retries Exceeded' : 'Something went wrong'}
+          </h2>
+          
+          <p className={styles.errorMessage}>
+            {error?.message || 'An unexpected error occurred'}
+          </p>
+
+          {showErrorDetails && error && (
+            <details className={styles.errorDetails}>
+              <summary>Error Details</summary>
+              <pre className={styles.errorStack}>
+                {error.stack}
+              </pre>
+            </details>
+          )}
+
+          {retryCount > 0 && (
+            <p className={styles.retryInfo}>
+              Retry attempt {retryCount} of {maxRetries}
+            </p>
+          )}
+
+          <div className={styles.errorActions}>
+            {canRetry && showRetryButton && (
+              <button 
+                className={styles.retryButton}
+                onClick={this.handleRetry}
+                disabled={isRetrying}
+              >
+                {isRetrying ? 'Retrying...' : 'Try Again'}
+              </button>
+            )}
+            
+            {showReloadButton && (
+              <button 
+                className={styles.reloadButton}
+                onClick={this.handleReload}
+              >
+                Reload Page
+              </button>
+            )}
+
+            <button 
+              className={styles.reportButton}
+              onClick={this.generateErrorReport}
+            >
+              Copy Error Report
+            </button>
+          </div>
+
+          {isRetryExceeded && (
+            <div className={styles.maxRetriesMessage}>
+              <p>We've tried to recover from this error multiple times but it keeps occurring.</p>
+              <p>Please try reloading the page or contact support if the problem persists.</p>
+            </div>
+          )}
         </div>
       );
     }
 
-    return this.props.children;
+    return children;
   }
 }

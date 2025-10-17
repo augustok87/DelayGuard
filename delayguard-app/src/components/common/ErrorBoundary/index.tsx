@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { logError } from '../../../utils/logger';
+import { logErrorWithError } from '../../../utils/logger';
 import { ErrorBoundaryState } from '../../../types/ui';
 import styles from './ErrorBoundary.module.css';
 
@@ -19,7 +19,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    logError(error, { 
+    logErrorWithError(error, { 
       component: 'ErrorBoundary', 
       action: 'componentDidCatch',
       metadata: { errorInfo }, 
