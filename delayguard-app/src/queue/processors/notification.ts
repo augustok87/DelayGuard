@@ -36,7 +36,20 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       throw new Error(`Order ${orderId} not found`);
     }
 
-    const order = orderResult[0] as { id: string; order_number: string; customer_name: string; customer_email: string; tracking_number: string; carrier_code: string };
+    const order = orderResult[0] as { 
+      id: string; 
+      order_number: string; 
+      customer_name: string; 
+      customer_email: string; 
+      tracking_number: string; 
+      carrier_code: string;
+      shopify_order_id: string;
+      customer_phone?: string;
+      shop_domain: string;
+      created_at: string;
+      email_enabled: boolean;
+      sms_enabled: boolean;
+    };
 
     // Check if notifications are already sent
     const alertResult = await query(
@@ -67,7 +80,7 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       customerEmail: order.customer_email,
       customerPhone: order.customer_phone,
       shopDomain: order.shop_domain,
-      createdAt: order.created_at,
+      createdAt: new Date(order.created_at),
     };
 
     // Send notifications based on settings and what hasn't been sent

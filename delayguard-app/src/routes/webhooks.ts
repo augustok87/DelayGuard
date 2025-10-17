@@ -104,7 +104,7 @@ async function processOrderUpdate(shopDomain: string, orderData: any): Promise<v
       return;
     }
 
-    const shopId = shopResult[0].id;
+    const shopId = (shopResult[0] as { id: string }).id;
 
     // Upsert order
     await query(`
@@ -143,12 +143,12 @@ async function processOrderUpdate(shopDomain: string, orderData: any): Promise<v
       [shopId, orderData.id.toString()],
     );
 
-    const orderId = orderResult[0].id;
+    const orderId = (orderResult[0] as { id: string }).id;
 
     // Process fulfillments if they exist
     if (orderData.fulfillments && orderData.fulfillments.length > 0) {
       for (const fulfillment of orderData.fulfillments) {
-        await processFulfillment(orderId, fulfillment);
+        await processFulfillment(parseInt(orderId), fulfillment);
       }
     }
 
@@ -173,7 +173,7 @@ async function processFulfillmentUpdate(shopDomain: string, fulfillmentData: any
       return;
     }
 
-    const shopId = shopResult[0].id;
+    const shopId = (shopResult[0] as { id: string }).id;
 
     // Get order ID
     const orderResult = await query(
@@ -186,10 +186,10 @@ async function processFulfillmentUpdate(shopDomain: string, fulfillmentData: any
       return;
     }
 
-    const orderId = orderResult[0].id;
+    const orderId = (orderResult[0] as { id: string }).id;
 
     // Process the fulfillment
-    await processFulfillment(orderId, fulfillmentData);
+    await processFulfillment(parseInt(orderId), fulfillmentData);
 
     console.log(`✅ Fulfillment ${fulfillmentData.id} processed successfully`);
 
@@ -212,7 +212,7 @@ async function processOrderPaid(shopDomain: string, orderData: any): Promise<voi
       return;
     }
 
-    const shopId = shopResult[0].id;
+    const shopId = (shopResult[0] as { id: string }).id;
 
     // Update order status to paid
     await query(
@@ -268,7 +268,7 @@ async function processFulfillment(orderId: number, fulfillmentData: any): Promis
           orderId,
           trackingNumber: fulfillmentData.tracking_info.number,
           carrierCode: fulfillmentData.tracking_info.company,
-          shopDomain: shopResult[0].shop_domain,
+          shopDomain: (shopResult[0] as { shop_domain: string }).shop_domain,
         });
 
         console.log(`🔍 Delay check job added for tracking ${fulfillmentData.tracking_info.number}`);

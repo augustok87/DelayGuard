@@ -31,7 +31,7 @@ async function initializeServices() {
   } catch (error) {
     logWarn('Some services could not be initialized', { 
       component: 'api', 
-      error: error instanceof Error ? error.message : 'Unknown error', 
+      metadata: { error: error instanceof Error ? error.message : 'Unknown error' }, 
     });
     // Continue without failing - graceful degradation
   }
@@ -217,7 +217,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
   } catch (error) {
-    logError(error, { component: 'api', action: 'handler' });
+    logError(error instanceof Error ? error : new Error(String(error)), { component: 'api', action: 'handler' });
     res.status(500).json({
       status: 'error',
       message: 'Internal server error',
