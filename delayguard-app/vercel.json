@@ -1,11 +1,13 @@
 {
   "version": 2,
-  "outputDirectory": "public",
   "functions": {
     "api/index.ts": {
       "maxDuration": 30
     },
     "api/simple.ts": {
+      "maxDuration": 30
+    },
+    "api/logger.ts": {
       "maxDuration": 30
     }
   },
@@ -16,7 +18,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/api/index"
+      "destination": "/index.html"
     }
   ]
 }
