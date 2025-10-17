@@ -2,6 +2,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DelayAlert, Order, AppSettings, StatsData } from '../../../types';
 import { mockAlerts, mockOrders, mockSettings, mockStats } from '../mockData';
+import { logError } from '../../../utils/logger';
+
+interface AnalyticsServiceInterface {
+  getAlerts(): Promise<DelayAlert[]>;
+  getOrders(): Promise<Order[]>;
+  updateSettings(settings: AppSettings): Promise<void>;
+  testDelayDetection(): Promise<void>;
+}
 
 interface UseDashboardDataProps {
   settings?: AppSettings;
@@ -36,7 +44,7 @@ export const useDashboardData = ({
   const [toastMessage, setToastMessage] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   // Initialize data if not provided via props
   useEffect(() => {
@@ -73,14 +81,14 @@ export const useDashboardData = ({
         const analyticsService = new AnalyticsService();
         
         // Call the mocked methods that the test expects
-        const alertsData = await (analyticsService as any).getAlerts();
-        const ordersData = await (analyticsService as any).getOrders();
+        const alertsData = await (analyticsService as AnalyticsServiceInterface).getAlerts();
+        const ordersData = await (analyticsService as AnalyticsServiceInterface).getOrders();
         
         setAlerts(alertsData || mockAlerts);
         setOrders(ordersData || mockOrders);
         setLoading(false);
       } catch (error) {
-        console.error('Failed to load initial data:', error);
+        logError(error, { component: 'useDashboardData', action: 'loadInitialData' });
         setError('Failed to load alerts');
         setAlerts(mockAlerts);
         setOrders(mockOrders);
@@ -113,13 +121,13 @@ export const useDashboardData = ({
         };
         const analyticsService = new AnalyticsService();
         
-        const alertsData = await (analyticsService as any).getAlerts();
-        const ordersData = await (analyticsService as any).getOrders();
+        const alertsData = await (analyticsService as AnalyticsServiceInterface).getAlerts();
+        const ordersData = await (analyticsService as AnalyticsServiceInterface).getOrders();
         
         setAlerts(alertsData || mockAlerts);
         setOrders(ordersData || mockOrders);
       } catch (error) {
-        console.error('Failed to update real-time data:', error);
+        logError(error, { component: 'useDashboardData', action: 'updateRealTimeData' });
       }
     };
 
@@ -151,7 +159,7 @@ export const useDashboardData = ({
       const analyticsService = new AnalyticsService();
       
       // Call the mocked updateSettings method
-      await (analyticsService as any).updateSettings(settings);
+      await (analyticsService as AnalyticsServiceInterface).updateSettings(settings);
       
       if (propOnSave) {
         propOnSave();
@@ -162,7 +170,7 @@ export const useDashboardData = ({
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      logError(error, { component: 'useDashboardData', action: 'saveSettings' });
       setToastMessage('Failed to save settings');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -213,7 +221,7 @@ export const useDashboardData = ({
       const analyticsService = new AnalyticsService();
       
       // Call the mocked testDelayDetection method
-      await (analyticsService as any).testDelayDetection();
+      await (analyticsService as AnalyticsServiceInterface).testDelayDetection();
       
       if (propOnTest) {
         propOnTest();
@@ -223,7 +231,7 @@ export const useDashboardData = ({
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (error) {
-      console.error('Failed to test delay detection:', error);
+      logError(error, { component: 'useDashboardData', action: 'testDelayDetection' });
       setToastMessage('Delay detection test failed');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -292,8 +300,8 @@ export const useDashboardData = ({
       
       // Call the mocked methods that the test expects
       // The test is mocking these methods, so they should exist in the mock
-      const alertsData = await (analyticsService as any).getAlerts();
-      const ordersData = await (analyticsService as any).getOrders();
+      const alertsData = await (analyticsService as AnalyticsServiceInterface).getAlerts();
+      const ordersData = await (analyticsService as AnalyticsServiceInterface).getOrders();
       
       setAlerts(alertsData || mockAlerts);
       setOrders(ordersData || mockOrders);
@@ -302,7 +310,7 @@ export const useDashboardData = ({
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (error) {
-      console.error('Failed to refresh data:', error);
+      logError(error, { component: 'useDashboardData', action: 'refreshData' });
       setError('Failed to refresh data');
       setLoading(false);
     }

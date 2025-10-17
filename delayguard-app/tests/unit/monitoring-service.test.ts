@@ -337,7 +337,7 @@ describe('MonitoringService', () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          url: url
+          url,
         });
       });
 

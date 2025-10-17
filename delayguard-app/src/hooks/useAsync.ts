@@ -11,8 +11,8 @@ interface UseAsyncOptions {
   resetOnExecute?: boolean;
 }
 
-export const useAsync = <T>(
-  asyncFunction: (...args: any[]) => Promise<T>,
+export const useAsync = <T, Args extends unknown[] = unknown[]>(
+  asyncFunction: (...args: Args) => Promise<T>,
   options: UseAsyncOptions = {},
 ) => {
   const { immediate = false, resetOnExecute = true } = options;
@@ -31,7 +31,7 @@ export const useAsync = <T>(
     };
   }, []);
 
-  const execute = useCallback(async(...args: any[]) => {
+  const execute = useCallback(async(...args: Args) => {
     if (!isMountedRef.current) return;
 
     if (resetOnExecute) {
@@ -86,7 +86,7 @@ export const useAsync = <T>(
   };
 };
 
-export const useAsyncCallback = <T extends (...args: any[]) => Promise<any>>(
+export const useAsyncCallback = <T extends (...args: unknown[]) => Promise<unknown>>(
   asyncFunction: T,
   deps: React.DependencyList = [],
 ) => {
@@ -132,7 +132,7 @@ export const useAsyncCallback = <T extends (...args: any[]) => Promise<any>>(
       
       throw error;
     }
-  }, deps);
+  }, [asyncFunction, ...deps]);
 
   const reset = useCallback(() => {
     if (isMountedRef.current) {

@@ -8,7 +8,7 @@ expect.extend(toHaveNoViolations);
 
 // Mock the RefactoredAppOptimized component
 jest.mock('./RefactoredApp.optimized', () => ({
-  RefactoredAppOptimized: () => <div data-testid="refactored-app-optimized">Refactored App Optimized</div>
+  RefactoredAppOptimized: () => <div data-testid="refactored-app-optimized">Refactored App Optimized</div>,
 }));
 
 describe('App', () => {
@@ -26,7 +26,7 @@ describe('App', () => {
   });
 
   describe('Accessibility', () => {
-    it('should be accessible', async () => {
+    it('should be accessible', async() => {
       const { container } = render(<App />);
       
       const results = await axe(container);

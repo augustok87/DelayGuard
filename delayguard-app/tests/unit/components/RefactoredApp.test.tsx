@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import RefactoredApp from '../../../src/components/RefactoredApp';
 import * as hooks from '../../../src/hooks';
 
@@ -58,7 +58,7 @@ jest.mock('../../../src/components/ui/LoadingSpinner', () => ({
 
 // Mock the tab components
 jest.mock('../../../src/components/tabs/DashboardTab', () => ({
-  DashboardTab: ({ shop, stats, settings, onSaveSettings, onTestDelayDetection }: any) => (
+  DashboardTab: ({ shop, stats, settings: _settings, onSaveSettings, onTestDelayDetection }: any) => (
     <div data-testid="dashboard-tab">
       <span>Dashboard Tab</span>
       {shop && <span>Shop: {shop}</span>}

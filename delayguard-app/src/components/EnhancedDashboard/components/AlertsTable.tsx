@@ -152,7 +152,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
       title: 'Actions',
       sortable: false,
       width: '150px',
-      render: (_: unknown, row: any) => (
+      render: (_: unknown, row: DelayAlert) => (
         <div style={{ display: 'flex', gap: '8px' }}>
           <Button
             size="sm"

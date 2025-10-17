@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAsyncResource } from './useAsyncResource';
 import { fetchSettings, saveSettings, resetSettings } from '../store/slices/settingsSlice';
 import { AppSettings } from '../types';
@@ -24,7 +24,7 @@ export const useSettings = () => {
   );
 
   // Extract the single settings object
-  const settings = settingsArray[0] || {};
+  const settings = useMemo(() => settingsArray[0] || {}, [settingsArray]);
 
   // Individual setting updates
   const updateDelayThreshold = useCallback(async(threshold: number) => {

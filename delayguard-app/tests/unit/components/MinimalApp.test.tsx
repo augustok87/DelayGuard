@@ -60,7 +60,7 @@ jest.mock('../../../src/components', () => ({
       ))}
     </div>
   ),
-  Modal: ({ children, open, onClose, ...props }: any) => 
+  Modal: ({ children, open, onClose: _onClose, ...props }: any) => 
     open ? <div data-testid="modal" {...props}>{children}</div> : null,
   ResourceList: ({ children, ...props }: any) => <div data-testid="resource-list" {...props}>{children}</div>,
   ResourceItem: ({ children, ...props }: any) => <div data-testid="resource-item" {...props}>{children}</div>,
@@ -105,12 +105,12 @@ describe('MinimalApp', () => {
     jest.useRealTimers();
   });
 
-  const mockSettings = {
-    delayThreshold: 3,
-    notificationTemplate: 'default',
-    emailNotifications: true,
-    smsNotifications: false,
-  };
+  // const mockSettings = {
+  //   delayThreshold: 3,
+  //   notificationTemplate: 'default',
+  //   emailNotifications: true,
+  //   smsNotifications: false,
+  // };
 
   const mockAlerts = [
     {

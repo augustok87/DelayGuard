@@ -22,7 +22,7 @@ export const DataTable: React.FC<DataTableProps> = ({
   const [sortColumn, setSortColumn] = React.useState<string | null>(null);
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
 
-  const tableData = data || rows || [];
+  const tableData = useMemo(() => data || rows || [], [data, rows]);
 
   const handleSort = useCallback((columnKey: string) => {
     if (!sortable || !onSort) return;

@@ -1,5 +1,5 @@
-import request from 'supertest';
-import Koa from 'koa';
+// import request from 'supertest';
+// import Koa from 'koa';
 import { RateLimitPresets } from '../../../src/middleware/rate-limiting';
 
 // Mock IORedis
@@ -19,10 +19,10 @@ jest.mock('ioredis', () => {
 });
 
 describe('Rate Limiting Middleware - Simplified Tests', () => {
-  let app: Koa;
+  // let app: Koa;
 
   beforeEach(() => {
-    app = new Koa();
+    // app = new Koa();
     jest.clearAllMocks();
   });
 

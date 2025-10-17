@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { axe, toHaveNoViolations } from 'jest-axe';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { toHaveNoViolations } from 'jest-axe';
 import { DataTable } from './index';
 import { DataTableProps, DataTableRow } from '../../../types/ui';
 
@@ -67,7 +67,7 @@ describe('DataTable', () => {
 
     it('should render with custom className', () => {
       const { container } = render(
-        <DataTable {...defaultProps} className="custom-class" />
+        <DataTable {...defaultProps} className="custom-class" />,
       );
       
       expect(container.querySelector('.table.custom-class')).toBeInTheDocument();
@@ -109,7 +109,7 @@ describe('DataTable', () => {
           {...defaultProps} 
           data={[]} 
           emptyMessage="No users found" 
-        />
+        />,
       );
       
       expect(screen.getByText('No users found')).toBeInTheDocument();
@@ -142,7 +142,7 @@ describe('DataTable', () => {
           {...defaultProps} 
           sortable={true} 
           onSort={onSort} 
-        />
+        />,
       );
       
       fireEvent.click(screen.getByText('Name'));
@@ -157,7 +157,7 @@ describe('DataTable', () => {
           {...defaultProps} 
           sortable={true} 
           onSort={onSort} 
-        />
+        />,
       );
       
       const nameHeader = screen.getByText('Name');
@@ -178,7 +178,7 @@ describe('DataTable', () => {
           {...defaultProps} 
           sortable={true} 
           onSort={onSort} 
-        />
+        />,
       );
       
       const nameHeader = screen.getByText('Name').closest('th');
@@ -197,7 +197,7 @@ describe('DataTable', () => {
           {...defaultProps} 
           sortable={true} 
           onSort={onSort} 
-        />
+        />,
       );
       
       fireEvent.click(screen.getByText('Email'));
@@ -227,7 +227,7 @@ describe('DataTable', () => {
           selectable={true} 
           selectedRows={[]} 
           onSelectionChange={jest.fn()} 
-        />
+        />,
       );
       
       expect(screen.getByTestId('select-all-checkbox')).toBeInTheDocument();
@@ -242,7 +242,7 @@ describe('DataTable', () => {
           selectable={true} 
           selectedRows={[]} 
           onSelectionChange={onSelectionChange} 
-        />
+        />,
       );
       
       const firstCheckbox = screen.getAllByTestId('checkbox')[0];
@@ -261,7 +261,7 @@ describe('DataTable', () => {
           selectedRows={[]} 
           onSelectionChange={onSelectionChange} 
           onSelectAll={onSelectAll} 
-        />
+        />,
       );
       
       const selectAllCheckbox = screen.getByTestId('select-all-checkbox');
@@ -278,7 +278,7 @@ describe('DataTable', () => {
           selectable={true} 
           selectedRows={['1']} 
           onSelectionChange={jest.fn()} 
-        />
+        />,
       );
       
       const selectAllCheckbox = screen.getByTestId('select-all-checkbox') as HTMLInputElement;
@@ -292,7 +292,7 @@ describe('DataTable', () => {
           selectable={true} 
           selectedRows={['1', '2', '3']} 
           onSelectionChange={jest.fn()} 
-        />
+        />,
       );
       
       const selectAllCheckbox = screen.getByTestId('select-all-checkbox') as HTMLInputElement;
@@ -307,7 +307,7 @@ describe('DataTable', () => {
         <DataTable 
           {...defaultProps} 
           onRowClick={onRowClick} 
-        />
+        />,
       );
       
       fireEvent.click(screen.getByText('John Doe').closest('tr')!);
@@ -321,7 +321,7 @@ describe('DataTable', () => {
         <DataTable 
           {...defaultProps} 
           onRowClick={onRowClick} 
-        />
+        />,
       );
       
       const row = screen.getByText('John Doe').closest('tr')!;
@@ -342,7 +342,7 @@ describe('DataTable', () => {
           selectedRows={[]} 
           onSelectionChange={jest.fn()} 
           onRowClick={onRowClick} 
-        />
+        />,
       );
       
       const checkbox = screen.getAllByTestId('checkbox')[0];
@@ -369,7 +369,7 @@ describe('DataTable', () => {
         <DataTable 
           {...defaultProps} 
           columns={columnsWithRender} 
-        />
+        />,
       );
       
       expect(screen.getByTestId('action-1')).toBeInTheDocument();
@@ -394,7 +394,7 @@ describe('DataTable', () => {
         <DataTable 
           {...defaultProps} 
           columns={columnsWithWidth} 
-        />
+        />,
       );
       
       const nameHeader = screen.getByText('Name').closest('th');
@@ -430,7 +430,7 @@ describe('DataTable', () => {
           selectable={true} 
           selectedRows={[]} 
           onSelectionChange={jest.fn()} 
-        />
+        />,
       );
       
       const selectAllCheckbox = screen.getByTestId('select-all-checkbox');
@@ -473,7 +473,7 @@ describe('DataTable', () => {
             {...defaultProps} 
             selectable={true} 
             selectedRows={[]} 
-          />
+          />,
         );
       }).not.toThrow();
     });
@@ -507,7 +507,7 @@ describe('DataTable', () => {
           {...defaultProps} 
           sortable={true} 
           onSort={onSort} 
-        />
+        />,
       );
       
       // Click name column to sort
@@ -524,7 +524,7 @@ describe('DataTable', () => {
           {...defaultProps} 
           sortable={true} 
           onSort={onSort} 
-        />
+        />,
       );
       
       // Click age column to sort

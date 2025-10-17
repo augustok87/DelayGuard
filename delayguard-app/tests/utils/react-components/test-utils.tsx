@@ -7,11 +7,11 @@ import { configureStore } from '@reduxjs/toolkit';
 const createTestStore = (preloadedState = {}) => {
   return configureStore({
     reducer: {
-      app: (state = { loading: false, error: null }, action) => state,
-      alerts: (state = { items: [], loading: false }, action) => state,
-      orders: (state = { items: [], loading: false }, action) => state,
-      settings: (state = { data: {}, loading: false }, action) => state,
-      ui: (state = { theme: 'light', sidebarOpen: false }, action) => state,
+      app: (state = { loading: false, error: null }, _action) => state,
+      alerts: (state = { items: [], loading: false }, _action) => state,
+      orders: (state = { items: [], loading: false }, _action) => state,
+      settings: (state = { data: {}, loading: false }, _action) => state,
+      ui: (state = { theme: 'light', sidebarOpen: false }, _action) => state,
     },
     preloadedState,
   });

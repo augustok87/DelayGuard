@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, DataTable, Text, Badge } from '../../ui';
 import { Order, DataTableRow } from '../../../types';
+import { logInfo } from '../../../utils/logger';
 
 interface OrdersListProps {
   orders: Order[];
@@ -21,7 +22,7 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, onOrderClick }) 
       sortable: true,
       width: '120px',
       render: (value: string) => {
-        console.log('Order number value:', value);
+        logInfo('Order number value', { value });
         return <Text variant="bodyMd" as="span">{value || 'N/A'}</Text>;
       },
     },
@@ -78,7 +79,7 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, onOrderClick }) 
   ];
 
   const rows = orders.map(order => {
-    console.log('Order data:', order);
+    logInfo('Order data', { order });
     const row = {
       id: order.id,
       orderNumber: order.orderNumber,

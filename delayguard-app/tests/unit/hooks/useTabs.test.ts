@@ -14,7 +14,7 @@ jest.mock('../../../src/store/hooks', () => ({
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
-  return React.createElement(Provider, { store, children });
+  return React.createElement(Provider, { store }, children);
 };
 
 describe('useTabs Hook', () => {

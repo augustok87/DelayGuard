@@ -60,7 +60,7 @@ export const useAlertActions = () => {
       showDeleteErrorToast('An unexpected error occurred');
       return { success: false, error: 'An unexpected error occurred' };
     }
-  }, [deleteExistingAlert, showDeleteSuccessToast, showDeleteErrorToast, showErrorToast]);
+  }, [deleteExistingAlert, showDeleteSuccessToast, showDeleteErrorToast]);
 
   const bulkResolveAlerts = useCallback(async(alertIds: string[]) => {
     const results = await Promise.allSettled(

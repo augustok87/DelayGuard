@@ -244,14 +244,14 @@ jest.mock('../../../src/services/analytics-service', () => ({
 }));
 
 describe('EnhancedDashboard', () => {
-  const mockSettings = {
-    delayThreshold: 3,
-    emailNotifications: true,
-    smsNotifications: false,
-    notificationTemplate: 'default',
-    autoResolveDays: 7,
-    enableAnalytics: true,
-  };
+  // const mockSettings = {
+  //   delayThreshold: 3,
+  //   emailNotifications: true,
+  //   smsNotifications: false,
+  //   notificationTemplate: 'default',
+  //   autoResolveDays: 7,
+  //   enableAnalytics: true,
+  // };
 
   const mockAlerts = [
     {

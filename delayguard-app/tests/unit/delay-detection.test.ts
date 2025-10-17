@@ -1,4 +1,4 @@
-import { checkForDelays, DelayDetectionResult } from '@/services/delay-detection';
+import { checkForDelays } from '@/services/delay-detection';
 
 describe('Delay Detection Service', () => {
   describe('checkForDelays', () => {

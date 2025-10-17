@@ -144,7 +144,7 @@ describe('useVirtualList', () => {
       useVirtualList(mockItems, 50, 400),
     );
 
-    const initialVisibleItems = result.current.visibleItems.length;
+    // const initialVisibleItems = result.current.visibleItems.length;
 
     act(() => {
       result.current.setScrollTop(1000);
