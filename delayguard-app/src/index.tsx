@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { AppProvider } from './components/AppProvider';
 import { App } from './components/App';
+import { logError } from './utils/logger';
 
 /**
  * Main entry point for DelayGuard
@@ -19,5 +20,5 @@ if (container) {
     </AppProvider>,
   );
 } else {
-  console.error('Root element not found');
+  logError('Root element not found', { component: 'index' });
 }

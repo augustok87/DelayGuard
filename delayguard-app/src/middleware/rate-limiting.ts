@@ -1,5 +1,6 @@
 import { Context, Next } from 'koa';
 import IORedis from 'ioredis';
+import { logError } from '../utils/logger';
 // import { RateLimitError } from '../types'; // Removed unused import
 
 /**
@@ -102,7 +103,7 @@ export class RateLimitingMiddleware {
       }
 
     } catch (error) {
-      console.error('Rate limiting error:', error);
+      logError(error, { component: 'rate-limiting', action: 'middleware' });
       // Continue without rate limiting if Redis fails
       await next();
     }

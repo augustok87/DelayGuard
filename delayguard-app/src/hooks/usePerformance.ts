@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { logInfo, logError } from '../utils/logger';
 
 interface PerformanceMetrics {
   renderTime: number;
@@ -40,7 +41,11 @@ export const usePerformance = (
     return () => {
       const totalMountTime = performance.now() - mountTimeRef.current;
       if (logToConsole) {
-        console.log(`${componentName} total mount time: ${totalMountTime.toFixed(2)}ms`);
+        logInfo(`${componentName} total mount time: ${totalMountTime.toFixed(2)}ms`, { 
+          component: 'usePerformance', 
+          action: 'mount',
+          metadata: { componentName, totalMountTime }, 
+        });
       }
     };
   }, [componentName, logToConsole]);
@@ -51,11 +56,15 @@ export const usePerformance = (
 
     const checkMemory = () => {
       if ('memory' in performance) {
-        const memory = (performance as any).memory;
+        const memory = (performance as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
         const memoryUsage = memory.usedJSHeapSize / 1024 / 1024; // MB
         
         if (logToConsole) {
-          console.log(`${componentName} memory usage: ${memoryUsage.toFixed(2)}MB`);
+          logInfo(`${componentName} memory usage: ${memoryUsage.toFixed(2)}MB`, { 
+            component: 'usePerformance', 
+            action: 'memory',
+            metadata: { componentName, memoryUsage }, 
+          });
         }
 
         if (onMetricsUpdate) {
@@ -90,12 +99,16 @@ export const usePerformance = (
       };
 
       if (trackMemoryUsage && 'memory' in performance) {
-        const memory = (performance as any).memory;
+        const memory = (performance as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
         metrics.memoryUsage = memory.usedJSHeapSize / 1024 / 1024; // MB
       }
 
       if (logToConsole) {
-        console.log(`${componentName} render time: ${renderTime.toFixed(2)}ms`);
+        logInfo(`${componentName} render time: ${renderTime.toFixed(2)}ms`, { 
+          component: 'usePerformance', 
+          action: 'render',
+          metadata: { componentName, renderTime }, 
+        });
       }
 
       if (onMetricsUpdate) {
@@ -116,7 +129,11 @@ export const usePerformance = (
         const fps = Math.round((frameCountRef.current * 1000) / (now - lastTimeRef.current));
         
         if (logToConsole) {
-          console.log(`${componentName} FPS: ${fps}`);
+          logInfo(`${componentName} FPS: ${fps}`, { 
+            component: 'usePerformance', 
+            action: 'fps',
+            metadata: { componentName, fps }, 
+          });
         }
 
         if (onMetricsUpdate) {
@@ -152,7 +169,7 @@ export const usePerformance = (
 // Hook for measuring component performance
 export const useComponentPerformance = (
   componentName: string,
-  dependencies: any[] = [],
+  dependencies: unknown[] = [],
 ) => {
   const { trackRender } = usePerformance(componentName, {
     trackRenderTime: true,
@@ -180,13 +197,21 @@ export const useAsyncPerformance = () => {
       const endTime = performance.now();
       const duration = endTime - startTime;
       
-      console.log(`${operationName} completed in ${duration.toFixed(2)}ms`);
+      logInfo(`${operationName} completed in ${duration.toFixed(2)}ms`, { 
+        component: 'usePerformance', 
+        action: 'operation',
+        metadata: { operationName, duration }, 
+      });
       return result;
     } catch (error) {
       const endTime = performance.now();
       const duration = endTime - startTime;
       
-      console.error(`${operationName} failed after ${duration.toFixed(2)}ms:`, error);
+      logError(error, { 
+        component: 'usePerformance', 
+        action: 'operation',
+        metadata: { operationName, duration }, 
+      });
       throw error;
     }
   }, []);
@@ -204,7 +229,11 @@ export const useBundleSize = () => {
         const endTime = performance.now();
         const loadTime = endTime - startTime;
         
-        console.log(`${componentName} bundle load time: ${loadTime.toFixed(2)}ms`);
+        logInfo(`${componentName} bundle load time: ${loadTime.toFixed(2)}ms`, { 
+          component: 'usePerformance', 
+          action: 'bundle',
+          metadata: { componentName, loadTime }, 
+        });
       };
     }
     

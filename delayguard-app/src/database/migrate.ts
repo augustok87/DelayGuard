@@ -1,13 +1,14 @@
 import { setupDatabase } from './connection';
+import { logInfo, logError } from '../utils/logger';
 
 async function migrate() {
   try {
-    console.log('🔄 Running database migrations...');
+    logInfo('Running database migrations', { component: 'database' });
     await setupDatabase();
-    console.log('✅ Database migrations completed successfully');
+    logInfo('Database migrations completed successfully', { component: 'database' });
     process.exit(0);
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    logError(error, { component: 'database', action: 'migration' });
     process.exit(1);
   }
 }

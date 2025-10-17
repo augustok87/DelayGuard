@@ -1,5 +1,9 @@
 import { useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { createSafeAsyncFunction } from '../utils/error-handler';
+import { logInfo } from '../utils/logger';
+import type { RootState, AppDispatch } from '../store/store';
+import type { AsyncThunk } from '@reduxjs/toolkit';
 
 /**
  * Generic hook for managing async resources with Redux
@@ -7,58 +11,67 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
  */
 export function useAsyncResource<T>(
   resourceName: string,
-  fetchAction: any,
-  updateAction: any,
-  deleteAction: any,
-  selector: (state: any) => { items: T[]; loading: boolean; error: string | null },
-  createAction?: any,
+  fetchAction: AsyncThunk<T[], unknown, { state: RootState; dispatch: AppDispatch }>,
+  updateAction: AsyncThunk<{ id: string; updates: Partial<T> }, { id: string; updates: Partial<T> }, { state: RootState; dispatch: AppDispatch }>,
+  deleteAction: AsyncThunk<string, string, { state: RootState; dispatch: AppDispatch }>,
+  selector: (state: RootState) => { items: T[]; loading: boolean; error: string | null },
+  createAction?: AsyncThunk<T, unknown, { state: RootState; dispatch: AppDispatch }>,
 ) {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector(selector);
 
   // Load items on mount
   useEffect(() => {
-    dispatch(fetchAction());
+    dispatch(fetchAction(undefined));
   }, [dispatch, fetchAction]);
 
   // Create new item
-  const createItem = useCallback(async(itemData: any) => {
-    try {
-      if (createAction) {
-        await dispatch(createAction(itemData)).unwrap();
-        return { success: true };
-      } else {
-        console.log(`Creating ${resourceName}:`, itemData);
-        return { success: true };
-      }
-    } catch (err) {
-      return { success: false, error: err as string };
-    }
-  }, [dispatch, createAction, resourceName]);
+  const createItem = useCallback(
+    createSafeAsyncFunction(
+      async(itemData: Partial<T>): Promise<{ success: true }> => {
+        if (createAction) {
+          await dispatch(createAction(itemData)).unwrap();
+          logInfo(`Created ${resourceName}`, { itemData });
+          return { success: true };
+        } else {
+          logInfo(`Creating ${resourceName}`, { itemData });
+          return { success: true };
+        }
+      },
+      { component: 'useAsyncResource', action: 'createItem', resourceName },
+    ),
+    [dispatch, createAction, resourceName],
+  );
 
   // Update existing item
-  const updateItem = useCallback(async(id: string, updates: any) => {
-    try {
-      await dispatch(updateAction({ id, updates })).unwrap();
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err as string };
-    }
-  }, [dispatch, updateAction]);
+  const updateItem = useCallback(
+    createSafeAsyncFunction(
+      async(id: string, updates: Partial<T>): Promise<{ success: true }> => {
+        await dispatch(updateAction({ id, updates })).unwrap();
+        logInfo(`Updated ${resourceName}`, { id, updates });
+        return { success: true };
+      },
+      { component: 'useAsyncResource', action: 'updateItem', resourceName },
+    ),
+    [dispatch, updateAction, resourceName],
+  );
 
   // Delete existing item
-  const deleteItem = useCallback(async(id: string) => {
-    try {
-      await dispatch(deleteAction(id)).unwrap();
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err as string };
-    }
-  }, [dispatch, deleteAction]);
+  const deleteItem = useCallback(
+    createSafeAsyncFunction(
+      async(id: string): Promise<{ success: true }> => {
+        await dispatch(deleteAction(id)).unwrap();
+        logInfo(`Deleted ${resourceName}`, { id });
+        return { success: true };
+      },
+      { component: 'useAsyncResource', action: 'deleteItem', resourceName },
+    ),
+    [dispatch, deleteAction, resourceName],
+  );
 
   // Refresh items
   const refreshItems = useCallback(() => {
-    dispatch(fetchAction());
+    dispatch(fetchAction(undefined));
   }, [dispatch, fetchAction]);
 
   return {

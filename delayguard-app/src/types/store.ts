@@ -75,7 +75,7 @@ export interface UIState {
 export interface ModalState {
   [key: string]: {
     isOpen: boolean;
-    data?: any;
+    data?: Record<string, unknown>;
   };
 }
 
@@ -105,7 +105,7 @@ export interface PaginationState {
 // Action Types
 export interface BaseAction {
   type: string;
-  payload?: any;
+  payload?: Record<string, unknown>;
 }
 
 export interface AsyncAction extends BaseAction {
@@ -119,7 +119,7 @@ export interface AsyncAction extends BaseAction {
 export interface ThunkConfig {
   state: RootState;
   dispatch: AppDispatch;
-  extra?: any;
+  extra?: Record<string, unknown>;
   rejectValue?: string;
 }
 
@@ -128,7 +128,7 @@ export type Selector<T> = (state: RootState) => T;
 export type ParametricSelector<T, P> = (state: RootState, params: P) => T;
 
 // Hook Types
-export type AppDispatch = any; // Will be properly typed in store.ts
+export type AppDispatch = ReturnType<typeof import('../store/store').store.dispatch>;
 
 export interface UseAppDispatch {
   (): AppDispatch;
@@ -142,17 +142,17 @@ export interface UseAppSelector {
 // Store Configuration
 export interface StoreConfig {
   preloadedState?: Partial<RootState>;
-  middleware?: any[];
+  middleware?: Array<Record<string, unknown>>;
   devTools?: boolean;
 }
 
 // Persist Configuration
 export interface PersistConfig {
   key: string;
-  storage: any;
+  storage: Record<string, unknown>;
   whitelist?: string[];
   blacklist?: string[];
-  transforms?: any[];
+  transforms?: Array<Record<string, unknown>>;
 }
 
 // Rehydration Types
@@ -180,7 +180,7 @@ export interface LoadingState {
 // Cache Types
 export interface CacheState {
   [key: string]: {
-    data: any;
+    data: Record<string, unknown>;
     timestamp: number;
     ttl: number;
   };
@@ -196,7 +196,7 @@ export interface AnalyticsState {
 export interface AnalyticsEvent {
   id: string;
   name: string;
-  properties: Record<string, any>;
+  properties: Record<string, unknown>;
   timestamp: number;
   userId?: string;
   sessionId?: string;

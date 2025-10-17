@@ -250,7 +250,7 @@ export class ExternalServiceError extends AppError {
 export interface ShopifyWebhook {
   id: string;
   topic: string;
-  data: any;
+  data: Record<string, unknown>;
   shop_domain: string;
   created_at: string;
 }

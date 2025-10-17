@@ -1,5 +1,6 @@
 import { Pool, PoolClient } from 'pg';
 // import { AppConfig } from '../types'; // Removed unused import
+import { logInfo, logError } from '../utils/logger';
 
 let pool: Pool;
 
@@ -15,13 +16,13 @@ export async function setupDatabase(): Promise<void> {
 
     // Test connection
     const client = await pool.connect();
-    console.log('✅ Database connected successfully');
+    logInfo('Database connected successfully', { component: 'database' });
     client.release();
 
     // Run migrations
     await runMigrations();
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    logError(error, { component: 'database', action: 'connection' });
     throw error;
   }
 }
@@ -33,7 +34,7 @@ export async function getDatabaseClient(): Promise<PoolClient> {
   return pool.connect();
 }
 
-export async function query(text: string, params?: any[]): Promise<any> {
+export async function query(text: string, params?: unknown[]): Promise<unknown[]> {
   const client = await getDatabaseClient();
   try {
     const result = await client.query(text, params);
@@ -133,9 +134,9 @@ async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_delay_alerts_created_at ON delay_alerts(created_at);
     `);
 
-    console.log('✅ Database migrations completed');
+    logInfo('Database migrations completed', { component: 'database' });
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    logError(error, { component: 'database', action: 'migration' });
     throw error;
   } finally {
     client.release();

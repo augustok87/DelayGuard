@@ -1,4 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
+import { logInfo, logWarn, logError } from './logger';
 
 // Initialize services (with error handling for missing env vars)
 let servicesInitialized = false;
@@ -11,24 +12,27 @@ async function initializeServices() {
     const hasMinimalConfig = process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET;
     
     if (hasMinimalConfig) {
-      console.log('✅ Shopify configuration detected');
+      logInfo('Shopify configuration detected', { component: 'api' });
       
       // Initialize database if DATABASE_URL is available
       if (process.env.DATABASE_URL) {
-        console.log('✅ Database URL configured');
+        logInfo('Database URL configured', { component: 'api' });
       }
       
       // Initialize queues if REDIS_URL is available
       if (process.env.REDIS_URL) {
-        console.log('✅ Redis URL configured');
+        logInfo('Redis URL configured', { component: 'api' });
       }
       
-      console.log('✅ Performance monitoring initialized');
+      logInfo('Performance monitoring initialized', { component: 'api' });
     }
     
     servicesInitialized = true;
   } catch (error) {
-    console.warn('⚠️ Some services could not be initialized:', error instanceof Error ? error.message : 'Unknown error');
+    logWarn('Some services could not be initialized', { 
+      component: 'api', 
+      error: error instanceof Error ? error.message : 'Unknown error', 
+    });
     // Continue without failing - graceful degradation
   }
 }
@@ -213,7 +217,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
   } catch (error) {
-    console.error('Handler error:', error);
+    logError(error, { component: 'api', action: 'handler' });
     res.status(500).json({
       status: 'error',
       message: 'Internal server error',

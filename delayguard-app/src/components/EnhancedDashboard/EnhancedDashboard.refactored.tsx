@@ -13,6 +13,7 @@ import {
 import AnalyticsDashboard from '../AnalyticsDashboard';
 import { EnhancedDashboardProps } from '../../types';
 import { TAB_IDS } from './constants';
+import { logInfo, logError } from '../../utils/logger';
 
 function EnhancedDashboard({
   settings: propSettings,
@@ -160,7 +161,9 @@ function EnhancedDashboard({
                  data-testid="start-date-input"
                  onChange={async(e) => {
                    const startDate = e.target.value;
-                   console.log('Start date changed:', startDate);
+                   
+                   // Log in development only
+                   logInfo('Start date changed', { startDate });
                    
                    // Trigger API call with date filter
                    try {
@@ -186,12 +189,14 @@ function EnhancedDashboard({
                      
                      const analyticsService = new AnalyticsService();
                      const endDateInput = document.querySelector('[data-testid="end-date-input"]') as HTMLInputElement;
-                      await (analyticsService as any).getAlerts({
+                     await (analyticsService as unknown as { getAlerts: (params: { startDate: string; endDate: string }) => Promise<void> }).getAlerts({
                        startDate,
                        endDate: endDateInput?.value || '',
                      });
                    } catch (error) {
-                     console.error('Failed to filter alerts by date:', error);
+                     // Use proper error handling instead of console.error
+                     logError(error, { component: 'EnhancedDashboard', action: 'filterAlertsByDate' });
+                     // TODO: Implement proper error handling with user feedback
                    }
                  }}
                  style={{
@@ -211,7 +216,11 @@ function EnhancedDashboard({
                  data-testid="end-date-input"
                  onChange={async(e) => {
                    const endDate = e.target.value;
-                   console.log('End date changed:', endDate);
+                   
+                   // Log in development only
+                   if (process.env.NODE_ENV === 'development') {
+                     logInfo('End date changed', { endDate });
+                   }
                    
                    // Trigger API call with date filter
                    try {
@@ -237,12 +246,14 @@ function EnhancedDashboard({
                      
                      const analyticsService = new AnalyticsService();
                      const startDateInput = document.querySelector('[data-testid="start-date-input"]') as HTMLInputElement;
-                      await (analyticsService as any).getAlerts({
+                     await (analyticsService as unknown as { getAlerts: (params: { startDate: string; endDate: string }) => Promise<void> }).getAlerts({
                        startDate: startDateInput?.value || '',
                        endDate,
                      });
                    } catch (error) {
-                     console.error('Failed to filter alerts by date:', error);
+                     // Use proper error handling instead of console.error
+                     logError(error, { component: 'EnhancedDashboard', action: 'filterAlertsByDate' });
+                     // TODO: Implement proper error handling with user feedback
                    }
                  }}
                  style={{

@@ -76,6 +76,8 @@ export interface RealTimeMetrics {
   memoryUsage: number;
 }
 
+import { logError } from '../utils/logger';
+
 export class AnalyticsService {
   private baseUrl: string;
   private apiKey: string;
@@ -114,7 +116,7 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      console.error('Error fetching alerts:', error);
+      logError(error, { component: 'AnalyticsService', action: 'getAlerts' });
       throw error;
     }
   }
@@ -146,7 +148,7 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      logError(error, { component: 'AnalyticsService', action: 'getOrders' });
       throw error;
     }
   }
@@ -169,7 +171,7 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      console.error('Error fetching metrics:', error);
+      logError(error, { component: 'AnalyticsService', action: 'getMetrics' });
       throw error;
     }
   }
@@ -192,7 +194,7 @@ export class AnalyticsService {
         throw new Error(`Failed to update settings: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error updating settings:', error);
+      logError(error, { component: 'AnalyticsService', action: 'updateSettings' });
       throw error;
     }
   }
@@ -216,7 +218,7 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      console.error('Error testing delay detection:', error);
+      logError(error, { component: 'AnalyticsService', action: 'testDelayDetection' });
       throw error;
     }
   }
@@ -238,7 +240,7 @@ export class AnalyticsService {
         throw new Error(`Failed to resolve alert: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error resolving alert:', error);
+      logError(error, { component: 'AnalyticsService', action: 'resolveAlert' });
       throw error;
     }
   }
@@ -260,7 +262,7 @@ export class AnalyticsService {
         throw new Error(`Failed to dismiss alert: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error dismissing alert:', error);
+      logError(error, { component: 'AnalyticsService', action: 'dismissAlert' });
       throw error;
     }
   }
@@ -291,7 +293,7 @@ export class AnalyticsService {
 
       return await response.blob();
     } catch (error) {
-      console.error('Error exporting alerts:', error);
+      logError(error, { component: 'AnalyticsService', action: 'exportAlerts' });
       throw error;
     }
   }
@@ -315,7 +317,7 @@ export class AnalyticsService {
       const data = await response.json();
       return data.data || data;
     } catch (error) {
-      console.error('Error fetching analytics metrics:', error);
+      logError(error, { component: 'AnalyticsService', action: 'getAnalyticsMetrics' });
       throw error;
     }
   }
@@ -339,7 +341,7 @@ export class AnalyticsService {
       const data = await response.json();
       return data.data || data;
     } catch (error) {
-      console.error('Error fetching real-time metrics:', error);
+      logError(error, { component: 'AnalyticsService', action: 'getRealTimeMetrics' });
       throw error;
     }
   }
@@ -361,7 +363,7 @@ export class AnalyticsService {
         throw new Error(`Failed to clear analytics cache: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error clearing analytics cache:', error);
+      logError(error, { component: 'AnalyticsService', action: 'clearCache' });
       throw error;
     }
   }

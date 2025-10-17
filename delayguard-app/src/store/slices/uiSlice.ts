@@ -29,7 +29,7 @@ const uiSlice = createSlice({
     setSelectedTab: (state, action: PayloadAction<number>) => {
       state.selectedTab = action.payload;
     },
-    openModal: (state, action: PayloadAction<{ key: string; data?: any }>) => {
+    openModal: (state, action: PayloadAction<{ key: string; data?: Record<string, unknown> }>) => {
       state.modals[action.payload.key] = {
         isOpen: true,
         data: action.payload.data,
@@ -61,7 +61,7 @@ const uiSlice = createSlice({
       state.toasts.items.push(toast);
     },
     hideToast: (state, action: PayloadAction<string>) => {
-      state.toasts.items = state.toasts.items.filter((toast: any) => toast.id !== action.payload);
+      state.toasts.items = state.toasts.items.filter((toast) => toast.id !== action.payload);
     },
     clearToasts: (state) => {
       state.toasts.items = [];

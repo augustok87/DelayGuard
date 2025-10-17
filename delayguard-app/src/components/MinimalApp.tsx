@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { logError, logInfo } from '../utils/logger';
 import {
   // React UI Components
   Button,
@@ -52,6 +53,19 @@ interface Order {
   createdAt: string;
 }
 
+interface MockAnalyticsAPI {
+  getAlerts(params?: { startDate?: string; endDate?: string }): Promise<DelayAlert[]>;
+  getOrders(): Promise<Order[]>;
+  updateSettings(settings: AppSettings): Promise<void>;
+  testDelayDetection(): Promise<void>;
+}
+
+declare global {
+  interface Window {
+    mockAnalyticsAPI?: MockAnalyticsAPI;
+  }
+}
+
 function MinimalApp() {
   const [settings, setSettings] = useState<AppSettings>({
     delayThreshold: 2,
@@ -85,10 +99,10 @@ function MinimalApp() {
         setError(null);
 
         // Check if mock API is available (for testing)
-        if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
+        if (typeof window !== 'undefined' && window.mockAnalyticsAPI) {
           const [alertsData, ordersData] = await Promise.all([
-            (window as any).mockAnalyticsAPI.getAlerts(),
-            (window as any).mockAnalyticsAPI.getOrders(),
+            window.mockAnalyticsAPI.getAlerts(),
+            window.mockAnalyticsAPI.getOrders(),
           ]);
           setAlerts(alertsData || []);
           setOrders(ordersData || []);
@@ -141,7 +155,7 @@ function MinimalApp() {
         }
       } catch (err) {
         setError('Failed to load data');
-        console.error('Error loading data:', err);
+        logError(err, { component: 'MinimalApp', action: 'loadData' });
       } finally {
         setLoading(false);
       }
@@ -162,18 +176,18 @@ function MinimalApp() {
 
   const handleSaveSettings = async() => {
     try {
-      console.log('Saving settings:', settings);
+      logInfo('Saving settings', { component: 'MinimalApp', action: 'saveSettings', metadata: { settings } });
       
       // Call mock API if available (for testing)
-      if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
-        await (window as any).mockAnalyticsAPI.updateSettings(settings);
+      if (typeof window !== 'undefined' && window.mockAnalyticsAPI) {
+        await window.mockAnalyticsAPI.updateSettings(settings);
       }
       
       setShowSettingsModal(false);
       setToastMessage('Settings saved successfully!');
       setShowToast(true);
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      logError(error, { component: 'MinimalApp', action: 'saveSettings' });
       setToastMessage('Failed to save settings');
       setShowToast(true);
     }
@@ -244,10 +258,10 @@ function MinimalApp() {
       setError(null);
 
       // Check if mock API is available (for testing)
-      if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
+      if (typeof window !== 'undefined' && window.mockAnalyticsAPI) {
         const [alertsData, ordersData] = await Promise.all([
-          (window as any).mockAnalyticsAPI.getAlerts(),
-          (window as any).mockAnalyticsAPI.getOrders(),
+          window.mockAnalyticsAPI.getAlerts(),
+          window.mockAnalyticsAPI.getOrders(),
         ]);
         setAlerts(alertsData || []);
         setOrders(ordersData || []);
@@ -260,7 +274,7 @@ function MinimalApp() {
       setShowToast(true);
     } catch (err) {
       setError('Failed to refresh data');
-      console.error('Error refreshing data:', err);
+      logError(err, { component: 'MinimalApp', action: 'refreshData' });
     } finally {
       setLoading(false);
     }
@@ -323,14 +337,14 @@ function MinimalApp() {
               label: "Test Delay Detection",
               onClick: async() => {
                 try {
-                  console.log('Testing delay detection...');
-                  if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
-                    await (window as any).mockAnalyticsAPI.testDelayDetection();
+                  logInfo('Testing delay detection', { component: 'MinimalApp', action: 'testDelayDetection' });
+                  if (typeof window !== 'undefined' && window.mockAnalyticsAPI) {
+                    await window.mockAnalyticsAPI.testDelayDetection();
                   }
                   setToastMessage('Test delay detection started');
                   setShowToast(true);
                 } catch (err) {
-                  console.error('Error testing delay detection:', err);
+                  logError(err, { component: 'MinimalApp', action: 'testDelayDetection' });
                   setToastMessage('Error testing delay detection');
                   setShowToast(true);
                 }
@@ -365,15 +379,15 @@ function MinimalApp() {
             </Button>
             <Button size="sm" variant="secondary" onClick={async() => {
               try {
-                console.log('Testing delay detection...');
+                logInfo('Testing delay detection', { component: 'MinimalApp', action: 'testDelayDetection' });
                 // Call mock API if available (for testing)
-                if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
-                  await (window as any).mockAnalyticsAPI.testDelayDetection();
+                if (typeof window !== 'undefined' && window.mockAnalyticsAPI) {
+                  await window.mockAnalyticsAPI.testDelayDetection();
                 }
                 setToastMessage('Test delay detection started');
                 setShowToast(true);
               } catch (err) {
-                console.error('Error testing delay detection:', err);
+                logError(err, { component: 'MinimalApp', action: 'testDelayDetection' });
                 setToastMessage('Error testing delay detection');
                 setShowToast(true);
               }
@@ -720,8 +734,8 @@ function MinimalApp() {
               }));
               
               // Call mock API if available (for testing)
-              if (typeof window !== 'undefined' && (window as any).mockAnalyticsAPI) {
-                await (window as any).mockAnalyticsAPI.getAlerts({
+              if (typeof window !== 'undefined' && window.mockAnalyticsAPI) {
+                await window.mockAnalyticsAPI.getAlerts({
                   startDate: newStartDate,
                   endDate: settings.dateRange.end,
                 });

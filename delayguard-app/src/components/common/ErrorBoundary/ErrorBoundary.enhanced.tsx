@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { logError, logInfo } from '../../../utils/logger';
 import { Button } from '../../ui/Button';
 import styles from './ErrorBoundary.module.css';
 
@@ -61,7 +62,11 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
   private logError = (error: Error, errorInfo: ErrorInfo) => {
     // In a real app, this would send to an error tracking service
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    logError(error, { 
+      component: 'ErrorBoundary.enhanced', 
+      action: 'logError',
+      metadata: { errorInfo }, 
+    });
     
     // Example: Send to error tracking service
     // errorTrackingService.captureException(error, {
@@ -114,7 +119,11 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
         url: window.location.href,
       };
 
-      console.log('Error report:', errorReport);
+      logInfo('Error report generated', { 
+        component: 'ErrorBoundary.enhanced', 
+        action: 'generateErrorReport',
+        metadata: { errorReport }, 
+      });
       
       // Example: Open bug report form
       // window.open(`/bug-report?error=${encodeURIComponent(JSON.stringify(errorReport))}`);

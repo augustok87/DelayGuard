@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { logError } from '../utils/logger';
 
 export const useDebounce = <T>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -16,7 +17,7 @@ export const useDebounce = <T>(value: T, delay: number): T => {
   return debouncedValue;
 };
 
-export const useDebouncedCallback = <T extends (...args: any[]) => any>(
+export const useDebouncedCallback = <T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number,
 ): T => {
@@ -32,12 +33,12 @@ export const useDebouncedCallback = <T extends (...args: any[]) => any>(
         const result = callback(...args);
         // Handle promises
         if (result && typeof result.catch === 'function') {
-          result.catch((error: any) => {
-            console.error('Debounced callback promise rejection:', error);
+          result.catch((error: unknown) => {
+            logError(error, { component: 'useDebounce', action: 'callback' });
           });
         }
       } catch (error) {
-        console.error('Debounced callback error:', error);
+        logError(error, { component: 'useDebounce', action: 'callback' });
       }
     }, delay);
   }, [callback, delay]);

@@ -81,8 +81,8 @@ export interface ModalProps {
 export interface FormFieldProps {
   label: string;
   type: 'text' | 'number' | 'select' | 'checkbox' | 'textarea';
-  value: any;
-  onChange: (value: any) => void;
+  value: string | number | boolean;
+  onChange: (value: string | number | boolean) => void;
   error?: string;
   helpText?: string;
   required?: boolean;
@@ -119,12 +119,12 @@ export interface DataTableColumn {
   sortable?: boolean;
   width?: string;
   align?: 'left' | 'center' | 'right';
-  render?: (value: any, row: DataTableRow) => React.ReactNode;
+  render?: (value: unknown, row: DataTableRow) => React.ReactNode;
 }
 
 export interface DataTableRow {
   id: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface DataTableProps {

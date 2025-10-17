@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { logError } from '../../../utils/logger';
 import { ErrorBoundaryState } from '../../../types/ui';
 import styles from './ErrorBoundary.module.css';
 
@@ -18,7 +19,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    logError(error, { 
+      component: 'ErrorBoundary', 
+      action: 'componentDidCatch',
+      metadata: { errorInfo }, 
+    });
     // In a real app, you would send this to an error reporting service
     // like Sentry, LogRocket, or Bugsnag
   }

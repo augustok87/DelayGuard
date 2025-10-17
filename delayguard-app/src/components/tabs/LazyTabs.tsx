@@ -13,19 +13,19 @@ export const LazySettingsCard = lazy(() => import('./DashboardTab/SettingsCard')
 export const LazyStatsCard = lazy(() => import('./DashboardTab/StatsCard').then(module => ({ default: module.StatsCard })));
 
 // Wrapper components with Suspense
-export const DashboardTabWithSuspense = (props: any) => (
+export const DashboardTabWithSuspense = (props: Record<string, unknown>) => (
   <Suspense fallback={<LoadingSpinner message="Loading Dashboard..." />}>
     <LazyDashboardTab {...props} />
   </Suspense>
 );
 
-export const AlertsTabWithSuspense = (props: any) => (
+export const AlertsTabWithSuspense = (props: Record<string, unknown>) => (
   <Suspense fallback={<LoadingSpinner message="Loading Alerts..." />}>
     <LazyAlertsTab {...props} />
   </Suspense>
 );
 
-export const OrdersTabWithSuspense = (props: any) => (
+export const OrdersTabWithSuspense = (props: Record<string, unknown>) => (
   <Suspense fallback={<LoadingSpinner message="Loading Orders..." />}>
     <LazyOrdersTab {...props} />
   </Suspense>

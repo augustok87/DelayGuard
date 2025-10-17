@@ -1,20 +1,21 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { openModal, closeModal } from '../store/slices/uiSlice';
+import { DelayAlert, Order, AppSettings } from '../types';
 
 export const useModals = () => {
   const dispatch = useAppDispatch();
   const modals = useAppSelector(state => state.ui.modals);
 
-  const openSettingsModal = useCallback((data?: any) => {
+  const openSettingsModal = useCallback((data?: AppSettings) => {
     dispatch(openModal({ key: 'settings', data }));
   }, [dispatch]);
 
-  const openAlertDetailsModal = useCallback((alertData: any) => {
+  const openAlertDetailsModal = useCallback((alertData: DelayAlert) => {
     dispatch(openModal({ key: 'alertDetails', data: alertData }));
   }, [dispatch]);
 
-  const openOrderTrackingModal = useCallback((orderData: any) => {
+  const openOrderTrackingModal = useCallback((orderData: Order) => {
     dispatch(openModal({ key: 'orderTracking', data: orderData }));
   }, [dispatch]);
 

@@ -1,5 +1,5 @@
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   message?: string;
   success: boolean;
@@ -10,7 +10,7 @@ export interface ApiError {
   message: string;
   code: string;
   statusCode: number;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {
@@ -94,7 +94,7 @@ export interface QueryParams {
   limit?: number;
   sort?: string;
   order?: 'asc' | 'desc';
-  filter?: Record<string, any>;
+  filter?: Record<string, unknown>;
   search?: string;
 }
 
@@ -102,7 +102,7 @@ export interface QueryParams {
 export interface WebhookPayload {
   id: string;
   topic: string;
-  data: any;
+  data: Record<string, unknown>;
   shop_domain: string;
   created_at: string;
 }

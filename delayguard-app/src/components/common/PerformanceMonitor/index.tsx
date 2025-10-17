@@ -1,4 +1,11 @@
 import React, { useState, useEffect } from 'react';
+
+interface PerformanceMetrics {
+  renderTime: number;
+  componentMountTime: number;
+  memoryUsage?: number;
+  fps?: number;
+}
 import { usePerformance } from '../../../hooks/usePerformance';
 import styles from './PerformanceMonitor.module.css';
 
@@ -6,7 +13,7 @@ interface PerformanceMonitorProps {
   componentName: string;
   enabled?: boolean;
   showMetrics?: boolean;
-  onMetricsUpdate?: (metrics: any) => void;
+  onMetricsUpdate?: (metrics: PerformanceMetrics) => void;
 }
 
 export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
@@ -15,7 +22,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   showMetrics = false,
   onMetricsUpdate,
 }) => {
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   const { trackRender } = usePerformance(componentName, {

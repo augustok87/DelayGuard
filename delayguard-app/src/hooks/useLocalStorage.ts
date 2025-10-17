@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { logWarn } from '../utils/logger';
 
 export const useLocalStorage = <T>(key: string, initialValue: T) => {
   // Get from local storage then parse stored json or return initialValue
@@ -7,7 +8,11 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
+      logWarn(`Error reading localStorage key "${key}"`, { 
+        component: 'useLocalStorage', 
+        action: 'read',
+        metadata: { key, error }, 
+      });
       return initialValue;
     }
   });
@@ -22,7 +27,11 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
       // Save to local storage
       window.localStorage.setItem(key, JSON.stringify(valueToStore));
     } catch (error) {
-      console.warn(`Error setting localStorage key "${key}":`, error);
+      logWarn(`Error setting localStorage key "${key}"`, { 
+        component: 'useLocalStorage', 
+        action: 'set',
+        metadata: { key, error }, 
+      });
     }
   }, [key, storedValue]);
 
@@ -32,7 +41,11 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
       window.localStorage.removeItem(key);
       setStoredValue(initialValue);
     } catch (error) {
-      console.warn(`Error removing localStorage key "${key}":`, error);
+      logWarn(`Error removing localStorage key "${key}"`, { 
+        component: 'useLocalStorage', 
+        action: 'remove',
+        metadata: { key, error }, 
+      });
     }
   }, [key, initialValue]);
 
@@ -45,7 +58,11 @@ export const useSessionStorage = <T>(key: string, initialValue: T) => {
       const item = window.sessionStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.warn(`Error reading sessionStorage key "${key}":`, error);
+      logWarn(`Error reading sessionStorage key "${key}"`, { 
+        component: 'useSessionStorage', 
+        action: 'read',
+        metadata: { key, error }, 
+      });
       return initialValue;
     }
   });
@@ -56,7 +73,11 @@ export const useSessionStorage = <T>(key: string, initialValue: T) => {
       setStoredValue(valueToStore);
       window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
     } catch (error) {
-      console.warn(`Error setting sessionStorage key "${key}":`, error);
+      logWarn(`Error setting sessionStorage key "${key}"`, { 
+        component: 'useSessionStorage', 
+        action: 'set',
+        metadata: { key, error }, 
+      });
     }
   }, [key, storedValue]);
 
@@ -65,7 +86,11 @@ export const useSessionStorage = <T>(key: string, initialValue: T) => {
       window.sessionStorage.removeItem(key);
       setStoredValue(initialValue);
     } catch (error) {
-      console.warn(`Error removing sessionStorage key "${key}":`, error);
+      logWarn(`Error removing sessionStorage key "${key}"`, { 
+        component: 'useSessionStorage', 
+        action: 'remove',
+        metadata: { key, error }, 
+      });
     }
   }, [key, initialValue]);
 

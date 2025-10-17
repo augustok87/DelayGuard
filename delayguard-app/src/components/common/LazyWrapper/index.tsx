@@ -28,7 +28,7 @@ export const withLazyLoading = <P extends object>(
 
   const WrappedComponent: React.FC<P> = (props) => (
     <LazyWrapper fallback={fallback}>
-      <LazyComponent {...(props as any)} />
+      <LazyComponent {...(props as Record<string, unknown>)} />
     </LazyWrapper>
   );
 
@@ -46,7 +46,7 @@ export const createLazyComponent = <P extends object>(
   
   return (props: P) => (
     <LazyWrapper fallback={fallback}>
-      <LazyComponent {...(props as any)} />
+      <LazyComponent {...(props as Record<string, unknown>)} />
     </LazyWrapper>
   );
 };

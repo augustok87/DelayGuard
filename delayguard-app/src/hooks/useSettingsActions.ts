@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSettings } from './useSettings';
 import { useToasts } from './useToasts';
+import { AppSettings } from '../types';
 
 export const useSettingsActions = () => {
   const { 
@@ -25,7 +26,7 @@ export const useSettingsActions = () => {
     showTestErrorToast,
   } = useToasts();
 
-  const saveSettings = useCallback(async(settings: any) => {
+  const saveSettings = useCallback(async(settings: AppSettings) => {
     try {
       const validation = validateSettings(settings);
       
@@ -157,7 +158,7 @@ export const useSettingsActions = () => {
     }
   }, [importSettings, showSuccessToast, showErrorToast]);
 
-  const validateCurrentSettings = useCallback((settings: any) => {
+  const validateCurrentSettings = useCallback((settings: AppSettings) => {
     const validation = validateSettings(settings);
     
     if (!validation.isValid) {

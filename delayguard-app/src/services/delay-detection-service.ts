@@ -1,5 +1,6 @@
 import { TrackingInfo, DelayDetectionResult, DelayDetectionService as IDelayDetectionService } from '../types';
 import { checkForDelays } from './delay-detection';
+import { logError } from '../utils/logger';
 
 /**
  * Advanced Delay Detection Service
@@ -113,7 +114,7 @@ export class DelayDetectionService implements IDelayDetectionService {
       return enhancedResult;
 
     } catch (error) {
-      console.error('Error in delay detection:', error);
+      logError(error, { component: 'delay-detection-service', action: 'detectDelay' });
       return {
         isDelayed: false,
         error: error instanceof Error ? error.message : 'Unknown error',
