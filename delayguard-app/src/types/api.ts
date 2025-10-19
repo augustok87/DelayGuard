@@ -27,11 +27,11 @@ export interface CreateAlertRequest {
   orderId: string;
   customerName: string;
   delayDays: number;
-  status: 'active' | 'resolved' | 'dismissed';
+  status: "active" | "resolved" | "dismissed";
 }
 
 export interface UpdateAlertRequest {
-  status?: 'active' | 'resolved' | 'dismissed';
+  status?: "active" | "resolved" | "dismissed";
   resolvedAt?: string;
 }
 
@@ -93,7 +93,7 @@ export interface QueryParams {
   page?: number;
   limit?: number;
   sort?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
   filter?: Record<string, unknown>;
   search?: string;
 }
@@ -108,7 +108,7 @@ export interface WebhookPayload {
 }
 
 export interface OrderUpdateWebhook extends WebhookPayload {
-  topic: 'orders/updated';
+  topic: "orders/updated";
   data: {
     id: string;
     name: string;
@@ -125,7 +125,7 @@ export interface OrderUpdateWebhook extends WebhookPayload {
 }
 
 export interface FulfillmentUpdateWebhook extends WebhookPayload {
-  topic: 'fulfillments/updated';
+  topic: "fulfillments/updated";
   data: {
     id: string;
     order_id: string;

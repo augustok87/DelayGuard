@@ -1,6 +1,6 @@
 /**
  * Analytics Service
- * 
+ *
  * Service for handling analytics data, metrics, and reporting functionality.
  * Provides methods for fetching alerts, orders, metrics, and updating settings.
  */
@@ -10,7 +10,7 @@ export interface Alert {
   orderId: string;
   customerName: string;
   delayDays: number;
-  status: 'active' | 'resolved' | 'dismissed';
+  status: "active" | "resolved" | "dismissed";
   createdAt: string;
   resolvedAt?: string;
 }
@@ -76,13 +76,13 @@ export interface RealTimeMetrics {
   memoryUsage: number;
 }
 
-import { logError } from '../utils/logger';
+import { logError } from "../utils/logger";
 
 export class AnalyticsService {
   private baseUrl: string;
   private apiKey: string;
 
-  constructor(baseUrl: string = '/api', apiKey: string = '') {
+  constructor(baseUrl: string = "/api", apiKey: string = "") {
     this.baseUrl = baseUrl;
     this.apiKey = apiKey;
   }
@@ -98,17 +98,20 @@ export class AnalyticsService {
   }): Promise<Alert[]> {
     try {
       const params = new URLSearchParams();
-      if (filters?.startDate) params.append('startDate', filters.startDate);
-      if (filters?.endDate) params.append('endDate', filters.endDate);
-      if (filters?.status) params.append('status', filters.status);
-      if (filters?.search) params.append('search', filters.search);
+      if (filters?.startDate) params.append("startDate", filters.startDate);
+      if (filters?.endDate) params.append("endDate", filters.endDate);
+      if (filters?.status) params.append("status", filters.status);
+      if (filters?.search) params.append("search", filters.search);
 
-      const response = await fetch(`${this.baseUrl}/alerts?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${this.baseUrl}/alerts?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch alerts: ${response.statusText}`);
@@ -116,7 +119,11 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'getAlerts' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "getAlerts" },
+      );
       throw error;
     }
   }
@@ -131,16 +138,19 @@ export class AnalyticsService {
   }): Promise<Order[]> {
     try {
       const params = new URLSearchParams();
-      if (filters?.startDate) params.append('startDate', filters.startDate);
-      if (filters?.endDate) params.append('endDate', filters.endDate);
-      if (filters?.search) params.append('search', filters.search);
+      if (filters?.startDate) params.append("startDate", filters.startDate);
+      if (filters?.endDate) params.append("endDate", filters.endDate);
+      if (filters?.search) params.append("search", filters.search);
 
-      const response = await fetch(`${this.baseUrl}/orders?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${this.baseUrl}/orders?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch orders: ${response.statusText}`);
@@ -148,7 +158,11 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'getOrders' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "getOrders" },
+      );
       throw error;
     }
   }
@@ -160,8 +174,8 @@ export class AnalyticsService {
     try {
       const response = await fetch(`${this.baseUrl}/metrics`, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
         },
       });
 
@@ -171,7 +185,11 @@ export class AnalyticsService {
 
       return await response.json();
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'getMetrics' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "getMetrics" },
+      );
       throw error;
     }
   }
@@ -182,10 +200,10 @@ export class AnalyticsService {
   async updateSettings(settings: Settings): Promise<void> {
     try {
       const response = await fetch(`${this.baseUrl}/settings`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(settings),
       });
@@ -194,7 +212,11 @@ export class AnalyticsService {
         throw new Error(`Failed to update settings: ${response.statusText}`);
       }
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'updateSettings' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "updateSettings" },
+      );
       throw error;
     }
   }
@@ -205,20 +227,26 @@ export class AnalyticsService {
   async testDelayDetection(): Promise<TestDelayDetectionResult> {
     try {
       const response = await fetch(`${this.baseUrl}/test-delay-detection`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to test delay detection: ${response.statusText}`);
+        throw new Error(
+          `Failed to test delay detection: ${response.statusText}`,
+        );
       }
 
       return await response.json();
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'testDelayDetection' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "testDelayDetection" },
+      );
       throw error;
     }
   }
@@ -228,19 +256,26 @@ export class AnalyticsService {
    */
   async resolveAlert(alertId: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/alerts/${alertId}/resolve`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${this.baseUrl}/alerts/${alertId}/resolve`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to resolve alert: ${response.statusText}`);
       }
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'resolveAlert' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "resolveAlert" },
+      );
       throw error;
     }
   }
@@ -250,19 +285,26 @@ export class AnalyticsService {
    */
   async dismissAlert(alertId: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/alerts/${alertId}/dismiss`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${this.baseUrl}/alerts/${alertId}/dismiss`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to dismiss alert: ${response.statusText}`);
       }
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'dismissAlert' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "dismissAlert" },
+      );
       throw error;
     }
   }
@@ -277,15 +319,18 @@ export class AnalyticsService {
   }): Promise<Blob> {
     try {
       const params = new URLSearchParams();
-      if (filters?.startDate) params.append('startDate', filters.startDate);
-      if (filters?.endDate) params.append('endDate', filters.endDate);
-      if (filters?.status) params.append('status', filters.status);
+      if (filters?.startDate) params.append("startDate", filters.startDate);
+      if (filters?.endDate) params.append("endDate", filters.endDate);
+      if (filters?.status) params.append("status", filters.status);
 
-      const response = await fetch(`${this.baseUrl}/alerts/export?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+      const response = await fetch(
+        `${this.baseUrl}/alerts/export?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to export alerts: ${response.statusText}`);
@@ -293,7 +338,11 @@ export class AnalyticsService {
 
       return await response.blob();
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'exportAlerts' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "exportAlerts" },
+      );
       throw error;
     }
   }
@@ -301,23 +350,35 @@ export class AnalyticsService {
   /**
    * Get analytics metrics for a specific shop and time range
    */
-  async getAnalyticsMetrics(shopId: string, timeRange: '7d' | '30d' | '90d' | '1y'): Promise<AnalyticsMetrics> {
+  async getAnalyticsMetrics(
+    shopId: string,
+    timeRange: "7d" | "30d" | "90d" | "1y",
+  ): Promise<AnalyticsMetrics> {
     try {
-      const response = await fetch(`${this.baseUrl}/analytics?shop=${shopId}&timeRange=${timeRange}`, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${this.baseUrl}/analytics?shop=${shopId}&timeRange=${timeRange}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch analytics metrics: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch analytics metrics: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
       return data.data || data;
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'getAnalyticsMetrics' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "getAnalyticsMetrics" },
+      );
       throw error;
     }
   }
@@ -327,21 +388,30 @@ export class AnalyticsService {
    */
   async getRealTimeMetrics(shopId: string): Promise<RealTimeMetrics> {
     try {
-      const response = await fetch(`${this.baseUrl}/analytics/realtime?shop=${shopId}`, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${this.baseUrl}/analytics/realtime?shop=${shopId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch real-time metrics: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch real-time metrics: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
       return data.data || data;
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'getRealTimeMetrics' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "getRealTimeMetrics" },
+      );
       throw error;
     }
   }
@@ -351,19 +421,28 @@ export class AnalyticsService {
    */
   async clearCache(shopId: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/analytics/cache?shop=${shopId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${this.baseUrl}/analytics/cache?shop=${shopId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
-        throw new Error(`Failed to clear analytics cache: ${response.statusText}`);
+        throw new Error(
+          `Failed to clear analytics cache: ${response.statusText}`,
+        );
       }
     } catch (error) {
-      logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'AnalyticsService', action: 'clearCache' });
+      logError(
+        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error : undefined,
+        { component: "AnalyticsService", action: "clearCache" },
+      );
       throw error;
     }
   }

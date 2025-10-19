@@ -5,9 +5,9 @@
  */
 
 // Service configuration
-const SERVICE_NAME = 'delayguard-api';
-const SERVICE_VERSION = process.env.npm_package_version || '1.0.0';
-const ENVIRONMENT = process.env.NODE_ENV || 'development';
+const SERVICE_NAME = "delayguard-api";
+const SERVICE_VERSION = process.env.npm_package_version || "1.0.0";
+const ENVIRONMENT = process.env.NODE_ENV || "development";
 
 // Simple tracing interface
 interface Span {
@@ -28,13 +28,13 @@ interface Meter {
 // Mock implementations for development
 class MockSpan implements Span {
   setStatus(status: { code: number; message?: string }): void {
-    console.log(`[TRACE] Span status: ${status.code} ${status.message || ''}`);
+    console.log(`[TRACE] Span status: ${status.code} ${status.message || ""}`);
   }
-  
+
   setAttributes(attributes: Record<string, any>): void {
     console.log(`[TRACE] Span attributes:`, attributes);
   }
-  
+
   end(): void {
     console.log(`[TRACE] Span ended`);
   }
@@ -56,7 +56,7 @@ class MockMeter implements Meter {
       },
     };
   }
-  
+
   createHistogram(name: string, options?: any): any {
     console.log(`[METRICS] Creating histogram: ${name}`, options);
     return {
@@ -78,7 +78,11 @@ export const getMeter = (name: string): Meter => {
   return new MockMeter();
 };
 
-export const createSpan = (tracer: Tracer, name: string, options?: any): Span => {
+export const createSpan = (
+  tracer: Tracer,
+  name: string,
+  options?: any,
+): Span => {
   return tracer.startSpan(name, options);
 };
 
@@ -88,7 +92,10 @@ export const withSpan = <T>(span: Span, fn: () => T): T => {
     span.setStatus({ code: 1 }); // OK
     return result;
   } catch (error) {
-    span.setStatus({ code: 2, message: error instanceof Error ? error.message : 'Unknown error' });
+    span.setStatus({
+      code: 2,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
     throw error;
   } finally {
     span.end();
@@ -97,71 +104,73 @@ export const withSpan = <T>(span: Span, fn: () => T): T => {
 
 // Initialize tracing (simplified)
 export async function initializeTracing(): Promise<void> {
-  console.log(`[TRACE] Initializing tracing for ${SERVICE_NAME} v${SERVICE_VERSION} in ${ENVIRONMENT}`);
-  
+  console.log(
+    `[TRACE] Initializing tracing for ${SERVICE_NAME} v${SERVICE_VERSION} in ${ENVIRONMENT}`,
+  );
+
   // In a real implementation, this would set up OpenTelemetry
   // For now, we just log that tracing is initialized
-  console.log('[TRACE] Tracing initialized (mock mode)');
+  console.log("[TRACE] Tracing initialized (mock mode)");
 }
 
 // Shutdown tracing
 export async function shutdownTracing(): Promise<void> {
-  console.log('[TRACE] Shutting down tracing');
+  console.log("[TRACE] Shutting down tracing");
 }
 
 // HTTP request tracing middleware
 export function traceHttpRequest(req: any, res: any, next: any): void {
-  const tracer = getTracer('http');
+  const tracer = getTracer("http");
   const span = tracer.startSpan(`${req.method} ${req.path}`);
-  
+
   span.setAttributes({
-    'http.method': req.method,
-    'http.url': req.url,
-    'http.user_agent': req.get('User-Agent') || 'unknown',
+    "http.method": req.method,
+    "http.url": req.url,
+    "http.user_agent": req.get("User-Agent") || "unknown",
   });
-  
-  res.on('finish', () => {
+
+  res.on("finish", () => {
     span.setAttributes({
-      'http.status_code': res.statusCode,
+      "http.status_code": res.statusCode,
     });
-    
+
     if (res.statusCode >= 400) {
       span.setStatus({ code: 2, message: `HTTP ${res.statusCode}` });
     } else {
       span.setStatus({ code: 1 });
     }
-    
+
     span.end();
   });
-  
+
   next();
 }
 
 // Database query tracing
 export function traceDatabaseQuery(query: string, params?: any[]): Span {
-  const tracer = getTracer('database');
-  const span = tracer.startSpan('db.query');
-  
+  const tracer = getTracer("database");
+  const span = tracer.startSpan("db.query");
+
   span.setAttributes({
-    'db.statement': query,
-    'db.parameters': params ? JSON.stringify(params) : undefined,
+    "db.statement": query,
+    "db.parameters": params ? JSON.stringify(params) : undefined,
   });
-  
+
   return span;
 }
 
 // Business logic tracing
 export function traceBusinessLogic(operation: string, data?: any): Span {
-  const tracer = getTracer('business');
+  const tracer = getTracer("business");
   const span = tracer.startSpan(operation);
-  
+
   if (data) {
     span.setAttributes({
-      'business.operation': operation,
-      'business.data': JSON.stringify(data),
+      "business.operation": operation,
+      "business.data": JSON.stringify(data),
     });
   }
-  
+
   return span;
 }
 
@@ -176,8 +185,15 @@ export const delayGuardMetrics = {
   updateGauge: (name: string, value: number, attributes?: any) => {
     console.log(`[METRICS] Gauge ${name}: ${value}`, attributes);
   },
-  recordApiResponseTime: (endpoint: string, responseTime: number, attributes?: any) => {
-    console.log(`[METRICS] API Response Time ${endpoint}: ${responseTime}ms`, attributes);
+  recordApiResponseTime: (
+    endpoint: string,
+    responseTime: number,
+    attributes?: any,
+  ) => {
+    console.log(
+      `[METRICS] API Response Time ${endpoint}: ${responseTime}ms`,
+      attributes,
+    );
   },
   updateQueueSize: (queueName: string, size: number, attributes?: any) => {
     console.log(`[METRICS] Queue Size ${queueName}: ${size}`, attributes);

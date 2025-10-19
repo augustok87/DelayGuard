@@ -1,5 +1,5 @@
-import { Context, Next } from 'koa';
-import crypto from 'crypto';
+import { Context, Next } from "koa";
+import crypto from "crypto";
 // import { ValidationError } from '../types'; // Removed unused import
 
 /**
@@ -13,7 +13,7 @@ export interface CSRFConfig {
   cookieOptions?: {
     httpOnly: boolean;
     secure: boolean;
-    sameSite: 'strict' | 'lax' | 'none';
+    sameSite: "strict" | "lax" | "none";
     maxAge: number;
   };
   excludedMethods?: string[];
@@ -28,22 +28,22 @@ export class CSRFProtectionMiddleware {
   private config: CSRFConfig;
 
   constructor(config: CSRFConfig) {
-    if (!config.secret || config.secret.trim() === '') {
-      throw new Error('CSRF secret is required');
+    if (!config.secret || config.secret.trim() === "") {
+      throw new Error("CSRF secret is required");
     }
-    
+
     this.config = {
       tokenLength: 32,
-      cookieName: '_csrf',
-      headerName: 'x-csrf-token',
+      cookieName: "_csrf",
+      headerName: "x-csrf-token",
       cookieOptions: {
         httpOnly: false, // Must be readable by JavaScript
         secure: true,
-        sameSite: 'strict',
+        sameSite: "strict",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       },
-      excludedMethods: ['GET', 'HEAD', 'OPTIONS'],
-      excludedPaths: ['/health', '/api/health'],
+      excludedMethods: ["GET", "HEAD", "OPTIONS"],
+      excludedPaths: ["/health", "/api/health"],
       ...config,
     };
   }
@@ -62,7 +62,7 @@ export class CSRFProtectionMiddleware {
     }
 
     // Skip CSRF check for excluded paths
-    if (this.config.excludedPaths!.some(path => ctx.path.startsWith(path))) {
+    if (this.config.excludedPaths!.some((path) => ctx.path.startsWith(path))) {
       await next();
       return;
     }
@@ -70,7 +70,7 @@ export class CSRFProtectionMiddleware {
     // Validate CSRF token for state-changing requests
     const isValid = this.validateToken(ctx);
     if (!isValid) {
-      ctx.throw(403, 'CSRF token missing');
+      ctx.throw(403, "CSRF token missing");
       return;
     }
 
@@ -81,7 +81,7 @@ export class CSRFProtectionMiddleware {
    * Generate CSRF token
    */
   private generateToken(): string {
-    return crypto.randomBytes(this.config.tokenLength!).toString('hex');
+    return crypto.randomBytes(this.config.tokenLength!).toString("hex");
   }
 
   /**
@@ -117,13 +117,12 @@ export class CSRFProtectionMiddleware {
     if (cookieToken.length !== providedToken.length) {
       return false;
     }
-    
+
     return crypto.timingSafeEqual(
-      Buffer.from(cookieToken, 'utf8'),
-      Buffer.from(providedToken, 'utf8'),
+      Buffer.from(cookieToken, "utf8"),
+      Buffer.from(providedToken, "utf8"),
     );
   }
-
 
   /**
    * Get CSRF token for current request
@@ -155,7 +154,7 @@ export class CSRFTokenGenerator {
    * Generate CSRF token for API requests
    */
   generateToken(): string {
-    return crypto.randomBytes(this.config.tokenLength || 32).toString('hex');
+    return crypto.randomBytes(this.config.tokenLength || 32).toString("hex");
   }
 
   /**
@@ -164,13 +163,13 @@ export class CSRFTokenGenerator {
   validateToken(token: string, secret: string): boolean {
     try {
       const expectedToken = crypto
-        .createHmac('sha256', this.config.secret)
+        .createHmac("sha256", this.config.secret)
         .update(secret)
-        .digest('hex');
-      
+        .digest("hex");
+
       return crypto.timingSafeEqual(
-        Buffer.from(token, 'hex'),
-        Buffer.from(expectedToken, 'hex'),
+        Buffer.from(token, "hex"),
+        Buffer.from(expectedToken, "hex"),
       );
     } catch (error) {
       return false;
@@ -185,22 +184,22 @@ export class APICSRFProtection {
   private config: CSRFConfig;
 
   constructor(config: CSRFConfig) {
-    if (!config.secret || config.secret.trim() === '') {
-      throw new Error('CSRF secret is required');
+    if (!config.secret || config.secret.trim() === "") {
+      throw new Error("CSRF secret is required");
     }
-    
+
     this.config = {
       tokenLength: 32,
-      cookieName: '_csrf',
-      headerName: 'x-csrf-token',
+      cookieName: "_csrf",
+      headerName: "x-csrf-token",
       cookieOptions: {
         httpOnly: false, // Must be readable by JavaScript
         secure: true,
-        sameSite: 'strict',
+        sameSite: "strict",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       },
-      excludedMethods: ['GET', 'HEAD', 'OPTIONS'],
-      excludedPaths: ['/health', '/api/health'],
+      excludedMethods: ["GET", "HEAD", "OPTIONS"],
+      excludedPaths: ["/health", "/api/health"],
       ...config,
     };
   }
@@ -219,7 +218,7 @@ export class APICSRFProtection {
     }
 
     // Skip CSRF check for excluded paths
-    if (this.config.excludedPaths!.some(path => ctx.path.startsWith(path))) {
+    if (this.config.excludedPaths!.some((path) => ctx.path.startsWith(path))) {
       await next();
       return;
     }
@@ -227,7 +226,7 @@ export class APICSRFProtection {
     // Validate CSRF token for state-changing requests
     const isValid = this.validateToken(ctx);
     if (!isValid) {
-      ctx.throw(403, 'CSRF token missing');
+      ctx.throw(403, "CSRF token missing");
       return;
     }
 
@@ -238,7 +237,7 @@ export class APICSRFProtection {
    * Generate CSRF token
    */
   private generateToken(): string {
-    return crypto.randomBytes(this.config.tokenLength!).toString('hex');
+    return crypto.randomBytes(this.config.tokenLength!).toString("hex");
   }
 
   /**
@@ -274,10 +273,10 @@ export class APICSRFProtection {
     if (cookieToken.length !== providedToken.length) {
       return false;
     }
-    
+
     return crypto.timingSafeEqual(
-      Buffer.from(cookieToken, 'utf8'),
-      Buffer.from(providedToken, 'utf8'),
+      Buffer.from(cookieToken, "utf8"),
+      Buffer.from(providedToken, "utf8"),
     );
   }
 

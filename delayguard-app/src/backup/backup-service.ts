@@ -3,12 +3,16 @@
  * Provides automated backup, restore, and disaster recovery capabilities
  */
 
-import { withSpan, getTracer, delayGuardMetrics } from '../observability/tracing';
+import {
+  withSpan,
+  getTracer,
+  delayGuardMetrics,
+} from "../observability/tracing";
 
 export interface BackupConfig {
   id: string;
   name: string;
-  type: 'database' | 'redis' | 'files' | 'secrets';
+  type: "database" | "redis" | "files" | "secrets";
   schedule: string; // Cron expression
   retention: number; // Days to keep backups
   encryption: boolean;
@@ -19,7 +23,7 @@ export interface BackupConfig {
 export interface BackupResult {
   id: string;
   configId: string;
-  status: 'success' | 'failed' | 'in_progress';
+  status: "success" | "failed" | "in_progress";
   startTime: Date;
   endTime?: Date;
   size: number;
@@ -37,7 +41,7 @@ export interface RestoreConfig {
 export interface RestoreResult {
   id: string;
   backupId: string;
-  status: 'success' | 'failed' | 'in_progress';
+  status: "success" | "failed" | "in_progress";
   startTime: Date;
   endTime?: Date;
   error?: string;
@@ -86,37 +90,37 @@ export class BackupService {
     const result: BackupResult = {
       id: backupId,
       configId,
-      status: 'in_progress',
+      status: "in_progress",
       startTime,
       size: 0,
-      checksum: '',
+      checksum: "",
     };
 
     this.results.set(backupId, result);
 
     try {
-      const tracer = getTracer('backup');
+      const tracer = getTracer("backup");
       const span = tracer.startSpan(`backup.${config.type}`);
       return await withSpan(span, async() => {
         span.setAttributes({
-          'backup.id': backupId,
-          'backup.type': config.type,
-          'backup.name': config.name,
+          "backup.id": backupId,
+          "backup.type": config.type,
+          "backup.name": config.name,
         });
 
         let backupData: Buffer;
 
         switch (config.type) {
-          case 'database':
+          case "database":
             backupData = await this.backupDatabase();
             break;
-          case 'redis':
+          case "redis":
             backupData = await this.backupRedis();
             break;
-          case 'files':
+          case "files":
             backupData = await this.backupFiles();
             break;
-          case 'secrets':
+          case "secrets":
             backupData = await this.backupSecrets();
             break;
           default:
@@ -140,7 +144,7 @@ export class BackupService {
         await this.storeBackup(backupId, backupData, config);
 
         // Update result
-        result.status = 'success';
+        result.status = "success";
         result.endTime = new Date();
         result.size = backupData.length;
         result.checksum = checksum;
@@ -148,14 +152,16 @@ export class BackupService {
         this.results.set(backupId, result);
 
         // Record metrics
-        delayGuardMetrics.recordApiResponseTime('backup', Date.now() - startTime.getTime());
+        delayGuardMetrics.recordApiResponseTime(
+          "backup",
+          Date.now() - startTime.getTime(),
+        );
 
         console.log(`Backup completed: ${backupId} (${result.size} bytes)`);
         return result;
-
       });
     } catch (error) {
-      result.status = 'failed';
+      result.status = "failed";
       result.endTime = new Date();
       result.error = (error as Error).message;
 
@@ -176,27 +182,27 @@ export class BackupService {
     const result: RestoreResult = {
       id: restoreId,
       backupId: restoreConfig.backupId,
-      status: 'in_progress',
+      status: "in_progress",
       startTime,
     };
 
     this.restoreResults.set(restoreId, result);
 
     try {
-      const tracer = getTracer('backup');
+      const tracer = getTracer("backup");
       const span = tracer.startSpan(`restore.${restoreConfig.backupId}`);
       return await withSpan(span, async() => {
         span.setAttributes({
-          'restore.id': restoreId,
-          'restore.backup_id': restoreConfig.backupId,
-          'restore.target': restoreConfig.target,
-          'restore.dry_run': restoreConfig.dryRun,
+          "restore.id": restoreId,
+          "restore.backup_id": restoreConfig.backupId,
+          "restore.target": restoreConfig.target,
+          "restore.dry_run": restoreConfig.dryRun,
         });
 
         // Get backup data
         const backupData = await this.retrieveBackup(restoreConfig.backupId);
         const backupResult = this.results.get(restoreConfig.backupId);
-        
+
         if (!backupResult) {
           throw new Error(`Backup not found: ${restoreConfig.backupId}`);
         }
@@ -204,18 +210,18 @@ export class BackupService {
         // Verify checksum
         const checksum = await this.calculateChecksum(backupData);
         if (checksum !== backupResult.checksum) {
-          throw new Error('Backup checksum verification failed');
+          throw new Error("Backup checksum verification failed");
         }
 
         // Decrypt if needed
         let decryptedData = backupData;
-        if (backupResult.checksum.includes('encrypted')) {
+        if (backupResult.checksum.includes("encrypted")) {
           decryptedData = await this.decryptData(backupData);
         }
 
         // Decompress if needed
         let decompressedData = decryptedData;
-        if (backupResult.checksum.includes('compressed')) {
+        if (backupResult.checksum.includes("compressed")) {
           decompressedData = await this.decompressData(decryptedData);
         }
 
@@ -224,17 +230,16 @@ export class BackupService {
           await this.performRestore(decompressedData, restoreConfig.target);
         }
 
-        result.status = 'success';
+        result.status = "success";
         result.endTime = new Date();
 
         this.restoreResults.set(restoreId, result);
 
         console.log(`Restore completed: ${restoreId}`);
         return result;
-
       });
     } catch (error) {
-      result.status = 'failed';
+      result.status = "failed";
       result.endTime = new Date();
       result.error = (error as Error).message;
 
@@ -278,7 +283,7 @@ export class BackupService {
    */
   async cleanupOldBackups() {
     const now = new Date();
-    const cutoffDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000)); // 30 days ago
+    const cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
 
     for (const [backupId, result] of this.results) {
       if (result.startTime < cutoffDate) {
@@ -295,50 +300,50 @@ export class BackupService {
   private initializeDefaultConfigs() {
     // Database backup - daily
     this.addConfig({
-      id: 'db-daily',
-      name: 'Daily Database Backup',
-      type: 'database',
-      schedule: '0 2 * * *', // 2 AM daily
+      id: "db-daily",
+      name: "Daily Database Backup",
+      type: "database",
+      schedule: "0 2 * * *", // 2 AM daily
       retention: 30,
       encryption: true,
       compression: true,
-      destination: 's3://delayguard-backups/database/',
+      destination: "s3://delayguard-backups/database/",
     });
 
     // Redis backup - hourly
     this.addConfig({
-      id: 'redis-hourly',
-      name: 'Hourly Redis Backup',
-      type: 'redis',
-      schedule: '0 * * * *', // Every hour
+      id: "redis-hourly",
+      name: "Hourly Redis Backup",
+      type: "redis",
+      schedule: "0 * * * *", // Every hour
       retention: 7,
       encryption: false,
       compression: true,
-      destination: 's3://delayguard-backups/redis/',
+      destination: "s3://delayguard-backups/redis/",
     });
 
     // Files backup - weekly
     this.addConfig({
-      id: 'files-weekly',
-      name: 'Weekly Files Backup',
-      type: 'files',
-      schedule: '0 3 * * 0', // 3 AM Sunday
+      id: "files-weekly",
+      name: "Weekly Files Backup",
+      type: "files",
+      schedule: "0 3 * * 0", // 3 AM Sunday
       retention: 90,
       encryption: true,
       compression: true,
-      destination: 's3://delayguard-backups/files/',
+      destination: "s3://delayguard-backups/files/",
     });
 
     // Secrets backup - daily
     this.addConfig({
-      id: 'secrets-daily',
-      name: 'Daily Secrets Backup',
-      type: 'secrets',
-      schedule: '0 1 * * *', // 1 AM daily
+      id: "secrets-daily",
+      name: "Daily Secrets Backup",
+      type: "secrets",
+      schedule: "0 1 * * *", // 1 AM daily
       retention: 365,
       encryption: true,
       compression: false,
-      destination: 's3://delayguard-backups/secrets/',
+      destination: "s3://delayguard-backups/secrets/",
     });
   }
 
@@ -346,8 +351,8 @@ export class BackupService {
    * Backup database
    */
   private async backupDatabase(): Promise<Buffer> {
-    const { query } = await import('../database/connection');
-    
+    const { query } = await import("../database/connection");
+
     // Create database dump
     const dump = await query(`
       SELECT 
@@ -368,39 +373,39 @@ export class BackupService {
    * Backup Redis
    */
   private async backupRedis(): Promise<Buffer> {
-    const { redis } = await import('../queue/setup');
-    
+    const { redis } = await import("../queue/setup");
+
     // Get all keys
-    const keys = await redis.keys('*');
+    const keys = await redis.keys("*");
     const data: Record<string, unknown> = {};
-    
+
     for (const key of keys) {
       const type = await redis.type(key);
       let value: unknown;
-      
+
       switch (type) {
-        case 'string':
+        case "string":
           value = await redis.get(key);
           break;
-        case 'hash':
+        case "hash":
           value = await redis.hgetall(key);
           break;
-        case 'list':
+        case "list":
           value = await redis.lrange(key, 0, -1);
           break;
-        case 'set':
+        case "set":
           value = await redis.smembers(key);
           break;
-        case 'zset':
-          value = await redis.zrange(key, 0, -1, 'WITHSCORES');
+        case "zset":
+          value = await redis.zrange(key, 0, -1, "WITHSCORES");
           break;
         default:
           value = null;
       }
-      
+
       data[key] = { type, value };
     }
-    
+
     return Buffer.from(JSON.stringify(data, null, 2));
   }
 
@@ -408,29 +413,29 @@ export class BackupService {
    * Backup files
    */
   private async backupFiles(): Promise<Buffer> {
-    const fs = await import('fs/promises');
-    
+    const fs = await import("fs/promises");
+
     // Create tar archive of important files
     const files = [
-      'package.json',
-      'package-lock.json',
-      'tsconfig.json',
-      'jest.config.ts',
-      'webpack.config.js',
-      'vercel.json',
+      "package.json",
+      "package-lock.json",
+      "tsconfig.json",
+      "jest.config.ts",
+      "webpack.config.js",
+      "vercel.json",
     ];
-    
+
     const archive: Record<string, string> = {};
-    
+
     for (const file of files) {
       try {
-        const content = await fs.readFile(file, 'utf-8');
+        const content = await fs.readFile(file, "utf-8");
         archive[file] = content;
       } catch (error) {
         console.warn(`Could not backup file: ${file}`, error);
       }
     }
-    
+
     return Buffer.from(JSON.stringify(archive, null, 2));
   }
 
@@ -439,16 +444,24 @@ export class BackupService {
    */
   private async backupSecrets(): Promise<Buffer> {
     const secrets = {
-      SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY ? '[REDACTED]' : undefined,
-      SHOPIFY_API_SECRET: process.env.SHOPIFY_API_SECRET ? '[REDACTED]' : undefined,
-      DATABASE_URL: process.env.DATABASE_URL ? '[REDACTED]' : undefined,
-      REDIS_URL: process.env.REDIS_URL ? '[REDACTED]' : undefined,
-      SHIPENGINE_API_KEY: process.env.SHIPENGINE_API_KEY ? '[REDACTED]' : undefined,
-      SENDGRID_API_KEY: process.env.SENDGRID_API_KEY ? '[REDACTED]' : undefined,
-      TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID ? '[REDACTED]' : undefined,
-      TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN ? '[REDACTED]' : undefined,
+      SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY ? "[REDACTED]" : undefined,
+      SHOPIFY_API_SECRET: process.env.SHOPIFY_API_SECRET
+        ? "[REDACTED]"
+        : undefined,
+      DATABASE_URL: process.env.DATABASE_URL ? "[REDACTED]" : undefined,
+      REDIS_URL: process.env.REDIS_URL ? "[REDACTED]" : undefined,
+      SHIPENGINE_API_KEY: process.env.SHIPENGINE_API_KEY
+        ? "[REDACTED]"
+        : undefined,
+      SENDGRID_API_KEY: process.env.SENDGRID_API_KEY ? "[REDACTED]" : undefined,
+      TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID
+        ? "[REDACTED]"
+        : undefined,
+      TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN
+        ? "[REDACTED]"
+        : undefined,
     };
-    
+
     return Buffer.from(JSON.stringify(secrets, null, 2));
   }
 
@@ -456,15 +469,15 @@ export class BackupService {
    * Calculate checksum
    */
   private async calculateChecksum(data: Buffer): Promise<string> {
-    const crypto = await import('crypto');
-    return crypto.createHash('sha256').update(data).digest('hex');
+    const crypto = await import("crypto");
+    return crypto.createHash("sha256").update(data).digest("hex");
   }
 
   /**
    * Compress data
    */
   private async compressData(data: Buffer): Promise<Buffer> {
-    const { gzip } = await import('zlib');
+    const { gzip } = await import("zlib");
     return new Promise((resolve, reject) => {
       gzip(data, (err, compressed) => {
         if (err) reject(err);
@@ -477,7 +490,7 @@ export class BackupService {
    * Decompress data
    */
   private async decompressData(data: Buffer): Promise<Buffer> {
-    const { gunzip } = await import('zlib');
+    const { gunzip } = await import("zlib");
     return new Promise((resolve, reject) => {
       gunzip(data, (err, decompressed) => {
         if (err) reject(err);
@@ -490,17 +503,17 @@ export class BackupService {
    * Encrypt data
    */
   private async encryptData(data: Buffer): Promise<Buffer> {
-    const crypto = await import('crypto');
-    const algorithm = 'aes-256-gcm';
+    const crypto = await import("crypto");
+    const algorithm = "aes-256-gcm";
     const key = crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);
-    
+
     const cipher = crypto.createCipher(algorithm, key);
-    cipher.setAAD(Buffer.from('delayguard-backup'));
-    
+    cipher.setAAD(Buffer.from("delayguard-backup"));
+
     const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
     const authTag = cipher.getAuthTag();
-    
+
     return Buffer.concat([key, iv, authTag, encrypted]);
   }
 
@@ -508,25 +521,29 @@ export class BackupService {
    * Decrypt data
    */
   private async decryptData(data: Buffer): Promise<Buffer> {
-    const crypto = await import('crypto');
-    const algorithm = 'aes-256-gcm';
-    
+    const crypto = await import("crypto");
+    const algorithm = "aes-256-gcm";
+
     const key = data.subarray(0, 32);
     // const _iv = data.subarray(32, 48); // Available for future use
     const authTag = data.subarray(48, 64);
     const encrypted = data.subarray(64);
-    
+
     const decipher = crypto.createDecipher(algorithm, key);
-    decipher.setAAD(Buffer.from('delayguard-backup'));
+    decipher.setAAD(Buffer.from("delayguard-backup"));
     decipher.setAuthTag(authTag);
-    
+
     return Buffer.concat([decipher.update(encrypted), decipher.final()]);
   }
 
   /**
    * Store backup
    */
-  private async storeBackup(backupId: string, data: Buffer, config: BackupConfig): Promise<void> {
+  private async storeBackup(
+    backupId: string,
+    data: Buffer,
+    config: BackupConfig,
+  ): Promise<void> {
     // In a real implementation, this would store to S3, local filesystem, etc.
     console.log(`Storing backup ${backupId} to ${config.destination}`);
     // For now, just log the operation

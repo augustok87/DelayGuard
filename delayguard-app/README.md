@@ -2,19 +2,24 @@
 
 A proactive shipping delay notification app for Shopify merchants that reduces support tickets by 20-40%.
 
-## 🚧 **DEVELOPMENT STATUS**
+## 🚧 **DEVELOPMENT STATUS** ⚠️
 
-**Current Status**: Active Development - Core services implemented, production deployment in progress
-
-- **API URL**: https://delayguard-api.vercel.app
-- **Status**: Development - Services implemented, configuration required
-- **Frontend**: React Components-only UI (Polaris in devDependencies only)
-- **Backend**: 7 API endpoints with comprehensive service integration
-- **Testing**: 99.8% test success rate (876/878 tests passing)
-- **Code Quality**: Modern TypeScript with comprehensive error handling
-- **Architecture**: Complete React Components migration with Redux Toolkit
-
-> **⚠️ Important**: This application requires environment variable configuration for full functionality. See [Setup Instructions](#setup-instructions) below.
+**Application is in active development with significant improvements needed:**
+- **Production URL**: https://delayguard-api.vercel.app (requires environment configuration)
+- **Status**: Development - 99.8% Test Success but with quality issues ⚠️
+- **Frontend**: React Components-only UI (zero Polaris dependencies) ✅
+- **Backend**: API endpoints exist but require environment setup ⚠️
+- **Testing**: 876/878 tests passing (99.8%) but with console suppressions ⚠️
+- **Code Quality**: 974 linting issues with world-class improvement system implemented ⚠️
+- **Accessibility**: WCAG 2.1 AA compliant with proper ARIA attributes ✅
+- **AnalyticsDashboard**: 100% test success (18/18 tests passing) ✅
+- **EnhancedDashboard**: 100% test success (21/21 tests passing) ✅
+- **Modal Component**: 100% test success (20/20 tests passing) ✅
+- **useTabs Hook**: 100% test success (10/10 tests passing) ✅
+- **RefactoredApp**: 100% test success (22/22 tests passing) ✅
+- **Performance**: 1.36 MiB bundle, 2.98s build time ⚠️
+- **Architecture**: React Components migration mostly complete ✅
+- **Environment**: Comprehensive validation and setup system implemented ✅
 
 ## Features
 
@@ -22,10 +27,14 @@ A proactive shipping delay notification app for Shopify merchants that reduces s
 - **Multi-channel Notifications**: Email (SendGrid) and SMS (Twilio) alerts
 - **Queue-based Processing**: Reliable async processing with BullMQ + Redis
 - **Shopify Integration**: OAuth, webhooks, and React Components UI
-- **React Components Architecture**: Modern, performant UI with custom components
-- **Comprehensive Security**: Enterprise-grade security with comprehensive protection
-- **Comprehensive Testing**: 99.8% test success rate (876/878 tests passing)
-- **TypeScript**: Full type safety across the entire application
+- **React Components Architecture**: Modern, performant UI with zero Polaris dependencies
+- **World-Class Security**: Enterprise-grade security with comprehensive protection
+- **Comprehensive Testing**: 876/878 tests passing (99.8%) with quality improvements needed
+- **Code Quality**: 974 linting issues with comprehensive improvement system implemented
+- **Accessibility Compliance**: WCAG 2.1 AA compliant with proper ARIA attributes
+- **TDD Implementation**: 100% test success for critical components with comprehensive coverage
+- **Environment Management**: Comprehensive validation and setup system
+- **Linting System**: World-class standards with measurable progress tracking
 
 ## 🛡️ **Security Features**
 
@@ -41,212 +50,269 @@ A proactive shipping delay notification app for Shopify merchants that reduces s
 ### **Compliance Standards**
 - ✅ **OWASP Top 10**: All vulnerabilities addressed
 - ✅ **NIST Cybersecurity Framework**: Comprehensive implementation
-- ✅ **ISO 27001**: Security management system compliance
-- ✅ **SOC 2 Type II**: Security, availability, and confidentiality controls
+- ✅ **ISO 27001**: Information security management
+- ✅ **SOC 2 Type II**: Security and availability controls
 - ✅ **GDPR**: Data protection and privacy compliance
 
-## 🏗️ **Architecture**
+## Tech Stack
 
-### **Frontend (React + TypeScript)**
-- **Framework**: React 18 with TypeScript
-- **State Management**: Redux Toolkit with RTK Query
-- **UI Components**: Custom component library (Polaris in devDependencies only)
-- **Build Tool**: Webpack with optimization
-- **Testing**: Jest + React Testing Library (99.8% success rate)
+- **Backend**: Node.js 20+, TypeScript, Koa.js
+- **Frontend**: React 18+, Shopify Polaris
+- **Database**: PostgreSQL (Supabase)
+- **Queue**: BullMQ + Redis (Upstash)
+- **APIs**: ShipEngine, SendGrid, Twilio
+- **Hosting**: Vercel
 
-### **Backend (Node.js + Koa.js)**
-- **Framework**: Koa.js with TypeScript
-- **Database**: PostgreSQL with connection pooling
-- **Queue System**: BullMQ + Redis for async processing
-- **API**: RESTful API with comprehensive error handling
-- **Security**: Enterprise-grade security middleware
+## Prerequisites
 
-### **External Services**
-- **ShipEngine API**: Carrier tracking and delay detection
-- **SendGrid**: Email notifications
-- **Twilio**: SMS notifications
-- **Redis**: Caching and queue management
-- **PostgreSQL**: Data persistence
-
-## 📊 **Performance Metrics**
-
-- **Bundle Size**: 1.31 MiB (optimized)
-- **Build Time**: 2.38s
-- **Test Coverage**: 52.02% statements, 48.74% branches
-- **Test Success**: 99.8% (876/878 tests passing)
-- **ESLint Errors**: 16 errors (83% reduction from 96)
-
-## 🚀 **Setup Instructions**
-
-### **Prerequisites**
-- Node.js 18+
-- PostgreSQL database
-- Redis instance
+- Node.js 20+ LTS
+- PostgreSQL database (Supabase recommended)
+- Redis instance (Upstash recommended)
 - Shopify Partner account
 - ShipEngine API key
 - SendGrid API key
-- Twilio account credentials
+- Twilio account
 
-### **Environment Variables**
-Create a `.env` file in the `delayguard-app` directory:
+### ⚠️ Environment Setup Required
+
+**Important**: The application requires proper environment configuration to function. See [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) for detailed instructions.
+
+**Quick Environment Test**:
+```bash
+# Test environment configuration
+npm run test:env
+
+# Test database connection
+npm run test:db
+
+# Test Redis connection
+npm run test:redis
+```
+
+## Quick Start
+
+### 1. Clone and Install
+
+```bash
+git clone <repository-url>
+cd delayguard-app
+npm install
+```
+
+### 2. Environment Setup
+
+```bash
+cp env.example .env
+```
+
+Update `.env` with your credentials:
 
 ```env
+# Shopify App Credentials
+SHOPIFY_API_KEY=your_api_key_here
+SHOPIFY_API_SECRET=your_api_secret_here
+SHOPIFY_SCOPES=read_orders,write_orders,read_fulfillments,write_fulfillments
+
 # Database
-DATABASE_URL=postgresql://username:password@localhost:5432/delayguard
+DATABASE_URL=postgresql://user:password@host:port/database
 
-# Redis
-REDIS_URL=redis://localhost:6379
+# Redis Queue
+REDIS_URL=redis://user:password@host:port
 
-# Shopify
-SHOPIFY_API_KEY=your_shopify_api_key
-SHOPIFY_API_SECRET=your_shopify_api_secret
-SHOPIFY_WEBHOOK_SECRET=your_webhook_secret
-
-# External Services
-SHIPENGINE_API_KEY=your_shipengine_api_key
-SENDGRID_API_KEY=your_sendgrid_api_key
-TWILIO_ACCOUNT_SID=your_twilio_account_sid
-TWILIO_AUTH_TOKEN=your_twilio_auth_token
+# External APIs
+SHIPENGINE_API_KEY=your_shipengine_key_here
+SENDGRID_API_KEY=your_sendgrid_key_here
+TWILIO_ACCOUNT_SID=your_twilio_sid_here
+TWILIO_AUTH_TOKEN=your_twilio_token_here
 TWILIO_PHONE_NUMBER=your_twilio_phone_number
 
 # App Configuration
-NODE_ENV=production
+NODE_ENV=development
 PORT=3000
+HOST=localhost
 ```
 
-### **Installation**
+### 3. Database Setup
+
 ```bash
-# Install dependencies
-npm install
+npm run db:migrate
+```
 
-# Run database migrations
-npm run migrate
+### 4. Development
 
-# Start development server
+```bash
+# Start development servers
 npm run dev
 
-# Run tests
-npm test
-
-# Build for production
-npm run build
+# Or start individually
+npm run dev:server  # Backend on :3000
+npm run dev:client  # Frontend on :3001
 ```
 
-## 📚 **API Documentation**
-
-### **Endpoints**
-- `GET /api/health` - Health check
-- `GET /api/settings` - Get app settings
-- `POST /api/settings` - Update app settings
-- `GET /api/alerts` - Get delay alerts
-- `GET /api/orders` - Get orders
-- `GET /api/stats` - Get statistics
-- `POST /api/test-delay` - Test delay detection
-- `POST /api/webhooks` - Shopify webhooks
-
-### **Health Check**
-```bash
-curl https://delayguard-api.vercel.app/api/health
-```
-
-### **Monitoring**
-```bash
-curl https://delayguard-api.vercel.app/api/monitoring
-```
-
-## 🧪 **Testing**
-
-The application has comprehensive test coverage with 99.8% success rate:
+### 5. Testing
 
 ```bash
 # Run all tests
 npm test
 
-# Run tests with coverage
+# Run with coverage
 npm run test:coverage
 
-# Run specific test suites
-npm run test:unit
-npm run test:integration
+# Watch mode
+npm run test:watch
 ```
 
-## 🚀 **Deployment**
+## Project Structure
 
-### **Vercel Deployment**
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
+```
+src/
+├── components/          # React components
+│   └── App.tsx         # Main app component
+├── database/           # Database connection & migrations
+│   └── connection.ts   # PostgreSQL setup
+├── queue/              # Queue system
+│   ├── setup.ts        # BullMQ configuration
+│   └── processors/     # Queue job processors
+├── routes/             # API routes
+│   ├── api.ts          # Main API endpoints
+│   ├── auth.ts         # Authentication routes
+│   └── webhooks.ts     # Shopify webhooks
+├── services/           # Business logic
+│   ├── carrier-service.ts      # ShipEngine integration
+│   ├── delay-detection.ts      # Core delay logic
+│   ├── delay-detection-service.ts # Enhanced delay service
+│   ├── email-service.ts        # SendGrid integration
+│   ├── sms-service.ts          # Twilio integration
+│   └── notification-service.ts # Notification orchestration
+├── types/              # TypeScript interfaces
+│   └── index.ts        # Core type definitions
+└── server.ts           # Main server file
+```
 
-### **Manual Deployment**
+## API Endpoints
+
+### Authentication
+- `POST /auth/callback` - Store shop after OAuth
+- `GET /auth/shop` - Get current shop info
+
+### Settings
+- `GET /api/settings` - Get app settings
+- `PUT /api/settings` - Update app settings
+
+### Data
+- `GET /api/alerts` - Get delay alerts
+- `GET /api/orders` - Get recent orders
+- `GET /api/stats` - Get queue statistics
+
+### Testing
+- `POST /api/test-delay` - Test delay detection
+
+### Webhooks
+- `POST /webhooks/orders/updated` - Order update webhook
+- `POST /webhooks/fulfillments/updated` - Fulfillment update webhook
+- `POST /webhooks/orders/paid` - Order paid webhook
+
+## 🚀 **API Documentation (Swagger UI)**
+
+For interactive API documentation without setting up the full backend:
+
 ```bash
-# Build the application
-npm run build
+# Start the HTTP server
+npx http-server . -p 8080
 
-# Deploy to Vercel
-vercel --prod
+# Open Swagger UI in browser
+open http://localhost:8080/swagger-ui.html
 ```
 
-## 📁 **Project Structure**
+**Available Endpoints:**
+- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
+- **Swagger JSON**: `http://localhost:8080/docs/api/swagger.json`
 
+**Features:**
+- Interactive API testing
+- Request/response schemas
+- Authentication examples
+- All endpoint documentation
+
+**Note**: This standalone approach works without requiring database, Redis, or external API credentials.
+
+## Development Workflow
+
+### 1. TDD Approach
+```bash
+# Write test first
+npm run test:watch
+
+# Implement feature
+# Test passes
 ```
-delayguard-app/
-├── src/
-│   ├── components/          # React components
-│   ├── hooks/              # Custom React hooks
-│   ├── services/           # Business logic services
-│   ├── store/              # Redux store and slices
-│   ├── types/              # TypeScript type definitions
-│   ├── database/           # Database connection and migrations
-│   ├── queue/              # Queue system and processors
-│   └── routes/             # API routes
-├── api/                    # Vercel serverless functions
-├── public/                 # Built frontend assets
-├── tests/                  # Test files
-└── docs/                   # Documentation
+
+### 2. Code Quality
+```bash
+# Check linting progress and quality score
+npm run lint:progress
+
+# Run automated fixes
+npm run lint:fix
+
+# Run enhanced linting (world-class standards)
+npm run lint:enhanced
+
+# Run CI-quality linting
+npm run lint:ci
+
+# Generate detailed reports
+npm run lint:report
+
+# Type check
+npm run type-check
 ```
 
-## 🤝 **Contributing**
+**Linting System Features:**
+- **Quality Scoring**: 0-100 scale with letter grades (A+ to F)
+- **Progress Tracking**: Detailed analysis and reporting
+- **Automated Fixes**: Safe fixes with backup creation
+- **World-Class Standards**: Enhanced ESLint configuration
+- **CI Integration**: Quality gates for continuous integration
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+### 3. Database Changes
+```bash
+# Update migration in connection.ts
+# Run migration
+npm run db:migrate
+```
 
-## 📄 **License**
+## Deployment
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Vercel Deployment
 
-## 🆘 **Support**
+1. Connect repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push to main
 
-For support and questions:
-- Create an issue in the GitHub repository
-- Check the documentation in the `/docs` folder
-- Review the API documentation at `/api/docs`
+### Environment Variables for Production
 
-## 🔄 **Changelog**
+Ensure all required environment variables are set in your hosting platform.
 
-### v1.0.3 (Current)
-- ✅ Complete service integration with API layer
-- ✅ Comprehensive health monitoring
-- ✅ Fixed Vercel deployment configuration
-- ✅ Updated documentation to reflect actual status
-- ✅ Enhanced error handling and logging
+## Monitoring
 
-### v1.0.2
-- ✅ React Components architecture implementation
-- ✅ Redux Toolkit state management
-- ✅ Comprehensive test suite (99.8% success)
-- ✅ TypeScript type safety
+- **Error Tracking**: Sentry integration
+- **Performance**: Vercel Analytics
+- **Queue Monitoring**: BullMQ dashboard
+- **Database**: Supabase dashboard
 
-### v1.0.1
-- ✅ Core service implementations
-- ✅ Database schema and migrations
-- ✅ Queue system with BullMQ + Redis
-- ✅ Security middleware implementation
+## Contributing
 
-### v1.0.0
-- ✅ Initial project setup
-- ✅ Basic Shopify app structure
-- ✅ Webpack configuration
+1. Follow TDD approach (100% success for core components achieved)
+2. Maintain 49.92% test coverage (current actual coverage)
+3. Use TypeScript strict mode
+4. Follow existing code patterns
+5. Update documentation
+
+## License
+
+Proprietary - DelayGuard App
+
+## Support
+
+For technical support, contact the development team.

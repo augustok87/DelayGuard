@@ -1,5 +1,5 @@
 // Redux Store Types
-import { AppSettings, DelayAlert, Order, Toast } from './index';
+import { AppSettings, DelayAlert, Order, Toast } from "./index";
 // import { StatsData } from './index'; // Available for future use
 
 // Root State
@@ -29,7 +29,7 @@ export interface AlertsState {
 }
 
 export interface AlertFilters {
-  status?: 'active' | 'resolved' | 'dismissed';
+  status?: "active" | "resolved" | "dismissed";
   dateRange?: {
     start: string;
     end: string;
@@ -84,9 +84,9 @@ export interface ToastState {
 }
 
 export interface ThemeState {
-  mode: 'light' | 'dark';
+  mode: "light" | "dark";
   primaryColor: string;
-  fontSize: 'sm' | 'md' | 'lg';
+  fontSize: "sm" | "md" | "lg";
 }
 
 export interface SidebarState {
@@ -128,7 +128,9 @@ export type Selector<T> = (state: RootState) => T;
 export type ParametricSelector<T, P> = (state: RootState, params: P) => T;
 
 // Hook Types
-export type AppDispatch = ReturnType<typeof import('../store/store').store.dispatch>;
+export type AppDispatch = ReturnType<
+  typeof import("../store/store").store.dispatch
+>;
 
 export interface UseAppDispatch {
   (): AppDispatch;

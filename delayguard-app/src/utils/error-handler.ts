@@ -3,7 +3,7 @@
  * Provides consistent error handling patterns across the application
  */
 
-import { logger } from './logger';
+import { logger } from "./logger";
 
 export interface ErrorContext {
   component?: string;
@@ -37,13 +37,13 @@ export class AppError extends Error {
 
   constructor(
     message: string,
-    code: string = 'UNKNOWN_ERROR',
+    code: string = "UNKNOWN_ERROR",
     statusCode: number = 500,
     context: ErrorContext = {},
     isOperational: boolean = true,
   ) {
     super(message);
-    this.name = 'AppError';
+    this.name = "AppError";
     this.code = code;
     this.statusCode = statusCode;
     this.context = context;
@@ -56,50 +56,50 @@ export class AppError extends Error {
 
 export class ValidationError extends AppError {
   constructor(message: string, context: ErrorContext = {}) {
-    super(message, 'VALIDATION_ERROR', 400, context);
-    this.name = 'ValidationError';
+    super(message, "VALIDATION_ERROR", 400, context);
+    this.name = "ValidationError";
   }
 }
 
 export class NotFoundError extends AppError {
   constructor(message: string, context: ErrorContext = {}) {
-    super(message, 'NOT_FOUND', 404, context);
-    this.name = 'NotFoundError';
+    super(message, "NOT_FOUND", 404, context);
+    this.name = "NotFoundError";
   }
 }
 
 export class UnauthorizedError extends AppError {
   constructor(message: string, context: ErrorContext = {}) {
-    super(message, 'UNAUTHORIZED', 401, context);
-    this.name = 'UnauthorizedError';
+    super(message, "UNAUTHORIZED", 401, context);
+    this.name = "UnauthorizedError";
   }
 }
 
 export class ForbiddenError extends AppError {
   constructor(message: string, context: ErrorContext = {}) {
-    super(message, 'FORBIDDEN', 403, context);
-    this.name = 'ForbiddenError';
+    super(message, "FORBIDDEN", 403, context);
+    this.name = "ForbiddenError";
   }
 }
 
 export class ConflictError extends AppError {
   constructor(message: string, context: ErrorContext = {}) {
-    super(message, 'CONFLICT', 409, context);
-    this.name = 'ConflictError';
+    super(message, "CONFLICT", 409, context);
+    this.name = "ConflictError";
   }
 }
 
 export class RateLimitError extends AppError {
   constructor(message: string, context: ErrorContext = {}) {
-    super(message, 'RATE_LIMIT_EXCEEDED', 429, context);
-    this.name = 'RateLimitError';
+    super(message, "RATE_LIMIT_EXCEEDED", 429, context);
+    this.name = "RateLimitError";
   }
 }
 
 export class ExternalServiceError extends AppError {
   constructor(message: string, service: string, context: ErrorContext = {}) {
-    super(message, 'EXTERNAL_SERVICE_ERROR', 502, { ...context, service });
-    this.name = 'ExternalServiceError';
+    super(message, "EXTERNAL_SERVICE_ERROR", 502, { ...context, service });
+    this.name = "ExternalServiceError";
   }
 }
 
@@ -140,7 +140,10 @@ export function withSyncErrorHandling<T extends unknown[], R>(
 /**
  * Handles errors and returns consistent error format
  */
-export function handleError(error: unknown, context: ErrorContext = {}): ErrorResult {
+export function handleError(
+  error: unknown,
+  context: ErrorContext = {},
+): ErrorResult {
   if (error instanceof AppError) {
     logger.error(`App Error: ${error.message}`, error, {
       ...context,
@@ -161,12 +164,16 @@ export function handleError(error: unknown, context: ErrorContext = {}): ErrorRe
   }
 
   if (error instanceof Error) {
-    logger.error(`Unexpected Error: ${error.message}`, error, context as Record<string, unknown>);
+    logger.error(
+      `Unexpected Error: ${error.message}`,
+      error,
+      context as Record<string, unknown>,
+    );
 
     return {
       success: false,
-      error: 'An unexpected error occurred',
-      code: 'UNEXPECTED_ERROR',
+      error: "An unexpected error occurred",
+      code: "UNEXPECTED_ERROR",
       details: {
         originalMessage: error.message,
         context,
@@ -175,13 +182,18 @@ export function handleError(error: unknown, context: ErrorContext = {}): ErrorRe
   }
 
   // Handle non-Error objects
-  const errorMessage = typeof error === 'string' ? error : 'An unknown error occurred';
-  logger.error(`Unknown Error: ${errorMessage}`, undefined, context as Record<string, unknown>);
+  const errorMessage =
+    typeof error === "string" ? error : "An unknown error occurred";
+  logger.error(
+    `Unknown Error: ${errorMessage}`,
+    undefined,
+    context as Record<string, unknown>,
+  );
 
   return {
     success: false,
-    error: 'An unknown error occurred',
-    code: 'UNKNOWN_ERROR',
+    error: "An unknown error occurred",
+    code: "UNKNOWN_ERROR",
     details: {
       originalError: error,
       context,
@@ -226,7 +238,10 @@ export function unwrapResult<T>(result: Result<T>): T {
 /**
  * Validates that a result is successful and returns the data, or returns a default value
  */
-export function unwrapResultOrDefault<T>(result: Result<T>, defaultValue: T): T {
+export function unwrapResultOrDefault<T>(
+  result: Result<T>,
+  defaultValue: T,
+): T {
   if (result.success) {
     return result.data;
   }
@@ -236,7 +251,10 @@ export function unwrapResultOrDefault<T>(result: Result<T>, defaultValue: T): T 
 /**
  * Maps over a result, applying a function to the data if successful
  */
-export function mapResult<T, U>(result: Result<T>, fn: (data: T) => U): Result<U> {
+export function mapResult<T, U>(
+  result: Result<T>,
+  fn: (data: T) => U,
+): Result<U> {
   if (result.success) {
     try {
       const mappedData = fn(result.data);
@@ -251,7 +269,10 @@ export function mapResult<T, U>(result: Result<T>, fn: (data: T) => U): Result<U
 /**
  * Chains results, applying a function that returns a result
  */
-export function chainResult<T, U>(result: Result<T>, fn: (data: T) => Result<U>): Result<U> {
+export function chainResult<T, U>(
+  result: Result<T>,
+  fn: (data: T) => Result<U>,
+): Result<U> {
   if (result.success) {
     return fn(result.data);
   }

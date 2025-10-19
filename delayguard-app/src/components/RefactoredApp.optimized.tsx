@@ -1,62 +1,78 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { AppHeader } from './layout/AppHeader';
-import { TabNavigation } from './layout/TabNavigation';
-import { ErrorAlert } from './common/ErrorAlert';
-import { LoadingSpinner } from './ui/LoadingSpinner';
-import { DashboardTabWithSuspense, AlertsTabWithSuspense, OrdersTabWithSuspense } from './tabs/LazyTabs';
-import { 
-  useDelayAlerts, 
-  useOrders, 
-  useSettings, 
-  useTabs, 
-  useAlertActions, 
-  useOrderActions, 
-  useSettingsActions, 
-} from '../hooks';
-import { AppSettings, StatsData } from '../types';
-import styles from './RefactoredApp.module.css';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { AppHeader } from "./layout/AppHeader";
+import { TabNavigation } from "./layout/TabNavigation";
+import { ErrorAlert } from "./common/ErrorAlert";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
+import {
+  DashboardTabWithSuspense,
+  AlertsTabWithSuspense,
+  OrdersTabWithSuspense,
+} from "./tabs/LazyTabs";
+import {
+  useDelayAlerts,
+  useOrders,
+  useSettings,
+  useTabs,
+  useAlertActions,
+  useOrderActions,
+  useSettingsActions,
+} from "../hooks";
+import { AppSettings, StatsData } from "../types";
+import styles from "./RefactoredApp.module.css";
 
 export function RefactoredAppOptimized() {
   // Custom hooks for data and state management
   const { selectedTab, changeTab } = useTabs();
-  const { alerts, loading: alertsLoading, error: alertsError } = useDelayAlerts();
+  const {
+    alerts,
+    loading: alertsLoading,
+    error: alertsError,
+  } = useDelayAlerts();
   const { orders, loading: ordersLoading, error: ordersError } = useOrders();
-  const { settings, loading: settingsLoading, error: settingsError } = useSettings();
-  
+  const {
+    settings,
+    loading: settingsLoading,
+    error: settingsError,
+  } = useSettings();
+
   // Action hooks
   const { resolveAlert, dismissAlert } = useAlertActions();
   const { trackOrder, viewOrderDetails } = useOrderActions();
-  const { saveSettings, testDelayDetection, connectToShopify } = useSettingsActions();
+  const { saveSettings, testDelayDetection, connectToShopify } =
+    useSettingsActions();
 
   // Local state
   const [shop, setShop] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Memoized statistics for the dashboard
-  const stats = useMemo<StatsData>(() => ({
-    totalAlerts: 12,
-    activeAlerts: 3,
-    resolvedAlerts: 9,
-    avgResolutionTime: '2.3 days',
-    customerSatisfaction: '94%',
-    supportTicketReduction: '35%',
-  }), []);
+  const stats = useMemo<StatsData>(
+    () => ({
+      totalAlerts: 12,
+      activeAlerts: 3,
+      resolvedAlerts: 9,
+      avgResolutionTime: "2.3 days",
+      customerSatisfaction: "94%",
+      supportTicketReduction: "35%",
+    }),
+    [],
+  );
 
   // Combined loading state
-  const loading = useMemo(() => 
-    Boolean(alertsLoading || ordersLoading || settingsLoading),
+  const loading = useMemo(
+    () => Boolean(alertsLoading || ordersLoading || settingsLoading),
     [alertsLoading, ordersLoading, settingsLoading],
   );
 
   // Combined error state
-  const combinedError = useMemo(() => 
-    error || alertsError || ordersError || settingsError,
+  const combinedError = useMemo(
+    () => error || alertsError || ordersError || settingsError,
     [error, alertsError, ordersError, settingsError],
   );
 
   // Initialize shop data
   useEffect(() => {
-    setShop('my-awesome-store.myshopify.com');
+    setShop("my-awesome-store.myshopify.com");
   }, []);
 
   // Memoized handler functions
@@ -73,29 +89,38 @@ export function RefactoredAppOptimized() {
   const handleConnectShopify = useCallback(async() => {
     const result = await connectToShopify();
     if (result.success) {
-      setShop('my-awesome-store.myshopify.com');
+      setShop("my-awesome-store.myshopify.com");
     }
   }, [connectToShopify]);
 
-  const handleAlertAction = useCallback(async(alertId: string, action: string) => {
-    if (action === 'resolve') {
-      await resolveAlert(alertId);
-    } else {
-      await dismissAlert(alertId);
-    }
-  }, [resolveAlert, dismissAlert]);
+  const handleAlertAction = useCallback(
+    async(alertId: string, action: string) => {
+      if (action === "resolve") {
+        await resolveAlert(alertId);
+      } else {
+        await dismissAlert(alertId);
+      }
+    },
+    [resolveAlert, dismissAlert],
+  );
 
-  const handleOrderAction = useCallback(async(orderId: string, action: string) => {
-    if (action === 'track') {
-      await trackOrder(orderId);
-    } else {
-      await viewOrderDetails(orderId);
-    }
-  }, [trackOrder, viewOrderDetails]);
+  const handleOrderAction = useCallback(
+    async(orderId: string, action: string) => {
+      if (action === "track") {
+        await trackOrder(orderId);
+      } else {
+        await viewOrderDetails(orderId);
+      }
+    },
+    [trackOrder, viewOrderDetails],
+  );
 
-  const handleSettingsChange = useCallback(async(newSettings: AppSettings) => {
-    await saveSettings(newSettings);
-  }, [saveSettings]);
+  const handleSettingsChange = useCallback(
+    async(newSettings: AppSettings) => {
+      await saveSettings(newSettings);
+    },
+    [saveSettings],
+  );
 
   const handleErrorDismiss = useCallback(() => {
     setError(null);
@@ -161,10 +186,7 @@ export function RefactoredAppOptimized() {
   if (loading) {
     return (
       <div className={styles.app}>
-        <LoadingSpinner 
-          overlay 
-          message="Loading DelayGuard..." 
-        />
+        <LoadingSpinner overlay message="Loading DelayGuard..." />
       </div>
     );
   }
@@ -172,14 +194,11 @@ export function RefactoredAppOptimized() {
   return (
     <div className={styles.app}>
       <AppHeader stats={stats} loading={loading} />
-      
-      <div className={styles.content}>
-        <ErrorAlert 
-          error={combinedError} 
-          onDismiss={handleErrorDismiss} 
-        />
 
-        <TabNavigation 
+      <div className={styles.content}>
+        <ErrorAlert error={combinedError} onDismiss={handleErrorDismiss} />
+
+        <TabNavigation
           selectedTab={selectedTab}
           onTabChange={changeTab}
           loading={loading}

@@ -1,6 +1,6 @@
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient, QueryResult } from "pg";
 // import { AppConfig } from '../types'; // Removed unused import
-import { logInfo, logError } from '../utils/logger';
+import { logInfo, logError } from "../utils/logger";
 
 let pool: Pool;
 
@@ -8,7 +8,10 @@ export async function setupDatabase(): Promise<void> {
   try {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      ssl:
+        process.env.NODE_ENV === "production"
+          ? { rejectUnauthorized: false }
+          : false,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
@@ -16,25 +19,32 @@ export async function setupDatabase(): Promise<void> {
 
     // Test connection
     const client = await pool.connect();
-    logInfo('Database connected successfully', { component: 'database' });
+    logInfo("Database connected successfully", { component: "database" });
     client.release();
 
     // Run migrations
     await runMigrations();
   } catch (error) {
-    logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'database', action: 'connection' });
+    logError(
+      error instanceof Error ? error.message : String(error),
+      error instanceof Error ? error : undefined,
+      { component: "database", action: "connection" },
+    );
     throw error;
   }
 }
 
 export async function getDatabaseClient(): Promise<PoolClient> {
   if (!pool) {
-    throw new Error('Database not initialized. Call setupDatabase() first.');
+    throw new Error("Database not initialized. Call setupDatabase() first.");
   }
   return pool.connect();
 }
 
-export async function query<T = unknown>(text: string, params?: unknown[]): Promise<T[]> {
+export async function query<T = unknown>(
+  text: string,
+  params?: unknown[],
+): Promise<T[]> {
   const client = await getDatabaseClient();
   try {
     const result = await client.query(text, params);
@@ -46,7 +56,7 @@ export async function query<T = unknown>(text: string, params?: unknown[]): Prom
 
 async function runMigrations(): Promise<void> {
   const client = await getDatabaseClient();
-  
+
   try {
     // Create shops table
     await client.query(`
@@ -134,9 +144,13 @@ async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_delay_alerts_created_at ON delay_alerts(created_at);
     `);
 
-    logInfo('Database migrations completed', { component: 'database' });
+    logInfo("Database migrations completed", { component: "database" });
   } catch (error) {
-    logError(error instanceof Error ? error.message : String(error), error instanceof Error ? error : undefined, { component: 'database', action: 'migration' });
+    logError(
+      error instanceof Error ? error.message : String(error),
+      error instanceof Error ? error : undefined,
+      { component: "database", action: "migration" },
+    );
     throw error;
   } finally {
     client.release();

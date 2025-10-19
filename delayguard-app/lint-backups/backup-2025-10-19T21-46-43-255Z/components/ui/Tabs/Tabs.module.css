@@ -1,0 +1,96 @@
+/* Tabs Component Styles */
+.tabs {
+  width: 100%;
+}
+
+.tabList {
+  display: flex;
+  border-bottom: 1px solid var(--delayguard-gray-200);
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tabList::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  color: var(--delayguard-gray-600);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+  min-height: 2.5rem;
+}
+
+.tab:hover:not(:disabled) {
+  color: var(--delayguard-gray-900);
+  background: var(--delayguard-gray-50);
+}
+
+.tab:focus {
+  outline: 2px solid var(--delayguard-primary);
+  outline-offset: -2px;
+}
+
+.tabActive,
+.active {
+  color: var(--delayguard-primary);
+  border-bottom-color: var(--delayguard-primary);
+  background: var(--delayguard-primary-50);
+}
+
+.tabDisabled {
+  color: var(--delayguard-gray-400);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.tabDisabled:hover {
+  background: none;
+  color: var(--delayguard-gray-400);
+}
+
+.tabIcon {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+}
+
+.tabLabel {
+  font-weight: inherit;
+}
+
+.tabPanels {
+  position: relative;
+}
+
+.tabPanel {
+  width: 100%;
+}
+
+.tabPanel[hidden] {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .tab {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .tabIcon {
+    font-size: 0.875rem;
+  }
+}

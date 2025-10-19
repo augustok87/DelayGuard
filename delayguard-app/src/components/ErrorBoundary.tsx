@@ -1,5 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { logError } from '../utils/logger';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { logError } from "../utils/logger";
 
 interface Props {
   children: ReactNode;
@@ -27,19 +27,23 @@ export class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo,
     });
-    
+
     // Log error using logger
-    logError('Error caught by ErrorBoundary', error, { 
-      component: 'ErrorBoundary', 
-      action: 'componentDidCatch',
-      metadata: { errorInfo }, 
+    logError("Error caught by ErrorBoundary", error, {
+      component: "ErrorBoundary",
+      action: "componentDidCatch",
+      metadata: { errorInfo },
     });
   }
 
   componentDidUpdate(prevProps: Props) {
     // Reset error state when children change and no longer throw errors
     if (this.state.hasError && prevProps.children !== this.props.children) {
-      this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+      this.setState({
+        hasError: false,
+        error: undefined,
+        errorInfo: undefined,
+      });
     }
   }
 
@@ -50,47 +54,57 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div style={{ 
-          padding: '2rem', 
-          textAlign: 'center',
-          border: '1px solid #e1e5e9',
-          borderRadius: '8px',
-          backgroundColor: '#fef2f2',
-          color: '#dc2626',
-        }}>
+        <div
+          style={{
+            padding: "2rem",
+            textAlign: "center",
+            border: "1px solid #e1e5e9",
+            borderRadius: "8px",
+            backgroundColor: "#fef2f2",
+            color: "#dc2626",
+          }}
+        >
           <h2>Something went wrong</h2>
           <p>An error occurred while rendering this component.</p>
-          {process.env.NODE_ENV === 'development' && this.state.error && (
-            <details style={{ marginTop: '1rem', textAlign: 'left' }}>
+          {process.env.NODE_ENV === "development" && this.state.error && (
+            <details style={{ marginTop: "1rem", textAlign: "left" }}>
               <summary>Error details</summary>
-              <pre style={{ 
-                marginTop: '0.5rem', 
-                padding: '0.5rem', 
-                backgroundColor: '#f3f4f6',
-                borderRadius: '4px',
-                fontSize: '0.875rem',
-                overflow: 'auto',
-              }}>
+              <pre
+                style={{
+                  marginTop: "0.5rem",
+                  padding: "0.5rem",
+                  backgroundColor: "#f3f4f6",
+                  borderRadius: "4px",
+                  fontSize: "0.875rem",
+                  overflow: "auto",
+                }}
+              >
                 {this.state.error.toString()}
                 {this.state.errorInfo?.componentStack}
               </pre>
             </details>
           )}
-                 <button 
-                   type="button"
-                   onClick={() => this.setState({ hasError: false, error: undefined, errorInfo: undefined })}
-                   style={{
-                     marginTop: '1rem',
-                     padding: '0.5rem 1rem',
-                     backgroundColor: '#dc2626',
-                     color: 'white',
-                     border: 'none',
-                     borderRadius: '4px',
-                     cursor: 'pointer',
-                   }}
-                 >
-                   Try again
-                 </button>
+          <button
+            type="button"
+            onClick={() =>
+              this.setState({
+                hasError: false,
+                error: undefined,
+                errorInfo: undefined,
+              })
+            }
+            style={{
+              marginTop: "1rem",
+              padding: "0.5rem 1rem",
+              backgroundColor: "#dc2626",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Try again
+          </button>
         </div>
       );
     }

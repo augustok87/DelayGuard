@@ -1,26 +1,26 @@
-import crypto from 'crypto';
-import { EventEmitter } from 'events';
+import crypto from "crypto";
+import { EventEmitter } from "events";
 
 /**
  * Secret Types
  */
 export enum SecretType {
-  API_KEY = 'API_KEY',
-  DATABASE_PASSWORD = 'DATABASE_PASSWORD',
-  JWT_SECRET = 'JWT_SECRET',
-  ENCRYPTION_KEY = 'ENCRYPTION_KEY',
-  OAUTH_SECRET = 'OAUTH_SECRET',
-  WEBHOOK_SECRET = 'WEBHOOK_SECRET',
-  CUSTOM = 'CUSTOM'
+  API_KEY = "API_KEY",
+  DATABASE_PASSWORD = "DATABASE_PASSWORD",
+  JWT_SECRET = "JWT_SECRET",
+  ENCRYPTION_KEY = "ENCRYPTION_KEY",
+  OAUTH_SECRET = "OAUTH_SECRET",
+  WEBHOOK_SECRET = "WEBHOOK_SECRET",
+  CUSTOM = "CUSTOM",
 }
 
 /**
  * Secret Rotation Strategy
  */
 export enum RotationStrategy {
-  MANUAL = 'MANUAL',
-  AUTOMATIC = 'AUTOMATIC',
-  SCHEDULED = 'SCHEDULED'
+  MANUAL = "MANUAL",
+  AUTOMATIC = "AUTOMATIC",
+  SCHEDULED = "SCHEDULED",
 }
 
 /**
@@ -63,7 +63,7 @@ export interface SecretAccessLog {
   secretId: string;
   accessedBy: string;
   accessedAt: Date;
-  action: 'READ' | 'WRITE' | 'DELETE' | 'ROTATE';
+  action: "READ" | "WRITE" | "DELETE" | "ROTATE";
   ipAddress: string;
   userAgent: string;
   success: boolean;
@@ -117,7 +117,7 @@ export class SecretsManager extends EventEmitter {
   ): Promise<string> {
     const secretId = this.generateSecretId();
     const encryptedValue = this.encrypt(value);
-    
+
     const metadata: SecretMetadata = {
       id: secretId,
       name,
@@ -131,7 +131,7 @@ export class SecretsManager extends EventEmitter {
       version: 1,
       isActive: true,
       environment: this.config.environment,
-      createdBy: options.createdBy || 'system',
+      createdBy: options.createdBy || "system",
     };
 
     const secretValue: SecretValue = {
@@ -146,8 +146,8 @@ export class SecretsManager extends EventEmitter {
     this.secrets.set(secretId, secretValue);
     this.metadata.set(secretId, metadata);
 
-    this.logAccess(secretId, 'system', 'WRITE', true);
-    this.emit('secretStored', { secretId, name, type });
+    this.logAccess(secretId, "system", "WRITE", true);
+    this.emit("secretStored", { secretId, name, type });
 
     return secretId;
   }
@@ -155,28 +155,43 @@ export class SecretsManager extends EventEmitter {
   /**
    * Retrieve secret with decryption
    */
-  async getSecret(secretId: string, accessedBy: string = 'system'): Promise<string | null> {
+  async getSecret(
+    secretId: string,
+    accessedBy: string = "system",
+  ): Promise<string | null> {
     const secret = this.secrets.get(secretId);
     const metadata = this.metadata.get(secretId);
 
     if (!secret || !metadata || !secret.isActive || !metadata.isActive) {
-      this.logAccess(secretId, accessedBy, 'READ', false, 'Secret not found or inactive');
+      this.logAccess(
+        secretId,
+        accessedBy,
+        "READ",
+        false,
+        "Secret not found or inactive",
+      );
       return null;
     }
 
     // Check expiration
     if (metadata.expiresAt && metadata.expiresAt < new Date()) {
-      this.logAccess(secretId, accessedBy, 'READ', false, 'Secret expired');
+      this.logAccess(secretId, accessedBy, "READ", false, "Secret expired");
       return null;
     }
 
     try {
       const decryptedValue = this.decrypt(secret.encryptedValue);
-      this.logAccess(secretId, accessedBy, 'READ', true);
-      this.emit('secretAccessed', { secretId, accessedBy });
+      this.logAccess(secretId, accessedBy, "READ", true);
+      this.emit("secretAccessed", { secretId, accessedBy });
       return decryptedValue;
     } catch (error) {
-      this.logAccess(secretId, accessedBy, 'READ', false, `Decryption failed: ${error}`);
+      this.logAccess(
+        secretId,
+        accessedBy,
+        "READ",
+        false,
+        `Decryption failed: ${error}`,
+      );
       return null;
     }
   }
@@ -192,7 +207,9 @@ export class SecretsManager extends EventEmitter {
    * List all secrets
    */
   listSecrets(): SecretMetadata[] {
-    return Array.from(this.metadata.values()).filter(metadata => metadata.isActive);
+    return Array.from(this.metadata.values()).filter(
+      (metadata) => metadata.isActive,
+    );
   }
 
   /**
@@ -201,13 +218,19 @@ export class SecretsManager extends EventEmitter {
   async updateSecret(
     secretId: string,
     newValue: string,
-    updatedBy: string = 'system',
+    updatedBy: string = "system",
   ): Promise<boolean> {
     const secret = this.secrets.get(secretId);
     const metadata = this.metadata.get(secretId);
 
     if (!secret || !metadata || !secret.isActive || !metadata.isActive) {
-      this.logAccess(secretId, updatedBy, 'WRITE', false, 'Secret not found or inactive');
+      this.logAccess(
+        secretId,
+        updatedBy,
+        "WRITE",
+        false,
+        "Secret not found or inactive",
+      );
       return false;
     }
 
@@ -224,14 +247,14 @@ export class SecretsManager extends EventEmitter {
     };
 
     this.secrets.set(secretId, updatedSecret);
-    
+
     // Update metadata
     metadata.updatedAt = new Date();
     metadata.version = newVersion;
     this.metadata.set(secretId, metadata);
 
-    this.logAccess(secretId, updatedBy, 'WRITE', true);
-    this.emit('secretUpdated', { secretId, version: newVersion, updatedBy });
+    this.logAccess(secretId, updatedBy, "WRITE", true);
+    this.emit("secretUpdated", { secretId, version: newVersion, updatedBy });
 
     return true;
   }
@@ -242,7 +265,7 @@ export class SecretsManager extends EventEmitter {
   async rotateSecret(
     secretId: string,
     newValue: string,
-    rotatedBy: string = 'system',
+    rotatedBy: string = "system",
   ): Promise<boolean> {
     const metadata = this.metadata.get(secretId);
     if (!metadata || !metadata.isActive) {
@@ -251,11 +274,11 @@ export class SecretsManager extends EventEmitter {
 
     // Update secret value
     const success = await this.updateSecret(secretId, newValue, rotatedBy);
-    
+
     if (success) {
       metadata.lastRotated = new Date();
       this.metadata.set(secretId, metadata);
-      this.emit('secretRotated', { secretId, rotatedBy });
+      this.emit("secretRotated", { secretId, rotatedBy });
     }
 
     return success;
@@ -264,12 +287,15 @@ export class SecretsManager extends EventEmitter {
   /**
    * Delete secret
    */
-  async deleteSecret(secretId: string, deletedBy: string = 'system'): Promise<boolean> {
+  async deleteSecret(
+    secretId: string,
+    deletedBy: string = "system",
+  ): Promise<boolean> {
     const secret = this.secrets.get(secretId);
     const metadata = this.metadata.get(secretId);
 
     if (!secret || !metadata) {
-      this.logAccess(secretId, deletedBy, 'DELETE', false, 'Secret not found');
+      this.logAccess(secretId, deletedBy, "DELETE", false, "Secret not found");
       return false;
     }
 
@@ -281,8 +307,8 @@ export class SecretsManager extends EventEmitter {
     this.secrets.set(secretId, secret);
     this.metadata.set(secretId, metadata);
 
-    this.logAccess(secretId, deletedBy, 'DELETE', true);
-    this.emit('secretDeleted', { secretId, deletedBy });
+    this.logAccess(secretId, deletedBy, "DELETE", true);
+    this.emit("secretDeleted", { secretId, deletedBy });
 
     return true;
   }
@@ -291,15 +317,15 @@ export class SecretsManager extends EventEmitter {
    * Get secrets by type
    */
   getSecretsByType(type: SecretType): SecretMetadata[] {
-    return this.listSecrets().filter(secret => secret.type === type);
+    return this.listSecrets().filter((secret) => secret.type === type);
   }
 
   /**
    * Get secrets by tags
    */
   getSecretsByTags(tags: string[]): SecretMetadata[] {
-    return this.listSecrets().filter(secret => 
-      tags.some(tag => secret.tags.includes(tag)),
+    return this.listSecrets().filter((secret) =>
+      tags.some((tag) => secret.tags.includes(tag)),
     );
   }
 
@@ -308,11 +334,11 @@ export class SecretsManager extends EventEmitter {
    */
   getAccessLogs(secretId?: string, limit: number = 100): SecretAccessLog[] {
     let logs = this.accessLogs;
-    
+
     if (secretId) {
-      logs = logs.filter(log => log.secretId === secretId);
+      logs = logs.filter((log) => log.secretId === secretId);
     }
-    
+
     return logs
       .sort((a, b) => b.accessedAt.getTime() - a.accessedAt.getTime())
       .slice(0, limit);
@@ -326,18 +352,18 @@ export class SecretsManager extends EventEmitter {
     if (!metadata || !metadata.isActive) return false;
 
     if (metadata.rotationStrategy === RotationStrategy.MANUAL) return false;
-    
+
     if (metadata.rotationStrategy === RotationStrategy.AUTOMATIC) {
       // Rotate if expired
       return metadata.expiresAt ? metadata.expiresAt < new Date() : false;
     }
-    
+
     if (metadata.rotationStrategy === RotationStrategy.SCHEDULED) {
       // Rotate based on schedule (simplified - in production, use cron)
-      const daysSinceLastRotation = metadata.lastRotated 
+      const daysSinceLastRotation = metadata.lastRotated
         ? (Date.now() - metadata.lastRotated.getTime()) / (1000 * 60 * 60 * 24)
         : Infinity;
-      
+
       return daysSinceLastRotation >= this.config.defaultRotationDays;
     }
 
@@ -348,7 +374,7 @@ export class SecretsManager extends EventEmitter {
    * Get secrets needing rotation
    */
   getSecretsNeedingRotation(): SecretMetadata[] {
-    return this.listSecrets().filter(secret => this.needsRotation(secret.id));
+    return this.listSecrets().filter((secret) => this.needsRotation(secret.id));
   }
 
   /**
@@ -356,26 +382,26 @@ export class SecretsManager extends EventEmitter {
    */
   private encrypt(value: string): string {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher('aes-256-cbc', this.encryptionKey);
-    
-    let encrypted = cipher.update(value, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    
-    return `${iv.toString('hex')}:${encrypted}`;
+    const cipher = crypto.createCipher("aes-256-cbc", this.encryptionKey);
+
+    let encrypted = cipher.update(value, "utf8", "hex");
+    encrypted += cipher.final("hex");
+
+    return `${iv.toString("hex")}:${encrypted}`;
   }
 
   /**
    * Decrypt value
    */
   private decrypt(encryptedValue: string): string {
-    const [, encrypted] = encryptedValue.split(':');
+    const [, encrypted] = encryptedValue.split(":");
     // const iv = Buffer.from(ivHex, 'hex'); // Available for future use
-    
-    const decipher = crypto.createDecipher('aes-256-cbc', this.encryptionKey);
-    
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    
+
+    const decipher = crypto.createDecipher("aes-256-cbc", this.encryptionKey);
+
+    let decrypted = decipher.update(encrypted, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+
     return decrypted;
   }
 
@@ -383,14 +409,14 @@ export class SecretsManager extends EventEmitter {
    * Derive encryption key from master key
    */
   private deriveEncryptionKey(masterKey: string): Buffer {
-    return crypto.createHash('sha256').update(masterKey).digest();
+    return crypto.createHash("sha256").update(masterKey).digest();
   }
 
   /**
    * Generate unique secret ID
    */
   private generateSecretId(): string {
-    return `secret_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+    return `secret_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
   }
 
   /**
@@ -399,26 +425,26 @@ export class SecretsManager extends EventEmitter {
   private logAccess(
     secretId: string,
     accessedBy: string,
-    action: 'READ' | 'WRITE' | 'DELETE' | 'ROTATE',
+    action: "READ" | "WRITE" | "DELETE" | "ROTATE",
     success: boolean,
     error?: string,
   ): void {
     if (!this.config.enableAuditLogging) return;
 
     const log: SecretAccessLog = {
-      id: `log_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      id: `log_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`,
       secretId,
       accessedBy,
       accessedAt: new Date(),
       action,
-      ipAddress: '127.0.0.1', // In production, get from request context
-      userAgent: 'SecretsManager/1.0',
+      ipAddress: "127.0.0.1", // In production, get from request context
+      userAgent: "SecretsManager/1.0",
       success,
       error,
     };
 
     this.accessLogs.push(log);
-    
+
     // Keep only recent logs
     if (this.accessLogs.length > 10000) {
       this.accessLogs = this.accessLogs.slice(-5000);
@@ -430,7 +456,9 @@ export class SecretsManager extends EventEmitter {
    */
   private validateSecretName(name: string): boolean {
     // Secret names should be alphanumeric with underscores and hyphens
-    return /^[a-zA-Z0-9_-]+$/.test(name) && name.length >= 3 && name.length <= 100;
+    return (
+      /^[a-zA-Z0-9_-]+$/.test(name) && name.length >= 3 && name.length <= 100
+    );
   }
 
   /**
@@ -450,35 +478,39 @@ export class SecretUtils {
    * Generate a secure database password
    */
   static generateDatabasePassword(length: number = 16): string {
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    const numbers = '0123456789';
-    const special = '!@#$%^&*';
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lowercase = "abcdefghijklmnopqrstuvwxyz";
+    const numbers = "0123456789";
+    const special = "!@#$%^&*";
     const allChars = uppercase + lowercase + numbers + special;
-    
-    let password = '';
-    
+
+    let password = "";
+
     // Ensure at least one character from each category
     password += uppercase[Math.floor(Math.random() * uppercase.length)];
     password += lowercase[Math.floor(Math.random() * lowercase.length)];
     password += numbers[Math.floor(Math.random() * numbers.length)];
     password += special[Math.floor(Math.random() * special.length)];
-    
+
     // Fill the rest with random characters
     for (let i = 4; i < length; i++) {
       password += allChars[Math.floor(Math.random() * allChars.length)];
     }
-    
+
     // Shuffle the password
-    return password.split('').sort(() => Math.random() - 0.5).join('');
+    return password
+      .split("")
+      .sort(() => Math.random() - 0.5)
+      .join("");
   }
 
   /**
    * Generate a secure API key
    */
   static generateAPIKey(length: number = 32): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let key = '';
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let key = "";
     for (let i = 0; i < length; i++) {
       key += chars[Math.floor(Math.random() * chars.length)];
     }
@@ -489,14 +521,14 @@ export class SecretUtils {
    * Generate secure random secret
    */
   static generateSecret(length: number = 32): string {
-    return crypto.randomBytes(length).toString('hex');
+    return crypto.randomBytes(length).toString("hex");
   }
 
   /**
    * Generate API key (alias for generateAPIKey)
    */
   static generateApiKey(): string {
-    return `sk_${crypto.randomBytes(32).toString('hex')}`;
+    return `sk_${crypto.randomBytes(32).toString("hex")}`;
   }
 
   /**
@@ -510,33 +542,37 @@ export class SecretUtils {
    * Generate a JWT secret
    */
   static generateJWTSecret(): string {
-    return crypto.randomBytes(64).toString('hex');
+    return crypto.randomBytes(64).toString("hex");
   }
 
   /**
    * Validate secret strength
    */
-  static validateSecretStrength(secret: string): { isStrong: boolean; score: number; suggestions: string[] } {
+  static validateSecretStrength(secret: string): {
+    isStrong: boolean;
+    score: number;
+    suggestions: string[];
+  } {
     let score = 0;
     const suggestions: string[] = [];
 
     if (secret.length >= 8) score += 1;
-    else suggestions.push('Use at least 8 characters');
+    else suggestions.push("Use at least 8 characters");
 
     if (secret.length >= 12) score += 1;
-    else suggestions.push('Use 12+ characters for better security');
+    else suggestions.push("Use 12+ characters for better security");
 
     if (/[A-Z]/.test(secret)) score += 1;
-    else suggestions.push('Include uppercase letters');
+    else suggestions.push("Include uppercase letters");
 
     if (/[a-z]/.test(secret)) score += 1;
-    else suggestions.push('Include lowercase letters');
+    else suggestions.push("Include lowercase letters");
 
     if (/[0-9]/.test(secret)) score += 1;
-    else suggestions.push('Include numbers');
+    else suggestions.push("Include numbers");
 
     if (/[!@#$%^&*]/.test(secret)) score += 1;
-    else suggestions.push('Include special characters');
+    else suggestions.push("Include special characters");
 
     return {
       isStrong: score >= 4,
@@ -555,8 +591,9 @@ export class SecretsManagerFactory {
    */
   static createDevelopment(): SecretsManager {
     return new SecretsManager({
-      encryptionKey: process.env.SECRETS_ENCRYPTION_KEY || 'dev-key-change-in-production',
-      environment: 'development',
+      encryptionKey:
+        process.env.SECRETS_ENCRYPTION_KEY || "dev-key-change-in-production",
+      environment: "development",
       enableAuditLogging: true,
       enableRotation: false,
       defaultRotationDays: 90,
@@ -571,7 +608,7 @@ export class SecretsManagerFactory {
   static createProduction(encryptionKey: string): SecretsManager {
     return new SecretsManager({
       encryptionKey,
-      environment: 'production',
+      environment: "production",
       enableAuditLogging: true,
       enableRotation: true,
       defaultRotationDays: 30,
@@ -580,4 +617,3 @@ export class SecretsManagerFactory {
     });
   }
 }
-

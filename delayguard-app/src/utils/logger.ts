@@ -23,7 +23,7 @@ class Logger {
   private isDevelopment: boolean;
 
   constructor() {
-    this.isDevelopment = process.env.NODE_ENV === 'development';
+    this.isDevelopment = process.env.NODE_ENV === "development";
     this.logLevel = this.isDevelopment ? LogLevel.DEBUG : LogLevel.WARN;
   }
 
@@ -31,16 +31,26 @@ class Logger {
     return level >= this.logLevel;
   }
 
-  private formatMessage(level: LogLevel, message: string, context?: Record<string, unknown>, error?: Error): string {
+  private formatMessage(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, unknown>,
+    error?: Error,
+  ): string {
     const timestamp = new Date().toISOString();
     const levelName = LogLevel[level];
-    const contextStr = context ? ` ${JSON.stringify(context)}` : '';
-    const errorStr = error ? ` Error: ${error.message}` : '';
-    
+    const contextStr = context ? ` ${JSON.stringify(context)}` : "";
+    const errorStr = error ? ` Error: ${error.message}` : "";
+
     return `[${timestamp}] ${levelName}: ${message}${contextStr}${errorStr}`;
   }
 
-  private log(level: LogLevel, message: string, context?: Record<string, unknown>, error?: Error): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, unknown>,
+    error?: Error,
+  ): void {
     if (!this.shouldLog(level)) {
       return;
     }
@@ -82,12 +92,21 @@ class Logger {
     this.log(LogLevel.WARN, message, context);
   }
 
-  error(message: string, error?: Error, context?: Record<string, unknown>): void {
+  error(
+    message: string,
+    error?: Error,
+    context?: Record<string, unknown>,
+  ): void {
     this.log(LogLevel.ERROR, message, context, error);
   }
 
   // Convenience methods for common patterns
-  logApiCall(endpoint: string, method: string, status?: number, duration?: number): void {
+  logApiCall(
+    endpoint: string,
+    method: string,
+    status?: number,
+    duration?: number,
+  ): void {
     this.info(`API Call: ${method} ${endpoint}`, {
       status,
       duration: duration ? `${duration}ms` : undefined,
@@ -102,7 +121,11 @@ class Logger {
     this.error(`Unexpected error: ${error.message}`, error, context);
   }
 
-  logPerformance(operation: string, duration: number, context?: Record<string, unknown>): void {
+  logPerformance(
+    operation: string,
+    duration: number,
+    context?: Record<string, unknown>,
+  ): void {
     this.info(`Performance: ${operation}`, {
       duration: `${duration}ms`,
       ...context,
@@ -114,10 +137,29 @@ class Logger {
 export const logger = new Logger();
 
 // Export convenience functions
-export const logDebug = (message: string, context?: Record<string, unknown>) => logger.debug(message, context);
-export const logInfo = (message: string, context?: Record<string, unknown>) => logger.info(message, context);
-export const logWarn = (message: string, context?: Record<string, unknown>) => logger.warn(message, context);
-export const logError = (message: string, error?: Error, context?: Record<string, unknown>) => logger.error(message, error, context);
-export const logApiCall = (endpoint: string, method: string, status?: number, duration?: number) => logger.logApiCall(endpoint, method, status, duration);
-export const logUserAction = (action: string, context?: Record<string, unknown>) => logger.logUserAction(action, context);
-export const logPerformance = (operation: string, duration: number, context?: Record<string, unknown>) => logger.logPerformance(operation, duration, context);
+export const logDebug = (message: string, context?: Record<string, unknown>) =>
+  logger.debug(message, context);
+export const logInfo = (message: string, context?: Record<string, unknown>) =>
+  logger.info(message, context);
+export const logWarn = (message: string, context?: Record<string, unknown>) =>
+  logger.warn(message, context);
+export const logError = (
+  message: string,
+  error?: Error,
+  context?: Record<string, unknown>,
+) => logger.error(message, error, context);
+export const logApiCall = (
+  endpoint: string,
+  method: string,
+  status?: number,
+  duration?: number,
+) => logger.logApiCall(endpoint, method, status, duration);
+export const logUserAction = (
+  action: string,
+  context?: Record<string, unknown>,
+) => logger.logUserAction(action, context);
+export const logPerformance = (
+  operation: string,
+  duration: number,
+  context?: Record<string, unknown>,
+) => logger.logPerformance(operation, duration, context);

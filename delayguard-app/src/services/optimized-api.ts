@@ -1,6 +1,6 @@
-import { OptimizedDatabase } from './optimized-database';
-import { OptimizedCache, CACHE_CONFIGS } from './optimized-cache';
-import { AppConfig } from '../types';
+import { OptimizedDatabase } from "./optimized-database";
+import { OptimizedCache, CACHE_CONFIGS } from "./optimized-cache";
+import { AppConfig } from "../types";
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -21,12 +21,12 @@ export class OptimizedApiService {
 
   async getSettings(shopDomain: string): Promise<ApiResponse> {
     const start = Date.now();
-    
+
     try {
       // Try cache first
       const cacheKey = `settings:${shopDomain}`;
       const cached = await this.cache.get(cacheKey, CACHE_CONFIGS.settings);
-      
+
       if (cached) {
         return {
           success: true,
@@ -41,7 +41,7 @@ export class OptimizedApiService {
       if (!shop) {
         return {
           success: false,
-          error: 'Shop not found',
+          error: "Shop not found",
           responseTime: Date.now() - start,
         };
       }
@@ -51,7 +51,7 @@ export class OptimizedApiService {
         delayThresholdDays: 2,
         emailEnabled: true,
         smsEnabled: false,
-        notificationTemplate: 'default',
+        notificationTemplate: "default",
       };
 
       // Cache the result
@@ -66,27 +66,31 @@ export class OptimizedApiService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         responseTime: Date.now() - start,
       };
     }
   }
 
-  async updateSettings(shopDomain: string, settings: any): Promise<ApiResponse> {
+  async updateSettings(
+    shopDomain: string,
+    settings: any,
+  ): Promise<ApiResponse> {
     const start = Date.now();
-    
+
     try {
       const shop = await this.db.getShopByDomain(shopDomain);
       if (!shop) {
         return {
           success: false,
-          error: 'Shop not found',
+          error: "Shop not found",
           responseTime: Date.now() - start,
         };
       }
 
       // Update in database
-      await this.db.query(`
+      await this.db.query(
+        `
         INSERT INTO app_settings (
           shop_id, 
           delay_threshold_days, 
@@ -101,13 +105,15 @@ export class OptimizedApiService {
           sms_enabled = EXCLUDED.sms_enabled,
           notification_template = EXCLUDED.notification_template,
           updated_at = CURRENT_TIMESTAMP
-      `, [
-        shop.id,
-        settings.delayThresholdDays,
-        settings.emailEnabled,
-        settings.smsEnabled,
-        settings.notificationTemplate,
-      ]);
+      `,
+        [
+          shop.id,
+          settings.delayThresholdDays,
+          settings.emailEnabled,
+          settings.smsEnabled,
+          settings.notificationTemplate,
+        ],
+      );
 
       // Invalidate cache
       const cacheKey = `settings:${shopDomain}`;
@@ -121,28 +127,32 @@ export class OptimizedApiService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         responseTime: Date.now() - start,
       };
     }
   }
 
-  async getAlerts(shopDomain: string, page: number = 1, limit: number = 20): Promise<ApiResponse> {
+  async getAlerts(
+    shopDomain: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<ApiResponse> {
     const start = Date.now();
-    
+
     try {
       const shop = await this.db.getShopByDomain(shopDomain);
       if (!shop) {
         return {
           success: false,
-          error: 'Shop not found',
+          error: "Shop not found",
           responseTime: Date.now() - start,
         };
       }
 
       const offset = (page - 1) * limit;
       const cacheKey = `alerts:${shop.id}:${page}:${limit}`;
-      
+
       // Try cache first
       const cached = await this.cache.get(cacheKey, CACHE_CONFIGS.alerts);
       if (cached) {
@@ -180,28 +190,32 @@ export class OptimizedApiService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         responseTime: Date.now() - start,
       };
     }
   }
 
-  async getOrders(shopDomain: string, page: number = 1, limit: number = 20): Promise<ApiResponse> {
+  async getOrders(
+    shopDomain: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<ApiResponse> {
     const start = Date.now();
-    
+
     try {
       const shop = await this.db.getShopByDomain(shopDomain);
       if (!shop) {
         return {
           success: false,
-          error: 'Shop not found',
+          error: "Shop not found",
           responseTime: Date.now() - start,
         };
       }
 
       const offset = (page - 1) * limit;
       const cacheKey = `orders:${shop.id}:${page}:${limit}`;
-      
+
       // Try cache first
       const cached = await this.cache.get(cacheKey, CACHE_CONFIGS.orders);
       if (cached) {
@@ -239,7 +253,7 @@ export class OptimizedApiService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         responseTime: Date.now() - start,
       };
     }
@@ -247,19 +261,19 @@ export class OptimizedApiService {
 
   async getStats(shopDomain: string): Promise<ApiResponse> {
     const start = Date.now();
-    
+
     try {
       const shop = await this.db.getShopByDomain(shopDomain);
       if (!shop) {
         return {
           success: false,
-          error: 'Shop not found',
+          error: "Shop not found",
           responseTime: Date.now() - start,
         };
       }
 
       const cacheKey = `stats:${shop.id}`;
-      
+
       // Try cache first
       const cached = await this.cache.get(cacheKey, CACHE_CONFIGS.performance);
       if (cached) {
@@ -299,7 +313,7 @@ export class OptimizedApiService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         responseTime: Date.now() - start,
       };
     }
@@ -307,43 +321,52 @@ export class OptimizedApiService {
 
   async clearCache(shopDomain: string): Promise<ApiResponse> {
     const start = Date.now();
-    
+
     try {
       const shop = await this.db.getShopByDomain(shopDomain);
       if (!shop) {
         return {
           success: false,
-          error: 'Shop not found',
+          error: "Shop not found",
           responseTime: Date.now() - start,
         };
       }
 
       // Clear all cache entries for this shop
       await Promise.all([
-        this.cache.invalidatePattern(`settings:${shopDomain}`, CACHE_CONFIGS.settings),
-        this.cache.invalidatePattern(`alerts:${shop.id}:*`, CACHE_CONFIGS.alerts),
-        this.cache.invalidatePattern(`orders:${shop.id}:*`, CACHE_CONFIGS.orders),
-        this.cache.invalidatePattern(`stats:${shop.id}`, CACHE_CONFIGS.performance),
+        this.cache.invalidatePattern(
+          `settings:${shopDomain}`,
+          CACHE_CONFIGS.settings,
+        ),
+        this.cache.invalidatePattern(
+          `alerts:${shop.id}:*`,
+          CACHE_CONFIGS.alerts,
+        ),
+        this.cache.invalidatePattern(
+          `orders:${shop.id}:*`,
+          CACHE_CONFIGS.orders,
+        ),
+        this.cache.invalidatePattern(
+          `stats:${shop.id}`,
+          CACHE_CONFIGS.performance,
+        ),
       ]);
 
       return {
         success: true,
-        data: { message: 'Cache cleared successfully' },
+        data: { message: "Cache cleared successfully" },
         responseTime: Date.now() - start,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         responseTime: Date.now() - start,
       };
     }
   }
 
   async close(): Promise<void> {
-    await Promise.all([
-      this.db.close(),
-      this.cache.close(),
-    ]);
+    await Promise.all([this.db.close(), this.cache.close()]);
   }
 }

@@ -2,7 +2,7 @@
 // / <reference types="@testing-library/jest-dom" />
 
 // Extend Jest matchers
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 
 // Global Jest types
 declare global {

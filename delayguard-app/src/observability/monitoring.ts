@@ -3,11 +3,11 @@
  * Provides real-time monitoring, alerting, and health checks for DelayGuard
  */
 
-import { delayGuardMetrics, withSpan, getTracer } from './tracing';
+import { delayGuardMetrics, withSpan, getTracer } from "./tracing";
 
 export interface HealthCheck {
   name: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   responseTime?: number;
   error?: string;
   lastChecked: Date;
@@ -46,7 +46,7 @@ export interface AlertRule {
   name: string;
   condition: string;
   threshold: number;
-  severity: 'critical' | 'warning' | 'info';
+  severity: "critical" | "warning" | "info";
   enabled: boolean;
   cooldown: number; // minutes
   lastTriggered?: Date;
@@ -74,10 +74,10 @@ export class HealthCheckService {
    */
   async runAllChecks(): Promise<HealthCheck[]> {
     const results: HealthCheck[] = [];
-    
+
     for (const [name, checkFn] of this.checks) {
       try {
-        const tracer = getTracer('monitoring');
+        const tracer = getTracer("monitoring");
         const span = tracer.startSpan(`health.${name}`);
         const result = await withSpan(span, async() => {
           return await checkFn();
@@ -86,7 +86,7 @@ export class HealthCheckService {
       } catch (error) {
         results.push({
           name,
-          status: 'unhealthy',
+          status: "unhealthy",
           error: (error as Error).message,
           lastChecked: new Date(),
         });
@@ -100,7 +100,7 @@ export class HealthCheckService {
    * Get overall system health
    */
   async getSystemHealth(): Promise<{
-    status: 'healthy' | 'degraded' | 'unhealthy';
+    status: "healthy" | "degraded" | "unhealthy";
     checks: HealthCheck[];
     summary: {
       total: number;
@@ -110,19 +110,19 @@ export class HealthCheckService {
     };
   }> {
     const checks = await this.runAllChecks();
-    
+
     const summary = {
       total: checks.length,
-      healthy: checks.filter(c => c.status === 'healthy').length,
-      degraded: checks.filter(c => c.status === 'degraded').length,
-      unhealthy: checks.filter(c => c.status === 'unhealthy').length,
+      healthy: checks.filter((c) => c.status === "healthy").length,
+      degraded: checks.filter((c) => c.status === "degraded").length,
+      unhealthy: checks.filter((c) => c.status === "unhealthy").length,
     };
 
-    let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+    let status: "healthy" | "degraded" | "unhealthy" = "healthy";
     if (summary.unhealthy > 0) {
-      status = 'unhealthy';
+      status = "unhealthy";
     } else if (summary.degraded > 0) {
-      status = 'degraded';
+      status = "degraded";
     }
 
     return { status, checks, summary };
@@ -133,24 +133,24 @@ export class HealthCheckService {
    */
   private registerDefaultChecks() {
     // Database health check
-    this.registerCheck('database', async() => {
+    this.registerCheck("database", async() => {
       const start = Date.now();
       try {
         // Import database connection
-        const { query } = await import('../database/connection');
-        await query('SELECT 1');
+        const { query } = await import("../database/connection");
+        await query("SELECT 1");
         const responseTime = Date.now() - start;
-        
+
         return {
-          name: 'database',
-          status: responseTime > 1000 ? 'degraded' : 'healthy',
+          name: "database",
+          status: responseTime > 1000 ? "degraded" : "healthy",
           responseTime,
           lastChecked: new Date(),
         };
       } catch (error) {
         return {
-          name: 'database',
-          status: 'unhealthy',
+          name: "database",
+          status: "unhealthy",
           error: (error as Error).message,
           lastChecked: new Date(),
         };
@@ -158,24 +158,24 @@ export class HealthCheckService {
     });
 
     // Redis health check
-    this.registerCheck('redis', async() => {
+    this.registerCheck("redis", async() => {
       const start = Date.now();
       try {
         // Import Redis connection
-        const { redis } = await import('../queue/setup');
+        const { redis } = await import("../queue/setup");
         await redis.ping();
         const responseTime = Date.now() - start;
-        
+
         return {
-          name: 'redis',
-          status: responseTime > 500 ? 'degraded' : 'healthy',
+          name: "redis",
+          status: responseTime > 500 ? "degraded" : "healthy",
           responseTime,
           lastChecked: new Date(),
         };
       } catch (error) {
         return {
-          name: 'redis',
-          status: 'unhealthy',
+          name: "redis",
+          status: "unhealthy",
           error: (error as Error).message,
           lastChecked: new Date(),
         };
@@ -183,58 +183,58 @@ export class HealthCheckService {
     });
 
     // External API health checks
-    this.registerCheck('shopify-api', async() => {
+    this.registerCheck("shopify-api", async() => {
       const start = Date.now();
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch('https://api.shopify.com/health', {
+
+        const response = await fetch("https://api.shopify.com/health", {
           signal: controller.signal,
         });
-        
+
         clearTimeout(timeoutId);
         const responseTime = Date.now() - start;
-        
+
         return {
-          name: 'shopify-api',
-          status: response.ok ? 'healthy' : 'degraded',
+          name: "shopify-api",
+          status: response.ok ? "healthy" : "degraded",
           responseTime,
           lastChecked: new Date(),
         };
       } catch (error) {
         return {
-          name: 'shopify-api',
-          status: 'unhealthy',
+          name: "shopify-api",
+          status: "unhealthy",
           error: (error as Error).message,
           lastChecked: new Date(),
         };
       }
     });
 
-    this.registerCheck('shipengine-api', async() => {
+    this.registerCheck("shipengine-api", async() => {
       const start = Date.now();
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch('https://api.shipengine.com/health', {
+
+        const response = await fetch("https://api.shipengine.com/health", {
           signal: controller.signal,
         });
-        
+
         clearTimeout(timeoutId);
         const responseTime = Date.now() - start;
-        
+
         return {
-          name: 'shipengine-api',
-          status: response.ok ? 'healthy' : 'degraded',
+          name: "shipengine-api",
+          status: response.ok ? "healthy" : "degraded",
           responseTime,
           lastChecked: new Date(),
         };
       } catch (error) {
         return {
-          name: 'shipengine-api',
-          status: 'unhealthy',
+          name: "shipengine-api",
+          status: "unhealthy",
           error: (error as Error).message,
           lastChecked: new Date(),
         };
@@ -251,8 +251,8 @@ export class SystemMetricsService {
    * Get current system metrics
    */
   async getSystemMetrics(): Promise<SystemMetrics> {
-    const tracer = getTracer('monitoring');
-    const span = tracer.startSpan('system.metrics');
+    const tracer = getTracer("monitoring");
+    const span = tracer.startSpan("system.metrics");
     return withSpan(span, async() => {
       const uptime = process.uptime();
       const memoryUsage = process.memoryUsage();
@@ -260,10 +260,10 @@ export class SystemMetricsService {
 
       // Database metrics
       const dbMetrics = await this.getDatabaseMetrics();
-      
+
       // Redis metrics
       const redisMetrics = await this.getRedisMetrics();
-      
+
       // Queue metrics
       const queueMetrics = await this.getQueueMetrics();
 
@@ -276,7 +276,7 @@ export class SystemMetricsService {
         },
         cpu: {
           usage: cpuUsage.user + cpuUsage.system,
-          load: process.platform === 'win32' ? [] : require('os').loadavg(),
+          load: process.platform === "win32" ? [] : require("os").loadavg(),
         },
         database: dbMetrics,
         redis: redisMetrics,
@@ -290,7 +290,7 @@ export class SystemMetricsService {
    */
   private async getDatabaseMetrics() {
     try {
-      const { query } = await import('../database/connection');
+      const { query } = await import("../database/connection");
       const result = await query(`
         SELECT 
           count(*) as connections,
@@ -299,8 +299,12 @@ export class SystemMetricsService {
         FROM pg_stat_activity 
         WHERE state = 'active'
       `);
-      
-      const row = result[0] as { connections: string; max_connections: string; slow_queries: string };
+
+      const row = result[0] as {
+        connections: string;
+        max_connections: string;
+        slow_queries: string;
+      };
       return {
         connections: parseInt(row.connections),
         maxConnections: parseInt(row.max_connections),
@@ -320,14 +324,25 @@ export class SystemMetricsService {
    */
   private async getRedisMetrics() {
     try {
-      const { redis } = await import('../queue/setup');
-      const info = await redis.info('memory');
-      const keyspace = await redis.info('keyspace');
-      
+      const { redis } = await import("../queue/setup");
+      const info = await redis.info("memory");
+      const keyspace = await redis.info("keyspace");
+
       return {
         connected: true,
-        memory: parseInt(info.split('\n').find(line => line.startsWith('used_memory:'))?.split(':')[1] || '0'),
-        keys: parseInt(keyspace.split('\n').find(line => line.startsWith('db0:'))?.split(':')[1]?.split(',')[0] || '0'),
+        memory: parseInt(
+          info
+            .split("\n")
+            .find((line) => line.startsWith("used_memory:"))
+            ?.split(":")[1] || "0",
+        ),
+        keys: parseInt(
+          keyspace
+            .split("\n")
+            .find((line) => line.startsWith("db0:"))
+            ?.split(":")[1]
+            ?.split(",")[0] || "0",
+        ),
       };
     } catch (error) {
       return {
@@ -343,23 +358,25 @@ export class SystemMetricsService {
    */
   private async getQueueMetrics() {
     try {
-      const { delayCheckQueue, notificationQueue } = await import('../queue/setup');
+      const { delayCheckQueue, notificationQueue } = await import(
+        "../queue/setup"
+      );
       const [delayWaiting, delayActive, delayFailed] = await Promise.all([
         delayCheckQueue.getWaiting(),
         delayCheckQueue.getActive(),
         delayCheckQueue.getFailed(),
       ]);
-      
+
       const [notifWaiting, notifActive, notifFailed] = await Promise.all([
         notificationQueue.getWaiting(),
         notificationQueue.getActive(),
         notificationQueue.getFailed(),
       ]);
-      
+
       const waiting = [...delayWaiting, ...notifWaiting];
       const active = [...delayActive, ...notifActive];
       const failed = [...delayFailed, ...notifFailed];
-      
+
       return {
         size: waiting.length,
         processing: active.length,
@@ -401,22 +418,24 @@ export class AlertingService {
   /**
    * Check all alert rules
    */
-  async checkAlerts(): Promise<Array<{
-    rule: AlertRule;
-    triggered: boolean;
-    message: string;
-  }>> {
+  async checkAlerts(): Promise<
+    Array<{
+      rule: AlertRule;
+      triggered: boolean;
+      message: string;
+    }>
+  > {
     const results = [];
-    
+
     for (const [ruleId, rule] of this.rules) {
       if (!rule.enabled) continue;
-      
+
       try {
         const triggered = await this.evaluateRule(rule);
         if (triggered) {
           const message = this.generateAlertMessage(rule);
           results.push({ rule, triggered, message });
-          
+
           // Record alert
           this.alertHistory.push({
             ruleId,
@@ -428,7 +447,7 @@ export class AlertingService {
         console.error(`Error evaluating alert rule ${ruleId}:`, error);
       }
     }
-    
+
     return results;
   }
 
@@ -446,15 +465,15 @@ export class AlertingService {
 
     // Evaluate condition based on rule type
     switch (rule.condition) {
-      case 'error_rate_high':
+      case "error_rate_high":
         return await this.checkErrorRate(rule.threshold);
-      case 'response_time_high':
+      case "response_time_high":
         return await this.checkResponseTime(rule.threshold);
-      case 'memory_usage_high':
+      case "memory_usage_high":
         return await this.checkMemoryUsage(rule.threshold);
-      case 'queue_size_large':
+      case "queue_size_large":
         return await this.checkQueueSize(rule.threshold);
-      case 'database_connections_high':
+      case "database_connections_high":
         return await this.checkDatabaseConnections(rule.threshold);
       default:
         return false;
@@ -493,7 +512,9 @@ export class AlertingService {
    */
   private async checkQueueSize(threshold: number): Promise<boolean> {
     try {
-      const { delayCheckQueue, notificationQueue } = await import('../queue/setup');
+      const { delayCheckQueue, notificationQueue } = await import(
+        "../queue/setup"
+      );
       const [delayWaiting, notifWaiting] = await Promise.all([
         delayCheckQueue.getWaiting(),
         notificationQueue.getWaiting(),
@@ -510,9 +531,13 @@ export class AlertingService {
    */
   private async checkDatabaseConnections(threshold: number): Promise<boolean> {
     try {
-      const { query } = await import('../database/connection');
-      const result = await query('SELECT count(*) as connections FROM pg_stat_activity WHERE state = \'active\'');
-      const connections = parseInt((result[0] as { connections: string }).connections);
+      const { query } = await import("../database/connection");
+      const result = await query(
+        "SELECT count(*) as connections FROM pg_stat_activity WHERE state = 'active'",
+      );
+      const connections = parseInt(
+        (result[0] as { connections: string }).connections,
+      );
       return connections > threshold;
     } catch (error) {
       return false;
@@ -532,55 +557,55 @@ export class AlertingService {
   private initializeDefaultRules() {
     // High error rate
     this.addRule({
-      id: 'error_rate_high',
-      name: 'High Error Rate',
-      condition: 'error_rate_high',
+      id: "error_rate_high",
+      name: "High Error Rate",
+      condition: "error_rate_high",
       threshold: 5, // 5% error rate
-      severity: 'critical',
+      severity: "critical",
       enabled: true,
       cooldown: 15, // 15 minutes
     });
 
     // High response time
     this.addRule({
-      id: 'response_time_high',
-      name: 'High Response Time',
-      condition: 'response_time_high',
+      id: "response_time_high",
+      name: "High Response Time",
+      condition: "response_time_high",
       threshold: 2000, // 2 seconds
-      severity: 'warning',
+      severity: "warning",
       enabled: true,
       cooldown: 10, // 10 minutes
     });
 
     // High memory usage
     this.addRule({
-      id: 'memory_usage_high',
-      name: 'High Memory Usage',
-      condition: 'memory_usage_high',
+      id: "memory_usage_high",
+      name: "High Memory Usage",
+      condition: "memory_usage_high",
       threshold: 80, // 80%
-      severity: 'warning',
+      severity: "warning",
       enabled: true,
       cooldown: 5, // 5 minutes
     });
 
     // Large queue size
     this.addRule({
-      id: 'queue_size_large',
-      name: 'Large Queue Size',
-      condition: 'queue_size_large',
+      id: "queue_size_large",
+      name: "Large Queue Size",
+      condition: "queue_size_large",
       threshold: 1000, // 1000 jobs
-      severity: 'warning',
+      severity: "warning",
       enabled: true,
       cooldown: 10, // 10 minutes
     });
 
     // High database connections
     this.addRule({
-      id: 'database_connections_high',
-      name: 'High Database Connections',
-      condition: 'database_connections_high',
+      id: "database_connections_high",
+      name: "High Database Connections",
+      condition: "database_connections_high",
       threshold: 80, // 80% of max connections
-      severity: 'critical',
+      severity: "critical",
       enabled: true,
       cooldown: 5, // 5 minutes
     });
@@ -605,12 +630,13 @@ export class MonitoringService {
   /**
    * Start monitoring
    */
-  start(intervalMs: number = 60000) { // Default 1 minute
+  start(intervalMs: number = 60000) {
+    // Default 1 minute
     this.intervalId = setInterval(async() => {
       await this.runMonitoringCycle();
     }, intervalMs);
-    
-    console.log('Monitoring service started');
+
+    console.log("Monitoring service started");
   }
 
   /**
@@ -621,8 +647,8 @@ export class MonitoringService {
       clearInterval(this.intervalId);
       this.intervalId = undefined;
     }
-    
-    console.log('Monitoring service stopped');
+
+    console.log("Monitoring service stopped");
   }
 
   /**
@@ -632,39 +658,44 @@ export class MonitoringService {
     try {
       // Run health checks
       const health = await this.healthCheckService.getSystemHealth();
-      
+
       // Get system metrics
       const metrics = await this.metricsService.getSystemMetrics();
-      
+
       // Check alerts
       const alerts = await this.alertingService.checkAlerts();
-      
+
       // Process alerts
       for (const alert of alerts) {
         if (alert.triggered) {
           await this.handleAlert(alert);
         }
       }
-      
+
       // Update metrics
-      delayGuardMetrics.updateQueueSize('delay-check', metrics.queue.size);
-      
-      console.log(`Monitoring cycle completed - Health: ${health.status}, Alerts: ${alerts.length}`);
-      
+      delayGuardMetrics.updateQueueSize("delay-check", metrics.queue.size);
+
+      console.log(
+        `Monitoring cycle completed - Health: ${health.status}, Alerts: ${alerts.length}`,
+      );
     } catch (error) {
-      console.error('Error in monitoring cycle:', error);
+      console.error("Error in monitoring cycle:", error);
     }
   }
 
   /**
    * Handle triggered alerts
    */
-  private async handleAlert(alert: { rule: AlertRule; triggered: boolean; message: string }) {
+  private async handleAlert(alert: {
+    rule: AlertRule;
+    triggered: boolean;
+    message: string;
+  }) {
     console.log(`ALERT: ${alert.message}`);
-    
+
     // Here you would integrate with your alerting system
     // e.g., send to PagerDuty, Slack, email, etc.
-    
+
     // For now, just log the alert
     console.log(`Alert triggered: ${alert.rule.name} (${alert.rule.severity})`);
   }
@@ -675,7 +706,7 @@ export class MonitoringService {
   async getSystemStatus() {
     const health = await this.healthCheckService.getSystemHealth();
     const metrics = await this.metricsService.getSystemMetrics();
-    
+
     return {
       health,
       metrics,

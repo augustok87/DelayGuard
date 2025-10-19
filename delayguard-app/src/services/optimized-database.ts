@@ -1,5 +1,5 @@
-import { Pool, PoolClient, QueryResult } from 'pg';
-import { AppConfig } from '../types';
+import { Pool, PoolClient, QueryResult } from "pg";
+import { AppConfig } from "../types";
 
 export interface QueryOptions {
   timeout?: number;
@@ -18,25 +18,25 @@ export class OptimizedDatabase {
     this.pool = new Pool({
       connectionString: config.database.url,
       max: 20, // Maximum number of clients in the pool
-      min: 5,  // Minimum number of clients in the pool
+      min: 5, // Minimum number of clients in the pool
       idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
       connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
       statement_timeout: 10000, // Query timeout of 10 seconds
       query_timeout: 10000,
-      application_name: 'delayguard',
+      application_name: "delayguard",
       keepAlive: true,
       keepAliveInitialDelayMillis: 0,
     });
 
     // Handle pool errors
-    this.pool.on('error', (err) => {
-      console.error('Unexpected error on idle client', err);
+    this.pool.on("error", (err) => {
+      console.error("Unexpected error on idle client", err);
     });
   }
 
   async query<T extends Record<string, any> = any>(
-    text: string, 
-    params: any[] = [], 
+    text: string,
+    params: any[] = [],
     options: QueryOptions = {},
   ): Promise<QueryResult<T>> {
     const {
@@ -47,7 +47,7 @@ export class OptimizedDatabase {
     } = options;
 
     const cacheKey = cache ? `${text}:${JSON.stringify(params)}` : null;
-    
+
     // Check cache first
     if (cache && cacheKey) {
       const cached = this.getFromCache(cacheKey);
@@ -57,68 +57,68 @@ export class OptimizedDatabase {
     }
 
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt <= retries; attempt++) {
       let client: PoolClient | null = null;
-      
+
       try {
         client = await this.pool.connect();
-        
+
         // Set query timeout
         await client.query(`SET statement_timeout = ${timeout}`);
-        
+
         const start = Date.now();
         const result = await client.query(text, params);
         const duration = Date.now() - start;
-        
+
         // Log slow queries
         if (duration > 1000) {
-          console.warn(`Slow query detected: ${duration}ms - ${text.substring(0, 100)}...`);
+          console.warn(
+            `Slow query detected: ${duration}ms - ${text.substring(0, 100)}...`,
+          );
         }
-        
+
         // Cache result if enabled
         if (cache && cacheKey) {
           this.setCache(cacheKey, result, cacheTTL);
         }
-        
+
         return result;
-        
       } catch (error) {
         lastError = error as Error;
-        
+
         // Don't retry on certain errors
         if (this.isNonRetryableError(error as Error)) {
           throw error;
         }
-        
+
         // Wait before retry (exponential backoff)
         if (attempt < retries) {
           const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
-        
       } finally {
         if (client) {
           client.release();
         }
       }
     }
-    
-    throw lastError || new Error('Query failed after all retries');
+
+    throw lastError || new Error("Query failed after all retries");
   }
 
   async transaction<T>(
     callback: (client: PoolClient) => Promise<T>,
   ): Promise<T> {
     const client = await this.pool.connect();
-    
+
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
       const result = await callback(client);
-      await client.query('COMMIT');
+      await client.query("COMMIT");
       return result;
     } catch (error) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       throw error;
     } finally {
       client.release();
@@ -130,15 +130,15 @@ export class OptimizedDatabase {
     _options: QueryOptions = {},
   ): Promise<QueryResult<T>[]> {
     const client = await this.pool.connect();
-    
+
     try {
       const results: QueryResult<T>[] = [];
-      
+
       for (const { text, params = [] } of queries) {
         const result = await client.query(text, params);
         results.push(result);
       }
-      
+
       return results;
     } finally {
       client.release();
@@ -168,26 +168,31 @@ export class OptimizedDatabase {
   // Optimized query methods for common operations
   async getShopByDomain(domain: string): Promise<any | null> {
     const result = await this.query(
-      'SELECT * FROM shops WHERE shop_domain = $1 LIMIT 1',
+      "SELECT * FROM shops WHERE shop_domain = $1 LIMIT 1",
       [domain],
       { cache: true, cacheTTL: 300000 }, // 5 minutes
     );
-    
+
     return result.rows[0] || null;
   }
 
   async getShopSettings(shopId: number): Promise<any | null> {
     const result = await this.query(
-      'SELECT * FROM app_settings WHERE shop_id = $1 LIMIT 1',
+      "SELECT * FROM app_settings WHERE shop_id = $1 LIMIT 1",
       [shopId],
       { cache: true, cacheTTL: 300000 }, // 5 minutes
     );
-    
+
     return result.rows[0] || null;
   }
 
-  async getRecentOrders(shopId: number, limit: number = 20, offset: number = 0): Promise<any[]> {
-    const result = await this.query(`
+  async getRecentOrders(
+    shopId: number,
+    limit: number = 20,
+    offset: number = 0,
+  ): Promise<any[]> {
+    const result = await this.query(
+      `
       SELECT 
         o.*,
         f.tracking_number,
@@ -198,13 +203,21 @@ export class OptimizedDatabase {
       WHERE o.shop_id = $1
       ORDER BY o.created_at DESC
       LIMIT $2 OFFSET $3
-    `, [shopId, limit, offset], { cache: true, cacheTTL: 180000 }); // 3 minutes
-    
+    `,
+      [shopId, limit, offset],
+      { cache: true, cacheTTL: 180000 },
+    ); // 3 minutes
+
     return result.rows;
   }
 
-  async getRecentAlerts(shopId: number, limit: number = 20, offset: number = 0): Promise<any[]> {
-    const result = await this.query(`
+  async getRecentAlerts(
+    shopId: number,
+    limit: number = 20,
+    offset: number = 0,
+  ): Promise<any[]> {
+    const result = await this.query(
+      `
       SELECT 
         da.*,
         o.order_number,
@@ -218,34 +231,44 @@ export class OptimizedDatabase {
       WHERE o.shop_id = $1
       ORDER BY da.created_at DESC
       LIMIT $2 OFFSET $3
-    `, [shopId, limit, offset], { cache: true, cacheTTL: 180000 }); // 3 minutes
-    
+    `,
+      [shopId, limit, offset],
+      { cache: true, cacheTTL: 180000 },
+    ); // 3 minutes
+
     return result.rows;
   }
 
   async getOrderCount(shopId: number, startDate?: Date): Promise<number> {
-    let query = 'SELECT COUNT(*) as count FROM orders WHERE shop_id = $1';
+    let query = "SELECT COUNT(*) as count FROM orders WHERE shop_id = $1";
     const params: any[] = [shopId];
-    
+
     if (startDate) {
-      query += ' AND created_at >= $2';
+      query += " AND created_at >= $2";
       params.push(startDate);
     }
-    
-    const result = await this.query(query, params, { cache: true, cacheTTL: 300000 });
+
+    const result = await this.query(query, params, {
+      cache: true,
+      cacheTTL: 300000,
+    });
     return parseInt(result.rows[0].count);
   }
 
   async getAlertCount(shopId: number, startDate?: Date): Promise<number> {
-    let query = 'SELECT COUNT(*) as count FROM delay_alerts da JOIN orders o ON da.order_id = o.id WHERE o.shop_id = $1';
+    let query =
+      "SELECT COUNT(*) as count FROM delay_alerts da JOIN orders o ON da.order_id = o.id WHERE o.shop_id = $1";
     const params: any[] = [shopId];
-    
+
     if (startDate) {
-      query += ' AND da.created_at >= $2';
+      query += " AND da.created_at >= $2";
       params.push(startDate);
     }
-    
-    const result = await this.query(query, params, { cache: true, cacheTTL: 300000 });
+
+    const result = await this.query(query, params, {
+      cache: true,
+      cacheTTL: 300000,
+    });
     return parseInt(result.rows[0].count);
   }
 
@@ -254,11 +277,11 @@ export class OptimizedDatabase {
     if (entry && entry.expiry > Date.now()) {
       return entry.result;
     }
-    
+
     if (entry) {
       this.queryCache.delete(key);
     }
-    
+
     return null;
   }
 
@@ -283,14 +306,14 @@ export class OptimizedDatabase {
 
   private isNonRetryableError(error: Error): boolean {
     const nonRetryableErrors = [
-      'syntax error',
-      'permission denied',
-      'relation does not exist',
-      'column does not exist',
-      'duplicate key value',
+      "syntax error",
+      "permission denied",
+      "relation does not exist",
+      "column does not exist",
+      "duplicate key value",
     ];
-    
+
     const errorMessage = error.message.toLowerCase();
-    return nonRetryableErrors.some(msg => errorMessage.includes(msg));
+    return nonRetryableErrors.some((msg) => errorMessage.includes(msg));
   }
 }

@@ -1,0 +1,11 @@
+// import { AxeResults } from 'jest-axe'; // Available for future use
+
+declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toHaveNoViolations(): R;
+    }
+  }
+}
+
+export {};

@@ -1,5 +1,5 @@
-const twilio = require('twilio');
-import { OrderInfo, DelayDetails } from '../types';
+const twilio = require("twilio");
+import { OrderInfo, DelayDetails } from "../types";
 
 export class SMSService {
   private client: any;
@@ -10,7 +10,11 @@ export class SMSService {
     this.phoneNumber = phoneNumber;
   }
 
-  async sendDelaySMS(phone: string, orderInfo: OrderInfo, delayDetails: DelayDetails): Promise<void> {
+  async sendDelaySMS(
+    phone: string,
+    orderInfo: OrderInfo,
+    delayDetails: DelayDetails,
+  ): Promise<void> {
     const message = `Hi ${orderInfo.customerName}, your order #${orderInfo.orderNumber} is delayed. New delivery: ${delayDetails.estimatedDelivery}. Track: ${delayDetails.trackingUrl}`;
 
     try {

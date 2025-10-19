@@ -1,14 +1,17 @@
-import { useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { setSelectedTab } from '../store/slices/uiSlice';
+import { useCallback } from "react";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { setSelectedTab } from "../store/slices/uiSlice";
 
 export const useTabs = () => {
   const dispatch = useAppDispatch();
-  const selectedTab = useAppSelector(state => state.ui.selectedTab);
+  const selectedTab = useAppSelector((state) => state.ui.selectedTab);
 
-  const changeTab = useCallback((tabIndex: number) => {
-    dispatch(setSelectedTab(tabIndex));
-  }, [dispatch]);
+  const changeTab = useCallback(
+    (tabIndex: number) => {
+      dispatch(setSelectedTab(tabIndex));
+    },
+    [dispatch],
+  );
 
   const nextTab = useCallback(() => {
     const nextIndex = (selectedTab + 1) % 3; // Assuming 3 tabs

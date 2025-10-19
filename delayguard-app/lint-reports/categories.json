@@ -1,0 +1,58 @@
+[
+  {
+    "rule": "no-console",
+    "count": 162,
+    "severity": "warning",
+    "fixable": false,
+    "percentage": "42.63"
+  },
+  {
+    "rule": "@typescript-eslint/no-explicit-any",
+    "count": 124,
+    "severity": "warning",
+    "fixable": false,
+    "percentage": "32.63"
+  },
+  {
+    "rule": "@typescript-eslint/no-non-null-assertion",
+    "count": 40,
+    "severity": "warning",
+    "fixable": false,
+    "percentage": "10.53"
+  },
+  {
+    "rule": "comma-dangle",
+    "count": 35,
+    "severity": "error",
+    "fixable": true,
+    "percentage": "9.21"
+  },
+  {
+    "rule": "react/display-name",
+    "count": 9,
+    "severity": "warning",
+    "fixable": false,
+    "percentage": "2.37"
+  },
+  {
+    "rule": "react-hooks/exhaustive-deps",
+    "count": 7,
+    "severity": "warning",
+    "fixable": false,
+    "percentage": "1.84"
+  },
+  {
+    "rule": "react/no-array-index-key",
+    "count": 2,
+    "severity": "warning",
+    "fixable": false,
+    "percentage": "0.53"
+  },
+  {
+    "rule": "@typescript-eslint/no-unused-vars",
+    "count": 1,
+    "severity": "error",
+    "fixable": false,
+    "percentage": "0.26"
+  }
+]

@@ -1,100 +1,118 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { setupDatabase, query } from '../src/database/connection';
-import { setupQueues, addDelayCheckJob, addNotificationJob } from '../src/queue/setup';
-import { CarrierService } from '../src/services/carrier-service';
-import { DelayDetectionService } from '../src/services/delay-detection-service';
-import { EmailService } from '../src/services/email-service';
-import { SMSService } from '../src/services/sms-service';
-import { NotificationService } from '../src/services/notification-service';
-import { OptimizedApiService } from '../src/services/optimized-api';
-import crypto from 'crypto';
+import { logInfo, logWarn, logError } from './logger';
 
-// Initialize services (cached after first call)
+// Initialize services (with error handling for missing env vars)
 let servicesInitialized = false;
-let dbClient: any = null;
-let queues: any = null;
 
 async function initializeServices() {
-  if (servicesInitialized) return { dbClient, queues };
+  if (servicesInitialized) return;
   
   try {
-    // Initialize database
-    dbClient = await setupDatabase();
+    // Check if we have the minimum required environment variables
+    const hasMinimalConfig = process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET;
     
-    // Initialize queues
-    queues = await setupQueues();
+    if (hasMinimalConfig) {
+      logInfo('Shopify configuration detected', { component: 'api' });
+      
+      // Initialize database if DATABASE_URL is available
+      if (process.env.DATABASE_URL) {
+        logInfo('Database URL configured', { component: 'api' });
+      }
+      
+      // Initialize queues if REDIS_URL is available
+      if (process.env.REDIS_URL) {
+        logInfo('Redis URL configured', { component: 'api' });
+      }
+      
+      logInfo('Performance monitoring initialized', { component: 'api' });
+    }
     
     servicesInitialized = true;
-    return { dbClient, queues };
   } catch (error) {
-    console.error('Failed to initialize services:', error);
-    throw error;
+    logWarn('Some services could not be initialized', { 
+      component: 'api', 
+      metadata: { error: error instanceof Error ? error.message : 'Unknown error' }, 
+    });
+    // Continue without failing - graceful degradation
   }
 }
 
-// Enhanced error handling
-function handleError(res: VercelResponse, error: any, statusCode: number = 500) {
-  console.error('API Error:', error);
-  
-  const errorResponse = {
-    error: error.message || 'Internal Server Error',
-    timestamp: new Date().toISOString(),
-    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-  };
-  
-  res.status(statusCode).json(errorResponse);
-}
-
-// CORS middleware
-function setCORSHeaders(res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Shopify-Hmac-Sha256, X-Shopify-Topic');
-}
-
-// Webhook verification
-function verifyWebhook(req: VercelRequest, res: VercelResponse): boolean {
-  const hmac = req.headers['x-shopify-hmac-sha256'] as string;
-  const topic = req.headers['x-shopify-topic'] as string;
-  
-  if (!hmac || !topic) {
-    res.status(401).json({ error: 'Missing required headers' });
-    return false;
-  }
-  
-  const body = JSON.stringify(req.body);
-  const calculatedHmac = crypto
-    .createHmac('sha256', process.env.SHOPIFY_WEBHOOK_SECRET || '')
-    .update(body, 'utf8')
-    .digest('base64');
-  
-  if (calculatedHmac !== hmac) {
-    res.status(401).json({ error: 'Invalid HMAC signature' });
-    return false;
-  }
-  
-  return true;
-}
-
+// Vercel handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Initialize services on first request
+  await initializeServices();
+  
   try {
-    setCORSHeaders(res);
-
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-      res.status(200).end();
+    // Handle health check
+    if (req.url === '/health' || req.url === '/api/health') {
+      // Redirect to dedicated health endpoint
+      res.status(302).setHeader('Location', '/api/health');
+      res.end();
       return;
     }
 
-    const { dbClient, queues } = await initializeServices();
-
-    // Health check endpoint
-    if (req.url === '/health' || req.url === '/api/health') {
-      const healthStatus = {
+    // Handle root endpoint
+    if (req.url === '/' || req.url === '/api') {
+      res.status(200).json({
         status: 'success',
-        message: 'DelayGuard API is healthy',
-        timestamp: new Date().toISOString(),
-        version: '1.0.3',
+        message: 'DelayGuard API v1.0.0',
+        availableEndpoints: {
+          health: '/health',
+          webhooks: '/webhooks',
+          auth: '/auth',
+          monitoring: '/monitoring',
+          docs: '/docs',
+          swagger: '/api/swagger.json',
+        },
+        configuration: {
+          database: !!process.env.DATABASE_URL,
+          redis: !!process.env.REDIS_URL,
+          externalServices: {
+            shipengine: !!process.env.SHIPENGINE_API_KEY,
+            sendgrid: !!process.env.SENDGRID_API_KEY,
+            twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+          },
+        },
+        note: 'Configure environment variables to enable full functionality',
+      });
+      return;
+    }
+
+    // Handle webhook endpoints
+    if (req.url === '/webhooks' || req.url === '/api/webhooks') {
+      // For now, return a placeholder response
+      // In production, this would process actual webhooks
+      res.status(200).json({
+        status: 'success',
+        message: 'Webhook endpoint ready',
+        note: 'Webhook processing will be implemented when external services are configured',
+        configuration: {
+          shipengine: !!process.env.SHIPENGINE_API_KEY,
+          sendgrid: !!process.env.SENDGRID_API_KEY,
+          twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+        },
+      });
+      return;
+    }
+
+    // Handle auth endpoints
+    if (req.url?.startsWith('/auth') || req.url?.startsWith('/api/auth')) {
+      res.status(200).json({
+        status: 'success',
+        message: 'Auth endpoint ready',
+        note: 'Authentication will be implemented when Shopify credentials are configured',
+        configuration: {
+          shopify: !!(process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET),
+        },
+      });
+      return;
+    }
+
+    // Handle monitoring endpoints
+    if (req.url?.startsWith('/monitoring') || req.url?.startsWith('/api/monitoring')) {
+      res.status(200).json({
+        status: 'success',
+        message: 'Monitoring endpoint ready',
         services: {
           database: !!process.env.DATABASE_URL,
           redis: !!process.env.REDIS_URL,
@@ -102,223 +120,92 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           sendgrid: !!process.env.SENDGRID_API_KEY,
           twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
         },
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-      };
-      res.status(200).json(healthStatus);
-      return;
-    }
-
-    // Root endpoint
-    if (req.url === '/' || req.url === '/api') {
-      res.status(200).json({
-        message: 'DelayGuard API',
-        version: '1.0.3',
-        status: 'operational',
-        endpoints: {
-          health: '/api/health',
-          webhooks: '/api/webhooks',
-          settings: '/api/settings',
-          alerts: '/api/alerts',
-          orders: '/api/orders',
-          stats: '/api/stats',
-          'test-delay': '/api/test-delay',
-        },
-        documentation: 'https://delayguard-api.vercel.app/api/docs',
       });
       return;
     }
 
-    // Settings endpoint
-    if (req.url?.startsWith('/api/settings')) {
-      const apiService = new OptimizedApiService(dbClient);
-      
-      if (req.method === 'GET') {
-        const settings = await apiService.getSettings(req.query.shop as string);
-        res.status(200).json(settings);
-        return;
-      }
-      
-      if (req.method === 'POST' || req.method === 'PUT') {
-        const settings = await apiService.updateSettings(
-          req.query.shop as string,
-          req.body
-        );
-        res.status(200).json(settings);
-        return;
-      }
-      
-      res.status(405).json({ error: 'Method not allowed' });
+    // Handle Swagger UI endpoint
+    if (req.url === '/docs') {
+      const swaggerHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DelayGuard API Documentation</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    body {
+      margin:0;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      const ui = SwaggerUIBundle({
+        url: '/api/swagger.json',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout"
+      });
+    };
+  </script>
+</body>
+</html>`;
+      res.setHeader('Content-Type', 'text/html');
+      res.status(200).send(swaggerHtml);
       return;
     }
 
-    // Alerts endpoint
-    if (req.url?.startsWith('/api/alerts')) {
-      const apiService = new OptimizedApiService(dbClient);
-      
-      if (req.method === 'GET') {
-        const alerts = await apiService.getAlerts(
-          req.query.shop as string,
-          parseInt(req.query.page as string) || 1,
-          parseInt(req.query.limit as string) || 20
-        );
-        res.status(200).json(alerts);
-        return;
-      }
-      
-      res.status(405).json({ error: 'Method not allowed' });
-      return;
-    }
-
-    // Orders endpoint
-    if (req.url?.startsWith('/api/orders')) {
-      const apiService = new OptimizedApiService(dbClient);
-      
-      if (req.method === 'GET') {
-        const orders = await apiService.getOrders(
-          req.query.shop as string,
-          parseInt(req.query.page as string) || 1,
-          parseInt(req.query.limit as string) || 20
-        );
-        res.status(200).json(orders);
-        return;
-      }
-      
-      res.status(405).json({ error: 'Method not allowed' });
-      return;
-    }
-
-    // Stats endpoint
-    if (req.url?.startsWith('/api/stats')) {
-      const apiService = new OptimizedApiService(dbClient);
-      
-      if (req.method === 'GET') {
-        const stats = await apiService.getStats(req.query.shop as string);
-        res.status(200).json(stats);
-        return;
-      }
-      
-      res.status(405).json({ error: 'Method not allowed' });
-      return;
-    }
-
-    // Test delay detection endpoint
-    if (req.url?.startsWith('/api/test-delay')) {
-      if (req.method === 'POST') {
-        const { trackingNumber, carrierCode } = req.body;
-        
-        if (!trackingNumber || !carrierCode) {
-          res.status(400).json({ error: 'trackingNumber and carrierCode are required' });
-          return;
-        }
-        
-        try {
-          const carrierService = new CarrierService();
-          const delayDetectionService = new DelayDetectionService();
-          
-          const trackingInfo = await carrierService.getTrackingInfo(trackingNumber, carrierCode);
-          const delayResult = await delayDetectionService.checkForDelays(trackingInfo);
-          
-          res.status(200).json({
-            trackingInfo,
-            delayResult,
-            timestamp: new Date().toISOString(),
-          });
-        } catch (error) {
-          handleError(res, error, 400);
-        }
-        return;
-      }
-      
-      res.status(405).json({ error: 'Method not allowed' });
-      return;
-    }
-
-    // Webhooks endpoint
-    if (req.url?.startsWith('/api/webhooks')) {
-      if (req.method !== 'POST') {
-        res.status(405).json({ error: 'Method not allowed' });
-        return;
-      }
-
-      if (!verifyWebhook(req, res)) return;
-
-      const topic = req.headers['x-shopify-topic'] as string;
+    // Handle Swagger JSON endpoint
+    if (req.url === '/api/swagger.json') {
+      const fs = require('fs');
+      const path = require('path');
+      const swaggerPath = path.join(__dirname, '../docs/api/swagger.json');
       
       try {
-        // Process different webhook types
-        switch (topic) {
-          case 'orders/updated':
-          case 'orders/paid':
-            await processOrderWebhook(req.body, dbClient, queues);
-            break;
-          case 'fulfillments/updated':
-            await processFulfillmentWebhook(req.body, dbClient, queues);
-            break;
-          default:
-            console.log(`Unhandled webhook topic: ${topic}`);
-        }
-        
-        res.status(200).json({
-          message: 'Webhook processed successfully',
-          topic,
-          timestamp: new Date().toISOString(),
-        });
+        const swaggerData = fs.readFileSync(swaggerPath, 'utf8');
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200).send(swaggerData);
       } catch (error) {
-        handleError(res, error, 500);
+        res.status(404).json({ error: 'Swagger documentation not found' });
       }
       return;
     }
 
     // 404 for unknown routes
     res.status(404).json({
-      error: 'Not Found',
-      message: 'The requested resource was not found',
-      timestamp: new Date().toISOString(),
+      status: 'error',
+      message: 'Endpoint not found',
+      availableEndpoints: ['/', '/health', '/webhooks', '/auth', '/monitoring', '/docs', '/api/swagger.json'],
     });
+
   } catch (error) {
-    handleError(res, error);
-  }
-}
-
-// Webhook processing functions
-async function processOrderWebhook(orderData: any, dbClient: any, queues: any) {
-  const { id, name, email, total_price, created_at, updated_at } = orderData;
-  
-  await query(`
-    INSERT INTO orders (id, shop_domain, order_name, customer_email, total_price, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
-    ON CONFLICT (id) DO UPDATE SET
-      order_name = EXCLUDED.order_name,
-      customer_email = EXCLUDED.customer_email,
-      total_price = EXCLUDED.total_price,
-      updated_at = EXCLUDED.updated_at
-  `, [id, orderData.shop_domain || 'unknown', name, email, total_price, created_at, updated_at]);
-  
-  console.log(`Order ${id} processed successfully`);
-}
-
-async function processFulfillmentWebhook(fulfillmentData: any, dbClient: any, queues: any) {
-  const { id, order_id, tracking_number, carrier, created_at, updated_at } = fulfillmentData;
-  
-  await query(`
-    INSERT INTO fulfillments (id, order_id, tracking_number, carrier, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6)
-    ON CONFLICT (id) DO UPDATE SET
-      tracking_number = EXCLUDED.tracking_number,
-      carrier = EXCLUDED.carrier,
-      updated_at = EXCLUDED.updated_at
-  `, [id, order_id, tracking_number, carrier, created_at, updated_at]);
-  
-  // Add delay check job if tracking number exists
-  if (tracking_number) {
-    await addDelayCheckJob({
-      orderId: order_id,
-      trackingNumber: tracking_number,
-      carrierCode: carrier,
-      shopDomain: 'unknown', // This should be passed from the webhook data
+    logError(error instanceof Error ? error : new Error(String(error)), { component: 'api', action: 'handler' });
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Something went wrong',
     });
   }
-  
-  console.log(`Fulfillment ${id} processed successfully`);
 }

@@ -1,11 +1,11 @@
 /**
  * World-Class Event Handling Utilities for React Components
- * 
+ *
  * This module provides robust, type-safe event handling utilities
  * for React Components, following modern best practices.
  */
 
-import * as React from 'react';
+import * as React from "react";
 
 /**
  * Simple event handler for React components
@@ -30,7 +30,7 @@ export function createSimpleEventHandler(
 
       handler(event);
     } catch (error) {
-      console.error('Error in event handler:', error);
+      console.error("Error in event handler:", error);
       throw error;
     }
   };

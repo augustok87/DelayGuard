@@ -1,8 +1,8 @@
-import { Context, Next } from 'koa';
-import { ValidationError } from '../types';
-import DOMPurify from 'isomorphic-dompurify';
-import validator from 'validator';
-import { escape } from 'html-escaper';
+import { Context, Next } from "koa";
+import { ValidationError } from "../types";
+import DOMPurify from "isomorphic-dompurify";
+import validator from "validator";
+import { escape } from "html-escaper";
 
 /**
  * Sanitization Configuration
@@ -37,8 +37,8 @@ export class InputSanitizationMiddleware {
       enableHTMLSanitization: true,
       enableInputValidation: true,
       maxStringLength: 10000,
-      allowedHTMLTags: ['b', 'i', 'em', 'strong', 'p', 'br'],
-      allowedHTMLAttributes: ['class', 'id'],
+      allowedHTMLTags: ["b", "i", "em", "strong", "p", "br"],
+      allowedHTMLAttributes: ["class", "id"],
       customValidators: {},
       ...config,
     };
@@ -85,15 +85,15 @@ export class InputSanitizationMiddleware {
       return obj;
     }
 
-    if (typeof obj === 'string') {
+    if (typeof obj === "string") {
       return this.sanitizeString(obj);
     }
 
     if (Array.isArray(obj)) {
-      return obj.map(item => this.sanitizeObject(item));
+      return obj.map((item) => this.sanitizeObject(item));
     }
 
-    if (typeof obj === 'object') {
+    if (typeof obj === "object") {
       const sanitized: any = {};
       for (const [key, value] of Object.entries(obj)) {
         // Sanitize key
@@ -110,15 +110,18 @@ export class InputSanitizationMiddleware {
    * Sanitize string input
    */
   private sanitizeString(input: string): string {
-    if (typeof input !== 'string') {
+    if (typeof input !== "string") {
       return input;
     }
 
     // Check string length
-    if (this.config.maxStringLength && input.length > this.config.maxStringLength) {
+    if (
+      this.config.maxStringLength &&
+      input.length > this.config.maxStringLength
+    ) {
       throw new ValidationError(
         `Input exceeds maximum length of ${this.config.maxStringLength} characters`,
-        'INPUT_TOO_LONG',
+        "INPUT_TOO_LONG",
       );
     }
 
@@ -147,17 +150,20 @@ export class InputSanitizationMiddleware {
    */
   private sanitizeXSS(input: string): string {
     // Remove script tags and their content
-    let sanitized = input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-    
+    let sanitized = input.replace(
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      "",
+    );
+
     // Remove javascript: protocols
-    sanitized = sanitized.replace(/javascript:/gi, '');
-    
+    sanitized = sanitized.replace(/javascript:/gi, "");
+
     // Remove on* event handlers
-    sanitized = sanitized.replace(/\bon\w+\s*=/gi, '');
-    
+    sanitized = sanitized.replace(/\bon\w+\s*=/gi, "");
+
     // Escape HTML entities
     sanitized = escape(sanitized);
-    
+
     return sanitized;
   }
 
@@ -184,19 +190,32 @@ export class InputSanitizationMiddleware {
    */
   private sanitizeSQLInjection(input: string): string {
     // Remove SQL comment patterns
-    let sanitized = input.replace(/--/g, '');
-    sanitized = sanitized.replace(/\/\*/g, '');
-    sanitized = sanitized.replace(/\*\//g, '');
-    
+    let sanitized = input.replace(/--/g, "");
+    sanitized = sanitized.replace(/\/\*/g, "");
+    sanitized = sanitized.replace(/\*\//g, "");
+
     // Remove SQL keywords that could be used in injection
     const sqlKeywords = [
-      'union', 'select', 'insert', 'update', 'delete', 'drop', 'create', 'alter',
-      'exec', 'execute', 'sp_', 'xp_', 'waitfor', 'delay', 'shutdown',
+      "union",
+      "select",
+      "insert",
+      "update",
+      "delete",
+      "drop",
+      "create",
+      "alter",
+      "exec",
+      "execute",
+      "sp_",
+      "xp_",
+      "waitfor",
+      "delay",
+      "shutdown",
     ];
-    
-    const regex = new RegExp(`\\b(${sqlKeywords.join('|')})\\b`, 'gi');
-    sanitized = sanitized.replace(regex, '');
-    
+
+    const regex = new RegExp(`\\b(${sqlKeywords.join("|")})\\b`, "gi");
+    sanitized = sanitized.replace(regex, "");
+
     return sanitized;
   }
 
@@ -205,10 +224,10 @@ export class InputSanitizationMiddleware {
    */
   private sanitizeHeaders(ctx: Context): void {
     const dangerousHeaders = [
-      'x-forwarded-for',
-      'x-real-ip',
-      'x-forwarded-proto',
-      'user-agent',
+      "x-forwarded-for",
+      "x-real-ip",
+      "x-forwarded-proto",
+      "user-agent",
     ];
 
     for (const header of dangerousHeaders) {
@@ -232,33 +251,49 @@ export class InputSanitizationMiddleware {
     }
 
     switch (type) {
-      case 'email':
-        if (typeof value === 'string' && !validator.isEmail(value)) {
-          throw new ValidationError('Invalid email format', 'INVALID_EMAIL', field);
+      case "email":
+        if (typeof value === "string" && !validator.isEmail(value)) {
+          throw new ValidationError(
+            "Invalid email format",
+            "INVALID_EMAIL",
+            field,
+          );
         }
         break;
 
-      case 'url':
-        if (typeof value === 'string' && !validator.isURL(value)) {
-          throw new ValidationError('Invalid URL format', 'INVALID_URL', field);
+      case "url":
+        if (typeof value === "string" && !validator.isURL(value)) {
+          throw new ValidationError("Invalid URL format", "INVALID_URL", field);
         }
         break;
 
-      case 'number':
-        if (typeof value !== 'number' && !validator.isNumeric(String(value))) {
-          throw new ValidationError('Invalid number format', 'INVALID_NUMBER', field);
+      case "number":
+        if (typeof value !== "number" && !validator.isNumeric(String(value))) {
+          throw new ValidationError(
+            "Invalid number format",
+            "INVALID_NUMBER",
+            field,
+          );
         }
         break;
 
-      case 'date':
-        if (typeof value === 'string' && !validator.isISO8601(value)) {
-          throw new ValidationError('Invalid date format', 'INVALID_DATE', field);
+      case "date":
+        if (typeof value === "string" && !validator.isISO8601(value)) {
+          throw new ValidationError(
+            "Invalid date format",
+            "INVALID_DATE",
+            field,
+          );
         }
         break;
 
-      case 'uuid':
-        if (typeof value === 'string' && !validator.isUUID(value)) {
-          throw new ValidationError('Invalid UUID format', 'INVALID_UUID', field);
+      case "uuid":
+        if (typeof value === "string" && !validator.isUUID(value)) {
+          throw new ValidationError(
+            "Invalid UUID format",
+            "INVALID_UUID",
+            field,
+          );
         }
         break;
 
@@ -266,7 +301,11 @@ export class InputSanitizationMiddleware {
         // Use custom validator if available
         if (this.config.customValidators?.[type]) {
           if (!this.config.customValidators[type](value)) {
-            throw new ValidationError(`Invalid ${type} format`, 'INVALID_FORMAT', field);
+            throw new ValidationError(
+              `Invalid ${type} format`,
+              "INVALID_FORMAT",
+              field,
+            );
           }
         }
         break;
@@ -302,34 +341,58 @@ export class AdvancedInputValidator {
 
     for (const [field, rules] of Object.entries(schema)) {
       const value = data[field];
-      
+
       if (rules.required && (value === undefined || value === null)) {
-        throw new ValidationError(`${field} is required`, 'REQUIRED_FIELD', field);
+        throw new ValidationError(
+          `${field} is required`,
+          "REQUIRED_FIELD",
+          field,
+        );
       }
 
       if (value !== undefined && value !== null) {
         // Type validation
         if (rules.type && typeof value !== rules.type) {
-          throw new ValidationError(`${field} must be of type ${rules.type}`, 'INVALID_TYPE', field);
+          throw new ValidationError(
+            `${field} must be of type ${rules.type}`,
+            "INVALID_TYPE",
+            field,
+          );
         }
 
         // Length validation
         if (rules.minLength && value.length < rules.minLength) {
-          throw new ValidationError(`${field} must be at least ${rules.minLength} characters`, 'TOO_SHORT', field);
+          throw new ValidationError(
+            `${field} must be at least ${rules.minLength} characters`,
+            "TOO_SHORT",
+            field,
+          );
         }
 
         if (rules.maxLength && value.length > rules.maxLength) {
-          throw new ValidationError(`${field} must be at most ${rules.maxLength} characters`, 'TOO_LONG', field);
+          throw new ValidationError(
+            `${field} must be at most ${rules.maxLength} characters`,
+            "TOO_LONG",
+            field,
+          );
         }
 
         // Pattern validation
         if (rules.pattern && !rules.pattern.test(value)) {
-          throw new ValidationError(`${field} format is invalid`, 'INVALID_PATTERN', field);
+          throw new ValidationError(
+            `${field} format is invalid`,
+            "INVALID_PATTERN",
+            field,
+          );
         }
 
         // Custom validation
         if (rules.validator && !rules.validator(value)) {
-          throw new ValidationError(`${field} validation failed`, 'CUSTOM_VALIDATION_FAILED', field);
+          throw new ValidationError(
+            `${field} validation failed`,
+            "CUSTOM_VALIDATION_FAILED",
+            field,
+          );
         }
 
         result[field] = value;
@@ -376,8 +439,8 @@ export const SanitizationPresets = {
     enableSQLInjectionProtection: true,
     enableHTMLSanitization: true,
     maxStringLength: 5000,
-    allowedHTMLTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li'],
-    allowedHTMLAttributes: ['class'],
+    allowedHTMLTags: ["b", "i", "em", "strong", "p", "br", "ul", "ol", "li"],
+    allowedHTMLAttributes: ["class"],
   },
 
   // Minimal sanitization for trusted input

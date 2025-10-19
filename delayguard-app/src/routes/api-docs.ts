@@ -1,10 +1,10 @@
 /**
  * @fileoverview Comprehensive API Documentation for DelayGuard
- * 
+ *
  * This file contains OpenAPI 3.0 documentation for all DelayGuard API endpoints.
  * It provides detailed specifications for request/response formats, authentication,
  * error handling, and examples for each endpoint.
- * 
+ *
  * @author DelayGuard Development Team
  * @version 1.0.0
  * @since 1.0.0
@@ -31,7 +31,7 @@
  *       in: header
  *       name: X-API-Key
  *       description: API key for external integrations
- * 
+ *
  *   schemas:
  *     Error:
  *       type: object
@@ -45,7 +45,7 @@
  *         details:
  *           type: object
  *           description: Additional error details
- * 
+ *
  *     HealthCheck:
  *       type: object
  *       properties:
@@ -75,7 +75,7 @@
  *             twilio:
  *               type: boolean
  *               description: Twilio API connectivity
- * 
+ *
  *     DelayAlert:
  *       type: object
  *       properties:
@@ -106,7 +106,7 @@
  *           type: string
  *           format: date-time
  *           description: Alert resolution timestamp
- * 
+ *
  *     Order:
  *       type: object
  *       properties:
@@ -131,7 +131,7 @@
  *           type: string
  *           format: date-time
  *           description: Order creation timestamp
- * 
+ *
  *     TrackingInfo:
  *       type: object
  *       properties:
@@ -164,7 +164,7 @@
  *                 type: string
  *               description:
  *                 type: string
- * 
+ *
  *     DelayDetectionResult:
  *       type: object
  *       properties:
@@ -185,7 +185,7 @@
  *         error:
  *           type: string
  *           description: Error message if detection failed
- * 
+ *
  *     AppSettings:
  *       type: object
  *       properties:
@@ -206,7 +206,7 @@
  *         smsTemplate:
  *           type: string
  *           description: Custom SMS template
- * 
+ *
  *     StatsData:
  *       type: object
  *       properties:
@@ -228,7 +228,7 @@
  *         supportTicketReduction:
  *           type: string
  *           description: Reduction in support tickets
- * 
+ *
  * tags:
  *   - name: System
  *     description: System health and monitoring endpoints
@@ -276,7 +276,7 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- * 
+ *
  * /api/settings:
  *   get:
  *     summary: Get Application Settings
@@ -307,7 +307,7 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- * 
+ *
  *   put:
  *     summary: Update Application Settings
  *     description: Updates the application settings for the authenticated shop
@@ -354,7 +354,7 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- * 
+ *
  * /api/alerts:
  *   get:
  *     summary: Get Delay Alerts
@@ -421,7 +421,7 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- * 
+ *
  * /api/orders:
  *   get:
  *     summary: Get Recent Orders
@@ -482,7 +482,7 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- * 
+ *
  * /api/stats:
  *   get:
  *     summary: Get Application Statistics
@@ -513,7 +513,7 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- * 
+ *
  * /api/test-delay:
  *   post:
  *     summary: Test Delay Detection

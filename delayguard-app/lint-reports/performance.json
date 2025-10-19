@@ -1,0 +1,59 @@
+{
+  "timestamp": "2025-10-19T21:46:37.977Z",
+  "performance": {
+    "duration": 3336,
+    "filesProcessed": 145,
+    "rulesChecked": 8,
+    "issuesPerSecond": "113.91",
+    "averageIssuesPerFile": "2.62"
+  },
+  "recommendations": {
+    "slowestFiles": [
+      {
+        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/observability/tracing.ts",
+        "totalIssues": 43
+      },
+      {
+        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/health.ts",
+        "totalIssues": 30
+      },
+      {
+        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/webhooks.ts",
+        "totalIssues": 23
+      },
+      {
+        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/optimized-database.ts",
+        "totalIssues": 17
+      },
+      {
+        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/middleware/csrf-protection.ts",
+        "totalIssues": 16
+      }
+    ],
+    "mostProblematicRules": [
+      {
+        "rule": "no-console",
+        "count": 162
+      },
+      {
+        "rule": "@typescript-eslint/no-explicit-any",
+        "count": 124
+      },
+      {
+        "rule": "@typescript-eslint/no-non-null-assertion",
+        "count": 40
+      },
+      {
+        "rule": "comma-dangle",
+        "count": 35
+      },
+      {
+        "rule": "react/display-name",
+        "count": 9
+      }
+    ],
+    "optimizationSuggestions": [
+      "Consider running ESLint in parallel for better performance"
+    ]
+  }
+}

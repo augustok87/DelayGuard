@@ -1,10 +1,10 @@
-import Redis from 'ioredis';
-import { Pool } from 'pg';
-import { AppConfig } from '../types';
+import Redis from "ioredis";
+import { Pool } from "pg";
+import { AppConfig } from "../types";
 
 export interface HealthCheck {
   name: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   responseTime: number;
   lastChecked: Date;
   error?: string;
@@ -61,10 +61,10 @@ export interface AlertRule {
   id: string;
   name: string;
   metric: string;
-  operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte';
+  operator: "gt" | "lt" | "eq" | "gte" | "lte";
   threshold: number;
   duration: number; // seconds
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   enabled: boolean;
   channels: string[];
 }
@@ -72,7 +72,7 @@ export interface AlertRule {
 export interface Alert {
   id: string;
   ruleId: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   message: string;
   value: number;
   threshold: number;
@@ -122,12 +122,13 @@ export class MonitoringService {
 
     // CPU metrics
     const cpuUsage = process.cpuUsage();
-    const loadAverage = process.platform === 'win32' ? [0, 0, 0] : require('os').loadavg();
+    const loadAverage =
+      process.platform === "win32" ? [0, 0, 0] : require("os").loadavg();
 
     // Memory metrics
     const memoryUsage = process.memoryUsage();
-    const totalMemory = require('os').totalmem();
-    const freeMemory = require('os').freemem();
+    const totalMemory = require("os").totalmem();
+    const freeMemory = require("os").freemem();
 
     // Database metrics
     const dbStats = await this.getDatabaseStats();
@@ -156,7 +157,7 @@ export class MonitoringService {
         queryTime: dbQueryTime,
       },
       redis: {
-        connected: this.redis.status === 'ready',
+        connected: this.redis.status === "ready",
         memory: redisStats.memory,
         operations: redisStats.operations,
       },
@@ -182,7 +183,7 @@ export class MonitoringService {
       );
     } catch (error) {
       // Log error but don't fail the metrics collection
-      console.warn('Failed to store metrics in Redis:', error);
+      console.warn("Failed to store metrics in Redis:", error);
     }
 
     return metrics;
@@ -196,7 +197,7 @@ export class MonitoringService {
       if (!rule.enabled) continue;
 
       const value = await this.getMetricValue(rule.metric);
-      if (value === null || typeof value !== 'number') continue;
+      if (value === null || typeof value !== "number") continue;
 
       const shouldAlert = this.evaluateAlertRule(rule, value);
       if (shouldAlert) {
@@ -229,24 +230,24 @@ export class MonitoringService {
   }
 
   async getSystemStatus(): Promise<{
-    status: 'healthy' | 'degraded' | 'unhealthy';
+    status: "healthy" | "degraded" | "unhealthy";
     checks: HealthCheck[];
     metrics: SystemMetrics | null;
     alerts: Alert[];
   }> {
     const checks = await this.performHealthChecks();
     const metrics = this.metrics[this.metrics.length - 1] || null;
-    const alerts = Array.from(this.alerts.values()).filter(a => !a.resolved);
+    const alerts = Array.from(this.alerts.values()).filter((a) => !a.resolved);
 
     // Determine overall status
-    const unhealthyChecks = checks.filter(c => c.status === 'unhealthy');
-    const degradedChecks = checks.filter(c => c.status === 'degraded');
-    
-    let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+    const unhealthyChecks = checks.filter((c) => c.status === "unhealthy");
+    const degradedChecks = checks.filter((c) => c.status === "degraded");
+
+    let status: "healthy" | "degraded" | "unhealthy" = "healthy";
     if (unhealthyChecks.length > 0) {
-      status = 'unhealthy';
+      status = "unhealthy";
     } else if (degradedChecks.length > 0) {
-      status = 'degraded';
+      status = "degraded";
     }
 
     return { status, checks, metrics, alerts };
@@ -254,50 +255,50 @@ export class MonitoringService {
 
   private async checkDatabase(): Promise<HealthCheck> {
     const start = Date.now();
-    
+
     try {
-      await this.db.query('SELECT 1 as health_check');
+      await this.db.query("SELECT 1 as health_check");
       const responseTime = Date.now() - start;
-      
+
       return {
-        name: 'Database',
-        status: responseTime < 1000 ? 'healthy' : 'degraded',
+        name: "Database",
+        status: responseTime < 1000 ? "healthy" : "degraded",
         responseTime,
         lastChecked: new Date(),
-        details: { query: 'SELECT 1' },
+        details: { query: "SELECT 1" },
       };
     } catch (error) {
       return {
-        name: 'Database',
-        status: 'unhealthy',
+        name: "Database",
+        status: "unhealthy",
         responseTime: Date.now() - start,
         lastChecked: new Date(),
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async checkRedis(): Promise<HealthCheck> {
     const start = Date.now();
-    
+
     try {
       await this.redis.ping();
       const responseTime = Date.now() - start;
-      
+
       return {
-        name: 'Redis',
-        status: responseTime < 100 ? 'healthy' : 'degraded',
+        name: "Redis",
+        status: responseTime < 100 ? "healthy" : "degraded",
         responseTime,
         lastChecked: new Date(),
         details: { status: this.redis.status },
       };
     } catch (error) {
       return {
-        name: 'Redis',
-        status: 'unhealthy',
+        name: "Redis",
+        status: "unhealthy",
         responseTime: Date.now() - start,
         lastChecked: new Date(),
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -305,22 +306,22 @@ export class MonitoringService {
   private async checkExternalAPIs(): Promise<HealthCheck[]> {
     const checks: HealthCheck[] = [];
     const apis = [
-      { name: 'ShipEngine', url: 'https://api.shipengine.com/v1/rates' },
-      { name: 'SendGrid', url: 'https://api.sendgrid.com/v3/mail/send' },
-      { name: 'Twilio', url: 'https://api.twilio.com/2010-04-01/Accounts' },
+      { name: "ShipEngine", url: "https://api.shipengine.com/v1/rates" },
+      { name: "SendGrid", url: "https://api.sendgrid.com/v3/mail/send" },
+      { name: "Twilio", url: "https://api.twilio.com/2010-04-01/Accounts" },
     ];
 
     for (const api of apis) {
       const start = Date.now();
-      
+
       try {
         // Simple HEAD request to check availability
-        const response = await fetch(api.url, { method: 'HEAD' });
+        const response = await fetch(api.url, { method: "HEAD" });
         const responseTime = Date.now() - start;
-        
+
         checks.push({
           name: api.name,
-          status: response.ok && responseTime < 5000 ? 'healthy' : 'degraded',
+          status: response.ok && responseTime < 5000 ? "healthy" : "degraded",
           responseTime,
           lastChecked: new Date(),
           details: { status: response.status },
@@ -328,10 +329,10 @@ export class MonitoringService {
       } catch (error) {
         checks.push({
           name: api.name,
-          status: 'unhealthy',
+          status: "unhealthy",
           responseTime: Date.now() - start,
           lastChecked: new Date(),
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
@@ -341,24 +342,25 @@ export class MonitoringService {
 
   private async checkApplication(): Promise<HealthCheck> {
     const start = Date.now();
-    
+
     try {
       // Check if application is responsive
       // Add a small delay to simulate actual processing time
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise((resolve) => setTimeout(resolve, 1));
       const responseTime = Date.now() - start;
       const memoryUsage = process.memoryUsage();
-      const memoryPercentage = (memoryUsage.heapUsed / require('os').totalmem()) * 100;
-      
-      let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+      const memoryPercentage =
+        (memoryUsage.heapUsed / require("os").totalmem()) * 100;
+
+      let status: "healthy" | "degraded" | "unhealthy" = "healthy";
       if (memoryPercentage > 90) {
-        status = 'unhealthy';
+        status = "unhealthy";
       } else if (memoryPercentage > 80) {
-        status = 'degraded';
+        status = "degraded";
       }
-      
+
       return {
-        name: 'Application',
+        name: "Application",
         status,
         responseTime,
         lastChecked: new Date(),
@@ -370,16 +372,20 @@ export class MonitoringService {
       };
     } catch (error) {
       return {
-        name: 'Application',
-        status: 'unhealthy',
+        name: "Application",
+        status: "unhealthy",
         responseTime: Date.now() - start,
         lastChecked: new Date(),
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
-  private async getDatabaseStats(): Promise<{ total: number; idle: number; active: number }> {
+  private async getDatabaseStats(): Promise<{
+    total: number;
+    idle: number;
+    active: number;
+  }> {
     try {
       return {
         total: this.db.totalCount,
@@ -394,7 +400,7 @@ export class MonitoringService {
   private async measureDatabaseQueryTime(): Promise<number> {
     const start = Date.now();
     try {
-      await this.db.query('SELECT 1');
+      await this.db.query("SELECT 1");
       return Date.now() - start;
     } catch {
       return -1;
@@ -406,12 +412,12 @@ export class MonitoringService {
     operations: { commands: number; keyspace: number };
   }> {
     try {
-      const info = await this.redis.info('memory');
-      const used = info.match(/used_memory:(\d+)/)?.[1] || '0';
-      const peak = info.match(/used_memory_peak:(\d+)/)?.[1] || '0';
-      
+      const info = await this.redis.info("memory");
+      const used = info.match(/used_memory:(\d+)/)?.[1] || "0";
+      const peak = info.match(/used_memory_peak:(\d+)/)?.[1] || "0";
+
       const keyspace = await this.redis.dbsize();
-      
+
       return {
         memory: {
           used: Math.round(parseInt(used) / 1024 / 1024), // MB
@@ -453,7 +459,7 @@ export class MonitoringService {
   private async getAlertRules(): Promise<AlertRule[]> {
     try {
       const result = await this.db.query(
-        'SELECT * FROM alert_rules WHERE enabled = true ORDER BY severity DESC',
+        "SELECT * FROM alert_rules WHERE enabled = true ORDER BY severity DESC",
       );
       return result.rows;
     } catch (error) {
@@ -462,68 +468,78 @@ export class MonitoringService {
     }
   }
 
-  private async getMetricValue(metric: string): Promise<number | boolean | null> {
+  private async getMetricValue(
+    metric: string,
+  ): Promise<number | boolean | null> {
     const latestMetrics = this.metrics[this.metrics.length - 1];
     if (!latestMetrics) return null;
 
-    const parts = metric.split('.');
+    const parts = metric.split(".");
     let value: any = latestMetrics;
-    
+
     for (const part of parts) {
-      if (value && typeof value === 'object' && part in value) {
+      if (value && typeof value === "object" && part in value) {
         value = value[part];
       } else {
         return null;
       }
     }
 
-    return (typeof value === 'number' || typeof value === 'boolean') ? value : null;
+    return typeof value === "number" || typeof value === "boolean"
+      ? value
+      : null;
   }
 
   private evaluateAlertRule(rule: AlertRule, value: number): boolean {
     switch (rule.operator) {
-      case 'gt': return value > rule.threshold;
-      case 'lt': return value < rule.threshold;
-      case 'eq': return value === rule.threshold;
-      case 'gte': return value >= rule.threshold;
-      case 'lte': return value <= rule.threshold;
-      default: return false;
+      case "gt":
+        return value > rule.threshold;
+      case "lt":
+        return value < rule.threshold;
+      case "eq":
+        return value === rule.threshold;
+      case "gte":
+        return value >= rule.threshold;
+      case "lte":
+        return value <= rule.threshold;
+      default:
+        return false;
     }
   }
 
   private async sendAlertNotification(alert: Alert): Promise<void> {
     // This would integrate with your notification services
     console.log(`ALERT [${alert.severity.toUpperCase()}]: ${alert.message}`);
-    
+
     // Store alert in database
     try {
-      await this.db.query(`
+      await this.db.query(
+        `
         INSERT INTO alerts (id, rule_id, severity, message, value, threshold, timestamp, resolved)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      `, [
-        alert.id,
-        alert.ruleId,
-        alert.severity,
-        alert.message,
-        alert.value,
-        alert.threshold,
-        alert.timestamp,
-        alert.resolved,
-      ]);
+      `,
+        [
+          alert.id,
+          alert.ruleId,
+          alert.severity,
+          alert.message,
+          alert.value,
+          alert.threshold,
+          alert.timestamp,
+          alert.resolved,
+        ],
+      );
     } catch (error) {
-      console.error('Failed to store alert:', error);
+      console.error("Failed to store alert:", error);
     }
   }
 
   async close(): Promise<void> {
     try {
-      await Promise.all([
-        this.redis.quit(),
-        this.db.end(),
-      ]);
+      await Promise.all([this.redis.quit(), this.db.end()]);
     } catch (error) {
       // Log error but don't throw
-      console.warn('Error closing monitoring service:', error);
+      console.warn("Error closing monitoring service:", error);
     }
   }
 }

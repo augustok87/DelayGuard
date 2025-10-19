@@ -1,0 +1,89 @@
+/* Error Boundary Styles */
+.errorFallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-radius: 1rem;
+  margin: 2rem;
+}
+
+.errorIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.errorTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--delayguard-gray-900);
+  margin: 0 0 1rem 0;
+}
+
+.errorMessage {
+  font-size: 1rem;
+  color: var(--delayguard-gray-600);
+  margin: 0 0 2rem 0;
+  max-width: 500px;
+  line-height: 1.5;
+}
+
+.errorActions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.retryButton {
+  background: var(--delayguard-primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.retryButton:hover {
+  background: var(--delayguard-primary-dark);
+  transform: translateY(-1px);
+}
+
+.reloadButton {
+  background: white;
+  color: var(--delayguard-gray-700);
+  border: 1px solid var(--delayguard-gray-300);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reloadButton:hover {
+  background: var(--delayguard-gray-50);
+}
+
+@media (max-width: 768px) {
+  .errorFallback {
+    margin: 1rem;
+    padding: 1rem;
+  }
+  
+  .errorActions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .retryButton,
+  .reloadButton {
+    width: 100%;
+  }
+}

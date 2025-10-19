@@ -1,0 +1,62 @@
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid #fecaca;
+  border-radius: 0.75rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alertIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.alertContent {
+  flex: 1;
+  font-weight: 500;
+}
+
+.dismissButton {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease-in-out;
+  line-height: 1;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dismissButton:hover {
+  background-color: rgba(220, 38, 38, 0.1);
+}
+
+.dismissButton:focus {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+}

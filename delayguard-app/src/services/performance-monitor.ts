@@ -1,5 +1,5 @@
-import { Redis } from 'ioredis';
-import { AppConfig } from '../types';
+import { Redis } from "ioredis";
+import { AppConfig } from "../types";
 
 export interface PerformanceMetrics {
   responseTime: number;
@@ -21,18 +21,23 @@ export class PerformanceMonitor {
     this.redis = new Redis(config.redis.url);
   }
 
-  async trackRequest(operation: string, duration: number, success: boolean, context?: any): Promise<void> {
+  async trackRequest(
+    operation: string,
+    duration: number,
+    success: boolean,
+    context?: any,
+  ): Promise<void> {
     const timestamp = Date.now();
     const key = `metrics:${operation}`;
-    
+
     // Store in Redis with TTL
     await this.redis.hset(key, {
       duration: duration.toString(),
       success: success.toString(),
       timestamp: timestamp.toString(),
-      context: context ? JSON.stringify(context) : '',
+      context: context ? JSON.stringify(context) : "",
     });
-    
+
     // Set TTL to 1 hour
     await this.redis.expire(key, 3600);
 
@@ -43,7 +48,7 @@ export class PerformanceMonitor {
   async getPerformanceMetrics(operation?: string): Promise<PerformanceMetrics> {
     const now = new Date();
     const memoryUsage = process.memoryUsage();
-    
+
     let responseTime = 0;
     let successRate = 100;
     let errorRate = 0;
@@ -59,12 +64,17 @@ export class PerformanceMonitor {
       // Get overall metrics
       const allOperations = await this.getAllOperations();
       const allMetrics = await Promise.all(
-        allOperations.map(op => this.getOperationMetrics(op)),
+        allOperations.map((op) => this.getOperationMetrics(op)),
       );
-      
-      responseTime = allMetrics.reduce((sum, m) => sum + m.averageResponseTime, 0) / allMetrics.length;
-      successRate = allMetrics.reduce((sum, m) => sum + m.successRate, 0) / allMetrics.length;
-      errorRate = allMetrics.reduce((sum, m) => sum + m.errorRate, 0) / allMetrics.length;
+
+      responseTime =
+        allMetrics.reduce((sum, m) => sum + m.averageResponseTime, 0) /
+        allMetrics.length;
+      successRate =
+        allMetrics.reduce((sum, m) => sum + m.successRate, 0) /
+        allMetrics.length;
+      errorRate =
+        allMetrics.reduce((sum, m) => sum + m.errorRate, 0) / allMetrics.length;
     }
 
     // Get queue metrics
@@ -92,7 +102,7 @@ export class PerformanceMonitor {
     responseTime: number;
   }> {
     const metrics = await this.getPerformanceMetrics();
-    
+
     return {
       activeAlerts: await this.getActiveAlerts(),
       queueSize: metrics.queueSize,
@@ -110,55 +120,57 @@ export class PerformanceMonitor {
   }> {
     const key = `metrics:${operation}`;
     const data = await this.redis.hgetall(key);
-    
+
     if (Object.keys(data).length === 0) {
       return { averageResponseTime: 0, successRate: 100, errorRate: 0 };
     }
 
     const durations: number[] = [];
     const successes: boolean[] = [];
-    
+
     for (let i = 0; i < Object.keys(data).length / 4; i++) {
-      const duration = parseFloat(data[`duration:${i}`] || '0');
-      const success = data[`success:${i}`] === 'true';
-      
+      const duration = parseFloat(data[`duration:${i}`] || "0");
+      const success = data[`success:${i}`] === "true";
+
       if (duration > 0) {
         durations.push(duration);
         successes.push(success);
       }
     }
 
-    const averageResponseTime = durations.length > 0 
-      ? durations.reduce((sum, d) => sum + d, 0) / durations.length 
-      : 0;
-    
-    const successRate = successes.length > 0 
-      ? (successes.filter(s => s).length / successes.length) * 100 
-      : 100;
-    
+    const averageResponseTime =
+      durations.length > 0
+        ? durations.reduce((sum, d) => sum + d, 0) / durations.length
+        : 0;
+
+    const successRate =
+      successes.length > 0
+        ? (successes.filter((s) => s).length / successes.length) * 100
+        : 100;
+
     const errorRate = 100 - successRate;
 
     return { averageResponseTime, successRate, errorRate };
   }
 
   private async getAllOperations(): Promise<string[]> {
-    const keys = await this.redis.keys('metrics:*');
-    return keys.map(key => key.replace('metrics:', ''));
+    const keys = await this.redis.keys("metrics:*");
+    return keys.map((key) => key.replace("metrics:", ""));
   }
 
   private async getQueueSize(): Promise<number> {
-    const waiting = await this.redis.llen('delay-check:waiting');
-    const active = await this.redis.llen('delay-check:active');
+    const waiting = await this.redis.llen("delay-check:waiting");
+    const active = await this.redis.llen("delay-check:active");
     return waiting + active;
   }
 
   private async getProcessingRate(): Promise<number> {
-    const rate = await this.redis.get('metrics:processing_rate') || '0';
+    const rate = (await this.redis.get("metrics:processing_rate")) || "0";
     return parseFloat(rate);
   }
 
   private async getActiveAlerts(): Promise<number> {
-    const count = await this.redis.get('metrics:active_alerts') || '0';
+    const count = (await this.redis.get("metrics:active_alerts")) || "0";
     return parseInt(count);
   }
 
@@ -167,14 +179,18 @@ export class PerformanceMonitor {
     return Math.round(usage.user / 1000000); // Convert to seconds
   }
 
-  private updateInMemoryMetrics(operation: string, duration: number, _success: boolean): void {
+  private updateInMemoryMetrics(
+    operation: string,
+    duration: number,
+    _success: boolean,
+  ): void {
     if (!this.metrics.has(operation)) {
       this.metrics.set(operation, []);
     }
-    
+
     const operationMetrics = this.metrics.get(operation)!;
     operationMetrics.push(duration);
-    
+
     // Keep only the last maxSamples
     if (operationMetrics.length > this.maxSamples) {
       operationMetrics.shift();
@@ -186,7 +202,7 @@ export class PerformanceMonitor {
       await this.redis.del(`metrics:${operation}`);
       this.metrics.delete(operation);
     } else {
-      const keys = await this.redis.keys('metrics:*');
+      const keys = await this.redis.keys("metrics:*");
       if (keys.length > 0) {
         await this.redis.del(...keys);
       }
@@ -194,15 +210,20 @@ export class PerformanceMonitor {
     }
   }
 
-  async getMetricsHistory(operation: string, hours: number = 24): Promise<{
-    timestamp: Date;
-    responseTime: number;
-    successRate: number;
-    errorRate: number;
-  }[]> {
+  async getMetricsHistory(
+    operation: string,
+    hours: number = 24,
+  ): Promise<
+    {
+      timestamp: Date;
+      responseTime: number;
+      successRate: number;
+      errorRate: number;
+    }[]
+  > {
     const key = `metrics:${operation}`;
     const data = await this.redis.hgetall(key);
-    
+
     const history: {
       timestamp: Date;
       responseTime: number;
@@ -210,13 +231,13 @@ export class PerformanceMonitor {
       errorRate: number;
     }[] = [];
 
-    const cutoff = Date.now() - (hours * 60 * 60 * 1000);
-    
+    const cutoff = Date.now() - hours * 60 * 60 * 1000;
+
     for (let i = 0; i < Object.keys(data).length / 4; i++) {
-      const timestamp = parseInt(data[`timestamp:${i}`] || '0');
-      const duration = parseFloat(data[`duration:${i}`] || '0');
-      const success = data[`success:${i}`] === 'true';
-      
+      const timestamp = parseInt(data[`timestamp:${i}`] || "0");
+      const duration = parseFloat(data[`duration:${i}`] || "0");
+      const success = data[`success:${i}`] === "true";
+
       if (timestamp > cutoff && duration > 0) {
         history.push({
           timestamp: new Date(timestamp),
@@ -227,18 +248,24 @@ export class PerformanceMonitor {
       }
     }
 
-    return history.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    return history.sort(
+      (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+    );
   }
 
   // Decorator function for automatic performance tracking
   static trackPerformance(operation: string) {
-    return function(target: any, propertyName: string, descriptor: PropertyDescriptor) {
+    return function(
+      target: any,
+      propertyName: string,
+      descriptor: PropertyDescriptor,
+    ) {
       const method = descriptor.value;
-      
+
       descriptor.value = async function(this: any, ...args: any[]) {
         const start = Date.now();
         let success = true;
-        
+
         try {
           const result = await method.apply(this, args);
           return result;
@@ -248,7 +275,11 @@ export class PerformanceMonitor {
         } finally {
           const duration = Date.now() - start;
           if (this.performanceMonitor) {
-            await this.performanceMonitor.trackRequest(operation, duration, success);
+            await this.performanceMonitor.trackRequest(
+              operation,
+              duration,
+              success,
+            );
           }
         }
       };

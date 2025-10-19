@@ -1,18 +1,24 @@
 // UI Component Types
-import { AppSettings, DelayAlert, Order, StatsData } from './index';
+import { AppSettings, DelayAlert, Order, StatsData } from "./index";
 
 export interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'tertiary' | 'danger' | 'success' | 'warning';
-  size?: 'sm' | 'md' | 'lg';
+  variant?:
+    | "primary"
+    | "secondary"
+    | "tertiary"
+    | "danger"
+    | "success"
+    | "warning";
+  size?: "sm" | "md" | "lg";
   loading?: boolean;
   disabled?: boolean;
   onClick?: () => void;
   children: React.ReactNode;
-  type?: 'button' | 'submit' | 'reset';
+  type?: "button" | "submit" | "reset";
   className?: string;
-  'aria-label'?: string;
-  'aria-describedby'?: string;
-  'aria-pressed'?: boolean;
+  "aria-label"?: string;
+  "aria-describedby"?: string;
+  "aria-pressed"?: boolean;
 }
 
 export interface CardProps {
@@ -22,26 +28,38 @@ export interface CardProps {
   actions?: React.ReactNode;
   loading?: boolean;
   className?: string;
-  'aria-label'?: string;
+  "aria-label"?: string;
 }
 
 export interface BadgeProps {
-  status?: 'active' | 'resolved' | 'dismissed' | 'shipped' | 'delivered' | 'processing';
-  tone?: 'critical' | 'warning' | 'success' | 'info' | 'base' | 'subdued';
+  status?:
+    | "active"
+    | "resolved"
+    | "dismissed"
+    | "shipped"
+    | "delivered"
+    | "processing";
+  tone?: "critical" | "warning" | "success" | "info" | "base" | "subdued";
   children: React.ReactNode;
   className?: string;
 }
 
 export interface TextProps {
-  variant?: 'headingLg' | 'headingMd' | 'headingSm' | 'bodyLg' | 'bodyMd' | 'bodySm';
-  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span' | 'div';
-  tone?: 'base' | 'subdued' | 'critical' | 'warning' | 'success' | 'info';
-  fontWeight?: 'regular' | 'medium' | 'semibold' | 'bold';
+  variant?:
+    | "headingLg"
+    | "headingMd"
+    | "headingSm"
+    | "bodyLg"
+    | "bodyMd"
+    | "bodySm";
+  as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span" | "div";
+  tone?: "base" | "subdued" | "critical" | "warning" | "success" | "info";
+  fontWeight?: "regular" | "medium" | "semibold" | "bold";
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
-  'aria-label'?: string;
-  'aria-describedby'?: string;
+  "aria-label"?: string;
+  "aria-describedby"?: string;
 }
 
 export interface TableProps {
@@ -62,7 +80,7 @@ export interface TableRow {
 export interface ModalAction {
   content: string;
   onAction: () => void;
-  variant?: 'primary' | 'secondary' | 'destructive';
+  variant?: "primary" | "secondary" | "destructive";
   disabled?: boolean;
 }
 
@@ -74,13 +92,13 @@ export interface ModalProps {
   actions?: React.ReactNode;
   primaryAction?: ModalAction;
   secondaryActions?: ModalAction[];
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
 
 export interface FormFieldProps {
   label: string;
-  type: 'text' | 'number' | 'select' | 'checkbox' | 'textarea';
+  type: "text" | "number" | "select" | "checkbox" | "textarea";
   value: string | number | boolean;
   onChange: (value: string | number | boolean) => void;
   error?: string;
@@ -99,7 +117,7 @@ export interface SelectOption {
 }
 
 export interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   message?: string;
   overlay?: boolean;
   className?: string;
@@ -107,7 +125,7 @@ export interface LoadingSpinnerProps {
 
 export interface ToastProps {
   message: string;
-  type?: 'info' | 'success' | 'warning' | 'error';
+  type?: "info" | "success" | "warning" | "error";
   duration?: number;
   onClose?: () => void;
   className?: string;
@@ -118,7 +136,7 @@ export interface DataTableColumn {
   title: string;
   sortable?: boolean;
   width?: string;
-  align?: 'left' | 'center' | 'right';
+  align?: "left" | "center" | "right";
   render?: (value: unknown, row: DataTableRow) => React.ReactNode;
 }
 
@@ -134,10 +152,10 @@ export interface DataTableProps {
   loading?: boolean;
   emptyMessage?: string;
   sortable?: boolean;
-  onSort?: (column: string, direction: 'asc' | 'desc') => void;
+  onSort?: (column: string, direction: "asc" | "desc") => void;
   onRowClick?: (row: DataTableRow) => void;
   className?: string;
-  'aria-label'?: string;
+  "aria-label"?: string;
   // Bulk selection props
   selectable?: boolean;
   selectedRows?: string[];
@@ -159,7 +177,7 @@ export interface TabsProps {
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
   className?: string;
-  'aria-label'?: string;
+  "aria-label"?: string;
 }
 
 export interface ErrorBoundaryState {
@@ -170,12 +188,12 @@ export interface ErrorBoundaryState {
 export interface Toast {
   id: string;
   message: string;
-  type: 'success' | 'error' | 'warning' | 'info';
+  type: "success" | "error" | "warning" | "info";
   duration?: number;
 }
 
 export interface ToastContextType {
-  showToast: (message: string, type?: Toast['type']) => void;
+  showToast: (message: string, type?: Toast["type"]) => void;
   hideToast: (id: string) => void;
 }
 

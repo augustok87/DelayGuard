@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-10-19T21:46:37.974Z",
+  "summary": {
+    "total": 380,
+    "errors": 36,
+    "warnings": 344,
+    "fixable": 35,
+    "fixed": 0,
+    "errorRate": "9.47",
+    "warningRate": "90.53",
+    "fixableRate": "9.21"
+  },
+  "quality": {
+    "score": 0,
+    "grade": "F",
+    "status": "Critical"
+  },
+  "performance": {
+    "duration": 3334,
+    "filesProcessed": 145,
+    "rulesChecked": 8
+  }
+}

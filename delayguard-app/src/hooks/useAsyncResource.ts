@@ -1,9 +1,9 @@
-import { useEffect, useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { createSafeAsyncFunction } from '../utils/error-handler';
-import { logInfo } from '../utils/logger';
-import type { RootState, AppDispatch } from '../store/store';
-import type { AsyncThunk } from '@reduxjs/toolkit';
+import { useEffect, useCallback } from "react";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { createSafeAsyncFunction } from "../utils/error-handler";
+import { logInfo } from "../utils/logger";
+import type { RootState, AppDispatch } from "../store/store";
+import type { AsyncThunk } from "@reduxjs/toolkit";
 
 /**
  * Generic hook for managing async resources with Redux
@@ -11,11 +11,31 @@ import type { AsyncThunk } from '@reduxjs/toolkit';
  */
 export function useAsyncResource<T>(
   resourceName: string,
-  fetchAction: AsyncThunk<T[], void, { state: RootState; dispatch: AppDispatch }>,
-  updateAction: AsyncThunk<{ id: string; updates: Partial<T> }, { id: string; updates: Partial<T> }, { state: RootState; dispatch: AppDispatch }>,
-  deleteAction: AsyncThunk<string, string, { state: RootState; dispatch: AppDispatch }>,
-  selector: (state: RootState) => { items: T[]; loading: boolean; error: string | null },
-  createAction?: AsyncThunk<T, unknown, { state: RootState; dispatch: AppDispatch }>,
+  fetchAction: AsyncThunk<
+    T[],
+    void,
+    { state: RootState; dispatch: AppDispatch }
+  >,
+  updateAction: AsyncThunk<
+    { id: string; updates: Partial<T> },
+    { id: string; updates: Partial<T> },
+    { state: RootState; dispatch: AppDispatch }
+  >,
+  deleteAction: AsyncThunk<
+    string,
+    string,
+    { state: RootState; dispatch: AppDispatch }
+  >,
+  selector: (state: RootState) => {
+    items: T[];
+    loading: boolean;
+    error: string | null;
+  },
+  createAction?: AsyncThunk<
+    T,
+    unknown,
+    { state: RootState; dispatch: AppDispatch }
+  >,
 ) {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector(selector);
@@ -38,7 +58,7 @@ export function useAsyncResource<T>(
           return { success: true };
         }
       },
-      { component: 'useAsyncResource', action: 'createItem', resourceName },
+      { component: "useAsyncResource", action: "createItem", resourceName },
     ),
     [dispatch, createAction, resourceName],
   );
@@ -51,7 +71,7 @@ export function useAsyncResource<T>(
         logInfo(`Updated ${resourceName}`, { id, updates });
         return { success: true };
       },
-      { component: 'useAsyncResource', action: 'updateItem', resourceName },
+      { component: "useAsyncResource", action: "updateItem", resourceName },
     ),
     [dispatch, updateAction, resourceName],
   );
@@ -64,7 +84,7 @@ export function useAsyncResource<T>(
         logInfo(`Deleted ${resourceName}`, { id });
         return { success: true };
       },
-      { component: 'useAsyncResource', action: 'deleteItem', resourceName },
+      { component: "useAsyncResource", action: "deleteItem", resourceName },
     ),
     [dispatch, deleteAction, resourceName],
   );
@@ -94,40 +114,52 @@ export function useItemFilters<T>(
   getPriority?: (item: T) => string,
 ) {
   // Filter by status
-  const getItemsByStatus = useCallback((status: string) => {
-    return items.filter(item => getStatus(item) === status);
-  }, [items, getStatus]);
+  const getItemsByStatus = useCallback(
+    (status: string) => {
+      return items.filter((item) => getStatus(item) === status);
+    },
+    [items, getStatus],
+  );
 
   // Filter by priority (if available)
-  const getItemsByPriority = useCallback((priority: string) => {
-    if (!getPriority) return [];
-    return items.filter(item => getPriority(item) === priority);
-  }, [items, getPriority]);
+  const getItemsByPriority = useCallback(
+    (priority: string) => {
+      if (!getPriority) return [];
+      return items.filter((item) => getPriority(item) === priority);
+    },
+    [items, getPriority],
+  );
 
   // Search items by text
-  const searchItems = useCallback((searchText: string, searchFields: (keyof T)[]) => {
-    if (!searchText.trim()) return items;
-    
-    const lowerSearchText = searchText.toLowerCase();
-    return items.filter(item => 
-      searchFields.some(field => {
-        const value = item[field];
-        return value && String(value).toLowerCase().includes(lowerSearchText);
-      }),
-    );
-  }, [items]);
+  const searchItems = useCallback(
+    (searchText: string, searchFields: (keyof T)[]) => {
+      if (!searchText.trim()) return items;
+
+      const lowerSearchText = searchText.toLowerCase();
+      return items.filter((item) =>
+        searchFields.some((field) => {
+          const value = item[field];
+          return value && String(value).toLowerCase().includes(lowerSearchText);
+        }),
+      );
+    },
+    [items],
+  );
 
   // Sort items
-  const sortItems = useCallback((sortBy: keyof T, direction: 'asc' | 'desc' = 'asc') => {
-    return [...items].sort((a, b) => {
-      const aValue = a[sortBy];
-      const bValue = b[sortBy];
-      
-      if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [items]);
+  const sortItems = useCallback(
+    (sortBy: keyof T, direction: "asc" | "desc" = "asc") => {
+      return [...items].sort((a, b) => {
+        const aValue = a[sortBy];
+        const bValue = b[sortBy];
+
+        if (aValue < bValue) return direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    },
+    [items],
+  );
 
   return {
     getItemsByStatus,

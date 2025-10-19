@@ -1,14 +1,14 @@
-import { Context, Next } from 'koa';
-import IORedis from 'ioredis';
-import { logError } from '../utils/logger';
+import { Context, Next } from "koa";
+import IORedis from "ioredis";
+import { logError } from "../utils/logger";
 // import { RateLimitError } from '../types'; // Removed unused import
 
 /**
  * Rate Limiting Configuration
  */
 export interface RateLimitConfig {
-  windowMs: number;        // Time window in milliseconds
-  maxRequests: number;      // Maximum requests per window
+  windowMs: number; // Time window in milliseconds
+  maxRequests: number; // Maximum requests per window
   skipSuccessfulRequests?: boolean;
   skipFailedRequests?: boolean;
   keyGenerator?: (ctx: Context) => string;
@@ -30,7 +30,7 @@ export class RateLimitingMiddleware {
       skipSuccessfulRequests: false,
       skipFailedRequests: false,
       keyGenerator: (ctx: Context) => `rate_limit:${ctx.ip}`,
-      message: 'Too many requests, please try again later.',
+      message: "Too many requests, please try again later.",
       ...config,
     };
   }
@@ -46,23 +46,23 @@ export class RateLimitingMiddleware {
     try {
       // Use Redis pipeline for atomic operations
       const pipeline = this.redis.pipeline();
-      
+
       // Remove expired entries
-      pipeline.zremrangebyscore(key, '-inf', windowStart);
-      
+      pipeline.zremrangebyscore(key, "-inf", windowStart);
+
       // Count current requests
       pipeline.zcard(key);
-      
+
       // Add current request
       pipeline.zadd(key, now, `${now}-${Math.random()}`);
-      
+
       // Set expiration
       pipeline.expire(key, Math.ceil(this.config.windowMs / 1000));
-      
+
       const results = await pipeline.exec();
-      
+
       if (!results || results.some(([err]) => err)) {
-        throw new Error('Redis rate limiting error');
+        throw new Error("Redis rate limiting error");
       }
 
       const currentCount = results[1][1] as number;
@@ -77,10 +77,16 @@ export class RateLimitingMiddleware {
           remaining: 0,
           resetTime: new Date(now + this.config.windowMs).toISOString(),
         };
-        ctx.set('Retry-After', Math.ceil(this.config.windowMs / 1000).toString());
-        ctx.set('X-RateLimit-Limit', this.config.maxRequests.toString());
-        ctx.set('X-RateLimit-Remaining', '0');
-        ctx.set('X-RateLimit-Reset', new Date(now + this.config.windowMs).toISOString());
+        ctx.set(
+          "Retry-After",
+          Math.ceil(this.config.windowMs / 1000).toString(),
+        );
+        ctx.set("X-RateLimit-Limit", this.config.maxRequests.toString());
+        ctx.set("X-RateLimit-Remaining", "0");
+        ctx.set(
+          "X-RateLimit-Reset",
+          new Date(now + this.config.windowMs).toISOString(),
+        );
 
         if (this.config.onLimitReached) {
           this.config.onLimitReached(ctx, key);
@@ -90,9 +96,15 @@ export class RateLimitingMiddleware {
       }
 
       // Set rate limit headers
-      ctx.set('X-RateLimit-Limit', this.config.maxRequests.toString());
-      ctx.set('X-RateLimit-Remaining', Math.max(0, this.config.maxRequests - currentCount).toString());
-      ctx.set('X-RateLimit-Reset', new Date(now + this.config.windowMs).toISOString());
+      ctx.set("X-RateLimit-Limit", this.config.maxRequests.toString());
+      ctx.set(
+        "X-RateLimit-Remaining",
+        Math.max(0, this.config.maxRequests - currentCount).toString(),
+      );
+      ctx.set(
+        "X-RateLimit-Reset",
+        new Date(now + this.config.windowMs).toISOString(),
+      );
 
       await next();
 
@@ -101,12 +113,13 @@ export class RateLimitingMiddleware {
         // Remove the request from counter if it was successful
         await this.redis.zrem(key, `${now}-*`);
       }
-
     } catch (error) {
       logError(
-        error instanceof Error ? error.message : 'Unknown error in rate limiting middleware',
+        error instanceof Error
+          ? error.message
+          : "Unknown error in rate limiting middleware",
         error instanceof Error ? error : undefined,
-        { component: 'rate-limiting', action: 'middleware' }
+        { component: "rate-limiting", action: "middleware" },
       );
       // Continue without rate limiting if Redis fails
       await next();
@@ -131,7 +144,7 @@ export const RateLimitPresets = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 5,
     keyGenerator: (ctx: Context) => `rate_limit:auth:${ctx.ip}`,
-    message: 'Too many authentication attempts, please try again later.',
+    message: "Too many authentication attempts, please try again later.",
   },
 
   // Moderate rate limiting for API endpoints
@@ -139,7 +152,7 @@ export const RateLimitPresets = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 100,
     keyGenerator: (ctx: Context) => `rate_limit:api:${ctx.ip}`,
-    message: 'API rate limit exceeded, please try again later.',
+    message: "API rate limit exceeded, please try again later.",
   },
 
   // Lenient rate limiting for general endpoints
@@ -147,7 +160,7 @@ export const RateLimitPresets = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 200,
     keyGenerator: (ctx: Context) => `rate_limit:general:${ctx.ip}`,
-    message: 'Rate limit exceeded, please try again later.',
+    message: "Rate limit exceeded, please try again later.",
   },
 
   // Very strict rate limiting for webhook endpoints
@@ -155,7 +168,7 @@ export const RateLimitPresets = {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 10,
     keyGenerator: (ctx: Context) => `rate_limit:webhook:${ctx.ip}`,
-    message: 'Webhook rate limit exceeded.',
+    message: "Webhook rate limit exceeded.",
   },
 };
 
@@ -175,19 +188,19 @@ export class AdvancedRateLimiting {
   async applyTieredRateLimit(ctx: Context, next: Next): Promise<void> {
     const userTier = this.getUserTier(ctx);
     const config = this.getConfigForTier(userTier);
-    
+
     const middleware = new RateLimitingMiddleware(this.redis, config);
     await middleware.apply(ctx, next);
   }
 
-  private getUserTier(ctx: Context): 'premium' | 'standard' | 'free' {
+  private getUserTier(ctx: Context): "premium" | "standard" | "free" {
     // Determine user tier based on shop plan or other factors
     const shop = ctx.state.shopify?.session?.shop;
-    if (!shop) return 'free';
-    
+    if (!shop) return "free";
+
     // This would typically check shop plan from database
     // For now, return standard as default
-    return 'standard';
+    return "standard";
   }
 
   private getConfigForTier(tier: string): RateLimitConfig {

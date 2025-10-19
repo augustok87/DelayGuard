@@ -1,36 +1,36 @@
-import { Context } from 'koa';
-import { EventEmitter } from 'events';
+import { Context } from "koa";
+import { EventEmitter } from "events";
 // import { AppConfig } from '../types'; // Available for future use
 
 /**
  * Security Event Types
  */
 export enum SecurityEventType {
-  AUTHENTICATION_SUCCESS = 'AUTHENTICATION_SUCCESS',
-  AUTHENTICATION_FAILURE = 'AUTHENTICATION_FAILURE',
-  AUTHORIZATION_SUCCESS = 'AUTHORIZATION_SUCCESS',
-  AUTHORIZATION_FAILURE = 'AUTHORIZATION_FAILURE',
-  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
-  CSRF_TOKEN_INVALID = 'CSRF_TOKEN_INVALID',
-  INPUT_SANITIZATION = 'INPUT_SANITIZATION',
-  SQL_INJECTION_ATTEMPT = 'SQL_INJECTION_ATTEMPT',
-  XSS_ATTEMPT = 'XSS_ATTEMPT',
-  SUSPICIOUS_ACTIVITY = 'SUSPICIOUS_ACTIVITY',
-  DATA_ACCESS = 'DATA_ACCESS',
-  DATA_MODIFICATION = 'DATA_MODIFICATION',
-  CONFIGURATION_CHANGE = 'CONFIGURATION_CHANGE',
-  SYSTEM_ERROR = 'SYSTEM_ERROR',
-  SECURITY_HEADER_VIOLATION = 'SECURITY_HEADER_VIOLATION'
+  AUTHENTICATION_SUCCESS = "AUTHENTICATION_SUCCESS",
+  AUTHENTICATION_FAILURE = "AUTHENTICATION_FAILURE",
+  AUTHORIZATION_SUCCESS = "AUTHORIZATION_SUCCESS",
+  AUTHORIZATION_FAILURE = "AUTHORIZATION_FAILURE",
+  RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED",
+  CSRF_TOKEN_INVALID = "CSRF_TOKEN_INVALID",
+  INPUT_SANITIZATION = "INPUT_SANITIZATION",
+  SQL_INJECTION_ATTEMPT = "SQL_INJECTION_ATTEMPT",
+  XSS_ATTEMPT = "XSS_ATTEMPT",
+  SUSPICIOUS_ACTIVITY = "SUSPICIOUS_ACTIVITY",
+  DATA_ACCESS = "DATA_ACCESS",
+  DATA_MODIFICATION = "DATA_MODIFICATION",
+  CONFIGURATION_CHANGE = "CONFIGURATION_CHANGE",
+  SYSTEM_ERROR = "SYSTEM_ERROR",
+  SECURITY_HEADER_VIOLATION = "SECURITY_HEADER_VIOLATION",
 }
 
 /**
  * Security Event Severity Levels
  */
 export enum SecuritySeverity {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  CRITICAL = "CRITICAL",
 }
 
 /**
@@ -110,7 +110,7 @@ export class AuditLogger extends EventEmitter {
       userId: ctx.state.user?.id,
       sessionId: ctx.session?.id,
       ipAddress: ctx.ip,
-      userAgent: ctx.get('User-Agent') || 'Unknown',
+      userAgent: ctx.get("User-Agent") || "Unknown",
       shopDomain: ctx.state.shopify?.session?.shop,
       endpoint: ctx.path,
       method: ctx.method,
@@ -123,12 +123,12 @@ export class AuditLogger extends EventEmitter {
 
     // Calculate risk score
     event.riskScore = await this.riskAnalyzer.calculateRiskScore(event);
-    
+
     // Add risk-based tags
     event.tags = this.generateTags(event);
 
     // Emit event for real-time monitoring
-    this.emit('securityEvent', event);
+    this.emit("securityEvent", event);
 
     // Add to buffer for batch processing
     this.eventBuffer.push(event);
@@ -140,7 +140,10 @@ export class AuditLogger extends EventEmitter {
 
     // Check if buffer needs flushing
     if (this.eventBuffer.length >= this.config.batchSize) {
-      console.log('Flushing events due to batch size reached:', this.eventBuffer.length);
+      console.log(
+        "Flushing events due to batch size reached:",
+        this.eventBuffer.length,
+      );
       await this.flushEvents();
     }
   }
@@ -153,16 +156,16 @@ export class AuditLogger extends EventEmitter {
     success: boolean,
     details: Record<string, any> = {},
   ): Promise<void> {
-    const type = success 
-      ? SecurityEventType.AUTHENTICATION_SUCCESS 
+    const type = success
+      ? SecurityEventType.AUTHENTICATION_SUCCESS
       : SecurityEventType.AUTHENTICATION_FAILURE;
-    
-    const severity = success 
-      ? SecuritySeverity.LOW 
-      : SecuritySeverity.HIGH;
 
-    await this.logSecurityEvent(type, ctx, 
-      success ? 'User authenticated successfully' : 'Authentication failed',
+    const severity = success ? SecuritySeverity.LOW : SecuritySeverity.HIGH;
+
+    await this.logSecurityEvent(
+      type,
+      ctx,
+      success ? "User authenticated successfully" : "Authentication failed",
       details,
       severity,
     );
@@ -177,16 +180,16 @@ export class AuditLogger extends EventEmitter {
     resource: string,
     action: string,
   ): Promise<void> {
-    const type = success 
-      ? SecurityEventType.AUTHORIZATION_SUCCESS 
+    const type = success
+      ? SecurityEventType.AUTHORIZATION_SUCCESS
       : SecurityEventType.AUTHORIZATION_FAILURE;
-    
-    const severity = success 
-      ? SecuritySeverity.LOW 
-      : SecuritySeverity.HIGH;
 
-    await this.logSecurityEvent(type, ctx,
-      success ? 'Access granted' : 'Access denied',
+    const severity = success ? SecuritySeverity.LOW : SecuritySeverity.HIGH;
+
+    await this.logSecurityEvent(
+      type,
+      ctx,
+      success ? "Access granted" : "Access denied",
       { resource, action },
       severity,
     );
@@ -221,7 +224,7 @@ export class AuditLogger extends EventEmitter {
     await this.logSecurityEvent(
       SecurityEventType.CSRF_TOKEN_INVALID,
       ctx,
-      'CSRF token validation failed',
+      "CSRF token validation failed",
       { tokenProvided, tokenValid },
       SecuritySeverity.HIGH,
     );
@@ -240,10 +243,10 @@ export class AuditLogger extends EventEmitter {
       SecurityEventType.INPUT_SANITIZATION,
       ctx,
       `Input sanitized: ${sanitizationType}`,
-      { 
+      {
         sanitizedInput: sanitizedInput.substring(0, 100), // Truncate for privacy
         originalLength: originalInput.length,
-        sanitizationType, 
+        sanitizationType,
       },
       SecuritySeverity.MEDIUM,
     );
@@ -254,22 +257,23 @@ export class AuditLogger extends EventEmitter {
    */
   async logAttackAttempt(
     ctx: Context,
-    attackType: 'SQL_INJECTION' | 'XSS' | 'CSRF' | 'RATE_LIMIT',
+    attackType: "SQL_INJECTION" | "XSS" | "CSRF" | "RATE_LIMIT",
     payload: string,
     blocked: boolean = true,
   ): Promise<void> {
-    const type = attackType === 'SQL_INJECTION' 
-      ? SecurityEventType.SQL_INJECTION_ATTEMPT 
-      : SecurityEventType.XSS_ATTEMPT;
+    const type =
+      attackType === "SQL_INJECTION"
+        ? SecurityEventType.SQL_INJECTION_ATTEMPT
+        : SecurityEventType.XSS_ATTEMPT;
 
     await this.logSecurityEvent(
       type,
       ctx,
-      `${attackType} attempt ${blocked ? 'blocked' : 'detected'}`,
-      { 
-        attackType, 
+      `${attackType} attempt ${blocked ? "blocked" : "detected"}`,
+      {
+        attackType,
         payload: payload.substring(0, 200), // Truncate for security
-        blocked, 
+        blocked,
       },
       SecuritySeverity.HIGH,
     );
@@ -329,9 +333,8 @@ export class AuditLogger extends EventEmitter {
       if (this.config.enableExternalLogging) {
         await this.logToExternal(events);
       }
-
     } catch (error) {
-      console.error('Failed to flush audit events:', error);
+      console.error("Failed to flush audit events:", error);
     }
   }
 
@@ -340,8 +343,8 @@ export class AuditLogger extends EventEmitter {
    */
   private startFlushTimer(): void {
     this.flushTimer = setInterval(() => {
-      this.flushEvents().catch(error => {
-        console.error('Failed to flush events in timer:', error);
+      this.flushEvents().catch((error) => {
+        console.error("Failed to flush events in timer:", error);
       });
     }, this.config.flushInterval);
   }
@@ -363,16 +366,16 @@ export class AuditLogger extends EventEmitter {
     tags.push(`severity:${event.severity.toLowerCase()}`);
 
     // Risk-based tags
-    if (event.riskScore > 80) tags.push('high-risk');
-    if (event.riskScore > 60) tags.push('medium-risk');
-    if (event.riskScore < 20) tags.push('low-risk');
+    if (event.riskScore > 80) tags.push("high-risk");
+    if (event.riskScore > 60) tags.push("medium-risk");
+    if (event.riskScore < 20) tags.push("low-risk");
 
     // Event type tags
     tags.push(`type:${event.type.toLowerCase()}`);
 
     // Geographic tags (if IP geolocation available)
     if (event.ipAddress) {
-      tags.push(`ip:${event.ipAddress.split('.').slice(0, 2).join('.')}.x.x`);
+      tags.push(`ip:${event.ipAddress.split(".").slice(0, 2).join(".")}.x.x`);
     }
 
     return tags;
@@ -382,7 +385,7 @@ export class AuditLogger extends EventEmitter {
    * Console logging
    */
   private logToConsole(events: SecurityEvent[]): void {
-    events.forEach(event => {
+    events.forEach((event) => {
       const logLevel = this.getLogLevel(event.severity);
       console[logLevel](`[AUDIT] ${event.type}: ${event.message}`, {
         id: event.id,
@@ -419,21 +422,23 @@ export class AuditLogger extends EventEmitter {
     if (!this.config.externalEndpoint) return;
 
     // Implementation would send to external SIEM
-    console.log(`[EXTERNAL] Sending ${events.length} events to ${this.config.externalEndpoint}`);
+    console.log(
+      `[EXTERNAL] Sending ${events.length} events to ${this.config.externalEndpoint}`,
+    );
   }
 
   /**
    * Get console log level based on severity
    */
-  private getLogLevel(severity: SecuritySeverity): 'log' | 'warn' | 'error' {
+  private getLogLevel(severity: SecuritySeverity): "log" | "warn" | "error" {
     switch (severity) {
       case SecuritySeverity.CRITICAL:
       case SecuritySeverity.HIGH:
-        return 'error';
+        return "error";
       case SecuritySeverity.MEDIUM:
-        return 'warn';
+        return "warn";
       default:
-        return 'log';
+        return "log";
     }
   }
 
@@ -523,7 +528,7 @@ class RiskAnalyzer {
       /^127\./, // Localhost
     ];
 
-    return suspiciousPatterns.some(pattern => pattern.test(ip));
+    return suspiciousPatterns.some((pattern) => pattern.test(ip));
   }
 
   /**
@@ -540,7 +545,7 @@ class RiskAnalyzer {
       /php/i,
     ];
 
-    return suspiciousPatterns.some(pattern => pattern.test(userAgent));
+    return suspiciousPatterns.some((pattern) => pattern.test(userAgent));
   }
 }
 
@@ -567,7 +572,9 @@ export class AuditLoggerFactory {
   /**
    * Create audit logger for production
    */
-  static createProduction(config: Partial<AuditLoggerConfig> = {}): AuditLogger {
+  static createProduction(
+    config: Partial<AuditLoggerConfig> = {},
+  ): AuditLogger {
     return new AuditLogger({
       enableConsoleLogging: false,
       enableFileLogging: true,

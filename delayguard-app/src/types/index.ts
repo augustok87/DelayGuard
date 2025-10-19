@@ -29,7 +29,12 @@ export interface TrackingEvent {
 export interface DelayDetectionResult {
   isDelayed: boolean;
   delayDays?: number;
-  delayReason?: 'DELAYED_STATUS' | 'EXCEPTION_STATUS' | 'DATE_DELAY' | 'ETA_EXCEEDED' | 'EVENT_DELAY';
+  delayReason?:
+    | "DELAYED_STATUS"
+    | "EXCEPTION_STATUS"
+    | "DATE_DELAY"
+    | "ETA_EXCEEDED"
+    | "EVENT_DELAY";
   estimatedDelivery?: string;
   originalDelivery?: string;
   error?: string;
@@ -51,7 +56,7 @@ export interface AppSettings {
   smsNotifications: boolean;
   autoResolveDays?: number;
   enableAnalytics?: boolean;
-  theme?: 'light' | 'dark';
+  theme?: "light" | "dark";
   language?: string;
 }
 
@@ -60,15 +65,15 @@ export interface DelayAlert {
   orderId: string;
   customerName: string;
   delayDays: number;
-  status: 'active' | 'resolved' | 'dismissed';
+  status: "active" | "resolved" | "dismissed";
   createdAt: string;
   resolvedAt?: string;
   customerEmail?: string;
   trackingNumber?: string;
   carrierCode?: string;
-  severity?: 'low' | 'medium' | 'high' | 'critical';
+  severity?: "low" | "medium" | "high" | "critical";
   delayReason?: string;
-  priority?: 'low' | 'medium' | 'high' | 'critical';
+  priority?: "low" | "medium" | "high" | "critical";
 }
 
 export interface Order {
@@ -97,9 +102,9 @@ export interface StatsData {
 }
 
 // Re-export all types for easy importing
-export * from './ui';
-export * from './api';
-export * from './store';
+export * from "./ui";
+export * from "./api";
+export * from "./store";
 
 // Additional types for hooks
 export interface CreateAlertData {
@@ -109,13 +114,13 @@ export interface CreateAlertData {
   customerEmail?: string;
   trackingNumber?: string;
   carrierCode?: string;
-  priority?: 'low' | 'medium' | 'high' | 'critical';
+  priority?: "low" | "medium" | "high" | "critical";
 }
 
 export interface UpdateAlertData {
-  status?: 'active' | 'resolved' | 'dismissed';
+  status?: "active" | "resolved" | "dismissed";
   resolvedAt?: string;
-  priority?: 'low' | 'medium' | 'high' | 'critical';
+  priority?: "low" | "medium" | "high" | "critical";
 }
 
 export interface CreateOrderData {
@@ -146,16 +151,30 @@ export interface DelayDetectionService {
 }
 
 export interface EmailService {
-  sendDelayEmail(email: string, orderInfo: OrderInfo, delayDetails: DelayDetails): Promise<void>;
+  sendDelayEmail(
+    email: string,
+    orderInfo: OrderInfo,
+    delayDetails: DelayDetails,
+  ): Promise<void>;
 }
 
 export interface SMSService {
-  sendDelaySMS(phone: string, orderInfo: OrderInfo, delayDetails: DelayDetails): Promise<void>;
+  sendDelaySMS(
+    phone: string,
+    orderInfo: OrderInfo,
+    delayDetails: DelayDetails,
+  ): Promise<void>;
 }
 
 export interface CarrierService {
-  getTrackingInfo(trackingNumber: string, carrierCode: string): Promise<TrackingInfo>;
-  validateTrackingNumber(trackingNumber: string, carrierCode: string): Promise<boolean>;
+  getTrackingInfo(
+    trackingNumber: string,
+    carrierCode: string,
+  ): Promise<TrackingInfo>;
+  validateTrackingNumber(
+    trackingNumber: string,
+    carrierCode: string,
+  ): Promise<boolean>;
   getCarrierList(): Promise<Array<{ code: string; name: string }>>;
 }
 
@@ -202,7 +221,11 @@ export class AppError extends Error {
 export class ValidationError extends AppError {
   public field?: string;
 
-  constructor(message: string, code: string = 'VALIDATION_ERROR', field?: string) {
+  constructor(
+    message: string,
+    code: string = "VALIDATION_ERROR",
+    field?: string,
+  ) {
     super(message, 400, code);
     this.field = field;
   }
@@ -210,37 +233,41 @@ export class ValidationError extends AppError {
 
 export class NotFoundError extends AppError {
   constructor(resource: string) {
-    super(`${resource} not found`, 404, 'NOT_FOUND');
+    super(`${resource} not found`, 404, "NOT_FOUND");
   }
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message: string = 'Unauthorized') {
-    super(message, 401, 'UNAUTHORIZED');
+  constructor(message: string = "Unauthorized") {
+    super(message, 401, "UNAUTHORIZED");
   }
 }
 
 export class ForbiddenError extends AppError {
-  constructor(message: string = 'Forbidden') {
-    super(message, 403, 'FORBIDDEN');
+  constructor(message: string = "Forbidden") {
+    super(message, 403, "FORBIDDEN");
   }
 }
 
 export class ConflictError extends AppError {
   constructor(message: string) {
-    super(message, 409, 'CONFLICT');
+    super(message, 409, "CONFLICT");
   }
 }
 
 export class RateLimitError extends AppError {
-  constructor(message: string = 'Rate limit exceeded') {
-    super(message, 429, 'RATE_LIMIT');
+  constructor(message: string = "Rate limit exceeded") {
+    super(message, 429, "RATE_LIMIT");
   }
 }
 
 export class ExternalServiceError extends AppError {
   constructor(service: string, message: string) {
-    super(`External service error (${service}): ${message}`, 502, 'EXTERNAL_SERVICE_ERROR');
+    super(
+      `External service error (${service}): ${message}`,
+      502,
+      "EXTERNAL_SERVICE_ERROR",
+    );
     this.service = service;
   }
   service: string;
@@ -256,7 +283,7 @@ export interface ShopifyWebhook {
 }
 
 export interface OrderUpdateWebhook extends ShopifyWebhook {
-  topic: 'orders/updated';
+  topic: "orders/updated";
   data: {
     id: string;
     name: string;

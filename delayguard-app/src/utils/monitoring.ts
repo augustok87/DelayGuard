@@ -1,4 +1,4 @@
-import { query } from '../database/connection';
+import { query } from "../database/connection";
 
 interface ErrorMetrics {
   timestamp: Date;
@@ -6,7 +6,7 @@ interface ErrorMetrics {
   errorMessage: string;
   stackTrace?: string;
   context?: any;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   shopDomain?: string;
   userId?: string;
 }
@@ -41,7 +41,11 @@ class MonitoringService {
   }
 
   // Error tracking
-  async trackError(error: Error, context?: any, severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'): Promise<void> {
+  async trackError(
+    error: Error,
+    context?: any,
+    severity: "low" | "medium" | "high" | "critical" = "medium",
+  ): Promise<void> {
     const errorMetrics: ErrorMetrics = {
       timestamp: new Date(),
       errorType: error.constructor.name,
@@ -64,7 +68,12 @@ class MonitoringService {
   }
 
   // Performance tracking
-  async trackPerformance(operation: string, duration: number, success: boolean, context?: any): Promise<void> {
+  async trackPerformance(
+    operation: string,
+    duration: number,
+    success: boolean,
+    context?: any,
+  ): Promise<void> {
     const metrics: PerformanceMetrics = {
       timestamp: new Date(),
       operation,
@@ -86,7 +95,11 @@ class MonitoringService {
 
   // Performance decorator
   static trackPerformance(operation: string) {
-    return function(target: any, propertyName: string, descriptor: PropertyDescriptor) {
+    return function(
+      target: any,
+      propertyName: string,
+      descriptor: PropertyDescriptor,
+    ) {
       const method = descriptor.value;
 
       descriptor.value = async function(...args: any[]) {
@@ -116,7 +129,7 @@ class MonitoringService {
 
   // Health check
   async getHealthStatus(): Promise<{
-    status: 'healthy' | 'degraded' | 'unhealthy';
+    status: "healthy" | "degraded" | "unhealthy";
     checks: {
       database: boolean;
       redis: boolean;
@@ -150,13 +163,13 @@ class MonitoringService {
 
   // Alert management
   async checkErrorAlerts(error: ErrorMetrics): Promise<void> {
-    const errorKey = `${error.errorType}:${error.shopDomain || 'global'}`;
+    const errorKey = `${error.errorType}:${error.shopDomain || "global"}`;
     const currentCount = this.errorCounts.get(errorKey) || 0;
     this.errorCounts.set(errorKey, currentCount + 1);
 
     // Check if error rate exceeds threshold
     if (currentCount + 1 > this.alertThresholds.errorRate) {
-      await this.sendAlert('high_error_rate', {
+      await this.sendAlert("high_error_rate", {
         errorType: error.errorType,
         count: currentCount + 1,
         shopDomain: error.shopDomain,
@@ -165,8 +178,8 @@ class MonitoringService {
     }
 
     // Check for critical errors
-    if (error.severity === 'critical') {
-      await this.sendAlert('critical_error', {
+    if (error.severity === "critical") {
+      await this.sendAlert("critical_error", {
         errorType: error.errorType,
         message: error.errorMessage,
         shopDomain: error.shopDomain,
@@ -178,7 +191,7 @@ class MonitoringService {
   async checkPerformanceAlerts(metrics: PerformanceMetrics): Promise<void> {
     // Check response time
     if (metrics.duration > this.alertThresholds.responseTime) {
-      await this.sendAlert('slow_response', {
+      await this.sendAlert("slow_response", {
         operation: metrics.operation,
         duration: metrics.duration,
         threshold: this.alertThresholds.responseTime,
@@ -188,10 +201,12 @@ class MonitoringService {
 
     // Check success rate
     const recentMetrics = this.performanceMetrics.slice(-100); // Last 100 operations
-    const successRate = recentMetrics.filter(m => m.success).length / recentMetrics.length;
-    
-    if (successRate < 0.9) { // Less than 90% success rate
-      await this.sendAlert('low_success_rate', {
+    const successRate =
+      recentMetrics.filter((m) => m.success).length / recentMetrics.length;
+
+    if (successRate < 0.9) {
+      // Less than 90% success rate
+      await this.sendAlert("low_success_rate", {
         successRate,
         operation: metrics.operation,
         shopDomain: metrics.shopDomain,
@@ -202,18 +217,18 @@ class MonitoringService {
   // Private methods
   private logError(error: ErrorMetrics): void {
     const logMessage = `[${error.severity.toUpperCase()}] ${error.errorType}: ${error.errorMessage}`;
-    
+
     switch (error.severity) {
-      case 'critical':
+      case "critical":
         console.error(logMessage, error);
         break;
-      case 'high':
+      case "high":
         console.error(logMessage, error);
         break;
-      case 'medium':
+      case "medium":
         console.warn(logMessage, error);
         break;
-      case 'low':
+      case "low":
         console.info(logMessage, error);
         break;
     }
@@ -221,29 +236,32 @@ class MonitoringService {
 
   private async storeError(error: ErrorMetrics): Promise<void> {
     try {
-      await query(`
+      await query(
+        `
         INSERT INTO error_logs (
           timestamp, error_type, error_message, stack_trace, 
           context, severity, shop_domain, user_id
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      `, [
-        error.timestamp,
-        error.errorType,
-        error.errorMessage,
-        error.stackTrace,
-        JSON.stringify(error.context),
-        error.severity,
-        error.shopDomain,
-        error.userId,
-      ]);
+      `,
+        [
+          error.timestamp,
+          error.errorType,
+          error.errorMessage,
+          error.stackTrace,
+          JSON.stringify(error.context),
+          error.severity,
+          error.shopDomain,
+          error.userId,
+        ],
+      );
     } catch (err) {
-      console.error('Failed to store error in database:', err);
+      console.error("Failed to store error in database:", err);
     }
   }
 
   private async checkDatabase(): Promise<boolean> {
     try {
-      await query('SELECT 1');
+      await query("SELECT 1");
       return true;
     } catch {
       return false;
@@ -252,7 +270,7 @@ class MonitoringService {
 
   private async checkRedis(): Promise<boolean> {
     try {
-      const { redis } = await import('../queue/setup');
+      const { redis } = await import("../queue/setup");
       await redis.ping();
       return true;
     } catch {
@@ -263,7 +281,7 @@ class MonitoringService {
   private async checkExternalAPIs(): Promise<boolean> {
     try {
       // Test ShipEngine API
-      const { CarrierService } = await import('../services/carrier-service');
+      const { CarrierService } = await import("../services/carrier-service");
       const carrierService = new CarrierService();
       await carrierService.getCarrierList();
       return true;
@@ -274,7 +292,7 @@ class MonitoringService {
 
   private async checkQueue(): Promise<boolean> {
     try {
-      const { getQueueStats } = await import('../queue/setup');
+      const { getQueueStats } = await import("../queue/setup");
       await getQueueStats();
       return true;
     } catch {
@@ -292,19 +310,26 @@ class MonitoringService {
     const oneMinuteAgo = new Date(now.getTime() - 60000);
 
     // Calculate error rate
-    const errorCount = Array.from(this.errorCounts.values()).reduce((sum, count) => sum + count, 0);
+    const errorCount = Array.from(this.errorCounts.values()).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
     const errorRate = errorCount; // errors in last minute
 
     // Calculate average response time
-    const recentMetrics = this.performanceMetrics.filter(m => m.timestamp > oneMinuteAgo);
-    const averageResponseTime = recentMetrics.length > 0 
-      ? recentMetrics.reduce((sum, m) => sum + m.duration, 0) / recentMetrics.length 
-      : 0;
+    const recentMetrics = this.performanceMetrics.filter(
+      (m) => m.timestamp > oneMinuteAgo,
+    );
+    const averageResponseTime =
+      recentMetrics.length > 0
+        ? recentMetrics.reduce((sum, m) => sum + m.duration, 0) /
+          recentMetrics.length
+        : 0;
 
     // Get queue size
     let queueSize = 0;
     try {
-      const { getQueueStats } = await import('../queue/setup');
+      const { getQueueStats } = await import("../queue/setup");
       const stats = await getQueueStats();
       queueSize = stats.delayCheck.waiting + stats.notifications.waiting;
     } catch {
@@ -312,7 +337,8 @@ class MonitoringService {
     }
 
     // Get memory usage
-    const memoryUsage = process.memoryUsage().heapUsed / process.memoryUsage().heapTotal * 100;
+    const memoryUsage =
+      (process.memoryUsage().heapUsed / process.memoryUsage().heapTotal) * 100;
 
     return {
       errorRate,
@@ -323,40 +349,55 @@ class MonitoringService {
   }
 
   private determineHealthStatus(
-    checks: { database: boolean; redis: boolean; externalAPIs: boolean; queue: boolean },
-    metrics: { errorRate: number; averageResponseTime: number; queueSize: number; memoryUsage: number },
-  ): 'healthy' | 'degraded' | 'unhealthy' {
+    checks: {
+      database: boolean;
+      redis: boolean;
+      externalAPIs: boolean;
+      queue: boolean;
+    },
+    metrics: {
+      errorRate: number;
+      averageResponseTime: number;
+      queueSize: number;
+      memoryUsage: number;
+    },
+  ): "healthy" | "degraded" | "unhealthy" {
     const criticalChecks = [checks.database, checks.redis];
     const allChecks = Object.values(checks);
 
     // Unhealthy if critical systems are down
-    if (!criticalChecks.every(check => check)) {
-      return 'unhealthy';
+    if (!criticalChecks.every((check) => check)) {
+      return "unhealthy";
     }
 
     // Degraded if some systems are down or metrics are poor
-    if (!allChecks.every(check => check) || 
-        metrics.errorRate > this.alertThresholds.errorRate ||
-        metrics.averageResponseTime > this.alertThresholds.responseTime ||
-        metrics.memoryUsage > this.alertThresholds.memoryUsage) {
-      return 'degraded';
+    if (
+      !allChecks.every((check) => check) ||
+      metrics.errorRate > this.alertThresholds.errorRate ||
+      metrics.averageResponseTime > this.alertThresholds.responseTime ||
+      metrics.memoryUsage > this.alertThresholds.memoryUsage
+    ) {
+      return "degraded";
     }
 
-    return 'healthy';
+    return "healthy";
   }
 
   private async sendAlert(type: string, data: any): Promise<void> {
     console.error(`🚨 ALERT: ${type}`, data);
-    
+
     // In production, this would send to monitoring service (e.g., Sentry, PagerDuty)
     // For now, we'll just log and store in database
     try {
-      await query(`
+      await query(
+        `
         INSERT INTO alerts (type, data, created_at)
         VALUES ($1, $2, $3)
-      `, [type, JSON.stringify(data), new Date()]);
+      `,
+        [type, JSON.stringify(data), new Date()],
+      );
     } catch (err) {
-      console.error('Failed to store alert:', err);
+      console.error("Failed to store alert:", err);
     }
   }
 }

@@ -23,14 +23,17 @@ export interface AnalyticsMetrics {
 }
 
 export class AnalyticsService {
-  async getMetrics(_dateRange?: { start: string; end: string }): Promise<AnalyticsMetrics> {
+  async getMetrics(_dateRange?: {
+    start: string;
+    end: string;
+  }): Promise<AnalyticsMetrics> {
     // This will be mocked in tests
-    throw new Error('AnalyticsService.getMetrics not implemented');
+    throw new Error("AnalyticsService.getMetrics not implemented");
   }
 
   async exportData(_data: AnalyticsMetrics): Promise<{ success: boolean }> {
     // This will be mocked in tests
-    throw new Error('AnalyticsService.exportData not implemented');
+    throw new Error("AnalyticsService.exportData not implemented");
   }
 }
 

@@ -1,5 +1,5 @@
-import * as sgMail from '@sendgrid/mail';
-import { OrderInfo, DelayDetails } from '../types';
+import * as sgMail from "@sendgrid/mail";
+import { OrderInfo, DelayDetails } from "../types";
 
 export class EmailService {
   private apiKey: string;
@@ -9,11 +9,15 @@ export class EmailService {
     sgMail.setApiKey(apiKey);
   }
 
-  async sendDelayEmail(email: string, orderInfo: OrderInfo, delayDetails: DelayDetails): Promise<void> {
+  async sendDelayEmail(
+    email: string,
+    orderInfo: OrderInfo,
+    delayDetails: DelayDetails,
+  ): Promise<void> {
     const msg = {
       to: email,
-      from: 'noreply@delayguard.app',
-      templateId: 'd-delay-notification-template',
+      from: "noreply@delayguard.app",
+      templateId: "d-delay-notification-template",
       dynamicTemplateData: {
         customerName: orderInfo.customerName,
         orderNumber: orderInfo.orderNumber,
