@@ -6,6 +6,7 @@
  */
 
 import * as React from "react";
+import { logger } from '../utils/logger';
 
 /**
  * Simple event handler for React components
@@ -30,7 +31,7 @@ export function createSimpleEventHandler(
 
       handler(event);
     } catch (error) {
-      console.error("Error in event handler:", error);
+      logger.error("Event handling failed", error as Error);
       throw error;
     }
   };
@@ -112,7 +113,7 @@ export const EventUtils = {
   /**
    * Debounce function for event handlers
    */
-  debounce<T extends(...args: any[]) => any>(
+  debounce<T extends(...args: unknown[]) => any>(
     func: T,
     wait: number,
   ): (...args: Parameters<T>) => void {
@@ -126,7 +127,7 @@ export const EventUtils = {
   /**
    * Throttle function for event handlers
    */
-  throttle<T extends(...args: any[]) => any>(
+  throttle<T extends(...args: unknown[]) => any>(
     func: T,
     limit: number,
   ): (...args: Parameters<T>) => void {

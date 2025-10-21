@@ -1,4 +1,5 @@
 import { Context } from "koa";
+import { logger } from '../utils/logger';
 import { EventEmitter } from "events";
 // import { AppConfig } from '../types'; // Available for future use
 
@@ -140,7 +141,7 @@ export class AuditLogger extends EventEmitter {
 
     // Check if buffer needs flushing
     if (this.eventBuffer.length >= this.config.batchSize) {
-      console.log(
+      logger.info(
         "Flushing events due to batch size reached:",
         this.eventBuffer.length,
       );
@@ -334,7 +335,7 @@ export class AuditLogger extends EventEmitter {
         await this.logToExternal(events);
       }
     } catch (error) {
-      console.error("Failed to flush audit events:", error);
+      logger.error($1, error as Error);
     }
   }
 
@@ -344,7 +345,7 @@ export class AuditLogger extends EventEmitter {
   private startFlushTimer(): void {
     this.flushTimer = setInterval(() => {
       this.flushEvents().catch((error) => {
-        console.error("Failed to flush events in timer:", error);
+        logger.error($1, error as Error);
       });
     }, this.config.flushInterval);
   }
@@ -403,7 +404,7 @@ export class AuditLogger extends EventEmitter {
   private async logToFile(events: SecurityEvent[]): Promise<void> {
     // Implementation would write to structured log files
     // For now, we'll use console as a placeholder
-    console.log(`[FILE] Logging ${events.length} events to file`);
+    logger.info(`[FILE] Logging ${events.length} events to file`);
   }
 
   /**
@@ -412,7 +413,7 @@ export class AuditLogger extends EventEmitter {
   private async logToDatabase(events: SecurityEvent[]): Promise<void> {
     // Implementation would write to database
     // For now, we'll use console as a placeholder
-    console.log(`[DB] Logging ${events.length} events to database`);
+    logger.info(`[DB] Logging ${events.length} events to database`);
   }
 
   /**
@@ -422,7 +423,7 @@ export class AuditLogger extends EventEmitter {
     if (!this.config.externalEndpoint) return;
 
     // Implementation would send to external SIEM
-    console.log(
+    logger.info(
       `[EXTERNAL] Sending ${events.length} events to ${this.config.externalEndpoint}`,
     );
   }

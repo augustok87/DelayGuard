@@ -176,6 +176,7 @@ function MinimalApp() {
         handleRealTimeUpdate();
       }
     };
+handleMessage.displayName = 'handleMessage';
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
@@ -223,6 +224,7 @@ function MinimalApp() {
     setToastMessage("Alert resolved successfully!");
     setShowToast(true);
   };
+handleResolveAlert.displayName = 'handleResolveAlert';
 
   const handleDismissAlert = (alertId: string) => {
     setAlerts((prev) =>
@@ -235,14 +237,17 @@ function MinimalApp() {
     setToastMessage("Alert dismissed!");
     setShowToast(true);
   };
+handleDismissAlert.displayName = 'handleDismissAlert';
 
   const handleTabChange = (tabIndex: number) => {
     setSelectedTab(tabIndex);
   };
+handleTabChange.displayName = 'handleTabChange';
 
   const handleCloseToast = () => {
     setShowToast(false);
   };
+handleCloseToast.displayName = 'handleCloseToast';
 
   const handleExportAlerts = () => {
     const csvContent = [
@@ -275,16 +280,19 @@ function MinimalApp() {
     setToastMessage("Export started");
     setShowToast(true);
   };
+handleExportAlerts.displayName = 'handleExportAlerts';
 
   const handlePreviousPage = () => {
     setToastMessage("Previous page clicked");
     setShowToast(true);
   };
+handlePreviousPage.displayName = 'handlePreviousPage';
 
   const handleNextPage = () => {
     setToastMessage("Next page clicked");
     setShowToast(true);
   };
+handleNextPage.displayName = 'handleNextPage';
 
   const handleRefresh = async() => {
     try {
@@ -742,6 +750,7 @@ function MinimalApp() {
       </Card>
     );
   };
+renderAlertsTable.displayName = 'renderAlertsTable';
 
   const renderOrdersTable = () => {
     // Handle error state
@@ -903,6 +912,7 @@ function MinimalApp() {
       </Card>
     );
   };
+renderOrdersTable.displayName = 'renderOrdersTable';
 
   const renderSettingsModal = () => (
     <Modal
@@ -1215,6 +1225,8 @@ function MinimalApp() {
     </div>
   );
 }
+
+MinimalApp.displayName = 'MinimalApp';
 
 export default MinimalApp;
 export { MinimalApp };

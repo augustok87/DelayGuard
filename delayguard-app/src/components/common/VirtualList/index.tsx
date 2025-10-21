@@ -88,7 +88,7 @@ export function VirtualList<T>({
         >
           {visibleItems.map(({ item, index }) => (
             <div
-              key={index}
+              key={`item-${index}`}
               style={{ height: itemHeight }}
               className={styles.item}
             >

@@ -6,6 +6,7 @@
  */
 
 import Redis from "ioredis";
+import { logger } from '../utils/logger';
 import envValidator from "../config/environment";
 
 interface RedisConfig {
@@ -70,23 +71,23 @@ class RedisConnectionManager {
 
       // Set up event handlers
       this.client.on("connect", () => {
-        console.log("✅ Redis connected successfully");
+        logger.info("✅ Redis connected successfully");
       });
 
       this.client.on("ready", () => {
-        console.log("✅ Redis ready for operations");
+        logger.info("✅ Redis ready for operations");
       });
 
       this.client.on("error", (error) => {
-        console.error("❌ Redis error:", error.message);
+        logger.error("❌ Redis error:", error.message);
       });
 
       this.client.on("close", () => {
-        console.log("⚠️  Redis connection closed");
+        logger.info("⚠️  Redis connection closed");
       });
 
       this.client.on("reconnecting", () => {
-        console.log("🔄 Redis reconnecting...");
+        logger.info("🔄 Redis reconnecting...");
       });
 
       // Wait for connection to be ready
@@ -94,7 +95,7 @@ class RedisConnectionManager {
 
       return this.client;
     } catch (error) {
-      console.error("❌ Failed to create Redis connection:", error);
+      logger.error($1, error as Error);
       throw new Error(
         `Redis connection failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -130,7 +131,7 @@ class RedisConnectionManager {
       const result = await client.ping();
       return result === "PONG";
     } catch (error) {
-      console.error("Redis connection test failed:", error);
+      logger.error($1, error as Error);
       return false;
     }
   }

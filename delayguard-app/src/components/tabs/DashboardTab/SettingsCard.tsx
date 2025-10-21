@@ -156,3 +156,5 @@ export function SettingsCard({
     </Card>
   );
 }
+
+SettingsCard.displayName = 'SettingsCard';

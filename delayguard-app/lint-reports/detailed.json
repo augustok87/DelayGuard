@@ -1,108 +1,11 @@
 {
-  "timestamp": "2025-10-19T21:46:37.975Z",
+  "timestamp": "2025-10-19T22:13:11.137Z",
   "files": {
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/backup/backup-service.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 12,
-        "messages": [
-          {
-            "line": 63,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 71,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 153,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 164,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 232,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 243,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 287,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 430,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 531,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 540,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 549,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 556,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -112,9 +15,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/AnalyticsDashboard.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 60,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -128,7 +40,7 @@
         "warnings": 3,
         "messages": [
           {
-            "line": 72,
+            "line": 76,
             "column": 36,
             "rule": "no-console",
             "message": "Unexpected console statement.",
@@ -136,7 +48,7 @@
             "fixable": false
           },
           {
-            "line": 73,
+            "line": 77,
             "column": 7,
             "rule": "no-console",
             "message": "Unexpected console statement.",
@@ -144,7 +56,7 @@
             "fixable": false
           },
           {
-            "line": 78,
+            "line": 82,
             "column": 7,
             "rule": "no-console",
             "message": "Unexpected console statement.",
@@ -209,9 +121,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/EnhancedDashboard/EnhancedDashboard.refactored.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 29,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -407,9 +328,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/MinimalApp.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 84,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -419,9 +349,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/RefactoredApp.optimized.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 26,
+            "column": 63,
+            "rule": null,
+            "message": "Parsing error: Declaration or statement expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -443,15 +382,15 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ThemeCustomizer.tsx": {
       "standard": {
-        "errors": 0,
-        "warnings": 1,
+        "errors": 1,
+        "warnings": 0,
         "messages": [
           {
-            "line": 419,
-            "column": 30,
-            "rule": "react/no-array-index-key",
-            "message": "Do not use Array index in keys",
-            "severity": 1,
+            "line": 55,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
             "fixable": false
           }
         ]
@@ -464,9 +403,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/common/EmptyState.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 35,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -476,9 +424,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/common/ErrorAlert/index.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 10,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -512,9 +469,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/common/ErrorState.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 29,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -621,9 +587,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/layout/AppHeader/index.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 11,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -633,9 +608,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/layout/TabNavigation/index.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 17,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -657,9 +641,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/AlertsTab/AlertCard.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 13,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -681,9 +674,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/AlertsTab/index.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 14,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -705,9 +707,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/DashboardTab/SettingsCard.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 26,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -717,9 +728,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/DashboardTab/StatsCard.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 11,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -729,9 +749,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/DashboardTab/index.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 29,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -765,9 +794,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/OrdersTab/OrderCard.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 13,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -789,9 +827,18 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/OrdersTab/index.tsx": {
       "standard": {
-        "errors": 0,
+        "errors": 1,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 14,
+            "column": 0,
+            "rule": null,
+            "message": "Parsing error: ',' expected.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -1194,19 +1241,11 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/config/environment.ts": {
       "standard": {
-        "errors": 4,
-        "warnings": 9,
+        "errors": 0,
+        "warnings": 2,
         "messages": [
           {
-            "line": 72,
-            "column": 28,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 81,
+            "line": 82,
             "column": 41,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -1214,90 +1253,10 @@
             "fixable": false
           },
           {
-            "line": 98,
-            "column": 30,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 144,
-            "column": 26,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 159,
-            "column": 63,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 166,
+            "line": 177,
             "column": 77,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 221,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 222,
-            "column": 38,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 225,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 226,
-            "column": 44,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 234,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 236,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 237,
-            "column": 44,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
             "severity": 1,
             "fixable": false
           }
@@ -1372,8 +1331,8 @@
         "warnings": 1,
         "messages": [
           {
-            "line": 135,
-            "column": 22,
+            "line": 145,
+            "column": 21,
             "rule": "react-hooks/exhaustive-deps",
             "message": "React Hook useCallback has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies.",
             "severity": 1,
@@ -1393,7 +1352,7 @@
         "warnings": 3,
         "messages": [
           {
-            "line": 29,
+            "line": 49,
             "column": 22,
             "rule": "react-hooks/exhaustive-deps",
             "message": "React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.",
@@ -1401,7 +1360,7 @@
             "fixable": false
           },
           {
-            "line": 47,
+            "line": 67,
             "column": 22,
             "rule": "react-hooks/exhaustive-deps",
             "message": "React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.",
@@ -1409,7 +1368,7 @@
             "fixable": false
           },
           {
-            "line": 60,
+            "line": 80,
             "column": 22,
             "rule": "react-hooks/exhaustive-deps",
             "message": "React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.",
@@ -1442,7 +1401,7 @@
         "warnings": 4,
         "messages": [
           {
-            "line": 17,
+            "line": 21,
             "column": 20,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -1450,7 +1409,7 @@
             "fixable": false
           },
           {
-            "line": 18,
+            "line": 22,
             "column": 20,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -1458,7 +1417,7 @@
             "fixable": false
           },
           {
-            "line": 19,
+            "line": 23,
             "column": 20,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -1466,8 +1425,8 @@
             "fixable": false
           },
           {
-            "line": 99,
-            "column": 39,
+            "line": 119,
+            "column": 41,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
             "severity": 1,
@@ -1523,7 +1482,7 @@
         "warnings": 3,
         "messages": [
           {
-            "line": 18,
+            "line": 22,
             "column": 20,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -1531,7 +1490,7 @@
             "fixable": false
           },
           {
-            "line": 19,
+            "line": 23,
             "column": 20,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -1539,7 +1498,7 @@
             "fixable": false
           },
           {
-            "line": 20,
+            "line": 24,
             "column": 20,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -1560,7 +1519,7 @@
         "warnings": 2,
         "messages": [
           {
-            "line": 182,
+            "line": 212,
             "column": 6,
             "rule": "react-hooks/exhaustive-deps",
             "message": "React Hook useEffect was passed a dependency list that is not an array literal. This means we can't statically verify whether you've passed the correct dependencies.",
@@ -1568,7 +1527,7 @@
             "fixable": false
           },
           {
-            "line": 182,
+            "line": 212,
             "column": 6,
             "rule": "react-hooks/exhaustive-deps",
             "message": "React Hook useEffect has a missing dependency: 'trackRender'. Either include it or remove the dependency array.",
@@ -1601,8 +1560,8 @@
         "warnings": 1,
         "messages": [
           {
-            "line": 45,
-            "column": 6,
+            "line": 47,
+            "column": 5,
             "rule": "react-hooks/exhaustive-deps",
             "message": "React Hook useCallback has an unnecessary dependency: 'showSaveErrorToast'. Either exclude it or remove the dependency array.",
             "severity": 1,
@@ -1655,64 +1614,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/middleware/csrf-protection.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 16,
+        "warnings": 2,
         "messages": [
-          {
-            "line": 56,
-            "column": 9,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 65,
-            "column": 9,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 84,
-            "column": 31,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 91,
-            "column": 27,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 92,
-            "column": 21,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 104,
-            "column": 41,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 105,
-            "column": 33,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
           {
             "line": 106,
             "column": 39,
@@ -1722,63 +1625,7 @@
             "fixable": false
           },
           {
-            "line": 213,
-            "column": 9,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 222,
-            "column": 9,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 241,
-            "column": 31,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 248,
-            "column": 27,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 249,
-            "column": 21,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 261,
-            "column": 41,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
             "line": 262,
-            "column": 33,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 263,
             "column": 39,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -1796,83 +1643,11 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/middleware/input-sanitization.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 10,
+        "warnings": 1,
         "messages": [
           {
-            "line": 18,
-            "column": 45,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 83,
-            "column": 31,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 83,
-            "column": 37,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 97,
-            "column": 24,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 229,
-            "column": 24,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 229,
-            "column": 60,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 300,
-            "column": 24,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 300,
-            "column": 52,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 300,
-            "column": 59,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 301,
-            "column": 19,
+            "line": 339,
+            "column": 56,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
@@ -1922,65 +1697,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/observability/monitoring.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 7,
-        "messages": [
-          {
-            "line": 428,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 613,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 625,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 652,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 655,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 663,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 669,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1991,10 +1709,10 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/observability/tracing.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 43,
+        "warnings": 6,
         "messages": [
           {
-            "line": 15,
+            "line": 16,
             "column": 44,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -2002,56 +1720,16 @@
             "fixable": false
           },
           {
-            "line": 20,
-            "column": 37,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 24,
-            "column": 41,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 24,
-            "column": 47,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
             "line": 25,
-            "column": 43,
+            "column": 51,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           },
           {
-            "line": 25,
-            "column": 49,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 31,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 34,
-            "column": 44,
+            "line": 26,
+            "column": 53,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
@@ -2059,102 +1737,6 @@
           },
           {
             "line": 35,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 39,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 44,
-            "column": 37,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 45,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 51,
-            "column": 41,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 51,
-            "column": 47,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 52,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 54,
-            "column": 41,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 55,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 60,
-            "column": 43,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 60,
-            "column": 49,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 61,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 63,
             "column": 44,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -2162,178 +1744,18 @@
             "fixable": false
           },
           {
-            "line": 64,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 72,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 77,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 81,
-            "column": 68,
+            "line": 85,
+            "column": 13,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           },
           {
-            "line": 100,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 104,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 109,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 113,
-            "column": 39,
+            "line": 192,
+            "column": 18,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 113,
-            "column": 49,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 113,
-            "column": 60,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 141,
-            "column": 60,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 154,
-            "column": 62,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 170,
-            "column": 68,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 171,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 173,
-            "column": 63,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 174,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 176,
-            "column": 59,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 177,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 179,
-            "column": 80,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 180,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 182,
-            "column": 67,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 183,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
             "severity": 1,
             "fixable": false
           }
@@ -2348,41 +1770,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/queue/processors/delay-check.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 4,
-        "messages": [
-          {
-            "line": 18,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 56,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 96,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 106,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2393,27 +1782,11 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/queue/processors/notification.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 12,
+        "warnings": 4,
         "messages": [
           {
-            "line": 24,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 67,
+            "line": 68,
             "column": 43,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 69,
-            "column": 7,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
             "severity": 1,
@@ -2436,58 +1809,10 @@
             "fixable": false
           },
           {
-            "line": 98,
-            "column": 13,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 101,
-            "column": 13,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 116,
-            "column": 13,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 119,
-            "column": 13,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 126,
+            "line": 72,
             "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 133,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 136,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
+            "rule": "@typescript-eslint/no-non-null-assertion",
+            "message": "Forbidden non-null assertion.",
             "severity": 1,
             "fixable": false
           }
@@ -2502,93 +1827,13 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/queue/setup.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 11,
+        "warnings": 1,
         "messages": [
           {
-            "line": 17,
+            "line": 18,
             "column": 25,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 24,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 75,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 77,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 85,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 89,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 94,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 98,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 103,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 107,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 129,
-            "column": 17,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           }
@@ -2603,49 +1848,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/analytics.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 5,
-        "messages": [
-          {
-            "line": 29,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 57,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 112,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 139,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 178,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2668,10 +1872,10 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/api.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 3,
+        "warnings": 2,
         "messages": [
           {
-            "line": 40,
+            "line": 41,
             "column": 40,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -2679,18 +1883,10 @@
             "fixable": false
           },
           {
-            "line": 112,
+            "line": 116,
             "column": 65,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 135,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
             "severity": 1,
             "fixable": false
           }
@@ -2705,41 +1901,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/auth.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 4,
-        "messages": [
-          {
-            "line": 34,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 65,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 69,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 93,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2749,250 +1912,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/health.ts": {
       "standard": {
-        "errors": 30,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 56,
-            "column": 31,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 72,
-            "column": 100,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 97,
-            "column": 36,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 100,
-            "column": 36,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 120,
-            "column": 30,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 126,
-            "column": 30,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 146,
-            "column": 30,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 152,
-            "column": 30,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 170,
-            "column": 25,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 182,
-            "column": 88,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 196,
-            "column": 45,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 204,
-            "column": 29,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 205,
-            "column": 11,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 212,
-            "column": 32,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 218,
-            "column": 32,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 225,
-            "column": 30,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 238,
-            "column": 46,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 239,
-            "column": 10,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 246,
-            "column": 32,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 252,
-            "column": 32,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 259,
-            "column": 30,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 274,
-            "column": 99,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 275,
-            "column": 10,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 282,
-            "column": 32,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 288,
-            "column": 32,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 295,
-            "column": 30,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 308,
-            "column": 51,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 337,
-            "column": 70,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 351,
-            "column": 42,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 357,
-            "column": 42,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -3003,65 +1925,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/monitoring.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 7,
-        "messages": [
-          {
-            "line": 220,
-            "column": 39,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 224,
-            "column": 52,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 228,
-            "column": 51,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 249,
-            "column": 42,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 249,
-            "column": 57,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 281,
-            "column": 53,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 283,
-            "column": 78,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -3072,189 +1937,13 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/webhooks.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 23,
+        "warnings": 1,
         "messages": [
           {
-            "line": 12,
+            "line": 13,
             "column": 27,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 31,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 38,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 56,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 63,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 81,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 88,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 94,
-            "column": 66,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 103,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 155,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 158,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 163,
-            "column": 78,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 172,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 185,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 194,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 197,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 202,
-            "column": 64,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 211,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 223,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 226,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 231,
-            "column": 69,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 274,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 279,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
             "severity": 1,
             "fixable": false
           }
@@ -3269,18 +1958,10 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/server.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 16,
+        "warnings": 10,
         "messages": [
           {
-            "line": 50,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 62,
+            "line": 63,
             "column": 13,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
@@ -3288,7 +1969,7 @@
             "fixable": false
           },
           {
-            "line": 63,
+            "line": 64,
             "column": 16,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
@@ -3296,7 +1977,7 @@
             "fixable": false
           },
           {
-            "line": 67,
+            "line": 68,
             "column": 10,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
@@ -3304,7 +1985,7 @@
             "fixable": false
           },
           {
-            "line": 70,
+            "line": 71,
             "column": 10,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
@@ -3312,7 +1993,7 @@
             "fixable": false
           },
           {
-            "line": 73,
+            "line": 74,
             "column": 13,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
@@ -3320,16 +2001,8 @@
             "fixable": false
           },
           {
-            "line": 76,
+            "line": 77,
             "column": 13,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 79,
-            "column": 17,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
             "severity": 1,
@@ -3337,7 +2010,7 @@
           },
           {
             "line": 80,
-            "column": 16,
+            "column": 17,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
             "severity": 1,
@@ -3345,6 +2018,14 @@
           },
           {
             "line": 81,
+            "column": 16,
+            "rule": "@typescript-eslint/no-non-null-assertion",
+            "message": "Forbidden non-null assertion.",
+            "severity": 1,
+            "fixable": false
+          },
+          {
+            "line": 82,
             "column": 18,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
@@ -3352,50 +2033,10 @@
             "fixable": false
           },
           {
-            "line": 278,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 279,
+            "line": 280,
             "column": 80,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 298,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 300,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 314,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 315,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
             "severity": 1,
             "fixable": false
           }
@@ -3434,10 +2075,10 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/audit-logger.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 10,
+        "warnings": 4,
         "messages": [
           {
-            "line": 53,
+            "line": 54,
             "column": 27,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -3445,7 +2086,7 @@
             "fixable": false
           },
           {
-            "line": 102,
+            "line": 103,
             "column": 29,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -3453,15 +2094,7 @@
             "fixable": false
           },
           {
-            "line": 143,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 154,
+            "line": 158,
             "column": 29,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -3469,48 +2102,8 @@
             "fixable": false
           },
           {
-            "line": 334,
+            "line": 391,
             "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 344,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 387,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 403,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 412,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 422,
-            "column": 5,
             "rule": "no-console",
             "message": "Unexpected console statement.",
             "severity": 1,
@@ -3527,61 +2120,13 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/carrier-service.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 7,
+        "warnings": 1,
         "messages": [
           {
-            "line": 9,
+            "line": 14,
             "column": 29,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 27,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 45,
-            "column": 42,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 55,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 59,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 106,
-            "column": 51,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 111,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
             "severity": 1,
             "fixable": false
           }
@@ -3595,9 +2140,26 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/delay-detection-service.ts": {
       "standard": {
-        "errors": 0,
+        "errors": 2,
         "warnings": 0,
-        "messages": []
+        "messages": [
+          {
+            "line": 7,
+            "column": 10,
+            "rule": "@typescript-eslint/no-unused-vars",
+            "message": "'logger' is defined but never used.",
+            "severity": 2,
+            "fixable": false
+          },
+          {
+            "line": 8,
+            "column": 1,
+            "rule": "no-duplicate-imports",
+            "message": "'../utils/logger' import is duplicated.",
+            "severity": 2,
+            "fixable": false
+          }
+        ]
       },
       "enhanced": {
         "errors": 0,
@@ -3632,73 +2194,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/monitoring-service.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 8,
-        "messages": [
-          {
-            "line": 11,
-            "column": 13,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 82,
-            "column": 14,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 86,
-            "column": 18,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 185,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 470,
-            "column": 16,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 496,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 514,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 526,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -3721,19 +2218,11 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/optimized-api.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 2,
+        "warnings": 1,
         "messages": [
           {
             "line": 5,
             "column": 34,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 75,
-            "column": 54,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
@@ -3750,75 +2239,11 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/optimized-cache.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 9,
+        "warnings": 1,
         "messages": [
           {
-            "line": 13,
-            "column": 44,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 43,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 60,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 74,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 114,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 138,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 151,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 177,
+            "line": 181,
             "column": 43,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 190,
-            "column": 45,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
@@ -3835,26 +2260,10 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/optimized-database.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 17,
+        "warnings": 9,
         "messages": [
           {
-            "line": 13,
-            "column": 45,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 33,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 37,
+            "line": 38,
             "column": 40,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -3862,40 +2271,8 @@
             "fixable": false
           },
           {
-            "line": 37,
+            "line": 38,
             "column": 47,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 39,
-            "column": 13,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 76,
-            "column": 11,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 128,
-            "column": 45,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 128,
-            "column": 52,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
@@ -3910,7 +2287,15 @@
             "fixable": false
           },
           {
-            "line": 169,
+            "line": 129,
+            "column": 52,
+            "rule": "@typescript-eslint/no-explicit-any",
+            "message": "Unexpected any. Specify a different type.",
+            "severity": 1,
+            "fixable": false
+          },
+          {
+            "line": 170,
             "column": 50,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -3918,7 +2303,7 @@
             "fixable": false
           },
           {
-            "line": 179,
+            "line": 180,
             "column": 50,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -3926,48 +2311,24 @@
             "fixable": false
           },
           {
-            "line": 189,
-            "column": 90,
+            "line": 194,
+            "column": 14,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           },
           {
-            "line": 206,
-            "column": 90,
+            "line": 219,
+            "column": 14,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           },
           {
-            "line": 228,
-            "column": 19,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 241,
-            "column": 19,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 252,
+            "line": 276,
             "column": 38,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 265,
-            "column": 41,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
@@ -3984,45 +2345,21 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/performance-monitor.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 5,
+        "warnings": 2,
         "messages": [
           {
-            "line": 24,
-            "column": 87,
+            "line": 28,
+            "column": 15,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           },
           {
-            "line": 175,
+            "line": 191,
             "column": 30,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 235,
-            "column": 29,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 238,
-            "column": 47,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 238,
-            "column": 61,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           }
@@ -4036,74 +2373,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/redis-connection.ts": {
       "standard": {
-        "errors": 1,
-        "warnings": 7,
-        "messages": [
-          {
-            "line": 51,
-            "column": 29,
-            "rule": "comma-dangle",
-            "message": "Missing trailing comma.",
-            "severity": 2,
-            "fixable": true
-          },
-          {
-            "line": 71,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 75,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 79,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 83,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 87,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 95,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 129,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "errors": 0,
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -4126,18 +2398,10 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/security-monitor.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 12,
+        "warnings": 5,
         "messages": [
           {
-            "line": 54,
-            "column": 10,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 63,
+            "line": 75,
             "column": 26,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -4145,39 +2409,7 @@
             "fixable": false
           },
           {
-            "line": 172,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 196,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 256,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 427,
-            "column": 63,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 428,
+            "line": 457,
             "column": 36,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
@@ -4185,42 +2417,26 @@
             "fixable": false
           },
           {
-            "line": 499,
-            "column": 52,
+            "line": 545,
+            "column": 28,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           },
           {
-            "line": 546,
-            "column": 57,
+            "line": 600,
+            "column": 28,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           },
           {
-            "line": 548,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 554,
-            "column": 55,
+            "line": 611,
+            "column": 28,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 556,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
             "severity": 1,
             "fixable": false
           }
@@ -4235,17 +2451,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/sms-service.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 5,
-            "column": 19,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -4364,17 +2571,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/types/global.d.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 208,
-            "column": 12,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -4462,125 +2660,13 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/utils/cache.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 15,
+        "warnings": 1,
         "messages": [
           {
-            "line": 29,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 40,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 48,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 57,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 68,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 85,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 96,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 119,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 159,
+            "line": 165,
             "column": 7,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 168,
-            "column": 27,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 172,
-            "column": 48,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 191,
-            "column": 92,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 197,
-            "column": 99,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 203,
-            "column": 71,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 209,
-            "column": 74,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           }
@@ -4607,18 +2693,10 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/utils/eventHandling.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 6,
+        "warnings": 3,
         "messages": [
           {
-            "line": 33,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 55,
+            "line": 56,
             "column": 30,
             "rule": "@typescript-eslint/no-non-null-assertion",
             "message": "Forbidden non-null assertion.",
@@ -4626,32 +2704,16 @@
             "fixable": false
           },
           {
-            "line": 115,
-            "column": 31,
+            "line": 116,
+            "column": 45,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           },
           {
-            "line": 115,
-            "column": 41,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 129,
-            "column": 31,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 129,
-            "column": 41,
+            "line": 130,
+            "column": 45,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
@@ -4668,49 +2730,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/utils/logger.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 5,
-        "messages": [
-          {
-            "line": 53,
-            "column": 11,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 58,
-            "column": 11,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 62,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 65,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 67,
-            "column": 11,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -4721,109 +2742,21 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/utils/monitoring.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 13,
+        "warnings": 2,
         "messages": [
           {
-            "line": 8,
-            "column": 13,
+            "line": 47,
+            "column": 15,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           },
           {
-            "line": 44,
-            "column": 44,
+            "line": 76,
+            "column": 15,
             "rule": "@typescript-eslint/no-explicit-any",
             "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 67,
-            "column": 91,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 89,
-            "column": 29,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 92,
-            "column": 50,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 208,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 211,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 214,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 217,
-            "column": 9,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 240,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 348,
-            "column": 47,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 349,
-            "column": 5,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 359,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
             "severity": 1,
             "fixable": false
           }
@@ -4837,18 +2770,23 @@
     }
   },
   "categories": {
+    "null": {
+      "count": 17,
+      "severity": 2,
+      "fixable": false
+    },
     "no-console": {
-      "count": 162,
+      "count": 8,
       "severity": 1,
       "fixable": false
     },
     "react/no-array-index-key": {
-      "count": 2,
+      "count": 1,
       "severity": 1,
       "fixable": false
     },
     "@typescript-eslint/no-explicit-any": {
-      "count": 124,
+      "count": 50,
       "severity": 1,
       "fixable": false
     },
@@ -4858,17 +2796,12 @@
       "fixable": false
     },
     "@typescript-eslint/no-non-null-assertion": {
-      "count": 40,
+      "count": 26,
       "severity": 1,
       "fixable": false
     },
-    "comma-dangle": {
-      "count": 35,
-      "severity": 2,
-      "fixable": true
-    },
     "@typescript-eslint/no-unused-vars": {
-      "count": 1,
+      "count": 2,
       "severity": 2,
       "fixable": false
     },
@@ -4876,46 +2809,54 @@
       "count": 7,
       "severity": 1,
       "fixable": false
+    },
+    "no-duplicate-imports": {
+      "count": 1,
+      "severity": 2,
+      "fixable": false
     }
   },
   "topIssues": [
     {
-      "rule": "no-console",
-      "count": 162
-    },
-    {
       "rule": "@typescript-eslint/no-explicit-any",
-      "count": 124
+      "count": 50
     },
     {
       "rule": "@typescript-eslint/no-non-null-assertion",
-      "count": 40
+      "count": 26
     },
     {
-      "rule": "comma-dangle",
-      "count": 35
+      "rule": "null",
+      "count": 17
     },
     {
       "rule": "react/display-name",
       "count": 9
     },
     {
+      "rule": "no-console",
+      "count": 8
+    },
+    {
       "rule": "react-hooks/exhaustive-deps",
       "count": 7
     },
     {
-      "rule": "react/no-array-index-key",
+      "rule": "@typescript-eslint/no-unused-vars",
       "count": 2
     },
     {
-      "rule": "@typescript-eslint/no-unused-vars",
+      "rule": "react/no-array-index-key",
+      "count": 1
+    },
+    {
+      "rule": "no-duplicate-imports",
       "count": 1
     }
   ],
   "recommendations": [
     "Fix all errors immediately - they prevent code from working correctly",
     "Address warnings systematically - they indicate potential issues",
-    "Run 'npm run lint:fix' to automatically fix 35 issues",
     "Consider breaking down large files into smaller, more manageable pieces"
   ]
 }

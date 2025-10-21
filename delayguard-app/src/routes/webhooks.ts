@@ -1,4 +1,5 @@
 import Router from "koa-router";
+import { logger } from '../utils/logger';
 import { query } from "../database/connection";
 import { addDelayCheckJob } from "../queue/setup";
 // import { OrderUpdateWebhook } from '../types'; // Available for future use
@@ -28,14 +29,14 @@ router.post("/orders/updated", async(ctx) => {
     return;
   }
 
-  console.log(`📦 Order updated webhook received for shop: ${shop}`);
+  logger.info(`📦 Order updated webhook received for shop: ${shop}`);
 
   try {
     await processOrderUpdate(shop, ctx.request.body);
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
-    console.error("❌ Error processing order update webhook:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = { error: "Internal server error" };
   }
@@ -53,14 +54,14 @@ router.post("/fulfillments/updated", async(ctx) => {
     return;
   }
 
-  console.log(`🚚 Fulfillment updated webhook received for shop: ${shop}`);
+  logger.info(`🚚 Fulfillment updated webhook received for shop: ${shop}`);
 
   try {
     await processFulfillmentUpdate(shop, ctx.request.body);
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
-    console.error("❌ Error processing fulfillment update webhook:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = { error: "Internal server error" };
   }
@@ -78,14 +79,14 @@ router.post("/orders/paid", async(ctx) => {
     return;
   }
 
-  console.log(`💳 Order paid webhook received for shop: ${shop}`);
+  logger.info(`💳 Order paid webhook received for shop: ${shop}`);
 
   try {
     await processOrderPaid(shop, ctx.request.body);
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
-    console.error("❌ Error processing order paid webhook:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = { error: "Internal server error" };
   }
@@ -93,7 +94,7 @@ router.post("/orders/paid", async(ctx) => {
 
 async function processOrderUpdate(
   shopDomain: string,
-  orderData: any,
+  orderData: unknown,
 ): Promise<void> {
   try {
     // Get shop ID
@@ -103,7 +104,7 @@ async function processOrderUpdate(
     );
 
     if (shopResult.length === 0) {
-      console.log(`Shop ${shopDomain} not found, skipping order update`);
+      logger.info(`Shop ${shopDomain} not found, skipping order update`);
       return;
     }
 
@@ -158,16 +159,16 @@ async function processOrderUpdate(
       }
     }
 
-    console.log(`✅ Order ${orderData.name} processed successfully`);
+    logger.info(`✅ Order ${orderData.name} processed successfully`);
   } catch (error) {
-    console.error("Error processing order update:", error);
+    logger.error($1, error as Error);
     throw error;
   }
 }
 
 async function processFulfillmentUpdate(
   shopDomain: string,
-  fulfillmentData: any,
+  fulfillmentData: unknown,
 ): Promise<void> {
   try {
     // Get shop ID
@@ -177,7 +178,7 @@ async function processFulfillmentUpdate(
     );
 
     if (shopResult.length === 0) {
-      console.log(`Shop ${shopDomain} not found, skipping fulfillment update`);
+      logger.info(`Shop ${shopDomain} not found, skipping fulfillment update`);
       return;
     }
 
@@ -190,7 +191,7 @@ async function processFulfillmentUpdate(
     );
 
     if (orderResult.length === 0) {
-      console.log(
+      logger.info(
         `Order ${fulfillmentData.order_id} not found for fulfillment update`,
       );
       return;
@@ -201,16 +202,16 @@ async function processFulfillmentUpdate(
     // Process the fulfillment
     await processFulfillment(parseInt(orderId), fulfillmentData);
 
-    console.log(`✅ Fulfillment ${fulfillmentData.id} processed successfully`);
+    logger.info(`✅ Fulfillment ${fulfillmentData.id} processed successfully`);
   } catch (error) {
-    console.error("Error processing fulfillment update:", error);
+    logger.error($1, error as Error);
     throw error;
   }
 }
 
 async function processOrderPaid(
   shopDomain: string,
-  orderData: any,
+  orderData: unknown,
 ): Promise<void> {
   try {
     // Get shop ID
@@ -220,7 +221,7 @@ async function processOrderPaid(
     );
 
     if (shopResult.length === 0) {
-      console.log(`Shop ${shopDomain} not found, skipping order paid`);
+      logger.info(`Shop ${shopDomain} not found, skipping order paid`);
       return;
     }
 
@@ -232,16 +233,16 @@ async function processOrderPaid(
       ["paid", shopId, orderData.id.toString()],
     );
 
-    console.log(`✅ Order ${orderData.name} marked as paid`);
+    logger.info(`✅ Order ${orderData.name} marked as paid`);
   } catch (error) {
-    console.error("Error processing order paid:", error);
+    logger.error($1, error as Error);
     throw error;
   }
 }
 
 async function processFulfillment(
   orderId: number,
-  fulfillmentData: any,
+  fulfillmentData: unknown,
 ): Promise<void> {
   try {
     // Upsert fulfillment
@@ -291,13 +292,13 @@ async function processFulfillment(
           shopDomain: (shopResult[0] as { shop_domain: string }).shop_domain,
         });
 
-        console.log(
+        logger.info(
           `🔍 Delay check job added for tracking ${fulfillmentData.tracking_info.number}`,
         );
       }
     }
   } catch (error) {
-    console.error("Error processing fulfillment:", error);
+    logger.error($1, error as Error);
     throw error;
   }
 }

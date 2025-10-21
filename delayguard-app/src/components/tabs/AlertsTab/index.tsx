@@ -99,3 +99,5 @@ export function AlertsTab({ alerts, loading, onAlertAction }: AlertsTabProps) {
     </div>
   );
 }
+
+AlertsTab.displayName = 'AlertsTab';

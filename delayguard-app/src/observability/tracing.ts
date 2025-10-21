@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * Simplified Tracing Configuration
  * Provides basic tracing functionality for the DelayGuard application
@@ -17,51 +18,51 @@ interface Span {
 }
 
 interface Tracer {
-  startSpan(name: string, options?: any): Span;
+  startSpan(name: string, options?: unknown): Span;
 }
 
 interface Meter {
-  createCounter(name: string, options?: any): any;
-  createHistogram(name: string, options?: any): any;
+  createCounter(name: string, options?: unknown): any;
+  createHistogram(name: string, options?: unknown): any;
 }
 
 // Mock implementations for development
 class MockSpan implements Span {
   setStatus(status: { code: number; message?: string }): void {
-    console.log(`[TRACE] Span status: ${status.code} ${status.message || ""}`);
+    logger.info(`[TRACE] Span status: ${status.code} ${status.message || ""}`);
   }
 
   setAttributes(attributes: Record<string, any>): void {
-    console.log(`[TRACE] Span attributes:`, attributes);
+    logger.info(`[TRACE] Span attributes:`, attributes);
   }
 
   end(): void {
-    console.log(`[TRACE] Span ended`);
+    logger.info(`[TRACE] Span ended`);
   }
 }
 
 class MockTracer implements Tracer {
-  startSpan(name: string, options?: any): Span {
-    console.log(`[TRACE] Starting span: ${name}`, options);
+  startSpan(name: string, options?: unknown): Span {
+    logger.info(`[TRACE] Starting span: ${name}`, options);
     return new MockSpan();
   }
 }
 
 class MockMeter implements Meter {
-  createCounter(name: string, options?: any): any {
-    console.log(`[METRICS] Creating counter: ${name}`, options);
+  createCounter(name: string, options?: unknown): unknown {
+    logger.info(`[METRICS] Creating counter: ${name}`, options);
     return {
-      add: (value: number, attributes?: any) => {
-        console.log(`[METRICS] Counter ${name}: +${value}`, attributes);
+      add: (value: number, attributes?: unknown) => {
+        logger.info(`[METRICS] Counter ${name}: +${value}`, attributes);
       },
     };
   }
 
-  createHistogram(name: string, options?: any): any {
-    console.log(`[METRICS] Creating histogram: ${name}`, options);
+  createHistogram(name: string, options?: unknown): unknown {
+    logger.info(`[METRICS] Creating histogram: ${name}`, options);
     return {
-      record: (value: number, attributes?: any) => {
-        console.log(`[METRICS] Histogram ${name}: ${value}`, attributes);
+      record: (value: number, attributes?: unknown) => {
+        logger.info(`[METRICS] Histogram ${name}: ${value}`, attributes);
       },
     };
   }
@@ -69,12 +70,12 @@ class MockMeter implements Meter {
 
 // Export mock implementations
 export const getTracer = (name: string): Tracer => {
-  console.log(`[TRACE] Getting tracer: ${name}`);
+  logger.info(`[TRACE] Getting tracer: ${name}`);
   return new MockTracer();
 };
 
 export const getMeter = (name: string): Meter => {
-  console.log(`[METRICS] Getting meter: ${name}`);
+  logger.info(`[METRICS] Getting meter: ${name}`);
   return new MockMeter();
 };
 
@@ -104,22 +105,22 @@ export const withSpan = <T>(span: Span, fn: () => T): T => {
 
 // Initialize tracing (simplified)
 export async function initializeTracing(): Promise<void> {
-  console.log(
+  logger.info(
     `[TRACE] Initializing tracing for ${SERVICE_NAME} v${SERVICE_VERSION} in ${ENVIRONMENT}`,
   );
 
   // In a real implementation, this would set up OpenTelemetry
   // For now, we just log that tracing is initialized
-  console.log("[TRACE] Tracing initialized (mock mode)");
+  logger.info("[TRACE] Tracing initialized (mock mode)");
 }
 
 // Shutdown tracing
 export async function shutdownTracing(): Promise<void> {
-  console.log("[TRACE] Shutting down tracing");
+  logger.info("[TRACE] Shutting down tracing");
 }
 
 // HTTP request tracing middleware
-export function traceHttpRequest(req: any, res: any, next: any): void {
+export function traceHttpRequest(req: unknown, res: unknown, next: unknown): void {
   const tracer = getTracer("http");
   const span = tracer.startSpan(`${req.method} ${req.path}`);
 
@@ -147,7 +148,7 @@ export function traceHttpRequest(req: any, res: any, next: any): void {
 }
 
 // Database query tracing
-export function traceDatabaseQuery(query: string, params?: any[]): Span {
+export function traceDatabaseQuery(query: string, params?: unknown[]): Span {
   const tracer = getTracer("database");
   const span = tracer.startSpan("db.query");
 
@@ -160,7 +161,7 @@ export function traceDatabaseQuery(query: string, params?: any[]): Span {
 }
 
 // Business logic tracing
-export function traceBusinessLogic(operation: string, data?: any): Span {
+export function traceBusinessLogic(operation: string, data?: unknown): Span {
   const tracer = getTracer("business");
   const span = tracer.startSpan(operation);
 
@@ -176,26 +177,26 @@ export function traceBusinessLogic(operation: string, data?: any): Span {
 
 // Mock metrics object
 export const delayGuardMetrics = {
-  incrementCounter: (name: string, value: number = 1, attributes?: any) => {
-    console.log(`[METRICS] Counter ${name}: +${value}`, attributes);
+  incrementCounter: (name: string, value: number = 1, attributes?: unknown) => {
+    logger.info(`[METRICS] Counter ${name}: +${value}`, attributes);
   },
-  recordHistogram: (name: string, value: number, attributes?: any) => {
-    console.log(`[METRICS] Histogram ${name}: ${value}`, attributes);
+  recordHistogram: (name: string, value: number, attributes?: unknown) => {
+    logger.info(`[METRICS] Histogram ${name}: ${value}`, attributes);
   },
-  updateGauge: (name: string, value: number, attributes?: any) => {
-    console.log(`[METRICS] Gauge ${name}: ${value}`, attributes);
+  updateGauge: (name: string, value: number, attributes?: unknown) => {
+    logger.info(`[METRICS] Gauge ${name}: ${value}`, attributes);
   },
   recordApiResponseTime: (
     endpoint: string,
     responseTime: number,
     attributes?: any,
   ) => {
-    console.log(
+    logger.info(
       `[METRICS] API Response Time ${endpoint}: ${responseTime}ms`,
       attributes,
     );
   },
-  updateQueueSize: (queueName: string, size: number, attributes?: any) => {
-    console.log(`[METRICS] Queue Size ${queueName}: ${size}`, attributes);
+  updateQueueSize: (queueName: string, size: number, attributes?: unknown) => {
+    logger.info(`[METRICS] Queue Size ${queueName}: ${size}`, attributes);
   },
 };

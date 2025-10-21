@@ -1,55 +1,55 @@
 {
-  "timestamp": "2025-10-19T21:46:37.977Z",
+  "timestamp": "2025-10-19T22:13:11.138Z",
   "performance": {
-    "duration": 3336,
+    "duration": 2558,
     "filesProcessed": 145,
-    "rulesChecked": 8,
-    "issuesPerSecond": "113.91",
-    "averageIssuesPerFile": "2.62"
+    "rulesChecked": 9,
+    "issuesPerSecond": "47.30",
+    "averageIssuesPerFile": "0.83"
   },
   "recommendations": {
     "slowestFiles": [
       {
-        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/observability/tracing.ts",
-        "totalIssues": 43
-      },
-      {
-        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/health.ts",
-        "totalIssues": 30
-      },
-      {
-        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/webhooks.ts",
-        "totalIssues": 23
+        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/server.ts",
+        "totalIssues": 10
       },
       {
         "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/optimized-database.ts",
-        "totalIssues": 17
+        "totalIssues": 9
       },
       {
-        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/middleware/csrf-protection.ts",
-        "totalIssues": 16
+        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ui/DataTable/DataTable.test.tsx",
+        "totalIssues": 7
+      },
+      {
+        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/observability/tracing.ts",
+        "totalIssues": 6
+      },
+      {
+        "file": "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/security-monitor.ts",
+        "totalIssues": 5
       }
     ],
     "mostProblematicRules": [
       {
-        "rule": "no-console",
-        "count": 162
-      },
-      {
         "rule": "@typescript-eslint/no-explicit-any",
-        "count": 124
+        "count": 50
       },
       {
         "rule": "@typescript-eslint/no-non-null-assertion",
-        "count": 40
+        "count": 26
       },
       {
-        "rule": "comma-dangle",
-        "count": 35
+        "rule": "null",
+        "count": 17
       },
       {
         "rule": "react/display-name",
         "count": 9
+      },
+      {
+        "rule": "no-console",
+        "count": 8
       }
     ],
     "optimizationSuggestions": [

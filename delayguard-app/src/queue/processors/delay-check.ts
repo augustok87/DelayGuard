@@ -1,4 +1,5 @@
 import { Job } from 'bullmq';
+import { logger } from '../utils/logger';
 import { CarrierService } from '../../services/carrier-service';
 import { DelayDetectionService } from '../../services/delay-detection-service';
 import { query } from '../../database/connection';
@@ -15,7 +16,7 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
   const { orderId, trackingNumber, carrierCode, shopDomain } = job.data;
 
   try {
-    console.log(`🔍 Processing delay check for order ${orderId}, tracking: ${trackingNumber}`);
+    logger.info(`🔍 Processing delay check for order ${orderId}, tracking: ${trackingNumber}`);
 
     // Get order details
     const orderResult = await query(
@@ -53,7 +54,7 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
     const delayResult = await delayDetectionService.checkForDelays(trackingInfo);
 
     if (delayResult.isDelayed) {
-      console.log(`⚠️ Delay detected for order ${orderId}: ${delayResult.delayReason}`);
+      logger.info(`⚠️ Delay detected for order ${orderId}: ${delayResult.delayReason}`);
 
       // Check if delay meets threshold
       const delayDays = delayResult.delayDays || 0;
@@ -93,7 +94,7 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
         }
       }
     } else {
-      console.log(`✅ No delay detected for order ${orderId}`);
+      logger.info(`✅ No delay detected for order ${orderId}`);
     }
 
     // Update order status
@@ -103,7 +104,7 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
     );
 
   } catch (error) {
-    console.error(`❌ Error processing delay check for order ${orderId}:`, error);
+    logger.error($1, error as Error);
     throw error;
   }
 }

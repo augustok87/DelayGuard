@@ -27,6 +27,7 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     if (delayDays >= 2) return '#d97706'; // Medium - amber
     return '#059669'; // Low - green
   };
+getPriorityColor.displayName = 'getPriorityColor';
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -37,10 +38,12 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
       minute: '2-digit',
     });
   };
+formatDate.displayName = 'formatDate';
 
   const getDaysText = (days: number) => {
     return days === 1 ? '1 day' : `${days} days`;
   };
+getDaysText.displayName = 'getDaysText';
 
   return (
     <div className={`${styles.alertCard} ${styles[variant]}`}>
@@ -108,3 +111,5 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     </div>
   );
 }
+
+AlertCard.displayName = 'AlertCard';

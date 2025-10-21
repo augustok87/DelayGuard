@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * Environment Configuration and Validation
  *
@@ -230,12 +231,12 @@ const envValidator = new EnvironmentValidator();
 const validation = envValidator.validate();
 
 if (!validation.isValid) {
-  console.error("❌ Environment validation failed:");
-  validation.errors.forEach((error) => console.error(`  - ${error}`));
+  logger.error("❌ Environment validation failed:");
+  validation.errors.forEach((error) => logger.error(`  - ${error}`));
 
   if (validation.warnings.length > 0) {
-    console.warn("⚠️  Environment warnings:");
-    validation.warnings.forEach((warning) => console.warn(`  - ${warning}`));
+    logger.warn("⚠️  Environment warnings:");
+    validation.warnings.forEach((warning) => logger.warn(`  - ${warning}`));
   }
 
   // In production, exit on validation failure
@@ -243,10 +244,10 @@ if (!validation.isValid) {
     process.exit(1);
   }
 } else {
-  console.log("✅ Environment validation passed");
+  logger.info("✅ Environment validation passed");
   if (validation.warnings.length > 0) {
-    console.warn("⚠️  Environment warnings:");
-    validation.warnings.forEach((warning) => console.warn(`  - ${warning}`));
+    logger.warn("⚠️  Environment warnings:");
+    validation.warnings.forEach((warning) => logger.warn(`  - ${warning}`));
   }
 }
 

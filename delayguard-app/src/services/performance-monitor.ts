@@ -256,13 +256,13 @@ export class PerformanceMonitor {
   // Decorator function for automatic performance tracking
   static trackPerformance(operation: string) {
     return function(
-      target: any,
+      target: unknown,
       propertyName: string,
       descriptor: PropertyDescriptor,
     ) {
       const method = descriptor.value;
 
-      descriptor.value = async function(this: any, ...args: any[]) {
+      descriptor.value = async function(this: unknown, ...args: unknown[]) {
         const start = Date.now();
         let success = true;
 

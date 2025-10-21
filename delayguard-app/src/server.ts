@@ -1,4 +1,5 @@
 import Koa from 'koa';
+import { logger } from '../utils/logger';
 import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import session from 'koa-session';
@@ -47,7 +48,7 @@ const requiredEnvVars = [
 
 requiredEnvVars.forEach(envVar => {
   if (!process.env[envVar]) {
-    console.error(`Missing required environment variable: ${envVar}`);
+    logger.error(`Missing required environment variable: ${envVar}`);
     // In production, we'll let Vercel handle this gracefully
     if (process.env.NODE_ENV === 'production') {
       return;
@@ -275,7 +276,7 @@ app.use(async(ctx, next) => {
   try {
     await next();
   } catch (error) {
-    console.error('Error:', error);
+    logger.error($1, error as Error);
     const statusCode = error instanceof Error && 'status' in error ? (error as any).status : 500;
     ctx.status = statusCode;
     ctx.body = {
@@ -295,9 +296,9 @@ async function initializeApp() {
   try {
     await setupDatabase();
     await setupQueues();
-    console.log('✅ Database and queues initialized');
+    logger.info('✅ Database and queues initialized');
   } catch (error) {
-    console.error('❌ Failed to initialize app:', error);
+    logger.error($1, error as Error);
     if (process.env.NODE_ENV !== 'production') {
       process.exit(1);
     }
@@ -311,8 +312,8 @@ const HOST = process.env.HOST || 'localhost';
 if (require.main === module && process.env.NODE_ENV !== 'production') {
   initializeApp().then(() => {
     app.listen(Number(PORT), HOST, () => {
-      console.log(`🚀 DelayGuard server running on http://${HOST}:${PORT}`);
-      console.log(`📱 Shopify app URL: https://${HOST}:${PORT}`);
+      logger.info(`🚀 DelayGuard server running on http://${HOST}:${PORT}`);
+      logger.info(`📱 Shopify app URL: https://${HOST}:${PORT}`);
     });
   });
 }

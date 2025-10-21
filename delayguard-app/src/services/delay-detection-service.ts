@@ -4,6 +4,7 @@ import {
   DelayDetectionService as IDelayDetectionService,
 } from "../types";
 import { checkForDelays } from "./delay-detection";
+import { logger } from '../utils/logger';
 import { logError } from "../utils/logger";
 
 /**
@@ -24,7 +25,7 @@ import { logError } from "../utils/logger";
  * const result = await delayService.checkForDelays(trackingInfo);
  *
  * if (result.isDelayed) {
- *   console.log(`Package delayed by ${result.delayDays} days`);
+ *   logger.info(`Package delayed by ${result.delayDays} days`);
  * }
  * ```
  *
@@ -83,7 +84,7 @@ export class DelayDetectionService implements IDelayDetectionService {
    * const result = await delayService.checkForDelays(trackingInfo);
    *
    * if (result.isDelayed) {
-   *   console.log(`Delay detected: ${result.delayDays} days`);
+   *   logger.info(`Delay detected: ${result.delayDays} days`);
    *   // Trigger notification logic
    * }
    * ```

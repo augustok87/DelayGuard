@@ -49,8 +49,15 @@
     "lint:progress": "node scripts/lint-progress.js",
     "lint:enhanced": "eslint src --config=.eslintrc.enhanced.js",
     "lint:enhanced:fix": "eslint src --fix --config=.eslintrc.enhanced.js",
+    "lint:modern": "eslint src --config=.eslintrc.modern.js",
+    "lint:modern:fix": "eslint src --fix --config=.eslintrc.modern.js",
+    "lint:improve": "node scripts/lint-improvement.js",
+    "lint:final": "node scripts/lint-final-improvement.js",
+    "fix:tests": "node scripts/fix-broken-tests.js",
+    "fix:tests:comprehensive": "node scripts/comprehensive-test-fix.js",
+    "fix:tests:emergency": "node scripts/emergency-test-fix.js",
     "lint:report": "eslint src --format=json --output-file=lint-report.json",
-    "lint:ci": "npm run lint:enhanced && npm run lint:progress"
+    "lint:ci": "npm run lint:modern && npm run lint:progress"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.0",
@@ -127,8 +134,10 @@
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-react": "^7.33.0",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-perf": "^3.3.3",
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-unused-imports": "^4.2.0",
+    "glob": "^11.0.3",
     "html-webpack-plugin": "^5.5.0",
     "http-server": "^14.1.1",
     "identity-obj-proxy": "^3.0.0",

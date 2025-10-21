@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { logger } from '../utils/logger';
 import {
   SecurityEvent,
   SecurityEventType,
@@ -62,7 +63,7 @@ export interface ThreatCondition {
     | "less_than"
     | "in"
     | "not_in";
-  value: any;
+  value: unknown;
   timeWindowMs?: number;
 }
 
@@ -108,7 +109,7 @@ export interface SecurityMetrics {
  *
  * // Listen for security alerts
  * securityMonitor.on('threatDetected', (alert) => {
- *   console.log('Security threat detected:', alert);
+ *   logger.info('Security threat detected:', alert);
  * });
  * ```
  *
@@ -180,7 +181,7 @@ export class SecurityMonitor extends EventEmitter {
   startMonitoring(): void {
     this.isMonitoring = true;
     this.emit("monitoringStarted");
-    console.log("🔍 Security monitoring started");
+    logger.info("🔍 Security monitoring started");
   }
 
   /**
@@ -204,7 +205,7 @@ export class SecurityMonitor extends EventEmitter {
   stopMonitoring(): void {
     this.isMonitoring = false;
     this.emit("monitoringStopped");
-    console.log("⏹️ Security monitoring stopped");
+    logger.info("⏹️ Security monitoring stopped");
   }
 
   /**
@@ -264,7 +265,7 @@ export class SecurityMonitor extends EventEmitter {
 
       this.emit("eventProcessed", event);
     } catch (error) {
-      console.error("Error processing security event:", error);
+      logger.error($1, error as Error);
       throw error;
     }
   }
@@ -452,7 +453,7 @@ export class SecurityMonitor extends EventEmitter {
   /**
    * Get field value from event
    */
-  private getFieldValue(event: SecurityEvent, field: string): any {
+  private getFieldValue(event: SecurityEvent, field: string): unknown {
     const fieldMap: Record<string, any> = {
       type: event.type,
       severity: event.severity,
@@ -600,7 +601,7 @@ export class SecurityMonitor extends EventEmitter {
     event: SecurityEvent,
   ): Promise<void> {
     // Implementation would send to Slack, email, etc.
-    console.log(`📧 Security notification: ${config.message || event.message}`);
+    logger.info(`📧 Security notification: ${config.message || event.message}`);
   }
 
   /**
@@ -611,7 +612,7 @@ export class SecurityMonitor extends EventEmitter {
     event: SecurityEvent,
   ): Promise<void> {
     // Implementation would escalate to security team
-    console.log(`🚨 Threat escalated: ${event.type} from ${event.ipAddress}`);
+    logger.info(`🚨 Threat escalated: ${event.type} from ${event.ipAddress}`);
   }
 
   /**

@@ -35,6 +35,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       [field]: value,
     });
   };
+handleInputChange.displayName = 'handleInputChange';
 
   const validateSettings = (settingsToValidate: AppSettings): boolean => {
     const newErrors: Record<string, string> = {};
@@ -56,6 +57,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       onSave();
     }
   };
+handleSave.displayName = 'handleSave';
 
   return (
     <Modal

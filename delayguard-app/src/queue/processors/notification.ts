@@ -1,4 +1,5 @@
 import { Job } from 'bullmq';
+import { logger } from '../utils/logger';
 import { NotificationService } from '../../services/notification-service';
 import { EmailService } from '../../services/email-service';
 import { SMSService } from '../../services/sms-service';
@@ -21,7 +22,7 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
   const { orderId, delayDetails } = job.data;
 
   try {
-    console.log(`📧 Processing notification for order ${orderId}`);
+    logger.info(`📧 Processing notification for order ${orderId}`);
 
     // Get order and shop details
     const orderResult = await query(
@@ -95,10 +96,10 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
               `UPDATE delay_alerts SET email_sent = TRUE WHERE order_id = $1`,
               [orderId],
             );
-            console.log(`✅ Email sent for order ${orderId}`);
+            logger.info(`✅ Email sent for order ${orderId}`);
           })
           .catch(error => {
-            console.error(`❌ Failed to send email for order ${orderId}:`, error);
+            logger.error($1, error as Error);
             throw error;
           }),
       );
@@ -113,27 +114,27 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
               `UPDATE delay_alerts SET sms_sent = TRUE WHERE order_id = $1`,
               [orderId],
             );
-            console.log(`✅ SMS sent for order ${orderId}`);
+            logger.info(`✅ SMS sent for order ${orderId}`);
           })
           .catch(error => {
-            console.error(`❌ Failed to send SMS for order ${orderId}:`, error);
+            logger.error($1, error as Error);
             throw error;
           }),
       );
     }
 
     if (promises.length === 0) {
-      console.log(`ℹ️ No notifications to send for order ${orderId}`);
+      logger.info(`ℹ️ No notifications to send for order ${orderId}`);
       return;
     }
 
     // Wait for all notifications to complete
     await Promise.all(promises);
 
-    console.log(`✅ All notifications processed for order ${orderId}`);
+    logger.info(`✅ All notifications processed for order ${orderId}`);
 
   } catch (error) {
-    console.error(`❌ Error processing notification for order ${orderId}:`, error);
+    logger.error($1, error as Error);
     throw error;
   }
 }

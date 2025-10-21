@@ -112,7 +112,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
       // In a real app, this would open a bug report form or send to support
       const errorReport = {
         message: error.message,
-        stack: error.stack,
+        stack: error.stack || "",
         componentStack: errorInfo?.componentStack,
         timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent,
@@ -159,7 +159,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
                 <summary>Error Details</summary>
                 <pre className={styles.errorStack}>
                   {error.message}
-                  {error.stack && `\n\n${error.stack}`}
+                  {error.stack || "" && `\n\n${error.stack || ""}`}
                 </pre>
               </details>
             )}

@@ -25,3 +25,5 @@ export function ErrorAlert({ error, onDismiss }: ErrorAlertProps) {
     </div>
   );
 }
+
+ErrorAlert.displayName = 'ErrorAlert';

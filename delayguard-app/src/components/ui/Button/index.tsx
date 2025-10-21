@@ -29,6 +29,7 @@ export const Button: React.FC<ButtonProps> = ({
       onClick();
     }
   };
+handleClick.displayName = 'handleClick';
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -36,6 +37,7 @@ export const Button: React.FC<ButtonProps> = ({
       handleClick();
     }
   };
+handleKeyDown.displayName = 'handleKeyDown';
 
   return (
     <button

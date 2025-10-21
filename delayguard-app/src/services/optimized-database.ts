@@ -1,4 +1,5 @@
 import { Pool, PoolClient, QueryResult } from "pg";
+import { logger } from '../utils/logger';
 import { AppConfig } from "../types";
 
 export interface QueryOptions {
@@ -10,7 +11,7 @@ export interface QueryOptions {
 
 export class OptimizedDatabase {
   private pool: Pool;
-  private queryCache: Map<string, { result: any; expiry: number }> = new Map();
+  private queryCache: Map<string, { result: unknown; expiry: number }> = new Map();
   private readonly maxCacheSize = 1000;
   private readonly defaultCacheTTL = 300000; // 5 minutes
 
@@ -30,13 +31,13 @@ export class OptimizedDatabase {
 
     // Handle pool errors
     this.pool.on("error", (err) => {
-      console.error("Unexpected error on idle client", err);
+      logger.error("Unexpected error on idle client", err);
     });
   }
 
   async query<T extends Record<string, any> = any>(
     text: string,
-    params: any[] = [],
+    params: unknown[] = [],
     options: QueryOptions = {},
   ): Promise<QueryResult<T>> {
     const {
@@ -73,7 +74,7 @@ export class OptimizedDatabase {
 
         // Log slow queries
         if (duration > 1000) {
-          console.warn(
+          logger.warn(
             `Slow query detected: ${duration}ms - ${text.substring(0, 100)}...`,
           );
         }
@@ -126,7 +127,7 @@ export class OptimizedDatabase {
   }
 
   async batchQuery<T extends Record<string, any> = any>(
-    queries: Array<{ text: string; params?: any[] }>,
+    queries: Array<{ text: string; params?: unknown[] }>,
     _options: QueryOptions = {},
   ): Promise<QueryResult<T>[]> {
     const client = await this.pool.connect();
@@ -241,7 +242,7 @@ export class OptimizedDatabase {
 
   async getOrderCount(shopId: number, startDate?: Date): Promise<number> {
     let query = "SELECT COUNT(*) as count FROM orders WHERE shop_id = $1";
-    const params: any[] = [shopId];
+    const params: unknown[] = [shopId];
 
     if (startDate) {
       query += " AND created_at >= $2";
@@ -258,7 +259,7 @@ export class OptimizedDatabase {
   async getAlertCount(shopId: number, startDate?: Date): Promise<number> {
     let query =
       "SELECT COUNT(*) as count FROM delay_alerts da JOIN orders o ON da.order_id = o.id WHERE o.shop_id = $1";
-    const params: any[] = [shopId];
+    const params: unknown[] = [shopId];
 
     if (startDate) {
       query += " AND da.created_at >= $2";
@@ -285,7 +286,7 @@ export class OptimizedDatabase {
     return null;
   }
 
-  private setCache(key: string, result: any, ttl: number): void {
+  private setCache(key: string, result: unknown, ttl: number): void {
     // Clean up expired entries if cache is full
     if (this.queryCache.size >= this.maxCacheSize) {
       this.cleanupCache();

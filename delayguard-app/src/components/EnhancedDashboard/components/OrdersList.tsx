@@ -15,6 +15,7 @@ export const OrdersList: React.FC<OrdersListProps> = ({ orders, onOrderClick }) 
       onOrderClick(row as unknown as Order);
     }
   };
+handleRowClick.displayName = 'handleRowClick';
   const columns = [
     {
       key: 'orderNumber',

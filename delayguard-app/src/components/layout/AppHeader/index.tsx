@@ -47,3 +47,5 @@ export function AppHeader({ stats, loading = false }: AppHeaderProps) {
     </header>
   );
 }
+
+AppHeader.displayName = 'AppHeader';

@@ -55,3 +55,5 @@ export function StatsCard({ stats }: StatsCardProps) {
     </Card>
   );
 }
+
+StatsCard.displayName = 'StatsCard';

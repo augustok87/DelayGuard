@@ -32,3 +32,5 @@ export function TabNavigation({ selectedTab, onTabChange, loading = false }: Tab
     </nav>
   );
 }
+
+TabNavigation.displayName = 'TabNavigation';

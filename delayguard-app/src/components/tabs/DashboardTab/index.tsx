@@ -41,3 +41,5 @@ export function DashboardTab({
     </div>
   );
 }
+
+DashboardTab.displayName = 'DashboardTab';

@@ -1,4 +1,5 @@
 import Router from "koa-router";
+import { logger } from '../utils/logger';
 import { verifyRequest } from "@shopify/koa-shopify-auth";
 // import { query } from '../database/connection'; // Available for future use
 // import { getQueueStats } from '../queue/setup'; // Available for future use
@@ -141,7 +142,7 @@ router.post("/test-delay", async(ctx) => {
       delayResult,
     };
   } catch (error) {
-    console.error("Error testing delay detection:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = { error: "Failed to test delay detection" };
   }

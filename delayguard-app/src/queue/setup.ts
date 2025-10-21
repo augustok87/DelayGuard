@@ -1,4 +1,5 @@
 import { Queue, Worker } from "bullmq";
+import { logger } from '../utils/logger';
 import IORedis from "ioredis";
 // import { QueueEvents } from 'bullmq'; // Available for future use
 // import { AppConfig } from '../types'; // Available for future use
@@ -21,7 +22,7 @@ export async function setupQueues(): Promise<void> {
 
     // Test Redis connection
     await redis.ping();
-    console.log("✅ Redis connected successfully");
+    logger.info("✅ Redis connected successfully");
 
     // Create queues
     delayCheckQueue = new Queue("delay-check", {
@@ -72,9 +73,9 @@ export async function setupQueues(): Promise<void> {
     // Set up event listeners
     setupQueueEvents();
 
-    console.log("✅ Queues and workers initialized");
+    logger.info("✅ Queues and workers initialized");
   } catch (error) {
-    console.error("❌ Queue setup failed:", error);
+    logger.error($1, error as Error);
     throw error;
   }
 }
@@ -82,29 +83,29 @@ export async function setupQueues(): Promise<void> {
 function setupQueueEvents(): void {
   // Delay check queue events
   delayCheckWorker.on("completed", (job) => {
-    console.log(`✅ Delay check completed for job ${job.id}`);
+    logger.info(`✅ Delay check completed for job ${job.id}`);
   });
 
   delayCheckWorker.on("failed", (job, err) => {
-    console.error(`❌ Delay check failed for job ${job?.id}:`, err.message);
+    logger.error(`❌ Delay check failed for job ${job?.id}:`, err.message);
   });
 
   // Notification queue events
   notificationWorker.on("completed", (job) => {
-    console.log(`✅ Notification sent for job ${job.id}`);
+    logger.info(`✅ Notification sent for job ${job.id}`);
   });
 
   notificationWorker.on("failed", (job, err) => {
-    console.error(`❌ Notification failed for job ${job?.id}:`, err.message);
+    logger.error(`❌ Notification failed for job ${job?.id}:`, err.message);
   });
 
   // Global error handling
   delayCheckWorker.on("error", (err) => {
-    console.error("❌ Delay check worker error:", err);
+    logger.error("❌ Delay check worker error:", err);
   });
 
   notificationWorker.on("error", (err) => {
-    console.error("❌ Notification worker error:", err);
+    logger.error("❌ Notification worker error:", err);
   });
 }
 
@@ -126,7 +127,7 @@ export async function addDelayCheckJob(data: {
 
 export async function addNotificationJob(data: {
   orderId: number;
-  delayDetails: any;
+  delayDetails: unknown;
   shopDomain: string;
 }): Promise<void> {
   if (!notificationQueue) {

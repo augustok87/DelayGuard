@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import { logger } from '../utils/logger';
 import {
   TrackingInfo,
   CarrierService as ICarrierService,
@@ -31,7 +32,7 @@ export class CarrierService implements ICarrierService {
     carrierCode: string,
   ): Promise<TrackingInfo> {
     try {
-      console.log(
+      logger.info(
         `🔍 Fetching tracking info for ${trackingNumber} via ${carrierCode}`,
       );
 
@@ -52,7 +53,7 @@ export class CarrierService implements ICarrierService {
         estimatedDeliveryDate: data.estimated_delivery_date,
         originalEstimatedDeliveryDate: data.original_estimated_delivery_date,
         events:
-          data.events?.map((event: any) => ({
+          data.events?.map((event: unknown) => ({
             timestamp: event.occurred_at,
             status: this.mapStatus(event.status_code),
             location: event.city_locality
@@ -62,10 +63,10 @@ export class CarrierService implements ICarrierService {
           })) || [],
       };
 
-      console.log(`✅ Tracking info retrieved: ${trackingInfo.status}`);
+      logger.info(`✅ Tracking info retrieved: ${trackingInfo.status}`);
       return trackingInfo;
     } catch (error) {
-      console.error(
+      logger.error(
         `❌ Failed to get tracking info for ${trackingNumber}:`,
         error,
       );
@@ -121,12 +122,12 @@ export class CarrierService implements ICarrierService {
     try {
       const response = await this.client.get("/v1/carriers");
 
-      return response.data.carriers.map((carrier: any) => ({
+      return response.data.carriers.map((carrier: unknown) => ({
         code: carrier.carrier_code,
         name: carrier.friendly_name,
       }));
     } catch (error) {
-      console.error("Failed to get carrier list:", error);
+      logger.error($1, error as Error);
       throw new Error("Failed to fetch carrier list");
     }
   }

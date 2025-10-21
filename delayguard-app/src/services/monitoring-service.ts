@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { logger } from '../utils/logger';
 import { Pool } from "pg";
 import { AppConfig } from "../types";
 
@@ -8,7 +9,7 @@ export interface HealthCheck {
   responseTime: number;
   lastChecked: Date;
   error?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export interface SystemMetrics {
@@ -79,11 +80,11 @@ export interface Alert {
   timestamp: Date;
   resolved: boolean;
   resolvedAt?: Date;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 export class MonitoringService {
-  private redis: any;
+  private redis: unknown;
   private db: Pool;
   private alerts: Map<string, Alert> = new Map();
   private metrics: SystemMetrics[] = [];
@@ -183,7 +184,7 @@ export class MonitoringService {
       );
     } catch (error) {
       // Log error but don't fail the metrics collection
-      console.warn("Failed to store metrics in Redis:", error);
+      logger.warn("Monitoring service warning", error as Error);
     }
 
     return metrics;
@@ -475,7 +476,7 @@ export class MonitoringService {
     if (!latestMetrics) return null;
 
     const parts = metric.split(".");
-    let value: any = latestMetrics;
+    let value: unknown = latestMetrics;
 
     for (const part of parts) {
       if (value && typeof value === "object" && part in value) {
@@ -509,7 +510,7 @@ export class MonitoringService {
 
   private async sendAlertNotification(alert: Alert): Promise<void> {
     // This would integrate with your notification services
-    console.log(`ALERT [${alert.severity.toUpperCase()}]: ${alert.message}`);
+    logger.info(`ALERT [${alert.severity.toUpperCase()}]: ${alert.message}`);
 
     // Store alert in database
     try {
@@ -530,7 +531,7 @@ export class MonitoringService {
         ],
       );
     } catch (error) {
-      console.error("Failed to store alert:", error);
+      logger.error($1, error as Error);
     }
   }
 
@@ -539,7 +540,7 @@ export class MonitoringService {
       await Promise.all([this.redis.quit(), this.db.end()]);
     } catch (error) {
       // Log error but don't throw
-      console.warn("Error closing monitoring service:", error);
+      logger.warn("Monitoring service warning", error as Error);
     }
   }
 }

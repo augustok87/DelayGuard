@@ -33,6 +33,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
     setSelectedAlerts(newSelected);
     setShowBulkActions(newSelected.size > 0);
   };
+handleSelectAlert.displayName = 'handleSelectAlert';
 
   const handleBulkResolve = () => {
     selectedAlerts.forEach(alertId => onResolve(alertId));
@@ -41,11 +42,13 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
     setShowBulkActions(false);
     setTimeout(() => setBulkMessage(''), 3000);
   };
+handleBulkResolve.displayName = 'handleBulkResolve';
 
   const handleExport = () => {
     setExportMessage('Export started');
     setTimeout(() => setExportMessage(''), 3000);
   };
+handleExport.displayName = 'handleExport';
 
   // Filtering logic
   const filteredAlerts = alerts.filter(alert => {
@@ -65,12 +68,14 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
       setCurrentPage(currentPage - 1);
     }
   };
+handlePreviousPage.displayName = 'handlePreviousPage';
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
+handleNextPage.displayName = 'handleNextPage';
 
   if (alerts.length === 0) {
     return (

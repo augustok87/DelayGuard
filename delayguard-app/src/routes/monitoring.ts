@@ -228,18 +228,18 @@ router.get("/diagnostics", async(ctx) => {
 });
 
 // Helper methods
-function calculateHealthScore(status: any): number {
+function calculateHealthScore(status: unknown): number {
   let score = 100;
 
   // Deduct points for unhealthy checks
   const unhealthyChecks = status.checks.filter(
-    (c: any) => c.status === "unhealthy",
+    (c: unknown) => c.status === "unhealthy",
   );
   score -= unhealthyChecks.length * 25;
 
   // Deduct points for degraded checks
   const degradedChecks = status.checks.filter(
-    (c: any) => c.status === "degraded",
+    (c: unknown) => c.status === "degraded",
   );
   score -= degradedChecks.length * 10;
 
@@ -261,7 +261,7 @@ function calculateHealthScore(status: any): number {
   return Math.max(0, Math.min(100, score));
 }
 
-function generateRecommendations(checks: any[], status: any): string[] {
+function generateRecommendations(checks: unknown[], status: unknown): string[] {
   const recommendations: string[] = [];
 
   // Check for unhealthy services
@@ -304,11 +304,11 @@ function generateRecommendations(checks: any[], status: any): string[] {
   // Check for active alerts
   if (status.alerts.length > 0) {
     const criticalAlerts = status.alerts.filter(
-      (a: any) => a.severity === "critical",
+      (a: unknown) => a.severity === "critical",
     );
     if (criticalAlerts.length > 0) {
       recommendations.push(
-        `Critical alerts active: ${criticalAlerts.map((a: any) => a.message).join(", ")}`,
+        `Critical alerts active: ${criticalAlerts.map((a: unknown) => a.message).join(", ")}`,
       );
     }
   }

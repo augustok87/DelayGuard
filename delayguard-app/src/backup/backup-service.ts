@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * Comprehensive Backup and Restore Service
  * Provides automated backup, restore, and disaster recovery capabilities
@@ -64,7 +65,7 @@ export class BackupService {
    */
   addConfig(config: BackupConfig) {
     this.configs.set(config.id, config);
-    console.log(`Backup configuration added: ${config.name}`);
+    logger.info(`Backup configuration added: ${config.name}`);
   }
 
   /**
@@ -72,7 +73,7 @@ export class BackupService {
    */
   removeConfig(configId: string) {
     this.configs.delete(configId);
-    console.log(`Backup configuration removed: ${configId}`);
+    logger.info(`Backup configuration removed: ${configId}`);
   }
 
   /**
@@ -157,7 +158,7 @@ export class BackupService {
           Date.now() - startTime.getTime(),
         );
 
-        console.log(`Backup completed: ${backupId} (${result.size} bytes)`);
+        logger.info(`Backup completed: ${backupId} (${result.size} bytes)`);
         return result;
       });
     } catch (error) {
@@ -167,7 +168,7 @@ export class BackupService {
 
       this.results.set(backupId, result);
 
-      console.error(`Backup failed: ${backupId}`, error);
+      logger.error("Backup execution failed", error as Error);
       throw error;
     }
   }
@@ -235,7 +236,7 @@ export class BackupService {
 
         this.restoreResults.set(restoreId, result);
 
-        console.log(`Restore completed: ${restoreId}`);
+        logger.info(`Restore completed: ${restoreId}`);
         return result;
       });
     } catch (error) {
@@ -245,7 +246,7 @@ export class BackupService {
 
       this.restoreResults.set(restoreId, result);
 
-      console.error(`Restore failed: ${restoreId}`, error);
+      logger.error("Backup execution failed", error as Error);
       throw error;
     }
   }
@@ -289,7 +290,7 @@ export class BackupService {
       if (result.startTime < cutoffDate) {
         await this.deleteBackup(backupId);
         this.results.delete(backupId);
-        console.log(`Old backup deleted: ${backupId}`);
+        logger.info(`Old backup deleted: ${backupId}`);
       }
     }
   }
@@ -432,7 +433,7 @@ export class BackupService {
         const content = await fs.readFile(file, "utf-8");
         archive[file] = content;
       } catch (error) {
-        console.warn(`Could not backup file: ${file}`, error);
+        logger.warn("Failed to read file during backup", error as Error);
       }
     }
 
@@ -545,7 +546,7 @@ export class BackupService {
     config: BackupConfig,
   ): Promise<void> {
     // In a real implementation, this would store to S3, local filesystem, etc.
-    console.log(`Storing backup ${backupId} to ${config.destination}`);
+    logger.info(`Storing backup ${backupId} to ${config.destination}`);
     // For now, just log the operation
   }
 
@@ -554,7 +555,7 @@ export class BackupService {
    */
   private async retrieveBackup(backupId: string): Promise<Buffer> {
     // In a real implementation, this would retrieve from S3, local filesystem, etc.
-    console.log(`Retrieving backup ${backupId}`);
+    logger.info(`Retrieving backup ${backupId}`);
     // For now, return empty buffer
     return Buffer.alloc(0);
   }
@@ -563,14 +564,14 @@ export class BackupService {
    * Delete backup
    */
   private async deleteBackup(backupId: string): Promise<void> {
-    console.log(`Deleting backup ${backupId}`);
+    logger.info(`Deleting backup ${backupId}`);
   }
 
   /**
    * Perform restore
    */
   private async performRestore(data: Buffer, target: string): Promise<void> {
-    console.log(`Performing restore to ${target}`);
+    logger.info(`Performing restore to ${target}`);
     // Implementation would depend on the target type
   }
 

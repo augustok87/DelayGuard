@@ -1,4 +1,5 @@
 import Router from "koa-router";
+import { logger } from '../utils/logger';
 import { AnalyticsService } from "../services/AnalyticsService";
 // import { config } from '../server'; // Available for future use
 
@@ -30,7 +31,7 @@ router.get("/analytics", async(ctx) => {
       generatedAt: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("Analytics error:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = {
       error: "Failed to fetch analytics data",
@@ -63,7 +64,7 @@ router.get("/analytics/realtime", async(ctx) => {
       generatedAt: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("Real-time analytics error:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = {
       error: "Failed to fetch real-time metrics",
@@ -123,7 +124,7 @@ router.get("/analytics/summary", async(ctx) => {
       generatedAt: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("Analytics summary error:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = {
       error: "Failed to fetch analytics summary",
@@ -155,7 +156,7 @@ router.delete("/analytics/cache", async(ctx) => {
       message: "Analytics cache cleared successfully",
     };
   } catch (error) {
-    console.error("Cache clear error:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = {
       error: "Failed to clear analytics cache",
@@ -206,7 +207,7 @@ router.get("/analytics/export", async(ctx) => {
       };
     }
   } catch (error) {
-    console.error("Analytics export error:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = {
       error: "Failed to export analytics data",

@@ -1,5 +1,6 @@
 // Refactored EnhancedDashboard component with improved structure and organization
 import * as React from 'react';
+import { logger } from '../utils/logger';
 import { Button, Tabs } from '../ui';
 import { useDashboardData } from './hooks/useDashboardData';
 import {
@@ -24,7 +25,7 @@ function EnhancedDashboard({
   onConnect: propOnConnect,
   onAlertAction: propOnAlertAction,
   onSettingsChange: propOnSettingsChange,
-}: EnhancedDashboardProps = {}) {
+}: EnhancedDashboardProps) {
   const {
     // State
     settings,
@@ -119,6 +120,7 @@ function EnhancedDashboard({
         return null;
     }
   };
+renderTabsContent.displayName = 'renderTabsContent';
 
   return (
     <div data-testid="layout" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -313,5 +315,7 @@ function EnhancedDashboard({
     </div>
   );
 }
+
+EnhancedDashboard.displayName = 'EnhancedDashboard';
 
 export default EnhancedDashboard;

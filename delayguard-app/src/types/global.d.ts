@@ -310,7 +310,7 @@ declare global {
 
 // React Component event types
 export interface ReactComponentEvent extends React.SyntheticEvent {
-  detail?: any;
+  detail?: unknown;
 }
 
 // React Component lifecycle events

@@ -74,7 +74,7 @@ export class OptimizedApiService {
 
   async updateSettings(
     shopDomain: string,
-    settings: any,
+    settings: unknown,
   ): Promise<ApiResponse> {
     const start = Date.now();
 

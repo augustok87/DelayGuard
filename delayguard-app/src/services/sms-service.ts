@@ -2,7 +2,7 @@ const twilio = require("twilio");
 import { OrderInfo, DelayDetails } from "../types";
 
 export class SMSService {
-  private client: any;
+  private client: unknown;
   private phoneNumber: string;
 
   constructor(accountSid: string, authToken: string, phoneNumber: string) {

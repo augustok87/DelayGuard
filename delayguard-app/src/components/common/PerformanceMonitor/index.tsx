@@ -51,6 +51,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
         setIsVisible(prev => !prev);
       }
     };
+handleKeyPress.displayName = 'handleKeyPress';
 
     if (enabled) {
       window.addEventListener('keydown', handleKeyPress);

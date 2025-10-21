@@ -74,7 +74,7 @@ class Logger {
       case LogLevel.ERROR:
         console.error(formattedMessage);
         if (error && this.isDevelopment) {
-          console.error(error.stack);
+          console.error(error.stack || "");
         }
         break;
     }

@@ -1,4 +1,5 @@
 import IORedis from "ioredis";
+import { logger } from '../utils/logger';
 
 interface CacheConfig {
   defaultTTL: number; // seconds
@@ -26,7 +27,7 @@ class CacheManager {
       const value = await this.redis.get(this.getKey(key));
       return value ? JSON.parse(value) : null;
     } catch (error) {
-      console.error("Cache get error:", error);
+      logger.error("Cache operation failed", error as Error);
       return null;
     }
   }
@@ -37,7 +38,7 @@ class CacheManager {
       const actualTTL = ttl || this.config.defaultTTL;
       await this.redis.setex(this.getKey(key), actualTTL, serialized);
     } catch (error) {
-      console.error("Cache set error:", error);
+      logger.error("Cache operation failed", error as Error);
     }
   }
 
@@ -45,7 +46,7 @@ class CacheManager {
     try {
       await this.redis.del(this.getKey(key));
     } catch (error) {
-      console.error("Cache delete error:", error);
+      logger.error("Cache operation failed", error as Error);
     }
   }
 
@@ -54,7 +55,7 @@ class CacheManager {
       const result = await this.redis.exists(this.getKey(key));
       return result === 1;
     } catch (error) {
-      console.error("Cache exists error:", error);
+      logger.error("Cache operation failed", error as Error);
       return false;
     }
   }
@@ -65,7 +66,7 @@ class CacheManager {
       const values = await this.redis.mget(...prefixedKeys);
       return values.map((value) => (value ? JSON.parse(value) : null));
     } catch (error) {
-      console.error("Cache mget error:", error);
+      logger.error("Cache operation failed", error as Error);
       return keys.map(() => null);
     }
   }
@@ -84,7 +85,7 @@ class CacheManager {
 
       await pipeline.exec();
     } catch (error) {
-      console.error("Cache mset error:", error);
+      logger.error("Cache operation failed", error as Error);
     }
   }
 
@@ -95,7 +96,7 @@ class CacheManager {
         await this.redis.del(...keys);
       }
     } catch (error) {
-      console.error("Cache invalidate pattern error:", error);
+      logger.error("Cache operation failed", error as Error);
     }
   }
 
@@ -121,7 +122,7 @@ class CacheManager {
         totalKeys: dbSize,
       };
     } catch (error) {
-      console.error("Cache stats error:", error);
+      logger.error("Cache operation failed", error as Error);
       return {
         usedMemory: "0B",
         connectedClients: 0,
@@ -171,14 +172,14 @@ export function getCache(type: keyof typeof CACHE_CONFIGS): CacheManager {
 // Cache decorator for methods
 export function cached(cacheType: keyof typeof CACHE_CONFIGS, ttl?: number) {
   return function(
-    target: any,
+    target: unknown,
     propertyName: string,
     descriptor: PropertyDescriptor,
   ) {
     const method = descriptor.value;
     const cache = getCache(cacheType);
 
-    descriptor.value = async function(...args: any[]) {
+    descriptor.value = async function(...args: unknown[]) {
       const cacheKey = `${propertyName}:${JSON.stringify(args)}`;
 
       // Try to get from cache
@@ -200,7 +201,7 @@ export function cached(cacheType: keyof typeof CACHE_CONFIGS, ttl?: number) {
 export async function cacheTrackingInfo(
   trackingNumber: string,
   carrierCode: string,
-  data: any,
+  data: unknown,
 ): Promise<void> {
   const cache = getCache("tracking");
   const key = `${trackingNumber}:${carrierCode}`;
@@ -210,7 +211,7 @@ export async function cacheTrackingInfo(
 export async function getCachedTrackingInfo(
   trackingNumber: string,
   carrierCode: string,
-): Promise<any> {
+): Promise<unknown> {
   const cache = getCache("tracking");
   const key = `${trackingNumber}:${carrierCode}`;
   return await cache.get(key);
@@ -218,14 +219,14 @@ export async function getCachedTrackingInfo(
 
 export async function cacheShopSettings(
   shopDomain: string,
-  settings: any,
+  settings: unknown,
 ): Promise<void> {
   const cache = getCache("settings");
   const key = `shop:${shopDomain}`;
   await cache.set(key, settings, 86400); // 24 hours TTL
 }
 
-export async function getCachedShopSettings(shopDomain: string): Promise<any> {
+export async function getCachedShopSettings(shopDomain: string): Promise<unknown> {
   const cache = getCache("settings");
   const key = `shop:${shopDomain}`;
   return await cache.get(key);

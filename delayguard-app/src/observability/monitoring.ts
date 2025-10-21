@@ -4,6 +4,7 @@
  */
 
 import { delayGuardMetrics, withSpan, getTracer } from "./tracing";
+import { logger } from '../utils/logger';
 
 export interface HealthCheck {
   name: string;
@@ -444,7 +445,7 @@ export class AlertingService {
           });
         }
       } catch (error) {
-        console.error(`Error evaluating alert rule ${ruleId}:`, error);
+        logger.error($1, error as Error);
       }
     }
 
@@ -636,7 +637,7 @@ export class MonitoringService {
       await this.runMonitoringCycle();
     }, intervalMs);
 
-    console.log("Monitoring service started");
+    logger.info("Monitoring service started");
   }
 
   /**
@@ -648,7 +649,7 @@ export class MonitoringService {
       this.intervalId = undefined;
     }
 
-    console.log("Monitoring service stopped");
+    logger.info("Monitoring service stopped");
   }
 
   /**
@@ -675,11 +676,11 @@ export class MonitoringService {
       // Update metrics
       delayGuardMetrics.updateQueueSize("delay-check", metrics.queue.size);
 
-      console.log(
+      logger.info(
         `Monitoring cycle completed - Health: ${health.status}, Alerts: ${alerts.length}`,
       );
     } catch (error) {
-      console.error("Error in monitoring cycle:", error);
+      logger.error($1, error as Error);
     }
   }
 
@@ -691,13 +692,13 @@ export class MonitoringService {
     triggered: boolean;
     message: string;
   }) {
-    console.log(`ALERT: ${alert.message}`);
+    logger.info(`ALERT: ${alert.message}`);
 
     // Here you would integrate with your alerting system
     // e.g., send to PagerDuty, Slack, email, etc.
 
     // For now, just log the alert
-    console.log(`Alert triggered: ${alert.rule.name} (${alert.rule.severity})`);
+    logger.info(`Alert triggered: ${alert.rule.name} (${alert.rule.severity})`);
   }
 
   /**

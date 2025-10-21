@@ -1,4 +1,5 @@
 import Router from "koa-router";
+import { logger } from '../utils/logger';
 import { query } from "../database/connection";
 
 const router = new Router();
@@ -31,7 +32,7 @@ router.get("/", async(ctx) => {
       message: "OAuth URL generated successfully",
     };
   } catch (error) {
-    console.error("Error generating OAuth URL:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = { error: "Failed to generate OAuth URL" };
   }
@@ -68,11 +69,11 @@ router.post("/callback", async(ctx) => {
       [shop],
     );
 
-    console.log(`✅ Shop ${shop} authenticated and stored successfully`);
+    logger.info(`✅ Shop ${shop} authenticated and stored successfully`);
 
     ctx.body = { success: true, shop };
   } catch (error) {
-    console.error("Error storing shop information:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = { error: "Failed to store shop information" };
   }
@@ -96,7 +97,7 @@ router.get("/shop", async(ctx) => {
 
     ctx.body = result[0];
   } catch (error) {
-    console.error("Error fetching shop information:", error);
+    logger.error($1, error as Error);
     ctx.status = 500;
     ctx.body = { error: "Failed to fetch shop information" };
   }

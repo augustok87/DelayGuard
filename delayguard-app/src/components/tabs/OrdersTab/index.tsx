@@ -99,3 +99,5 @@ export function OrdersTab({ orders, loading, onOrderAction }: OrdersTabProps) {
     </div>
   );
 }
+
+OrdersTab.displayName = 'OrdersTab';

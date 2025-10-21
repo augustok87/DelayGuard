@@ -15,7 +15,7 @@ export interface SanitizationConfig {
   maxStringLength?: number;
   allowedHTMLTags?: string[];
   allowedHTMLAttributes?: string[];
-  customValidators?: Record<string, (value: any) => boolean>;
+  customValidators?: Record<string, (value: unknown) => boolean>;
   xss?: boolean;
   sql?: boolean;
   nosql?: boolean;
@@ -80,7 +80,7 @@ export class InputSanitizationMiddleware {
   /**
    * Sanitize object recursively
    */
-  private sanitizeObject(obj: any): any {
+  private sanitizeObject(obj: unknown): unknown {
     if (obj === null || obj === undefined) {
       return obj;
     }
@@ -94,7 +94,7 @@ export class InputSanitizationMiddleware {
     }
 
     if (typeof obj === "object") {
-      const sanitized: any = {};
+      const sanitized: unknown = {};
       for (const [key, value] of Object.entries(obj)) {
         // Sanitize key
         const sanitizedKey = this.sanitizeString(key);
@@ -245,7 +245,7 @@ export class InputSanitizationMiddleware {
   /**
    * Validate input based on type
    */
-  validateInput(value: any, type: string, field?: string): any {
+  validateInput(value: unknown, type: string, field?: string): unknown {
     if (!this.config.enableInputValidation) {
       return value;
     }
@@ -336,8 +336,8 @@ export class AdvancedInputValidator {
   /**
    * Validate and sanitize request body against schema
    */
-  validateSchema(data: any, schema: Record<string, any>): any {
-    const result: any = {};
+  validateSchema(data: unknown, schema: Record<string, any>): unknown {
+    const result: unknown = {};
 
     for (const [field, rules] of Object.entries(schema)) {
       const value = data[field];

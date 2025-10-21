@@ -53,7 +53,7 @@ export class CSRFProtectionMiddleware {
    */
   async apply(ctx: Context, next: Next): Promise<void> {
     // Generate and set CSRF token for safe methods
-    if (this.config.excludedMethods!.includes(ctx.method)) {
+    if (this.config?.excludedMethods.includes(ctx.method)) {
       const token = this.generateToken();
       this.setCSRFCookie(ctx, token);
       ctx.state.csrfToken = token;
@@ -62,7 +62,7 @@ export class CSRFProtectionMiddleware {
     }
 
     // Skip CSRF check for excluded paths
-    if (this.config.excludedPaths!.some((path) => ctx.path.startsWith(path))) {
+    if (this.config?.excludedPaths.some((path) => ctx.path.startsWith(path))) {
       await next();
       return;
     }
@@ -81,15 +81,15 @@ export class CSRFProtectionMiddleware {
    * Generate CSRF token
    */
   private generateToken(): string {
-    return crypto.randomBytes(this.config.tokenLength!).toString("hex");
+    return crypto.randomBytes(this.config?.tokenLength).toString("hex");
   }
 
   /**
    * Set CSRF cookie
    */
   private setCSRFCookie(ctx: Context, token: string): void {
-    const cookieOptions = this.config.cookieOptions!;
-    ctx.cookies.set(this.config.cookieName!, token, {
+    const cookieOptions = this.config?.cookieOptions;
+    ctx.cookies.set(this.config?.cookieName, token, {
       httpOnly: cookieOptions.httpOnly,
       secure: cookieOptions.secure,
       sameSite: cookieOptions.sameSite,
@@ -101,8 +101,8 @@ export class CSRFProtectionMiddleware {
    * Validate CSRF token
    */
   private validateToken(ctx: Context): boolean {
-    const cookieToken = ctx.cookies.get(this.config.cookieName!);
-    const headerToken = ctx.get(this.config.headerName!);
+    const cookieToken = ctx.cookies.get(this.config?.cookieName);
+    const headerToken = ctx.get(this.config?.headerName);
     const bodyToken = (ctx.request as any).body?.csrfToken;
 
     // Token can be in header or body
@@ -209,7 +209,7 @@ export class APICSRFProtection {
    */
   async apply(ctx: Context, next: Next): Promise<void> {
     // Generate and set CSRF token for safe methods
-    if (this.config.excludedMethods!.includes(ctx.method)) {
+    if (this.config?.excludedMethods.includes(ctx.method)) {
       const token = this.generateToken();
       this.setCSRFCookie(ctx, token);
       ctx.state.csrfToken = token;
@@ -218,7 +218,7 @@ export class APICSRFProtection {
     }
 
     // Skip CSRF check for excluded paths
-    if (this.config.excludedPaths!.some((path) => ctx.path.startsWith(path))) {
+    if (this.config?.excludedPaths.some((path) => ctx.path.startsWith(path))) {
       await next();
       return;
     }
@@ -237,15 +237,15 @@ export class APICSRFProtection {
    * Generate CSRF token
    */
   private generateToken(): string {
-    return crypto.randomBytes(this.config.tokenLength!).toString("hex");
+    return crypto.randomBytes(this.config?.tokenLength).toString("hex");
   }
 
   /**
    * Set CSRF cookie
    */
   private setCSRFCookie(ctx: Context, token: string): void {
-    const cookieOptions = this.config.cookieOptions!;
-    ctx.cookies.set(this.config.cookieName!, token, {
+    const cookieOptions = this.config?.cookieOptions;
+    ctx.cookies.set(this.config?.cookieName, token, {
       httpOnly: cookieOptions.httpOnly,
       secure: cookieOptions.secure,
       sameSite: cookieOptions.sameSite,
@@ -257,8 +257,8 @@ export class APICSRFProtection {
    * Validate CSRF token
    */
   private validateToken(ctx: Context): boolean {
-    const cookieToken = ctx.cookies.get(this.config.cookieName!);
-    const headerToken = ctx.get(this.config.headerName!);
+    const cookieToken = ctx.cookies.get(this.config?.cookieName);
+    const headerToken = ctx.get(this.config?.headerName);
     const bodyToken = (ctx.request as any).body?.csrfToken;
 
     // Token can be in header or body

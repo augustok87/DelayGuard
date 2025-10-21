@@ -58,4 +58,6 @@ export function ErrorState({
   );
 }
 
+ErrorState.displayName = 'ErrorState';
+
 export default ErrorState;

@@ -186,6 +186,7 @@ function AnalyticsDashboard({
       }
       handleRefresh();
     };
+handleFocus.displayName = 'handleFocus';
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
@@ -335,6 +336,7 @@ function AnalyticsDashboard({
       </Card>
     );
   };
+renderReasonBreakdown.displayName = 'renderReasonBreakdown';
 
   const renderNotificationMetrics = () => (
     <Card>
@@ -623,5 +625,7 @@ function AnalyticsDashboard({
     </div>
   );
 }
+
+AnalyticsDashboard.displayName = 'AnalyticsDashboard';
 
 export default AnalyticsDashboard;

@@ -1,4 +1,5 @@
 import { Redis } from "ioredis";
+import { logger } from '../utils/logger';
 import { AppConfig } from "../types";
 
 export interface CacheConfig {
@@ -10,7 +11,7 @@ export interface CacheConfig {
 
 export class OptimizedCache {
   private redis: Redis;
-  private localCache: Map<string, { value: any; expiry: number }> = new Map();
+  private localCache: Map<string, { value: unknown; expiry: number }> = new Map();
   private readonly maxLocalSize = 1000;
   private readonly localCacheTTL = 60000; // 1 minute
 
@@ -40,7 +41,7 @@ export class OptimizedCache {
         return parsed;
       }
     } catch (error) {
-      console.warn("Redis cache error:", error);
+      logger.warn("Cache operation warning", error as Error);
     }
 
     return null;
@@ -57,7 +58,7 @@ export class OptimizedCache {
       const serialized = JSON.stringify(value);
       await this.redis.setex(fullKey, config.ttl, serialized);
     } catch (error) {
-      console.warn("Redis cache error:", error);
+      logger.warn("Cache operation warning", error as Error);
     }
   }
 
@@ -71,7 +72,7 @@ export class OptimizedCache {
     try {
       await this.redis.del(fullKey);
     } catch (error) {
-      console.warn("Redis cache error:", error);
+      logger.warn("Cache operation warning", error as Error);
     }
   }
 
@@ -111,7 +112,7 @@ export class OptimizedCache {
           }
         }
       } catch (error) {
-        console.warn("Redis mget error:", error);
+        logger.warn("Cache operation warning", error as Error);
       }
     }
 
@@ -138,7 +139,7 @@ export class OptimizedCache {
     try {
       await pipeline.exec();
     } catch (error) {
-      console.warn("Redis mset error:", error);
+      logger.warn("Cache operation warning", error as Error);
     }
   }
 
@@ -151,7 +152,7 @@ export class OptimizedCache {
         await this.redis.del(...keys);
       }
     } catch (error) {
-      console.warn("Redis pattern invalidation error:", error);
+      logger.warn("Cache operation warning", error as Error);
     }
 
     // Clear local cache entries matching pattern
@@ -190,7 +191,7 @@ export class OptimizedCache {
     return null;
   }
 
-  private setLocalCache(key: string, value: any, ttl: number): void {
+  private setLocalCache(key: string, value: unknown, ttl: number): void {
     // Clean up expired entries if cache is full
     if (this.localCache.size >= this.maxLocalSize) {
       this.cleanupLocalCache();

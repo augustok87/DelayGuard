@@ -51,7 +51,8 @@ const defaultTheme: ThemeSettings = {
 function ThemeCustomizer({
   onThemeChange,
   initialTheme = defaultTheme,
-}: ThemeCustomizerProps) {
+}
+): ThemeCustomizerProps {
   const [theme, setTheme] = useState<ThemeSettings>(initialTheme);
   const [showModal, setShowModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -69,14 +70,17 @@ function ThemeCustomizer({
   const handleColorChange = (property: keyof ThemeSettings, value: string) => {
     setTheme((prev) => ({ ...prev, [property]: value }));
   };
+handleColorChange.displayName = 'handleColorChange';
 
   const handleNumberChange = (property: keyof ThemeSettings, value: number) => {
     setTheme((prev) => ({ ...prev, [property]: value }));
   };
+handleNumberChange.displayName = 'handleNumberChange';
 
   const handleStringChange = (property: keyof ThemeSettings, value: string) => {
     setTheme((prev) => ({ ...prev, [property]: value }));
   };
+handleStringChange.displayName = 'handleStringChange';
 
   const handleBooleanChange = (
     property: keyof ThemeSettings,
@@ -84,28 +88,33 @@ function ThemeCustomizer({
   ) => {
     setTheme((prev) => ({ ...prev, [property]: value }));
   };
+handleBooleanChange.displayName = 'handleBooleanChange';
 
   const handleReset = () => {
     setTheme(defaultTheme);
     setToastMessage("Theme reset to defaults!");
     setShowToast(true);
   };
+handleReset.displayName = 'handleReset';
 
   const handleSave = () => {
     setShowModal(false);
     setToastMessage("Theme saved successfully!");
     setShowToast(true);
   };
+handleSave.displayName = 'handleSave';
 
   const handleCloseToast = () => {
     setShowToast(false);
   };
+handleCloseToast.displayName = 'handleCloseToast';
 
   const handlePreviewTheme = () => {
     setShowPreview(true);
     setToastMessage("Theme preview opened!");
     setShowToast(true);
   };
+handlePreviewTheme.displayName = 'handlePreviewTheme';
 
   const handleExportTheme = () => {
     const themeData = JSON.stringify(theme, null, 2);
@@ -121,6 +130,7 @@ function ThemeCustomizer({
     setToastMessage("Theme exported successfully!");
     setShowToast(true);
   };
+handleExportTheme.displayName = 'handleExportTheme';
 
   const handleImportTheme = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -137,6 +147,7 @@ function ThemeCustomizer({
           setShowToast(true);
         }
       };
+handleImportTheme.displayName = 'handleImportTheme';
       reader.readAsText(file);
     }
   };
@@ -144,6 +155,7 @@ function ThemeCustomizer({
   const handleColorSuggestions = () => {
     setShowColorSuggestions(true);
   };
+handleColorSuggestions.displayName = 'handleColorSuggestions';
 
   const handleShareTheme = () => {
     const themeUrl = btoa(JSON.stringify(theme));
@@ -163,6 +175,7 @@ function ThemeCustomizer({
     setToastMessage("Theme link copied to clipboard");
     setShowToast(true);
   };
+handleShareTheme.displayName = 'handleShareTheme';
 
   const handleCustomCSSChange = (value: string) => {
     setTheme((prev) => ({ ...prev, customCSS: value }));
@@ -178,6 +191,7 @@ function ThemeCustomizer({
       setCustomCSSError("Invalid CSS syntax");
     }
   };
+handleCustomCSSChange.displayName = 'handleCustomCSSChange';
 
   const colorPalettes = [
     {

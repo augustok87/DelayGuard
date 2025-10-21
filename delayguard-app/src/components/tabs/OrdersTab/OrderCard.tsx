@@ -30,6 +30,7 @@ export function OrderCard({ order, onAction, variant }: OrderCardProps) {
       minute: '2-digit',
     });
   };
+formatDate.displayName = 'formatDate';
 
   const formatCurrency = (amount?: number, currency?: string) => {
     if (!amount) return 'N/A';
@@ -38,6 +39,7 @@ export function OrderCard({ order, onAction, variant }: OrderCardProps) {
       currency: currency || 'USD',
     }).format(amount);
   };
+formatCurrency.displayName = 'formatCurrency';
 
   return (
     <div className={`${styles.orderCard} ${styles[variant]}`}>
@@ -112,3 +114,5 @@ export function OrderCard({ order, onAction, variant }: OrderCardProps) {
     </div>
   );
 }
+
+OrderCard.displayName = 'OrderCard';

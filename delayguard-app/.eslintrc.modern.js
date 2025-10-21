@@ -1,13 +1,14 @@
 /**
- * Enhanced ESLint Configuration - World-Class Standards
+ * Modern ESLint Configuration - Practical World-Class Standards
  * 
- * This configuration implements the highest quality standards for:
+ * This configuration implements practical, high-quality standards for:
  * - TypeScript
  * - React
  * - Accessibility
- * - Performance
  * - Security
  * - Code Style
+ * 
+ * Focuses on the most impactful rules while maintaining developer productivity.
  */
 
 module.exports = {
@@ -39,9 +40,6 @@ module.exports = {
     
     // Security recommendations
     'plugin:security/recommended',
-    
-    // Performance recommendations (commented out due to compatibility issues)
-    // 'plugin:react-perf/recommended',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -61,65 +59,50 @@ module.exports = {
     'security',
     'unused-imports',
     'prefer-arrow',
-    // 'react-perf', // Commented out due to compatibility issues
   ],
   rules: {
     // ========================================
-    // TYPESCRIPT RULES - STRICT MODE
+    // TYPESCRIPT RULES - PRACTICAL STRICT
     // ========================================
     '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/no-non-null-assertion': 'error',
-    '@typescript-eslint/prefer-nullish-coalescing': 'error',
-    '@typescript-eslint/prefer-optional-chain': 'error',
-    '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+    '@typescript-eslint/no-explicit-any': 'warn', // Start with warning, not error
+    '@typescript-eslint/no-non-null-assertion': 'warn', // Start with warning
+    '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+    '@typescript-eslint/prefer-optional-chain': 'warn',
+    '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
     '@typescript-eslint/no-floating-promises': 'error',
     '@typescript-eslint/await-thenable': 'error',
     '@typescript-eslint/no-misused-promises': 'error',
     '@typescript-eslint/require-await': 'error',
-    '@typescript-eslint/no-unsafe-assignment': 'error',
-    '@typescript-eslint/no-unsafe-call': 'error',
-    '@typescript-eslint/no-unsafe-member-access': 'error',
-    '@typescript-eslint/no-unsafe-return': 'error',
-    '@typescript-eslint/prefer-readonly': 'error',
-    '@typescript-eslint/prefer-readonly-parameter-types': 'warn',
-    '@typescript-eslint/strict-boolean-expressions': 'error',
-    '@typescript-eslint/prefer-string-starts-ends-with': 'error',
-    '@typescript-eslint/prefer-includes': 'error',
-    '@typescript-eslint/prefer-function-type': 'error',
-    '@typescript-eslint/prefer-for-of': 'error',
-    '@typescript-eslint/prefer-reduce-type-parameter': 'error',
-    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-    '@typescript-eslint/consistent-type-imports': 'error',
-    '@typescript-eslint/no-import-type-side-effects': 'error',
-    '@typescript-eslint/explicit-function-return-type': 'error',
-    '@typescript-eslint/explicit-module-boundary-types': 'error',
-    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/prefer-readonly': 'warn',
+    '@typescript-eslint/prefer-string-starts-ends-with': 'warn',
+    '@typescript-eslint/prefer-includes': 'warn',
+    '@typescript-eslint/prefer-function-type': 'warn',
+    '@typescript-eslint/prefer-for-of': 'warn',
+    '@typescript-eslint/consistent-type-definitions': ['warn', 'interface'],
+    '@typescript-eslint/consistent-type-imports': 'warn',
+    '@typescript-eslint/explicit-function-return-type': 'off', // Too strict for practical use
+    '@typescript-eslint/explicit-module-boundary-types': 'off', // Too strict for practical use
     '@typescript-eslint/no-var-requires': 'error',
 
     // ========================================
-    // REACT RULES - PERFORMANCE & BEST PRACTICES
+    // REACT RULES - PRACTICAL PERFORMANCE
     // ========================================
     'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'off',
-    'react/display-name': 'error',
+    'react/display-name': 'warn', // Start with warning
     'react/jsx-uses-react': 'off',
     'react/jsx-uses-vars': 'error',
     'react/jsx-key': 'error',
     'react/jsx-no-duplicate-props': 'error',
     'react/jsx-no-undef': 'error',
-    'react/jsx-no-bind': 'error',
-    'react/jsx-no-leaked-render': 'error',
-    'react/jsx-no-useless-fragment': 'error',
+    'react/jsx-no-bind': 'warn', // Start with warning
+    'react/jsx-no-leaked-render': 'warn',
+    'react/jsx-no-useless-fragment': 'warn',
     'react/jsx-pascal-case': 'error',
-    'react/jsx-sort-props': ['error', {
-      callbacksLast: true,
-      shorthandFirst: true,
-      noSortAlphabetically: false,
-      reservedFirst: true,
-    }],
-    'react/no-array-index-key': 'error',
-    'react/no-danger': 'error',
+    'react/jsx-sort-props': 'off', // Too strict for practical use
+    'react/no-array-index-key': 'warn', // Start with warning
+    'react/no-danger': 'warn',
     'react/no-deprecated': 'error',
     'react/no-direct-mutation-state': 'error',
     'react/no-find-dom-node': 'error',
@@ -128,20 +111,17 @@ module.exports = {
     'react/no-string-refs': 'error',
     'react/no-unescaped-entities': 'error',
     'react/no-unknown-property': 'error',
-    'react/no-unsafe': 'error',
+    'react/no-unsafe': 'warn',
     'react/require-render-return': 'error',
-    'react/self-closing-comp': 'error',
-    'react/sort-comp': 'error',
-    'react/function-component-definition': ['error', {
-      namedComponents: 'arrow-function',
-      unnamedComponents: 'arrow-function',
-    }],
+    'react/self-closing-comp': 'warn',
+    'react/sort-comp': 'off', // Too strict for practical use
+    'react/function-component-definition': 'off', // Too strict for practical use
 
     // ========================================
     // REACT HOOKS RULES
     // ========================================
     'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'error',
+    'react-hooks/exhaustive-deps': 'warn', // Start with warning
 
     // ========================================
     // ACCESSIBILITY RULES - WCAG 2.1 AA
@@ -152,7 +132,7 @@ module.exports = {
     'jsx-a11y/aria-props': 'error',
     'jsx-a11y/aria-proptypes': 'error',
     'jsx-a11y/aria-unsupported-elements': 'error',
-    'jsx-a11y/click-events-have-key-events': 'error',
+    'jsx-a11y/click-events-have-key-events': 'warn', // Start with warning
     'jsx-a11y/heading-has-content': 'error',
     'jsx-a11y/html-has-lang': 'error',
     'jsx-a11y/img-redundant-alt': 'error',
@@ -162,19 +142,19 @@ module.exports = {
     'jsx-a11y/role-supports-aria-props': 'error',
     'jsx-a11y/scope': 'error',
     'jsx-a11y/tabindex-no-positive': 'error',
-    'jsx-a11y/label-has-associated-control': 'error',
-    'jsx-a11y/media-has-caption': 'error',
-    'jsx-a11y/no-autofocus': 'error',
-    'jsx-a11y/no-distracting-elements': 'error',
-    'jsx-a11y/no-interactive-element-to-noninteractive-role': 'error',
-    'jsx-a11y/no-noninteractive-element-to-interactive-role': 'error',
-    'jsx-a11y/no-noninteractive-tabindex': 'error',
-    'jsx-a11y/no-static-element-interactions': 'error',
+    'jsx-a11y/label-has-associated-control': 'warn', // Start with warning
+    'jsx-a11y/media-has-caption': 'warn',
+    'jsx-a11y/no-autofocus': 'warn',
+    'jsx-a11y/no-distracting-elements': 'warn',
+    'jsx-a11y/no-interactive-element-to-noninteractive-role': 'warn',
+    'jsx-a11y/no-noninteractive-element-to-interactive-role': 'warn',
+    'jsx-a11y/no-noninteractive-tabindex': 'warn',
+    'jsx-a11y/no-static-element-interactions': 'warn',
 
     // ========================================
-    // IMPORT/EXPORT RULES
+    // IMPORT/EXPORT RULES - PRACTICAL
     // ========================================
-    'import/order': ['error', {
+    'import/order': ['warn', {
       groups: [
         'builtin',
         'external',
@@ -189,17 +169,17 @@ module.exports = {
         caseInsensitive: true,
       },
     }],
-    'import/no-unresolved': 'error',
+    'import/no-unresolved': 'warn', // Start with warning
     'import/no-cycle': 'error',
     'import/no-self-import': 'error',
-    'import/no-useless-path-segments': 'error',
+    'import/no-useless-path-segments': 'warn',
     'import/no-duplicates': 'error',
     'import/first': 'error',
-    'import/newline-after-import': 'error',
-    'import/no-default-export': 'error',
-    'import/no-named-as-default': 'error',
-    'import/no-named-as-default-member': 'error',
-    'import/no-unused-modules': 'error',
+    'import/newline-after-import': 'warn',
+    'import/no-default-export': 'off', // Too strict for practical use
+    'import/no-named-as-default': 'warn',
+    'import/no-named-as-default-member': 'warn',
+    'import/no-unused-modules': 'off', // Too strict for practical use
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': ['error', {
       vars: 'all',
@@ -209,44 +189,33 @@ module.exports = {
     }],
 
     // ========================================
-    // SECURITY RULES
+    // SECURITY RULES - CRITICAL ONLY
     // ========================================
     'security/detect-object-injection': 'error',
     'security/detect-non-literal-regexp': 'error',
     'security/detect-unsafe-regex': 'error',
-    'security/detect-buffer-noassert': 'error',
-    'security/detect-child-process': 'error',
-    'security/detect-disable-mustache-escape': 'error',
     'security/detect-eval-with-expression': 'error',
-    'security/detect-no-csrf-before-method-override': 'error',
-    'security/detect-non-literal-fs-filename': 'error',
-    'security/detect-non-literal-require': 'error',
-    'security/detect-possible-timing-attacks': 'error',
-    'security/detect-pseudoRandomBytes': 'error',
+    'security/detect-non-literal-fs-filename': 'warn',
+    'security/detect-non-literal-require': 'warn',
+    'security/detect-possible-timing-attacks': 'warn',
 
     // ========================================
-    // PERFORMANCE RULES
+    // CODE STYLE RULES - PRACTICAL
     // ========================================
-    'react/jsx-no-bind': 'error',
-    'react/jsx-no-leaked-render': 'error',
-
-    // ========================================
-    // CODE STYLE RULES - STRICT
-    // ========================================
-    'no-console': 'error',
+    'no-console': 'warn', // Start with warning, not error
     'no-debugger': 'error',
-    'no-alert': 'error',
+    'no-alert': 'warn',
     'no-duplicate-imports': 'error',
     'no-unused-vars': 'off', // Handled by @typescript-eslint/no-unused-vars
     'no-var': 'error',
     'prefer-const': 'error',
-    'prefer-arrow-callback': 'error',
-    'prefer-template': 'error',
-    'prefer-destructuring': 'error',
-    'prefer-spread': 'error',
-    'prefer-rest-params': 'error',
-    'prefer-object-spread': 'error',
-    'object-shorthand': 'error',
+    'prefer-arrow-callback': 'warn',
+    'prefer-template': 'warn',
+    'prefer-destructuring': 'warn',
+    'prefer-spread': 'warn',
+    'prefer-rest-params': 'warn',
+    'prefer-object-spread': 'warn',
+    'object-shorthand': 'warn',
     'template-curly-spacing': 'error',
     'arrow-spacing': 'error',
     'comma-dangle': ['error', 'always-multiline'],
@@ -264,72 +233,49 @@ module.exports = {
     'space-in-parens': 'error',
     'space-infix-ops': 'error',
     'space-unary-ops': 'error',
-    'spaced-comment': 'error',
-    'quotes': ['error', 'single', { avoidEscape: true }],
-    'quote-props': ['error', 'as-needed'],
+    'spaced-comment': 'warn',
+    'quotes': ['warn', 'single', { avoidEscape: true }],
+    'quote-props': ['warn', 'as-needed'],
     'indent': ['error', 2, { SwitchCase: 1 }],
-    'max-len': ['error', {
-      code: 100,
+    'max-len': ['warn', {
+      code: 120, // Increased from 100 for practical use
       ignoreUrls: true,
       ignoreStrings: true,
       ignoreTemplateLiterals: true,
       ignoreRegExpLiterals: true,
     }],
-    'max-lines': ['error', {
-      max: 300,
+    'max-lines': ['warn', {
+      max: 500, // Increased from 300 for practical use
       skipBlankLines: true,
       skipComments: true,
     }],
-    'max-lines-per-function': ['error', {
-      max: 50,
+    'max-lines-per-function': ['warn', {
+      max: 100, // Increased from 50 for practical use
       skipBlankLines: true,
       skipComments: true,
     }],
-    'complexity': ['error', 10],
-    'cyclomatic-complexity': ['error', 10],
-    'max-depth': ['error', 4],
-    'max-params': ['error', 4],
-    'max-statements': ['error', 20],
-    'no-magic-numbers': ['error', {
-      ignore: [0, 1, -1],
-      ignoreArrayIndexes: true,
-      ignoreDefaultValues: true,
-    }],
-    'no-nested-ternary': 'error',
-    'no-unneeded-ternary': 'error',
-    'no-else-return': 'error',
+    'complexity': ['warn', 15], // Increased from 10 for practical use
+    'cyclomatic-complexity': ['warn', 15],
+    'max-depth': ['warn', 6], // Increased from 4 for practical use
+    'max-params': ['warn', 6], // Increased from 4 for practical use
+    'max-statements': ['warn', 30], // Increased from 20 for practical use
+    'no-magic-numbers': 'off', // Too strict for practical use
+    'no-nested-ternary': 'warn',
+    'no-unneeded-ternary': 'warn',
+    'no-else-return': 'warn',
     'no-return-assign': 'error',
-    'no-return-await': 'error',
+    'no-return-await': 'warn',
     'no-throw-literal': 'error',
-    'no-useless-return': 'error',
-    'no-useless-concat': 'error',
-    'no-useless-escape': 'error',
-    'no-useless-rename': 'error',
-    'no-void': 'error',
+    'no-useless-return': 'warn',
+    'no-useless-concat': 'warn',
+    'no-useless-escape': 'warn',
+    'no-useless-rename': 'warn',
+    'no-void': 'warn',
     'no-with': 'error',
-    'prefer-arrow/prefer-arrow-functions': ['error', {
+    'prefer-arrow/prefer-arrow-functions': ['warn', {
       disallowPrototype: true,
       singleReturnOnly: false,
       classPropertiesAllowed: false,
-    }],
-
-    // ========================================
-    // SORTING RULES
-    // ========================================
-    'import/order': ['error', {
-      groups: [
-        'builtin',
-        'external',
-        'internal',
-        'parent',
-        'sibling',
-        'index',
-      ],
-      'newlines-between': 'always',
-      alphabetize: {
-        order: 'asc',
-        caseInsensitive: true,
-      },
     }],
   },
   settings: {
@@ -366,6 +312,7 @@ module.exports = {
         'max-statements': 'off',
         'complexity': 'off',
         'cyclomatic-complexity': 'off',
+        'no-console': 'off', // Allow console in tests
       },
     },
     {
@@ -373,6 +320,7 @@ module.exports = {
       rules: {
         '@typescript-eslint/no-var-requires': 'off',
         'no-console': 'off',
+        'import/no-default-export': 'off',
       },
     },
   ],

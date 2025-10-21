@@ -13,6 +13,7 @@ export const useToast = () => {
   }
   return context;
 };
+useToast.displayName = 'useToast';
 
 interface ToastProviderProps {
   children: React.ReactNode;

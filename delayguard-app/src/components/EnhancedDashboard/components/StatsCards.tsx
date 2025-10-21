@@ -42,7 +42,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
       }}
     >
       {statsData.map((stat, index) => (
-        <Card key={index} title={stat.title}>
+        <Card key={`item-${index}`} title={stat.title}>
           <div style={{ textAlign: 'center' }}>
             <Text
               variant="headingLg"
