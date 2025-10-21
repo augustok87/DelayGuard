@@ -60,26 +60,26 @@ requiredEnvVars.forEach(envVar => {
 // App configuration
 const config: AppConfig = {
   shopify: {
-    apiKey: process.env.SHOPIFY_API_KEY!,
-    apiSecret: process.env.SHOPIFY_API_SECRET!,
+    apiKey: requireEnv('SHOPIFY_API_KEY'),
+    apiSecret: requireEnv('SHOPIFY_API_SECRET'),
     scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_orders', 'write_orders', 'read_fulfillments', 'write_fulfillments'],
   },
   database: {
-    url: process.env.DATABASE_URL!,
+    url: requireEnv('DATABASE_URL'),
   },
   redis: {
-    url: process.env.REDIS_URL!,
+    url: requireEnv('REDIS_URL'),
   },
   shipengine: {
-    apiKey: process.env.SHIPENGINE_API_KEY!,
+    apiKey: requireEnv('SHIPENGINE_API_KEY'),
   },
   sendgrid: {
-    apiKey: process.env.SENDGRID_API_KEY!,
+    apiKey: requireEnv('SENDGRID_API_KEY'),
   },
   twilio: {
-    accountSid: process.env.TWILIO_ACCOUNT_SID!,
-    authToken: process.env.TWILIO_AUTH_TOKEN!,
-    phoneNumber: process.env.TWILIO_PHONE_NUMBER!,
+    accountSid: requireEnv('TWILIO_ACCOUNT_SID'),
+    authToken: requireEnv('TWILIO_AUTH_TOKEN'),
+    phoneNumber: requireEnv('TWILIO_PHONE_NUMBER'),
   },
 };
 
@@ -276,8 +276,8 @@ app.use(async(ctx, next) => {
   try {
     await next();
   } catch (error) {
-    logger.error($1, error as Error);
-    const statusCode = error instanceof Error && 'status' in error ? (error as any).status : 500;
+    logger.error('Request error occurred', error as Error);
+    const statusCode = error instanceof Error && 'status' in error ? (error as Error & { status: number }).status : 500;
     ctx.status = statusCode;
     ctx.body = {
       error: process.env.NODE_ENV === 'production' 
@@ -298,7 +298,7 @@ async function initializeApp() {
     await setupQueues();
     logger.info('✅ Database and queues initialized');
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Failed to initialize app', error as Error);
     if (process.env.NODE_ENV !== 'production') {
       process.exit(1);
     }

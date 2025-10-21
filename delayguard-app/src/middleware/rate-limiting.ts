@@ -39,7 +39,10 @@ export class RateLimitingMiddleware {
    * Apply rate limiting middleware
    */
   async apply(ctx: Context, next: Next): Promise<void> {
-    const key = this.config.keyGenerator!(ctx);
+    if (!this.config.keyGenerator) {
+      throw new Error('keyGenerator is required for rate limiting');
+    }
+    const key = this.config.keyGenerator(ctx);
     const now = Date.now();
     const windowStart = now - this.config.windowMs;
 

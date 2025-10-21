@@ -1,65 +1,30 @@
 [
   {
-    "rule": "@typescript-eslint/no-explicit-any",
-    "count": 50,
-    "severity": "warning",
-    "fixable": false,
-    "percentage": "41.32"
-  },
-  {
-    "rule": "@typescript-eslint/no-non-null-assertion",
-    "count": 26,
-    "severity": "warning",
-    "fixable": false,
-    "percentage": "21.49"
-  },
-  {
-    "rule": "null",
-    "count": 17,
-    "severity": "error",
-    "fixable": false,
-    "percentage": "14.05"
-  },
-  {
-    "rule": "react/display-name",
-    "count": 9,
-    "severity": "warning",
-    "fixable": false,
-    "percentage": "7.44"
-  },
-  {
-    "rule": "no-console",
-    "count": 8,
-    "severity": "warning",
-    "fixable": false,
-    "percentage": "6.61"
-  },
-  {
     "rule": "react-hooks/exhaustive-deps",
     "count": 7,
     "severity": "warning",
     "fixable": false,
-    "percentage": "5.79"
-  },
-  {
-    "rule": "@typescript-eslint/no-unused-vars",
-    "count": 2,
-    "severity": "error",
-    "fixable": false,
-    "percentage": "1.65"
+    "percentage": "63.64"
   },
   {
     "rule": "react/no-array-index-key",
+    "count": 2,
+    "severity": "warning",
+    "fixable": false,
+    "percentage": "18.18"
+  },
+  {
+    "rule": "react/display-name",
     "count": 1,
     "severity": "warning",
     "fixable": false,
-    "percentage": "0.83"
+    "percentage": "9.09"
   },
   {
-    "rule": "no-duplicate-imports",
+    "rule": "no-console",
     "count": 1,
-    "severity": "error",
+    "severity": "warning",
     "fixable": false,
-    "percentage": "0.83"
+    "percentage": "9.09"
   }
 ]

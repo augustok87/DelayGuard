@@ -1,23 +1,23 @@
 {
-  "timestamp": "2025-10-19T22:13:11.135Z",
+  "timestamp": "2025-10-21T03:58:18.868Z",
   "summary": {
-    "total": 121,
-    "errors": 20,
-    "warnings": 101,
+    "total": 11,
+    "errors": 0,
+    "warnings": 11,
     "fixable": 0,
     "fixed": 0,
-    "errorRate": "16.53",
-    "warningRate": "83.47",
+    "errorRate": "0.00",
+    "warningRate": "100.00",
     "fixableRate": "0.00"
   },
   "quality": {
-    "score": 0,
-    "grade": "F",
-    "status": "Critical"
+    "score": 78,
+    "grade": "B",
+    "status": "Fair"
   },
   "performance": {
-    "duration": 2556,
+    "duration": 3132,
     "filesProcessed": 145,
-    "rulesChecked": 9
+    "rulesChecked": 4
   }
 }

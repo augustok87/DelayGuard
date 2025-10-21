@@ -15,7 +15,11 @@ let notificationWorker: Worker;
 export async function setupQueues(): Promise<void> {
   try {
     // Initialize Redis connection
-    redis = new IORedis(process.env.REDIS_URL!, {
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) {
+      throw new Error('REDIS_URL environment variable is required');
+    }
+    redis = new IORedis(redisUrl, {
       maxRetriesPerRequest: 3,
       enableReadyCheck: false,
     });
@@ -75,7 +79,7 @@ export async function setupQueues(): Promise<void> {
 
     logger.info("✅ Queues and workers initialized");
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error setting up queues', error as Error);
     throw error;
   }
 }

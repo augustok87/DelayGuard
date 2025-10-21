@@ -117,8 +117,9 @@ export const useDelayAlerts = () => {
         ? alerts
             .filter((alert) => alert.status === "resolved" && alert.resolvedAt)
             .reduce((acc, alert) => {
+              if (!alert.resolvedAt) return acc;
               const created = new Date(alert.createdAt);
-              const resolved = new Date(alert.resolvedAt!);
+              const resolved = new Date(alert.resolvedAt);
               const diffDays =
                 (resolved.getTime() - created.getTime()) /
                 (1000 * 60 * 60 * 24);

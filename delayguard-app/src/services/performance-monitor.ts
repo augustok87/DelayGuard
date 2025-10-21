@@ -190,7 +190,10 @@ export class PerformanceMonitor {
       this.metrics.set(operation, []);
     }
 
-    const operationMetrics = this.metrics.get(operation)!;
+    const operationMetrics = this.metrics.get(operation);
+    if (!operationMetrics) {
+      throw new Error(`Failed to get metrics for operation: ${operation}`);
+    }
     operationMetrics.push(duration);
 
     // Keep only the last maxSamples

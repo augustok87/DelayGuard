@@ -53,7 +53,10 @@ export class EventListenerManager {
       this.listeners.set(element, new Map());
     }
 
-    const elementListeners = this.listeners.get(element)!;
+    const elementListeners = this.listeners.get(element);
+    if (!elementListeners) {
+      throw new Error('Failed to get element listeners');
+    }
     elementListeners.set(eventType, handler);
     element.addEventListener(eventType, handler, options);
 
@@ -113,7 +116,7 @@ export const EventUtils = {
   /**
    * Debounce function for event handlers
    */
-  debounce<T extends(...args: unknown[]) => any>(
+  debounce<T extends(...args: unknown[]) => void>(
     func: T,
     wait: number,
   ): (...args: Parameters<T>) => void {
@@ -127,7 +130,7 @@ export const EventUtils = {
   /**
    * Throttle function for event handlers
    */
-  throttle<T extends(...args: unknown[]) => any>(
+  throttle<T extends(...args: unknown[]) => void>(
     func: T,
     limit: number,
   ): (...args: Parameters<T>) => void {

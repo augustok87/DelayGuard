@@ -11,7 +11,7 @@ export class CarrierService implements ICarrierService {
   private apiKey: string;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.SHIPENGINE_API_KEY!;
+    this.apiKey = apiKey || process.env.SHIPENGINE_API_KEY || '';
 
     if (!this.apiKey) {
       throw new Error("ShipEngine API key is required");
@@ -53,14 +53,23 @@ export class CarrierService implements ICarrierService {
         estimatedDeliveryDate: data.estimated_delivery_date,
         originalEstimatedDeliveryDate: data.original_estimated_delivery_date,
         events:
-          data.events?.map((event: unknown) => ({
-            timestamp: (event as any).occurred_at,
-            status: this.mapStatus((event as any).status_code),
-            location: (event as any).city_locality
-              ? `${(event as any).city_locality}, ${(event as any).state_province}`
-              : undefined,
-            description: (event as any).description || (event as any).status_code,
-          })) || [],
+          data.events?.map((event: unknown) => {
+            const shipEngineEvent = event as {
+              occurred_at: string;
+              status_code: string;
+              city_locality?: string;
+              state_province?: string;
+              description?: string;
+            };
+            return {
+              timestamp: shipEngineEvent.occurred_at,
+              status: this.mapStatus(shipEngineEvent.status_code),
+              location: shipEngineEvent.city_locality
+                ? `${shipEngineEvent.city_locality}, ${shipEngineEvent.state_province}`
+                : undefined,
+              description: shipEngineEvent.description || shipEngineEvent.status_code,
+            };
+          }) || [],
       };
 
       logger.info(`✅ Tracking info retrieved: ${trackingInfo.status}`);
@@ -122,10 +131,13 @@ export class CarrierService implements ICarrierService {
     try {
       const response = await this.client.get("/v1/carriers");
 
-      return response.data.carriers.map((carrier: unknown) => ({
-        code: (carrier as any).carrier_code,
-        name: (carrier as any).friendly_name,
-      }));
+      return response.data.carriers.map((carrier: unknown) => {
+        const shipEngineCarrier = carrier as { carrier_code: string; friendly_name: string };
+        return {
+          code: shipEngineCarrier.carrier_code,
+          name: shipEngineCarrier.friendly_name,
+        };
+      });
     } catch (error) {
       logger.error("Carrier service error", error as Error);
       throw new Error("Failed to fetch carrier list");

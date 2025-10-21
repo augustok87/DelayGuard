@@ -104,7 +104,7 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
     );
 
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error processing delay check', error as Error);
     throw error;
   }
 }

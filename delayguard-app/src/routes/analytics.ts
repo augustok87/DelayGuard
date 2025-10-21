@@ -31,7 +31,7 @@ router.get("/analytics", async(ctx) => {
       generatedAt: new Date().toISOString(),
     };
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error fetching analytics data', error as Error);
     ctx.status = 500;
     ctx.body = {
       error: "Failed to fetch analytics data",
@@ -64,7 +64,7 @@ router.get("/analytics/realtime", async(ctx) => {
       generatedAt: new Date().toISOString(),
     };
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error fetching real-time metrics', error as Error);
     ctx.status = 500;
     ctx.body = {
       error: "Failed to fetch real-time metrics",
@@ -124,7 +124,7 @@ router.get("/analytics/summary", async(ctx) => {
       generatedAt: new Date().toISOString(),
     };
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error fetching analytics summary', error as Error);
     ctx.status = 500;
     ctx.body = {
       error: "Failed to fetch analytics summary",
@@ -156,7 +156,7 @@ router.delete("/analytics/cache", async(ctx) => {
       message: "Analytics cache cleared successfully",
     };
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error clearing analytics cache', error as Error);
     ctx.status = 500;
     ctx.body = {
       error: "Failed to clear analytics cache",
@@ -207,7 +207,7 @@ router.get("/analytics/export", async(ctx) => {
       };
     }
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error exporting analytics data', error as Error);
     ctx.status = 500;
     ctx.body = {
       error: "Failed to export analytics data",

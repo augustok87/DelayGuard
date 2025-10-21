@@ -161,8 +161,12 @@ const cacheInstances: { [key: string]: CacheManager } = {};
 
 export function getCache(type: keyof typeof CACHE_CONFIGS): CacheManager {
   if (!cacheInstances[type]) {
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) {
+      throw new Error('REDIS_URL environment variable is required');
+    }
     cacheInstances[type] = new CacheManager(
-      process.env.REDIS_URL!,
+      redisUrl,
       CACHE_CONFIGS[type],
     );
   }

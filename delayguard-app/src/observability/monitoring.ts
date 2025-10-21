@@ -445,7 +445,7 @@ export class AlertingService {
           });
         }
       } catch (error) {
-        logger.error($1, error as Error);
+        logger.error('Error checking alert rule', error as Error);
       }
     }
 
@@ -680,7 +680,7 @@ export class MonitoringService {
         `Monitoring cycle completed - Health: ${health.status}, Alerts: ${alerts.length}`,
       );
     } catch (error) {
-      logger.error($1, error as Error);
+      logger.error('Error in monitoring cycle', error as Error);
     }
   }
 

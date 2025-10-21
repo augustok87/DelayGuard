@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-10-19T22:13:11.137Z",
+  "timestamp": "2025-10-21T03:58:18.869Z",
   "files": {
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/backup/backup-service.ts": {
       "standard": {
@@ -15,18 +15,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/AnalyticsDashboard.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 60,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -37,33 +28,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/App.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 3,
-        "messages": [
-          {
-            "line": 76,
-            "column": 36,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 77,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 82,
-            "column": 7,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -121,18 +87,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/EnhancedDashboard/EnhancedDashboard.refactored.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 29,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -272,41 +229,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ErrorBoundary.simple.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 4,
-        "messages": [
-          {
-            "line": 10,
-            "column": 30,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 12,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 16,
-            "column": 3,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 30,
-            "column": 6,
-            "rule": "no-console",
-            "message": "Unexpected console statement.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -328,18 +252,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/MinimalApp.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 84,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -349,18 +264,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/RefactoredApp.optimized.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 26,
-            "column": 63,
-            "rule": null,
-            "message": "Parsing error: Declaration or statement expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -382,15 +288,15 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ThemeCustomizer.tsx": {
       "standard": {
-        "errors": 1,
-        "warnings": 0,
+        "errors": 0,
+        "warnings": 1,
         "messages": [
           {
-            "line": 55,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
+            "line": 605,
+            "column": 30,
+            "rule": "react/no-array-index-key",
+            "message": "Do not use Array index in keys",
+            "severity": 1,
             "fixable": false
           }
         ]
@@ -403,18 +309,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/common/EmptyState.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 35,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -424,18 +321,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/common/ErrorAlert/index.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 10,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -469,18 +357,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/common/ErrorState.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 29,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -491,29 +370,13 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/common/LazyWrapper/index.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 3,
+        "warnings": 1,
         "messages": [
           {
-            "line": 31,
-            "column": 36,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 47,
+            "line": 49,
             "column": 10,
             "rule": "react/display-name",
             "message": "Component definition is missing display name",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 49,
-            "column": 36,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
             "severity": 1,
             "fixable": false
           }
@@ -587,18 +450,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/layout/AppHeader/index.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 11,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -608,18 +462,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/layout/TabNavigation/index.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 17,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -641,18 +486,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/AlertsTab/AlertCard.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 13,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -674,18 +510,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/AlertsTab/index.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 14,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -707,18 +534,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/DashboardTab/SettingsCard.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 26,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -728,18 +546,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/DashboardTab/StatsCard.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 11,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -749,18 +558,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/DashboardTab/index.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 29,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -794,18 +594,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/OrdersTab/OrderCard.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 13,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -827,18 +618,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/tabs/OrdersTab/index.tsx": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 14,
-            "column": 0,
-            "rule": null,
-            "message": "Parsing error: ',' expected.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -873,17 +655,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ui/Button/Button.simple.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 180,
-            "column": 26,
-            "rule": "react/display-name",
-            "message": "Component definition is missing display name",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -894,17 +667,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ui/Button/Button.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 194,
-            "column": 26,
-            "rule": "react/display-name",
-            "message": "Component definition is missing display name",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -939,17 +703,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ui/Card/Card.simple.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 63,
-            "column": 24,
-            "rule": "react/display-name",
-            "message": "Component definition is missing display name",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -960,17 +715,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ui/Card/Card.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 150,
-            "column": 24,
-            "rule": "react/display-name",
-            "message": "Component definition is missing display name",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -993,65 +739,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ui/DataTable/DataTable.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 7,
-        "messages": [
-          {
-            "line": 186,
-            "column": 25,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 189,
-            "column": 25,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 215,
-            "column": 23,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 313,
-            "column": 23,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 327,
-            "column": 19,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 362,
-            "column": 27,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 452,
-            "column": 57,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1086,17 +775,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ui/Modal/Modal.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 258,
-            "column": 25,
-            "rule": "react/display-name",
-            "message": "Component definition is missing display name",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1131,17 +811,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ui/Tabs/Tabs.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 181,
-            "column": 24,
-            "rule": "react/display-name",
-            "message": "Component definition is missing display name",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1164,17 +835,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ui/Text/Text.simple.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 98,
-            "column": 24,
-            "rule": "react/display-name",
-            "message": "Component definition is missing display name",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1185,17 +847,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/components/ui/Text/Text.test.tsx": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 164,
-            "column": 24,
-            "rule": "react/display-name",
-            "message": "Component definition is missing display name",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1242,25 +895,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/config/environment.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 2,
-        "messages": [
-          {
-            "line": 82,
-            "column": 41,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 177,
-            "column": 77,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1270,18 +906,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/database/connection.ts": {
       "standard": {
-        "errors": 1,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 1,
-            "column": 28,
-            "rule": "@typescript-eslint/no-unused-vars",
-            "message": "'QueryResult' is defined but never used.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1398,41 +1025,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/hooks/useDelayAlerts.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 4,
-        "messages": [
-          {
-            "line": 21,
-            "column": 20,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 22,
-            "column": 20,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 23,
-            "column": 20,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 119,
-            "column": 41,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1479,33 +1073,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/hooks/useOrders.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 3,
-        "messages": [
-          {
-            "line": 22,
-            "column": 20,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 23,
-            "column": 20,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 24,
-            "column": 20,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1614,25 +1183,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/middleware/csrf-protection.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 2,
-        "messages": [
-          {
-            "line": 106,
-            "column": 39,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 262,
-            "column": 39,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1643,17 +1195,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/middleware/input-sanitization.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 339,
-            "column": 56,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1664,17 +1207,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/middleware/rate-limiting.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 42,
-            "column": 17,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1709,57 +1243,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/observability/tracing.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 6,
-        "messages": [
-          {
-            "line": 16,
-            "column": 44,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 25,
-            "column": 51,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 26,
-            "column": 53,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 35,
-            "column": 44,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 85,
-            "column": 13,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 192,
-            "column": 18,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1782,41 +1267,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/queue/processors/notification.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 4,
-        "messages": [
-          {
-            "line": 68,
-            "column": 43,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 70,
-            "column": 7,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 71,
-            "column": 7,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 72,
-            "column": 7,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1827,17 +1279,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/queue/setup.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 18,
-            "column": 25,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1872,25 +1315,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/api.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 2,
-        "messages": [
-          {
-            "line": 41,
-            "column": 40,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 116,
-            "column": 65,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1937,17 +1363,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/routes/webhooks.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 13,
-            "column": 27,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -1958,89 +1375,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/server.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 10,
-        "messages": [
-          {
-            "line": 63,
-            "column": 13,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 64,
-            "column": 16,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 68,
-            "column": 10,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 71,
-            "column": 10,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 74,
-            "column": 13,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 77,
-            "column": 13,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 80,
-            "column": 17,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 81,
-            "column": 16,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 82,
-            "column": 18,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 280,
-            "column": 80,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2075,34 +1411,10 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/audit-logger.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 4,
+        "warnings": 1,
         "messages": [
           {
-            "line": 54,
-            "column": 27,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 103,
-            "column": 29,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 158,
-            "column": 29,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 391,
+            "line": 393,
             "column": 7,
             "rule": "no-console",
             "message": "Unexpected console statement.",
@@ -2120,17 +1432,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/carrier-service.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 14,
-            "column": 29,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2140,26 +1443,9 @@
     },
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/delay-detection-service.ts": {
       "standard": {
-        "errors": 2,
+        "errors": 0,
         "warnings": 0,
-        "messages": [
-          {
-            "line": 7,
-            "column": 10,
-            "rule": "@typescript-eslint/no-unused-vars",
-            "message": "'logger' is defined but never used.",
-            "severity": 2,
-            "fixable": false
-          },
-          {
-            "line": 8,
-            "column": 1,
-            "rule": "no-duplicate-imports",
-            "message": "'../utils/logger' import is duplicated.",
-            "severity": 2,
-            "fixable": false
-          }
-        ]
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2218,17 +1504,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/optimized-api.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 5,
-            "column": 34,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2239,17 +1516,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/optimized-cache.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 181,
-            "column": 43,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2260,81 +1528,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/optimized-database.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 9,
-        "messages": [
-          {
-            "line": 38,
-            "column": 40,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 38,
-            "column": 47,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 129,
-            "column": 45,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 129,
-            "column": 52,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 170,
-            "column": 50,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 180,
-            "column": 50,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 194,
-            "column": 14,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 219,
-            "column": 14,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 276,
-            "column": 38,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2345,25 +1540,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/performance-monitor.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 2,
-        "messages": [
-          {
-            "line": 28,
-            "column": 15,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 191,
-            "column": 30,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2398,49 +1576,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/services/security-monitor.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 5,
-        "messages": [
-          {
-            "line": 75,
-            "column": 26,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 457,
-            "column": 36,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 545,
-            "column": 28,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 600,
-            "column": 28,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 611,
-            "column": 28,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2607,25 +1744,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/types/jest.d.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 2,
-        "messages": [
-          {
-            "line": 13,
-            "column": 48,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 22,
-            "column": 55,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2660,17 +1780,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/utils/cache.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 1,
-        "messages": [
-          {
-            "line": 165,
-            "column": 7,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2693,33 +1804,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/utils/eventHandling.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 3,
-        "messages": [
-          {
-            "line": 56,
-            "column": 30,
-            "rule": "@typescript-eslint/no-non-null-assertion",
-            "message": "Forbidden non-null assertion.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 116,
-            "column": 45,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 130,
-            "column": 45,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2742,25 +1828,8 @@
     "/Users/jooniekwun/Documents/DelayGuard/delayguard-app/src/utils/monitoring.ts": {
       "standard": {
         "errors": 0,
-        "warnings": 2,
-        "messages": [
-          {
-            "line": 47,
-            "column": 15,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          },
-          {
-            "line": 76,
-            "column": 15,
-            "rule": "@typescript-eslint/no-explicit-any",
-            "message": "Unexpected any. Specify a different type.",
-            "severity": 1,
-            "fixable": false
-          }
-        ]
+        "warnings": 0,
+        "messages": []
       },
       "enhanced": {
         "errors": 0,
@@ -2770,39 +1839,14 @@
     }
   },
   "categories": {
-    "null": {
-      "count": 17,
-      "severity": 2,
-      "fixable": false
-    },
-    "no-console": {
-      "count": 8,
-      "severity": 1,
-      "fixable": false
-    },
     "react/no-array-index-key": {
-      "count": 1,
-      "severity": 1,
-      "fixable": false
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 50,
+      "count": 2,
       "severity": 1,
       "fixable": false
     },
     "react/display-name": {
-      "count": 9,
+      "count": 1,
       "severity": 1,
-      "fixable": false
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 26,
-      "severity": 1,
-      "fixable": false
-    },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2,
-      "severity": 2,
       "fixable": false
     },
     "react-hooks/exhaustive-deps": {
@@ -2810,53 +1854,29 @@
       "severity": 1,
       "fixable": false
     },
-    "no-duplicate-imports": {
+    "no-console": {
       "count": 1,
-      "severity": 2,
+      "severity": 1,
       "fixable": false
     }
   },
   "topIssues": [
     {
-      "rule": "@typescript-eslint/no-explicit-any",
-      "count": 50
-    },
-    {
-      "rule": "@typescript-eslint/no-non-null-assertion",
-      "count": 26
-    },
-    {
-      "rule": "null",
-      "count": 17
-    },
-    {
-      "rule": "react/display-name",
-      "count": 9
-    },
-    {
-      "rule": "no-console",
-      "count": 8
-    },
-    {
       "rule": "react-hooks/exhaustive-deps",
       "count": 7
     },
     {
-      "rule": "@typescript-eslint/no-unused-vars",
+      "rule": "react/no-array-index-key",
       "count": 2
     },
     {
-      "rule": "react/no-array-index-key",
+      "rule": "react/display-name",
       "count": 1
     },
     {
-      "rule": "no-duplicate-imports",
+      "rule": "no-console",
       "count": 1
     }
   ],
-  "recommendations": [
-    "Fix all errors immediately - they prevent code from working correctly",
-    "Address warnings systematically - they indicate potential issues",
-    "Consider breaking down large files into smaller, more manageable pieces"
-  ]
+  "recommendations": []
 }

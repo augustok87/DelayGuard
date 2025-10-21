@@ -144,7 +144,7 @@ router.post("/test-delay", async(ctx) => {
       delayResult,
     };
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error testing delay detection', error as Error);
     ctx.status = 500;
     ctx.body = { error: "Failed to test delay detection" };
   }

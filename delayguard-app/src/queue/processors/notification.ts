@@ -65,12 +65,18 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
     const alert = alertResult[0] as { email_sent: boolean; sms_sent: boolean };
 
     // Initialize services
-    const emailService = new EmailService(process.env.SENDGRID_API_KEY!);
-    const smsService = new SMSService(
-      process.env.TWILIO_ACCOUNT_SID!,
-      process.env.TWILIO_AUTH_TOKEN!,
-      process.env.TWILIO_PHONE_NUMBER!,
-    );
+    const sendgridKey = process.env.SENDGRID_API_KEY;
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+    const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+    const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+    
+    if (!sendgridKey) throw new Error('SENDGRID_API_KEY is required');
+    if (!twilioSid) throw new Error('TWILIO_ACCOUNT_SID is required');
+    if (!twilioToken) throw new Error('TWILIO_AUTH_TOKEN is required');
+    if (!twilioPhone) throw new Error('TWILIO_PHONE_NUMBER is required');
+
+    const emailService = new EmailService(sendgridKey);
+    const smsService = new SMSService(twilioSid, twilioToken, twilioPhone);
     const notificationService = new NotificationService(emailService, smsService);
 
     // Prepare order info
@@ -99,7 +105,7 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
             logger.info(`✅ Email sent for order ${orderId}`);
           })
           .catch(error => {
-            logger.error($1, error as Error);
+            logger.error('Error sending email notification', error as Error);
             throw error;
           }),
       );
@@ -117,7 +123,7 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
             logger.info(`✅ SMS sent for order ${orderId}`);
           })
           .catch(error => {
-            logger.error($1, error as Error);
+            logger.error('Error sending SMS notification', error as Error);
             throw error;
           }),
       );
@@ -134,7 +140,7 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
     logger.info(`✅ All notifications processed for order ${orderId}`);
 
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error processing notification', error as Error);
     throw error;
   }
 }

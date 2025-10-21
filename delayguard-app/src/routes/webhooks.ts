@@ -9,8 +9,12 @@ const router = new Router();
 
 // HMAC verification for webhooks
 function verifyWebhook(data: string, hmac: string): boolean {
+  const apiSecret = process.env.SHOPIFY_API_SECRET;
+  if (!apiSecret) {
+    throw new Error('SHOPIFY_API_SECRET environment variable is required');
+  }
   const hash = crypto
-    .createHmac("sha256", process.env.SHOPIFY_API_SECRET!)
+    .createHmac("sha256", apiSecret)
     .update(data, "utf8")
     .digest("base64");
 
@@ -36,7 +40,7 @@ router.post("/orders/updated", async(ctx) => {
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error processing order update webhook', error as Error);
     ctx.status = 500;
     ctx.body = { error: "Internal server error" };
   }
@@ -61,7 +65,7 @@ router.post("/fulfillments/updated", async(ctx) => {
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error processing fulfillment update webhook', error as Error);
     ctx.status = 500;
     ctx.body = { error: "Internal server error" };
   }
@@ -86,7 +90,7 @@ router.post("/orders/paid", async(ctx) => {
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error processing order paid webhook', error as Error);
     ctx.status = 500;
     ctx.body = { error: "Internal server error" };
   }
@@ -161,7 +165,7 @@ async function processOrderUpdate(
 
     logger.info(`✅ Order ${orderData.name} processed successfully`);
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error in processOrderUpdate', error as Error);
     throw error;
   }
 }
@@ -204,7 +208,7 @@ async function processFulfillmentUpdate(
 
     logger.info(`✅ Fulfillment ${fulfillmentData.id} processed successfully`);
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error in processFulfillmentUpdate', error as Error);
     throw error;
   }
 }
@@ -235,7 +239,7 @@ async function processOrderPaid(
 
     logger.info(`✅ Order ${orderData.name} marked as paid`);
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error in processOrderPaid', error as Error);
     throw error;
   }
 }
@@ -298,7 +302,7 @@ async function processFulfillment(
       }
     }
   } catch (error) {
-    logger.error($1, error as Error);
+    logger.error('Error in processFulfillment', error as Error);
     throw error;
   }
 }
