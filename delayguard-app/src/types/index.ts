@@ -309,3 +309,97 @@ export interface EnhancedDashboardProps {
   onAlertAction?: (alertId: string, action: string) => void;
   onSettingsChange?: (settings: AppSettings) => void;
 }
+
+// GDPR Webhook Types
+export interface GDPRDataRequestWebhook {
+  shop_id: number;
+  shop_domain: string;
+  orders_requested: number[];
+  customer: {
+    id: number;
+    email: string;
+    phone?: string;
+  };
+  data_request: {
+    id: number;
+  };
+}
+
+export interface GDPRCustomerRedactWebhook {
+  shop_id: number;
+  shop_domain: string;
+  customer: {
+    id: number;
+    email: string;
+    phone?: string;
+  };
+  orders_to_redact: number[];
+}
+
+export interface GDPRShopRedactWebhook {
+  shop_id: number;
+  shop_domain: string;
+}
+
+export interface GDPRCustomerData {
+  customer_id: string;
+  email?: string;
+  phone?: string;
+  orders: Array<{
+    order_id: string;
+    order_number: string;
+    created_at: string;
+    total_amount?: number;
+  }>;
+  alerts: Array<{
+    alert_id: string;
+    created_at: string;
+    delay_days: number;
+    status: string;
+  }>;
+  fulfillments: Array<{
+    tracking_number: string;
+    carrier: string;
+    created_at: string;
+  }>;
+}
+
+// Billing Types
+export interface ShopifySubscriptionPlan {
+  name: string;
+  price: number;
+  trial_days: number;
+  features: string[];
+  monthly_alert_limit?: number;
+}
+
+export interface AppSubscription {
+  id: string;
+  shop_id: string;
+  plan_name: 'free' | 'pro' | 'enterprise';
+  status: 'active' | 'cancelled' | 'frozen' | 'pending';
+  current_period_start: Date;
+  current_period_end: Date;
+  trial_ends_at?: Date;
+  cancelled_at?: Date;
+  shopify_charge_id?: string;
+  monthly_alert_count: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface BillingConfig {
+  plans: {
+    free: ShopifySubscriptionPlan;
+    pro: ShopifySubscriptionPlan;
+    enterprise: ShopifySubscriptionPlan;
+  };
+}
+
+export interface RecurringCharge {
+  name: string;
+  price: string;
+  return_url: string;
+  trial_days?: number;
+  test?: boolean;
+}

@@ -1,7 +1,7 @@
 # DelayGuard Privacy Policy
 
-**Effective Date**: [Date]  
-**Last Updated**: [Date]
+**Effective Date**: January 1, 2025  
+**Last Updated**: October 21, 2025
 
 ## 1. Introduction
 

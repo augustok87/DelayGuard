@@ -5,10 +5,10 @@ import bodyParser from 'koa-bodyparser';
 import session from 'koa-session';
 import serve from 'koa-static';
 import { join } from 'path';
-import dotenv from 'dotenv';
 
 // Shopify imports
 import { shopifyApi, LATEST_API_VERSION, LogSeverity } from '@shopify/shopify-api';
+import '@shopify/shopify-api/adapters/node'; // Import Node adapter
 import { verifyRequest } from '@shopify/koa-shopify-auth';
 // import createShopifyGraphQLClient from '@shopify/koa-shopify-graphql-proxy'; // Available for future use
 
@@ -20,69 +20,16 @@ import { webhookRoutes } from './routes/webhooks';
 import { apiRoutes } from './routes/api';
 import { authRoutes } from './routes/auth';
 import { monitoringRoutes } from './routes/monitoring';
+import { gdprRoutes } from './routes/gdpr';
+import { billingRoutes } from './routes/billing';
 import { PerformanceMonitor } from './services/performance-monitor';
-import { requireEnv } from './config/environment';
+import { appConfig as config } from './config/app-config';
 
 // Security middleware imports
 import { securityHeaders } from './middleware/security-headers';
 // import { RateLimitingMiddleware, RateLimitPresets } from './middleware/rate-limiting'; // Available for future use
 import { CSRFProtectionMiddleware } from './middleware/csrf-protection';
 import { InputSanitizationMiddleware, SanitizationPresets } from './middleware/input-sanitization';
-
-// Load environment variables (only in development)
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config();
-}
-
-// Validate required environment variables
-const requiredEnvVars = [
-  'SHOPIFY_API_KEY',
-  'SHOPIFY_API_SECRET',
-  'DATABASE_URL',
-  'REDIS_URL',
-  'SHIPENGINE_API_KEY',
-  'SENDGRID_API_KEY',
-  'TWILIO_ACCOUNT_SID',
-  'TWILIO_AUTH_TOKEN',
-  'TWILIO_PHONE_NUMBER',
-];
-
-requiredEnvVars.forEach(envVar => {
-  if (!process.env[envVar]) {
-    logger.error(`Missing required environment variable: ${envVar}`);
-    // In production, we'll let Vercel handle this gracefully
-    if (process.env.NODE_ENV === 'production') {
-      return;
-    }
-    throw new Error(`Missing required environment variable: ${envVar}`);
-  }
-});
-
-// App configuration
-const config: AppConfig = {
-  shopify: {
-    apiKey: requireEnv('SHOPIFY_API_KEY'),
-    apiSecret: requireEnv('SHOPIFY_API_SECRET'),
-    scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_orders', 'write_orders', 'read_fulfillments', 'write_fulfillments'],
-  },
-  database: {
-    url: requireEnv('DATABASE_URL'),
-  },
-  redis: {
-    url: requireEnv('REDIS_URL'),
-  },
-  shipengine: {
-    apiKey: requireEnv('SHIPENGINE_API_KEY'),
-  },
-  sendgrid: {
-    apiKey: requireEnv('SENDGRID_API_KEY'),
-  },
-  twilio: {
-    accountSid: requireEnv('TWILIO_ACCOUNT_SID'),
-    authToken: requireEnv('TWILIO_AUTH_TOKEN'),
-    phoneNumber: requireEnv('TWILIO_PHONE_NUMBER'),
-  },
-};
 
 // Initialize Shopify API
 const shopify = shopifyApi({
@@ -159,6 +106,8 @@ router.use('/api', apiRoutes.routes());
 router.use('/webhooks', webhookRoutes.routes());
 router.use('/auth', authRoutes.routes());
 router.use('/monitoring', monitoringRoutes.routes());
+router.use('/webhooks', gdprRoutes.routes()); // GDPR webhooks (mandatory for Shopify)
+router.use('/billing', billingRoutes.routes()); // Billing and subscription management
 
 // Swagger UI route
 router.get('/docs', async(ctx) => {

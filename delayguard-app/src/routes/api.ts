@@ -7,10 +7,10 @@ import { verifyRequest } from "@shopify/koa-shopify-auth";
 // import { getQueueStats } from '../queue/setup'; // Available for future use
 import { analyticsRoutes } from "./analytics";
 import { OptimizedApiService } from "../services/optimized-api";
-import { config } from "../server";
+import { appConfig } from "../config/app-config";
 
 const router = new Router();
-const optimizedApi = new OptimizedApiService(config);
+const optimizedApi = new OptimizedApiService(appConfig);
 
 // Apply authentication to all API routes
 router.use(verifyRequest());

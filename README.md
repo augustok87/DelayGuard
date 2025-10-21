@@ -83,8 +83,10 @@ DelayGuard is an intelligent Shopify app that monitors your orders in real-time,
 - **🎨 Theme Customization**: Complete visual customization system for notifications
 - **📈 Performance Monitoring**: Comprehensive health checks and alerting system
 - **🛡️ Enterprise Security**: A- security rating with GDPR and SOC 2 Type II compliance
+- **🔒 GDPR Compliance**: Full GDPR webhook implementation (customers/data_request, customers/redact, shop/redact)
+- **💰 Billing System**: Complete Shopify billing integration with Free/Pro/Enterprise tiers
 - **⚡ Performance Monitoring**: Response time tracking and optimization with comprehensive tracing
-- **🧪 Testing Infrastructure**: World-class test suite with 99.8% success (1,017/1,019 tests passing)
+- **🧪 Testing Infrastructure**: World-class test suite with 99.8% success (1,047/1,049 tests passing)
 - **📚 Documentation System**: World-class JSDoc, OpenAPI 3.0, and automated documentation generation
 
 ## 🏗️ Architecture

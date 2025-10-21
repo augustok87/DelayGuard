@@ -58,7 +58,7 @@ export function useAsyncResource<T>(
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        logError(`Failed to create ${resourceName}`, { error: errorMessage, itemData });
+        logError(`Failed to create ${resourceName}`, error as Error);
         return { success: false, error: errorMessage };
       }
     },
@@ -74,7 +74,7 @@ export function useAsyncResource<T>(
         return { success: true };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        logError(`Failed to update ${resourceName}`, { error: errorMessage, id, updates });
+        logError(`Failed to update ${resourceName}`, error as Error);
         return { success: false, error: errorMessage };
       }
     },
@@ -90,7 +90,7 @@ export function useAsyncResource<T>(
         return { success: true };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        logError(`Failed to delete ${resourceName}`, { error: errorMessage, id });
+        logError(`Failed to delete ${resourceName}`, error as Error);
         return { success: false, error: errorMessage };
       }
     },

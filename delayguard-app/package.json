@@ -4,8 +4,10 @@
   "description": "Proactive shipping delay notification app for Shopify merchants",
   "main": "server.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev": "concurrently \"npm run dev:server:simple\" \"npm run dev:client\"",
+    "dev:full": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "ts-node src/server.ts",
+    "dev:server:simple": "ts-node src/server-simple.ts",
     "dev:client": "webpack serve --mode development",
     "dev:client:optimized": "webpack serve --mode development --config webpack.optimized.config.js",
     "build": "npm run build:client && npm run build:server",

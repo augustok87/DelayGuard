@@ -1,6 +1,6 @@
 import Router from "koa-router";
 import { MonitoringService, HealthCheck, SystemMetrics, Alert } from "../services/monitoring-service";
-import { config } from "../server";
+import { appConfig as config } from "../config/app-config";
 
 // Type for system status response
 interface SystemStatus {
