@@ -92,9 +92,12 @@ export const useAlertActions = () => {
         }),
       );
 
-      const successful = results.filter(
-        (result) => result.status === "fulfilled" && result.value.success,
-      ).length;
+      const successful = results.filter((result) => {
+        if (result.status === "fulfilled") {
+          return result.value.success;
+        }
+        return false;
+      }).length;
 
       const failed = results.length - successful;
 
@@ -132,9 +135,12 @@ export const useAlertActions = () => {
         }),
       );
 
-      const successful = results.filter(
-        (result) => result.status === "fulfilled" && result.value.success,
-      ).length;
+      const successful = results.filter((result) => {
+        if (result.status === "fulfilled") {
+          return result.value.success;
+        }
+        return false;
+      }).length;
 
       const failed = results.length - successful;
 
@@ -168,9 +174,12 @@ export const useAlertActions = () => {
         }),
       );
 
-      const successful = results.filter(
-        (result) => result.status === "fulfilled" && result.value.success,
-      ).length;
+      const successful = results.filter((result) => {
+        if (result.status === "fulfilled") {
+          return result.value.success;
+        }
+        return false;
+      }).length;
 
       const failed = results.length - successful;
 

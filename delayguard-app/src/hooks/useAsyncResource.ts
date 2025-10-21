@@ -1,7 +1,6 @@
 import { useEffect, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { createSafeAsyncFunction } from "../utils/error-handler";
-import { logInfo } from "../utils/logger";
+import { logInfo, logError } from "../utils/logger";
 import type { RootState, AppDispatch } from "../store/store";
 import type { AsyncThunk } from "@reduxjs/toolkit";
 
@@ -47,8 +46,8 @@ export function useAsyncResource<T>(
 
   // Create new item
   const createItem = useCallback(
-    createSafeAsyncFunction(
-      async(itemData: Partial<T>): Promise<{ success: true }> => {
+    async(itemData: Partial<T>): Promise<{ success: boolean; error?: string }> => {
+      try {
         if (createAction) {
           await dispatch(createAction(itemData)).unwrap();
           logInfo(`Created ${resourceName}`, { itemData });
@@ -57,37 +56,44 @@ export function useAsyncResource<T>(
           logInfo(`Creating ${resourceName}`, { itemData });
           return { success: true };
         }
-      },
-      { component: "useAsyncResource", action: "createItem", resourceName },
-    ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        logError(`Failed to create ${resourceName}`, { error: errorMessage, itemData });
+        return { success: false, error: errorMessage };
+      }
+    },
     [dispatch, createAction, resourceName],
   );
 
   // Update existing item
   const updateItem = useCallback(
-    createSafeAsyncFunction(
-      async(id: string, updates: Partial<T>): Promise<{ success: true }> => {
+    async(id: string, updates: Partial<T>): Promise<{ success: boolean; error?: string }> => {
+      try {
         await dispatch(updateAction({ id, updates })).unwrap();
         logInfo(`Updated ${resourceName}`, { id, updates });
         return { success: true };
-      },
-      { component: "useAsyncResource", action: "updateItem", resourceName },
-    ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        logError(`Failed to update ${resourceName}`, { error: errorMessage, id, updates });
+        return { success: false, error: errorMessage };
+      }
+    },
     [dispatch, updateAction, resourceName],
   );
 
   // Delete existing item
   const deleteItem = useCallback(
-    createSafeAsyncFunction(
-      async(id: string): Promise<{ success: true }> => {
+    async(id: string): Promise<{ success: boolean; error?: string }> => {
+      try {
         await dispatch(deleteAction(id)).unwrap();
         logInfo(`Deleted ${resourceName}`, { id });
         return { success: true };
-      },
-      { component: "useAsyncResource", action: "deleteItem", resourceName },
-    ),
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        logError(`Failed to delete ${resourceName}`, { error: errorMessage, id });
+        return { success: false, error: errorMessage };
+      }
+    },
     [dispatch, deleteAction, resourceName],
   );
 
