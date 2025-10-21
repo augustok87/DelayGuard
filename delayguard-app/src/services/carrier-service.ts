@@ -127,7 +127,7 @@ export class CarrierService implements ICarrierService {
         name: (carrier as any).friendly_name,
       }));
     } catch (error) {
-      logger.error("Carrier service error", { error: error as Error });
+      logger.error("Carrier service error", error as Error);
       throw new Error("Failed to fetch carrier list");
     }
   }

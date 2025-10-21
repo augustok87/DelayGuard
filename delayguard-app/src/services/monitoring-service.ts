@@ -184,7 +184,7 @@ export class MonitoringService {
       );
     } catch (error) {
       // Log error but don't fail the metrics collection
-      logger.warn("Monitoring service warning", { error: error as Error });
+      logger.error("Monitoring service warning", error as Error);
     }
 
     return metrics;
@@ -531,7 +531,7 @@ export class MonitoringService {
         ],
       );
     } catch (error) {
-      logger.error("Monitoring service error", { error: error as Error });
+      logger.error("Monitoring service error", error as Error);
     }
   }
 
@@ -540,7 +540,7 @@ export class MonitoringService {
       await Promise.all([(this.redis as any).quit(), this.db.end()]);
     } catch (error) {
       // Log error but don't throw
-      logger.warn("Monitoring service warning", { error: error as Error });
+      logger.error("Monitoring service warning", error as Error);
     }
   }
 }

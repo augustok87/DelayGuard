@@ -335,7 +335,7 @@ export class AuditLogger extends EventEmitter {
         await this.logToExternal(events);
       }
     } catch (error) {
-      logger.error("Audit logger error", { error: error as Error });
+      logger.error("Audit logger error", error as Error);
     }
   }
 
@@ -345,7 +345,7 @@ export class AuditLogger extends EventEmitter {
   private startFlushTimer(): void {
     this.flushTimer = setInterval(() => {
       this.flushEvents().catch((error) => {
-        logger.error("Audit logger error", { error: error as Error });
+        logger.error("Audit logger error", error as Error);
       });
     }, this.config.flushInterval);
   }

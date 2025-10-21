@@ -265,7 +265,7 @@ export class SecurityMonitor extends EventEmitter {
 
       this.emit("eventProcessed", event);
     } catch (error) {
-      logger.error("Security monitor error", { error: error as Error });
+      logger.error("Security monitor error", error as Error);
       throw error;
     }
   }
