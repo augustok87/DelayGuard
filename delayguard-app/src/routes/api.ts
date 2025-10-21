@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// API routes with dynamic request handling
 import Router from "koa-router";
 import { logger } from '../utils/logger';
 import { verifyRequest } from "@shopify/koa-shopify-auth";

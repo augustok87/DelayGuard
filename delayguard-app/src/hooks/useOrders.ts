@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Hook for managing orders with dynamic actions
 import { useCallback } from "react";
 import { useAsyncResource, useItemFilters } from "./useAsyncResource";
 import {

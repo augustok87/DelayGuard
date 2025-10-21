@@ -14,6 +14,7 @@ jest.mock('../../../src/store/hooks', () => ({
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
+  // eslint-disable-next-line react/no-children-prop
   return React.createElement(Provider, { store, children });
 };
 

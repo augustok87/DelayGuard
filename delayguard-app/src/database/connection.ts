@@ -1,4 +1,4 @@
-import { Pool, PoolClient, QueryResult } from "pg";
+import { Pool, PoolClient } from "pg";
 // import { AppConfig } from '../types'; // Removed unused import
 import { logInfo, logError } from "../utils/logger";
 

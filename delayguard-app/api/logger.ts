@@ -1,4 +1,5 @@
-// API Logger utility for server-side logging
+/* eslint-disable no-console */
+// API Logger utility for server-side logging - console usage is intentional
 export interface LogContext {
   component?: string;
   action?: string;

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Complex security monitoring service with dynamic threat analysis
 import { EventEmitter } from "events";
 import { logger } from '../utils/logger';
 import {

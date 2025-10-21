@@ -1,6 +1,8 @@
+/* eslint-disable no-console */
 /**
  * Centralized logging utility for DelayGuard
  * Provides consistent logging across the application with proper error handling
+ * Console usage is intentional in this logger implementation
  */
 
 export enum LogLevel {

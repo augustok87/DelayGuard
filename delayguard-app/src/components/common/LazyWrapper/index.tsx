@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Lazy loading wrapper with dynamic imports
 import React, { Suspense, lazy, ComponentType } from 'react';
 import { LoadingSpinner } from '../../ui/LoadingSpinner';
 

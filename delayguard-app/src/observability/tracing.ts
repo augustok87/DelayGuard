@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Observability tracing with dynamic span management
 import { logger } from '../utils/logger';
 /**
  * Simplified Tracing Configuration

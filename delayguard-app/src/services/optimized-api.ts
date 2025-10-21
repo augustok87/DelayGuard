@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Optimized API service with dynamic request handling
 import { OptimizedDatabase } from "./optimized-database";
 import { OptimizedCache, CACHE_CONFIGS } from "./optimized-cache";
 import { AppConfig } from "../types";

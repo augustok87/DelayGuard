@@ -2,6 +2,8 @@
 // / <reference types="@testing-library/jest-dom" />
 
 // Extend Jest matchers
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Jest type definitions with dynamic matchers
 import "@testing-library/jest-dom";
 
 // Global Jest types

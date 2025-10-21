@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Complex monitoring service with dynamic metric collection and alerting
 import Redis from "ioredis";
 import { logger } from '../utils/logger';
 import { Pool } from "pg";

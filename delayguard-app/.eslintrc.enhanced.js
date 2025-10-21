@@ -94,7 +94,7 @@ module.exports = {
     '@typescript-eslint/no-import-type-side-effects': 'error',
     '@typescript-eslint/explicit-function-return-type': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'error',
-    '@typescript-eslint/no-explicit-any': 'error',
+    // '@typescript-eslint/no-explicit-any' already defined above at line 71
     '@typescript-eslint/no-var-requires': 'error',
 
     // ========================================
@@ -227,8 +227,7 @@ module.exports = {
     // ========================================
     // PERFORMANCE RULES
     // ========================================
-    'react/jsx-no-bind': 'error',
-    'react/jsx-no-leaked-render': 'error',
+    // 'react/jsx-no-bind' and 'react/jsx-no-leaked-render' already defined above at lines 111-112
 
     // ========================================
     // CODE STYLE RULES - STRICT
@@ -316,21 +315,7 @@ module.exports = {
     // ========================================
     // SORTING RULES
     // ========================================
-    'import/order': ['error', {
-      groups: [
-        'builtin',
-        'external',
-        'internal',
-        'parent',
-        'sibling',
-        'index',
-      ],
-      'newlines-between': 'always',
-      alphabetize: {
-        order: 'asc',
-        caseInsensitive: true,
-      },
-    }],
+    // 'import/order' already defined above at line 177
   },
   settings: {
     react: {
@@ -357,7 +342,7 @@ module.exports = {
   ],
   overrides: [
     {
-      files: ['*.test.ts', '*.test.tsx', '*.spec.ts', '*.spec.tsx'],
+      files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx', '**/tests/**/*.ts', '**/tests/**/*.tsx'],
       rules: {
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-non-null-assertion': 'off',
@@ -366,6 +351,8 @@ module.exports = {
         'max-statements': 'off',
         'complexity': 'off',
         'cyclomatic-complexity': 'off',
+        'no-console': 'off', // Allow console in tests for debugging
+        'react/display-name': 'off', // Test components don't need display names
       },
     },
     {
@@ -373,6 +360,12 @@ module.exports = {
       rules: {
         '@typescript-eslint/no-var-requires': 'off',
         'no-console': 'off',
+      },
+    },
+    {
+      files: ['**/logger.ts', '**/utils/logger.ts', '**/api/logger.ts'],
+      rules: {
+        'no-console': 'off', // Logger utilities need console access
       },
     },
   ],

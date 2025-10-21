@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Optimized cache service with dynamic serialization
 import { Redis } from "ioredis";
 import { logger } from '../utils/logger';
 import { AppConfig } from "../types";

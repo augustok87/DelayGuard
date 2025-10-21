@@ -1,12 +1,18 @@
 const twilio = require("twilio");
 import { OrderInfo, DelayDetails } from "../types";
 
+interface TwilioClient {
+  messages: {
+    create: (params: { body: string; from: string; to: string }) => Promise<unknown>;
+  };
+}
+
 export class SMSService {
-  private client: unknown;
+  private client: TwilioClient;
   private phoneNumber: string;
 
   constructor(accountSid: string, authToken: string, phoneNumber: string) {
-    this.client = twilio(accountSid, authToken);
+    this.client = twilio(accountSid, authToken) as TwilioClient;
     this.phoneNumber = phoneNumber;
   }
 
@@ -18,7 +24,7 @@ export class SMSService {
     const message = `Hi ${orderInfo.customerName}, your order #${orderInfo.orderNumber} is delayed. New delivery: ${delayDetails.estimatedDelivery}. Track: ${delayDetails.trackingUrl}`;
 
     try {
-      await (this.client as any).messages.create({
+      await this.client.messages.create({
         body: message,
         from: this.phoneNumber,
         to: phone,

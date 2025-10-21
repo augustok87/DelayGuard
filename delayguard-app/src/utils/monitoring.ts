@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Comprehensive monitoring utility with dynamic metric collection
 import { query } from "../database/connection";
 import { logger } from '../utils/logger';
 

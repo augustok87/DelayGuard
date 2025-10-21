@@ -4,7 +4,6 @@ import {
   DelayDetectionService as IDelayDetectionService,
 } from "../types";
 import { checkForDelays } from "./delay-detection";
-import { logger } from '../utils/logger';
 import { logError } from "../utils/logger";
 
 /**

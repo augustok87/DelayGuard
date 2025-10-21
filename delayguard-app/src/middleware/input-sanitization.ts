@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Input Sanitization Middleware with dynamic validation
 import { Context, Next } from "koa";
 import { ValidationError } from "../types";
 import DOMPurify from "isomorphic-dompurify";

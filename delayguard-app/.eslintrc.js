@@ -122,4 +122,23 @@ module.exports = {
     '*.config.ts',
     'scripts/',
   ],
+  overrides: [
+    {
+      // Test files - relax strict typing rules
+      files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx', '**/tests/**/*.ts', '**/tests/**/*.tsx'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-non-null-assertion': 'off',
+        'no-console': 'off',
+        'react/display-name': 'off',
+      },
+    },
+    {
+      // Logger files - allow console usage
+      files: ['**/logger.ts', '**/utils/logger.ts', '**/api/logger.ts'],
+      rules: {
+        'no-console': 'off',
+      },
+    },
+  ],
 };

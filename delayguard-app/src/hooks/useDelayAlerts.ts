@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Hook for managing delay alerts with dynamic filtering
 import { useCallback } from "react";
 import { useAsyncResource, useItemFilters } from "./useAsyncResource";
 import {

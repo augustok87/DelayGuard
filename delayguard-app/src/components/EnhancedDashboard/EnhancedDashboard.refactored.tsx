@@ -1,6 +1,5 @@
 // Refactored EnhancedDashboard component with improved structure and organization
 import * as React from 'react';
-import { logger } from '../../utils/logger';
 import { Button, Tabs } from '../ui';
 import { useDashboardData } from './hooks/useDashboardData';
 import {

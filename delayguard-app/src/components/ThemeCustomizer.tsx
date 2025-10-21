@@ -26,11 +26,6 @@ interface ThemeSettings {
   customCSS?: string;
 }
 
-interface ThemeCustomizerProps {
-  onThemeChange?: (theme: ThemeSettings) => void;
-  initialTheme?: ThemeSettings;
-}
-
 const defaultTheme: ThemeSettings = {
   primaryColor: "#008060",
   secondaryColor: "#6B7280",

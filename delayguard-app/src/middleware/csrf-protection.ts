@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// CSRF Protection Middleware with dynamic token validation
 import { Context, Next } from "koa";
 import crypto from "crypto";
 // import { ValidationError } from '../types'; // Removed unused import

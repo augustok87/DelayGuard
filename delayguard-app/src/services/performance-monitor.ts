@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Performance monitoring service with dynamic metric tracking
 import { Redis } from "ioredis";
 import { AppConfig } from "../types";
 

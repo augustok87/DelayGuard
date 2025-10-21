@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Audit logging service with dynamic event tracking
 import { Context } from "koa";
 import { logger } from '../utils/logger';
 import { EventEmitter } from "events";

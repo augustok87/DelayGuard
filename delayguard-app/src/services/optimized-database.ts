@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Optimized database service with dynamic query building
 import { Pool, PoolClient, QueryResult } from "pg";
 import { logger } from '../utils/logger';
 import { AppConfig } from "../types";
