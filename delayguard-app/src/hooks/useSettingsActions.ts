@@ -19,7 +19,7 @@ export const useSettingsActions = () => {
     showWarningToast,
     showInfoToast,
     showSaveSuccessToast,
-    showSaveErrorToast,
+    // showSaveErrorToast, // Not used in this hook
     showConnectionSuccessToast,
     showConnectionErrorToast,
     showTestSuccessToast,
@@ -49,7 +49,6 @@ export const useSettingsActions = () => {
       validateSettings,
       showErrorToast,
       showSaveSuccessToast,
-      showSaveErrorToast,
     ],
   );
 

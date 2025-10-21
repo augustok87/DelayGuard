@@ -60,6 +60,7 @@ export function useAsyncResource<T>(
       },
       { component: "useAsyncResource", action: "createItem", resourceName },
     ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [dispatch, createAction, resourceName],
   );
 
@@ -73,6 +74,7 @@ export function useAsyncResource<T>(
       },
       { component: "useAsyncResource", action: "updateItem", resourceName },
     ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [dispatch, updateAction, resourceName],
   );
 

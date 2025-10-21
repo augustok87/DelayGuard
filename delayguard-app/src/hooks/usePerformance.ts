@@ -209,6 +209,7 @@ export const useComponentPerformance = (
   useEffect(() => {
     const cleanup = trackRender();
     return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 
   return trackRender;

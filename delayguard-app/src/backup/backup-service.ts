@@ -435,7 +435,7 @@ export class BackupService {
       } catch (error) {
         logger.warn("Failed to read file during backup", {
           file,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }

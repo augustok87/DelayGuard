@@ -46,9 +46,13 @@ export const createLazyComponent = <P extends object>(
 ) => {
   const LazyComponent = lazy(importFn);
   
-  return (props: P) => (
+  const LazyComponentWrapper: React.FC<P> = (props: P) => (
     <LazyWrapper fallback={fallback}>
       <LazyComponent {...(props as any)} />
     </LazyWrapper>
   );
+
+  LazyComponentWrapper.displayName = 'LazyComponent';
+  
+  return LazyComponentWrapper;
 };

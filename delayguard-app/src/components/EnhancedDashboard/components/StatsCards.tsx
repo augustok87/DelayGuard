@@ -41,8 +41,8 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
         marginBottom: DASHBOARD_CONFIG.MARGIN_BOTTOM,
       }}
     >
-      {statsData.map((stat, index) => (
-        <Card key={`item-${index}`} title={stat.title}>
+      {statsData.map((stat) => (
+        <Card key={stat.title} title={stat.title}>
           <div style={{ textAlign: 'center' }}>
             <Text
               variant="headingLg"

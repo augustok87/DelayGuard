@@ -600,9 +600,9 @@ handleCustomCSSChange.displayName = 'handleCustomCSSChange';
                     {palette.name}
                   </Text>
                   <div style={{ display: "flex", gap: "4px" }}>
-                    {palette.colors.map((color, colorIndex) => (
+                    {palette.colors.map((color) => (
                       <div
-                        key={`${palette.name}-color-${colorIndex}`}
+                        key={`${palette.name}-${color}`}
                         style={{
                           width: "30px",
                           height: "30px",

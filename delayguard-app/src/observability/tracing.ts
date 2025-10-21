@@ -149,7 +149,7 @@ export async function traceHttpRequest(ctx: Context, next: Next): Promise<void> 
   } catch (error) {
     span.setStatus({ 
       code: 2, 
-      message: error instanceof Error ? error.message : "Unknown error" 
+      message: error instanceof Error ? error.message : "Unknown error",
     });
     throw error;
   } finally {

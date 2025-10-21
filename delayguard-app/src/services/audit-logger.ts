@@ -390,6 +390,7 @@ export class AuditLogger extends EventEmitter {
   private logToConsole(events: SecurityEvent[]): void {
     events.forEach((event) => {
       const logLevel = this.getLogLevel(event.severity);
+      // eslint-disable-next-line no-console
       console[logLevel](`[AUDIT] ${event.type}: ${event.message}`, {
         id: event.id,
         severity: event.severity,

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import EnhancedDashboard from '../../../src/components/EnhancedDashboard';
