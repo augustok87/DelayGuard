@@ -16,7 +16,7 @@ describe('ThemeCustomizer', () => {
   });
 
   it('should render theme customizer with default values', () => {
-    render(<ThemeCustomizer />);
+    render(<ThemeCustomizer onThemeChange={jest.fn()} />);
 
     expect(screen.getAllByText('Theme Customizer')).toHaveLength(2); // Card title and content title
     expect(screen.getByText('Customize')).toBeInTheDocument();
@@ -30,7 +30,7 @@ describe('ThemeCustomizer', () => {
   });
 
   it('should render form layout with all input fields', () => {
-    render(<ThemeCustomizer />);
+    render(<ThemeCustomizer onThemeChange={jest.fn()} />);
 
     const formLayout = screen.getByTestId('form-layout');
     expect(formLayout).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('ThemeCustomizer', () => {
   });
 
   it('should handle reset functionality', () => {
-    render(<ThemeCustomizer />);
+    render(<ThemeCustomizer onThemeChange={jest.fn()} />);
 
     const resetButton = screen.getByText('Reset');
     fireEvent.click(resetButton);
@@ -122,7 +122,7 @@ describe('ThemeCustomizer', () => {
   });
 
   it('should open and close advanced modal', () => {
-    render(<ThemeCustomizer />);
+    render(<ThemeCustomizer onThemeChange={jest.fn()} />);
 
     const advancedButton = screen.getByText('Advanced');
     fireEvent.click(advancedButton);
@@ -138,7 +138,7 @@ describe('ThemeCustomizer', () => {
   });
 
   it('should handle custom CSS changes', () => {
-    render(<ThemeCustomizer />);
+    render(<ThemeCustomizer onThemeChange={jest.fn()} />);
 
     const advancedButton = screen.getByText('Advanced');
     fireEvent.click(advancedButton);
@@ -150,7 +150,7 @@ describe('ThemeCustomizer', () => {
   });
 
   it('should show CSS validation error for invalid CSS', () => {
-    render(<ThemeCustomizer />);
+    render(<ThemeCustomizer onThemeChange={jest.fn()} />);
 
     const advancedButton = screen.getByText('Advanced');
     fireEvent.click(advancedButton);
@@ -162,7 +162,7 @@ describe('ThemeCustomizer', () => {
   });
 
   it('should handle theme preview', () => {
-    render(<ThemeCustomizer />);
+    render(<ThemeCustomizer onThemeChange={jest.fn()} />);
 
     const previewButton = screen.getByText('Preview Theme');
     fireEvent.click(previewButton);
@@ -190,7 +190,7 @@ describe('ThemeCustomizer', () => {
       customCSS: '.test { color: red; }',
     };
 
-    render(<ThemeCustomizer initialTheme={initialTheme} />);
+    render(<ThemeCustomizer onThemeChange={jest.fn()} initialTheme={initialTheme} />);
 
     const primaryColorPicker = screen.getAllByTestId('color-picker')[0];
     expect(primaryColorPicker).toHaveValue('#ff0000');

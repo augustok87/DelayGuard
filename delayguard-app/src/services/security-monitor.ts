@@ -265,7 +265,7 @@ export class SecurityMonitor extends EventEmitter {
 
       this.emit("eventProcessed", event);
     } catch (error) {
-      logger.error($1, error as Error);
+      logger.error("Security monitor error", { error: error as Error });
       throw error;
     }
   }
@@ -431,7 +431,7 @@ export class SecurityMonitor extends EventEmitter {
       case "contains":
         return String(fieldValue).includes(String(condition.value));
       case "matches":
-        return new RegExp(condition.value).test(String(fieldValue));
+        return new RegExp(condition.value as string).test(String(fieldValue));
       case "greater_than":
         return Number(fieldValue) > Number(condition.value);
       case "less_than":

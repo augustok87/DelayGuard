@@ -54,12 +54,12 @@ export class CarrierService implements ICarrierService {
         originalEstimatedDeliveryDate: data.original_estimated_delivery_date,
         events:
           data.events?.map((event: unknown) => ({
-            timestamp: event.occurred_at,
-            status: this.mapStatus(event.status_code),
-            location: event.city_locality
-              ? `${event.city_locality}, ${event.state_province}`
+            timestamp: (event as any).occurred_at,
+            status: this.mapStatus((event as any).status_code),
+            location: (event as any).city_locality
+              ? `${(event as any).city_locality}, ${(event as any).state_province}`
               : undefined,
-            description: event.description || event.status_code,
+            description: (event as any).description || (event as any).status_code,
           })) || [],
       };
 
@@ -68,7 +68,7 @@ export class CarrierService implements ICarrierService {
     } catch (error) {
       logger.error(
         `❌ Failed to get tracking info for ${trackingNumber}:`,
-        error,
+        error as Error,
       );
 
       if (axios.isAxiosError(error)) {
@@ -123,11 +123,11 @@ export class CarrierService implements ICarrierService {
       const response = await this.client.get("/v1/carriers");
 
       return response.data.carriers.map((carrier: unknown) => ({
-        code: carrier.carrier_code,
-        name: carrier.friendly_name,
+        code: (carrier as any).carrier_code,
+        name: (carrier as any).friendly_name,
       }));
     } catch (error) {
-      logger.error($1, error as Error);
+      logger.error("Carrier service error", { error: error as Error });
       throw new Error("Failed to fetch carrier list");
     }
   }

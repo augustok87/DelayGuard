@@ -56,7 +56,7 @@ export class InputSanitizationMiddleware {
 
       // Sanitize query parameters
       if (ctx.query) {
-        ctx.query = this.sanitizeObject(ctx.query);
+        ctx.query = this.sanitizeObject(ctx.query as Record<string, unknown>) as any;
       }
 
       // Sanitize headers (basic sanitization)
@@ -98,7 +98,7 @@ export class InputSanitizationMiddleware {
       for (const [key, value] of Object.entries(obj)) {
         // Sanitize key
         const sanitizedKey = this.sanitizeString(key);
-        sanitized[sanitizedKey] = this.sanitizeObject(value);
+        (sanitized as Record<string, unknown>)[sanitizedKey] = this.sanitizeObject(value);
       }
       return sanitized;
     }
@@ -340,7 +340,7 @@ export class AdvancedInputValidator {
     const result: unknown = {};
 
     for (const [field, rules] of Object.entries(schema)) {
-      const value = data[field];
+      const value = (data as Record<string, unknown>)[field];
 
       if (rules.required && (value === undefined || value === null)) {
         throw new ValidationError(
@@ -361,7 +361,7 @@ export class AdvancedInputValidator {
         }
 
         // Length validation
-        if (rules.minLength && value.length < rules.minLength) {
+        if (rules.minLength && (value as string).length < rules.minLength) {
           throw new ValidationError(
             `${field} must be at least ${rules.minLength} characters`,
             "TOO_SHORT",
@@ -369,7 +369,7 @@ export class AdvancedInputValidator {
           );
         }
 
-        if (rules.maxLength && value.length > rules.maxLength) {
+        if (rules.maxLength && (value as string).length > rules.maxLength) {
           throw new ValidationError(
             `${field} must be at most ${rules.maxLength} characters`,
             "TOO_LONG",
@@ -395,7 +395,7 @@ export class AdvancedInputValidator {
           );
         }
 
-        result[field] = value;
+        (result as Record<string, unknown>)[field] = value;
       }
     }
 

@@ -51,8 +51,10 @@ const defaultTheme: ThemeSettings = {
 function ThemeCustomizer({
   onThemeChange,
   initialTheme = defaultTheme,
-}
-): ThemeCustomizerProps {
+}: {
+  onThemeChange: (theme: ThemeSettings) => void;
+  initialTheme?: ThemeSettings;
+}): React.JSX.Element {
   const [theme, setTheme] = useState<ThemeSettings>(initialTheme);
   const [showModal, setShowModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -147,7 +149,7 @@ handleExportTheme.displayName = 'handleExportTheme';
           setShowToast(true);
         }
       };
-handleImportTheme.displayName = 'handleImportTheme';
+// handleImportTheme.displayName = 'handleImportTheme'; // Function expressions don't have displayName
       reader.readAsText(file);
     }
   };

@@ -158,7 +158,7 @@ export class MonitoringService {
         queryTime: dbQueryTime,
       },
       redis: {
-        connected: this.redis.status === "ready",
+        connected: (this.redis as any).status === "ready",
         memory: redisStats.memory,
         operations: redisStats.operations,
       },
@@ -177,14 +177,14 @@ export class MonitoringService {
 
     // Store in Redis for persistence
     try {
-      await this.redis.setex(
+      await (this.redis as any).setex(
         `metrics:system:${timestamp.getTime()}`,
         3600, // 1 hour TTL
         JSON.stringify(metrics),
       );
     } catch (error) {
       // Log error but don't fail the metrics collection
-      logger.warn("Monitoring service warning", error as Error);
+      logger.warn("Monitoring service warning", { error: error as Error });
     }
 
     return metrics;
@@ -283,7 +283,7 @@ export class MonitoringService {
     const start = Date.now();
 
     try {
-      await this.redis.ping();
+      await (this.redis as any).ping();
       const responseTime = Date.now() - start;
 
       return {
@@ -291,7 +291,7 @@ export class MonitoringService {
         status: responseTime < 100 ? "healthy" : "degraded",
         responseTime,
         lastChecked: new Date(),
-        details: { status: this.redis.status },
+        details: { status: (this.redis as any).status },
       };
     } catch (error) {
       return {
@@ -413,11 +413,11 @@ export class MonitoringService {
     operations: { commands: number; keyspace: number };
   }> {
     try {
-      const info = await this.redis.info("memory");
+      const info = await (this.redis as any).info("memory");
       const used = info.match(/used_memory:(\d+)/)?.[1] || "0";
       const peak = info.match(/used_memory_peak:(\d+)/)?.[1] || "0";
 
-      const keyspace = await this.redis.dbsize();
+      const keyspace = await (this.redis as any).dbsize();
 
       return {
         memory: {
@@ -480,7 +480,7 @@ export class MonitoringService {
 
     for (const part of parts) {
       if (value && typeof value === "object" && part in value) {
-        value = value[part];
+        value = (value as any)[part];
       } else {
         return null;
       }
@@ -531,16 +531,16 @@ export class MonitoringService {
         ],
       );
     } catch (error) {
-      logger.error($1, error as Error);
+      logger.error("Monitoring service error", { error: error as Error });
     }
   }
 
   async close(): Promise<void> {
     try {
-      await Promise.all([this.redis.quit(), this.db.end()]);
+      await Promise.all([(this.redis as any).quit(), this.db.end()]);
     } catch (error) {
       // Log error but don't throw
-      logger.warn("Monitoring service warning", error as Error);
+      logger.warn("Monitoring service warning", { error: error as Error });
     }
   }
 }

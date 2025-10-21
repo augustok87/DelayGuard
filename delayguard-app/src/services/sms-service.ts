@@ -18,7 +18,7 @@ export class SMSService {
     const message = `Hi ${orderInfo.customerName}, your order #${orderInfo.orderNumber} is delayed. New delivery: ${delayDetails.estimatedDelivery}. Track: ${delayDetails.trackingUrl}`;
 
     try {
-      await this.client.messages.create({
+      await (this.client as any).messages.create({
         body: message,
         from: this.phoneNumber,
         to: phone,

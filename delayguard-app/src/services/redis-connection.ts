@@ -79,7 +79,7 @@ class RedisConnectionManager {
       });
 
       this.client.on("error", (error) => {
-        logger.error("❌ Redis error:", error.message);
+        logger.error("❌ Redis error:", { error: error as Error });
       });
 
       this.client.on("close", () => {
@@ -95,7 +95,7 @@ class RedisConnectionManager {
 
       return this.client;
     } catch (error) {
-      logger.error($1, error as Error);
+      logger.error("Redis connection error", { error: error as Error });
       throw new Error(
         `Redis connection failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -131,7 +131,7 @@ class RedisConnectionManager {
       const result = await client.ping();
       return result === "PONG";
     } catch (error) {
-      logger.error($1, error as Error);
+      logger.error("Redis connection error", { error: error as Error });
       return false;
     }
   }
