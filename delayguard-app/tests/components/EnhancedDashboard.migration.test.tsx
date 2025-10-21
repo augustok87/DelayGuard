@@ -18,6 +18,24 @@ jest.mock('../../src/services/analytics-service', () => ({
   })),
 }));
 
+// Mock the useApiClient hook to prevent real API calls in tests
+jest.mock('../../src/hooks/useApiClient', () => ({
+  useApiClient: jest.fn(() => ({
+    getAlerts: jest.fn().mockResolvedValue({ success: true, data: [] }),
+    getOrders: jest.fn().mockResolvedValue({ success: true, data: [] }),
+    getSettings: jest.fn().mockResolvedValue({ success: true, data: mockAppSettings }),
+    getAnalytics: jest.fn().mockResolvedValue({ 
+      success: true, 
+      data: { 
+        alerts: { total_alerts: 0, sent_alerts: 0, pending_alerts: 0 },
+        orders: { total_orders: 0 }
+      }
+    }),
+    updateSettings: jest.fn().mockResolvedValue({ success: true }),
+    setApp: jest.fn(),
+  })),
+}));
+
 describe('EnhancedDashboard Migration', () => {
   const defaultProps = {
     settings: mockAppSettings,

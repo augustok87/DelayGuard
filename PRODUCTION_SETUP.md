@@ -80,6 +80,24 @@ Before setting up production, ensure you have:
    - API secret key
    - (Save these for environment variables)
 
+### Step 1.3: Configure Authentication (Embedded App)
+
+DelayGuard uses **Shopify Embedded App authentication** with session tokens. This provides:
+- ✅ No separate login system required
+- ✅ Automatic authentication through Shopify Admin
+- ✅ Secure JWT-based session tokens
+- ✅ Stateless architecture
+
+**Important Notes:**
+1. **Session Tokens**: The app uses App Bridge to retrieve session tokens (JWT) that are validated by the backend
+2. **SHOPIFY_API_SECRET**: This is critical for JWT verification - keep it secret!
+3. **Embedded Mode**: Must be enabled in app settings (see above)
+4. **App Bridge**: Frontend automatically handles token generation and refresh
+
+**No additional configuration required** - authentication is handled automatically once environment variables are set.
+
+For detailed authentication documentation, see [AUTHENTICATION_GUIDE.md](./AUTHENTICATION_GUIDE.md).
+
 ---
 
 ## 2. Database Setup
@@ -228,45 +246,90 @@ vercel --prod
 Set these in **Vercel Dashboard** → **Settings** → **Environment Variables**:
 
 ```env
-# Shopify Configuration (REQUIRED)
-SHOPIFY_API_KEY=your_shopify_api_key
-SHOPIFY_API_SECRET=your_shopify_api_secret
+# ============================================
+# AUTHENTICATION (REQUIRED - CRITICAL!)
+# ============================================
+# These are ESSENTIAL for Shopify Embedded App authentication
+SHOPIFY_API_KEY=your_shopify_api_key                 # From Shopify Partners dashboard
+SHOPIFY_API_SECRET=your_shopify_api_secret           # CRITICAL: Used for JWT verification!
 SHOPIFY_SCOPES=read_orders,write_orders,read_fulfillments,write_fulfillments
 
-# Database (REQUIRED)
+# Frontend Environment (for App Bridge)
+REACT_APP_SHOPIFY_API_KEY=your_shopify_api_key       # Same as SHOPIFY_API_KEY above
+
+# ============================================
+# DATABASE (REQUIRED)
+# ============================================
 DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
 
-# Redis (REQUIRED)
+# ============================================
+# REDIS (REQUIRED)
+# ============================================
 REDIS_URL=rediss://default:password@host:6379
 
-# External APIs (REQUIRED)
+# ============================================
+# EXTERNAL APIs (REQUIRED)
+# ============================================
 SHIPENGINE_API_KEY=your_shipengine_api_key
 SENDGRID_API_KEY=your_sendgrid_api_key
 TWILIO_ACCOUNT_SID=your_twilio_account_sid
 TWILIO_AUTH_TOKEN=your_twilio_auth_token
 TWILIO_PHONE_NUMBER=+1234567890
 
-# Application Configuration
+# ============================================
+# APPLICATION CONFIGURATION
+# ============================================
 NODE_ENV=production
 PORT=3000
 
-# Optional: Monitoring
+# ============================================
+# OPTIONAL: MONITORING
+# ============================================
 SENTRY_DSN=your_sentry_dsn
 ```
 
+### Authentication Environment Variables (CRITICAL)
+
+⚠️ **IMPORTANT**: These variables are essential for authentication to work:
+
+1. **SHOPIFY_API_SECRET**
+   - Used to verify JWT session tokens from App Bridge
+   - **MUST match** the API secret in Shopify Partners dashboard
+   - Keep this secret! Never expose in client-side code
+   - Without this, all API requests will fail with 401 Unauthorized
+
+2. **SHOPIFY_API_KEY**
+   - Used by App Bridge to identify your app
+   - Must match the API key in Shopify Partners dashboard
+   - Needs to be set in both backend AND frontend (as REACT_APP_SHOPIFY_API_KEY)
+
+3. **REACT_APP_SHOPIFY_API_KEY**
+   - Frontend version of API key
+   - Read by App Bridge provider
+   - Set to same value as SHOPIFY_API_KEY
+
 ### Environment Variable Checklist
 
-- [ ] SHOPIFY_API_KEY
-- [ ] SHOPIFY_API_SECRET
+#### Authentication (CRITICAL - Must be set!)
+- [ ] SHOPIFY_API_KEY _(Backend)_
+- [ ] SHOPIFY_API_SECRET _(Backend - for JWT verification)_
+- [ ] REACT_APP_SHOPIFY_API_KEY _(Frontend - for App Bridge)_
 - [ ] SHOPIFY_SCOPES
+
+#### Infrastructure
 - [ ] DATABASE_URL
 - [ ] REDIS_URL
+- [ ] NODE_ENV=production
+
+#### External Services
 - [ ] SHIPENGINE_API_KEY
 - [ ] SENDGRID_API_KEY
 - [ ] TWILIO_ACCOUNT_SID
 - [ ] TWILIO_AUTH_TOKEN
 - [ ] TWILIO_PHONE_NUMBER
-- [ ] NODE_ENV=production
+
+#### Optional
+- [ ] SENTRY_DSN
 
 ---
 
@@ -290,10 +353,59 @@ curl https://your-app.vercel.app/api/health
 
 ### Step 7.2: Test Shopify Authentication
 
-1. Install app on test store
-2. Complete OAuth flow
-3. Verify redirect to app
-4. Check database for shop entry
+This is critical! The app uses Shopify Embedded App authentication with session tokens.
+
+1. **Install app on test store**
+   ```bash
+   # From Shopify Partners dashboard:
+   # Apps → Your App → Test on development store
+   ```
+
+2. **Complete OAuth flow**
+   - Should redirect to `/auth` endpoint
+   - Grant permissions
+   - Redirect to app homepage
+
+3. **Verify embedded app loads**
+   - Open app from Shopify Admin
+   - App should load inside Shopify Admin (embedded)
+   - No separate login screen should appear
+
+4. **Test API authentication**
+   - Open browser console in Shopify Admin
+   - Run this test:
+   ```javascript
+   // Get session token
+   const token = await app.sessionToken.getSessionToken();
+   console.log('Token received:', !!token);
+   
+   // Test authenticated API call
+   const response = await fetch('/api/health', {
+     headers: { 'Authorization': `Bearer ${token}` }
+   });
+   console.log('API Response:', await response.json());
+   ```
+
+5. **Check database for shop entry**
+   ```sql
+   SELECT shop_domain, created_at FROM shops WHERE shop_domain = 'your-test-store.myshopify.com';
+   ```
+
+6. **Verify real data loading**
+   - Dashboard should show real data (not mock data)
+   - Alerts, orders, and settings should load from API
+   - Check browser Network tab for API calls with Authorization headers
+
+**Expected Behavior:**
+- ✅ No 401 Unauthorized errors in console
+- ✅ API calls include `Authorization: Bearer <token>` header
+- ✅ Real data displays (check if it matches your test store)
+- ✅ Settings can be updated and persist
+
+**Troubleshooting:**
+- If 401 errors: Check SHOPIFY_API_SECRET is set correctly
+- If REACT_APP_SHOPIFY_API_KEY error: Set frontend env var in Vercel
+- If mock data shows: Check browser console for API errors
 
 ### Step 7.3: Test Webhook Endpoints
 

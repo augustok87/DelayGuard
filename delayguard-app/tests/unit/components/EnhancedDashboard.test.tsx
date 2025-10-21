@@ -244,6 +244,90 @@ jest.mock('../../../src/services/analytics-service', () => ({
   AnalyticsService: jest.fn().mockImplementation(() => mockAnalyticsAPI),
 }));
 
+// Mock the useApiClient hook to prevent real API calls in tests
+jest.mock('../../../src/hooks/useApiClient', () => ({
+  useApiClient: jest.fn(() => ({
+    getAlerts: jest.fn().mockResolvedValue({ 
+      success: true, 
+      data: [
+        {
+          id: '1',
+          orderId: 'ORD-001',
+          customerName: 'John Doe',
+          customerEmail: 'john@example.com',
+          delayDays: 3,
+          delayReason: 'Weather Delay',
+          severity: 'high',
+          createdAt: '2024-01-15T10:00:00Z',
+          status: 'active',
+          trackingNumber: '1Z999AA1234567890',
+          carrierCode: 'UPS',
+        },
+        {
+          id: '2',
+          orderId: 'ORD-002',
+          customerName: 'Jane Smith',
+          customerEmail: 'jane@example.com',
+          delayDays: 1,
+          delayReason: 'Carrier Issue',
+          severity: 'medium',
+          createdAt: '2024-01-15T11:00:00Z',
+          status: 'resolved',
+          trackingNumber: '1234567890123456',
+          carrierCode: 'FedEx',
+        },
+      ]
+    }),
+    getOrders: jest.fn().mockResolvedValue({ 
+      success: true, 
+      data: [
+        {
+          id: '1',
+          orderNumber: 'ORD-001',
+          customerName: 'John Doe',
+          totalAmount: 299.99,
+          createdAt: '2024-01-10T10:00:00Z',
+          status: 'shipped',
+          carrierCode: 'UPS',
+          trackingNumber: '1Z999AA1234567890',
+          currency: 'USD',
+        },
+        {
+          id: '2',
+          orderNumber: 'ORD-002',
+          customerName: 'Jane Smith',
+          totalAmount: 149.99,
+          createdAt: '2024-01-12T14:00:00Z',
+          status: 'delivered',
+          carrierCode: 'FedEx',
+          trackingNumber: '1234567890123456',
+          currency: 'USD',
+        },
+      ]
+    }),
+    getSettings: jest.fn().mockResolvedValue({ 
+      success: true, 
+      data: {
+        delayThreshold: 3,
+        emailNotifications: true,
+        smsNotifications: false,
+        notificationTemplate: 'default',
+        autoResolveDays: 7,
+        enableAnalytics: true,
+      }
+    }),
+    getAnalytics: jest.fn().mockResolvedValue({ 
+      success: true, 
+      data: { 
+        alerts: { total_alerts: 2, sent_alerts: 1, pending_alerts: 1 },
+        orders: { total_orders: 2 }
+      }
+    }),
+    updateSettings: jest.fn().mockResolvedValue({ success: true }),
+    setApp: jest.fn(),
+  })),
+}));
+
 describe('EnhancedDashboard', () => {
   // const mockSettings = {
   //   delayThreshold: 3,

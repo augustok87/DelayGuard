@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -65,6 +66,12 @@ module.exports = {
         minifyCSS: true,
         minifyURLs: true,
       } : false,
+    }),
+    // Inject environment variables into the bundle
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      'process.env.REACT_APP_SHOPIFY_API_KEY': JSON.stringify(process.env.REACT_APP_SHOPIFY_API_KEY || 'development-api-key'),
+      'process.env.SHOPIFY_API_KEY': JSON.stringify(process.env.SHOPIFY_API_KEY || ''),
     }),
   ],
   devServer: {

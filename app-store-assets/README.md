@@ -14,14 +14,25 @@ app-store-assets/
 └── README.md             # This file
 ```
 
-## App Icons ✅ READY
+## App Icons ⚠️ ACTION REQUIRED
 
-All required icon sizes have been generated:
+### Current Status:
+- ✅ `app-icon-1024x1024.png` - Good design
+- ✅ `app-icon-512x512.png` - Medium size
+- ✅ `app-icon-256x256.png` - Small size  
+- ✅ `app-icon-128x128.png` - Thumbnail
 
-- `app-icon-1024x1024.png` - App Store listing (primary)
-- `app-icon-512x512.png` - Medium size
-- `app-icon-256x256.png` - Small size  
-- `app-icon-128x128.png` - Thumbnail
+### ⚠️ REQUIRED UPDATE (2025):
+**Shopify now requires**: **1200x1200 pixels** for main app icon
+
+**Action needed**: Resize the 1024x1024 icon to 1200x1200 pixels
+
+```bash
+# Using ImageMagick (install with: brew install imagemagick)
+convert app-icon-1024x1024.png -resize 1200x1200 app-icon-1200x1200.png
+
+# Or use any image editor to resize to 1200x1200px
+```
 
 ### Icon Design
 - **Primary Color**: Blue (#4F46E5)
@@ -41,6 +52,13 @@ Shopify requires **5-10 high-quality screenshots** showing:
 4. **Analytics** - Charts and reporting
 5. **Settings** - Configuration options
 
+### ⚠️ UPDATED DIMENSIONS (2025)
+
+**IMPORTANT**: Shopify updated screenshot requirements in 2024:
+- **Screenshots**: 1600x1200 pixels (NOT 1920x1080)
+- **Feature Media**: 1600x900 pixels (NEW - required for listing header)
+- **App Icon**: 1200x1200 pixels (NOT 1024x1024)
+
 ### Option 1: Generate from HTML Templates (Recommended)
 
 We have HTML templates ready. To generate screenshots:
@@ -49,12 +67,13 @@ We have HTML templates ready. To generate screenshots:
 cd app-store-assets
 
 # Method A: Using Node.js script (if you have puppeteer installed)
+# IMPORTANT: Update script to use 1600x1200 dimensions
 npm install puppeteer
 node generate-screenshots.js
 
-# Method B: Manual browser screenshots
+# Method B: Manual browser screenshots (RECOMMENDED)
 # 1. Open each HTML file in browser
-# 2. Set window to 1920x1080
+# 2. Set window to 1600x1200 (NEW DIMENSIONS)
 # 3. Take full-page screenshot
 # 4. Save as PNG to screenshots/ directory
 ```
@@ -80,15 +99,16 @@ npm run dev
 # 5. Save to app-store-assets/screenshots/
 ```
 
-### Screenshot Requirements
+### Screenshot Requirements (Updated 2025)
 
-✅ **Resolution**: Minimum 1920x1080 pixels  
+✅ **Resolution**: **1600x1200 pixels** (Shopify standard 2024-2025)  
 ✅ **Format**: PNG or JPEG  
 ✅ **Size**: Less than 5MB per image  
 ✅ **Quality**: High resolution, no blurriness  
 ✅ **Content**: Show actual app interface (not mockups)  
 ✅ **Text**: Readable at all sizes  
-✅ **Branding**: Consistent colors and style
+✅ **Branding**: Consistent colors and style  
+✅ **Layout**: Uncluttered, clear feature demonstration
 
 ### Screenshot Naming Convention
 
@@ -101,30 +121,40 @@ npm run dev
 6-notifications-templates.png
 ```
 
-## Demo Video (Optional but Recommended)
+## Feature Media ⭐ REQUIRED (NEW for 2025)
 
-### Video Requirements
+### ⚠️ MANDATORY REQUIREMENT
 
-- **Length**: 30-60 seconds
+Shopify now **requires** Feature Media for the listing header. Choose ONE:
+
+**Option A: Feature Image** (Recommended for faster submission)
+- **Dimensions**: **1600x900 pixels**
+- **Format**: PNG or JPEG
+- **Content**: Eye-catching image showing app's core benefit
+- **Text overlay**: Brief value proposition (e.g., "Stop Shipping Delays Before Customers Complain")
+- **Design**: Professional, brand-aligned, clear messaging
+
+**Option B: Promotional Video** (More engaging but takes longer)
+- **Length**: **2-3 minutes** (promotional, not instructional)
 - **Format**: MP4, MOV, or AVI
 - **Resolution**: 1920x1080 (Full HD)
 - **Size**: Less than 100MB
-- **Audio**: Optional but helpful
+- **Content**: Show VALUE and BENEFITS, not just features
+- **Style**: Professional, engaging, fast-paced
 
-### Video Content Ideas
+### Tools for Creation
 
-1. Quick tour of main features
-2. Show delay detection in action
-3. Demonstrate customer notification flow
-4. Highlight analytics dashboard
-5. Show easy setup process
+**For Feature Image**:
+- Canva (free, easy templates)
+- Figma (professional design)
+- Photoshop (advanced)
 
-### Tools for Video Creation
-
+**For Promotional Video**:
 - **Loom** - https://www.loom.com (Free, easy to use)
 - **OBS Studio** - https://obsproject.com (Free, professional)
 - **QuickTime** (Mac) - Built-in screen recording
 - **Windows Game Bar** (Windows) - Built-in screen recording
+- **DaVinci Resolve** (Free, professional editing)
 
 ## App Listing Copy
 
