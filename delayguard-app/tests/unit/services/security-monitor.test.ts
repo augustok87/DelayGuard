@@ -35,18 +35,18 @@ describe('SecurityMonitor', () => {
   describe('Monitoring Control', () => {
     it('should start and stop monitoring', () => {
       const startSpy = jest.spyOn(securityMonitor, 'emit');
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "info").mockImplementation();
 
       securityMonitor.startMonitoring();
       expect(startSpy).toHaveBeenCalledWith('monitoringStarted');
-      expect(consoleSpy).toHaveBeenCalledWith('🔍 Security monitoring started');
+      expect(loggerSpy).toHaveBeenCalledWith("🔍 Security monitoring started");
 
       securityMonitor.stopMonitoring();
       expect(startSpy).toHaveBeenCalledWith('monitoringStopped');
-      expect(consoleSpy).toHaveBeenCalledWith('⏹️ Security monitoring stopped');
+      expect(loggerSpy).toHaveBeenCalledWith('⏹️ Security monitoring stopped');
 
       startSpy.mockRestore();
-      consoleSpy.mockRestore();
+      loggerSpy.mockRestore();
     });
 
     it('should emit monitoring events', () => {
@@ -108,7 +108,7 @@ describe('SecurityMonitor', () => {
       securityMonitor.addRule(errorRule);
       
       await expect(securityMonitor.processSecurityEvent(mockEvent)).rejects.toThrow('Rule evaluation failed');
-      expect(errorSpy).toHaveBeenCalledWith('Error processing security event:', expect.any(Error));
+      expect(errorSpy).toHaveBeenCalledWith("Security monitor error", expect.any(Error));
       
       errorSpy.mockRestore();
       eventSpy.mockRestore();
