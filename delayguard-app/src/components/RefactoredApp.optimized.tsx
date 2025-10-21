@@ -73,7 +73,7 @@ export function RefactoredAppOptimized() {
   // Initialize shop data
   useEffect(() => {
     setShop("my-awesome-store.myshopify.com");
-  }, []); // TODO: Review dependencies
+  }, []); // Empty deps array is intentional - only run on mount
 
   // Memoized handler functions
   const handleSaveSettings = useCallback(async() => {
