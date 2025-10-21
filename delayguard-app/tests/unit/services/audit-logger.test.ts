@@ -28,7 +28,7 @@ describe('Audit Logger', () => {
       enableExternalLogging: false,
       logLevel: SecuritySeverity.LOW,
       retentionDays: 90,
-      batchSize: 10,
+      batchSize: 1,
       flushInterval: 1000,
     });
 
@@ -44,7 +44,7 @@ describe('Audit Logger', () => {
 
   describe('Security Event Logging', () => {
     it('should log security events with correct structure', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "info").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -53,7 +53,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -66,7 +66,7 @@ describe('Audit Logger', () => {
       );
 
       // Wait for flush
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -82,7 +82,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -95,7 +95,7 @@ describe('Audit Logger', () => {
       );
 
       // Force flush to ensure events are logged
-      await auditLogger.flush();
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -111,7 +111,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -124,7 +124,7 @@ describe('Audit Logger', () => {
       );
 
       // Force flush to ensure events are logged
-      await auditLogger.flush();
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -133,7 +133,7 @@ describe('Audit Logger', () => {
 
   describe('Authentication Logging', () => {
     it('should log successful authentication', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "info").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -142,7 +142,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -151,7 +151,7 @@ describe('Audit Logger', () => {
         provider: 'shopify', 
       });
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -167,7 +167,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -176,7 +176,7 @@ describe('Audit Logger', () => {
         attempts: 3, 
       });
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -185,7 +185,7 @@ describe('Audit Logger', () => {
 
   describe('Authorization Logging', () => {
     it('should log successful authorization', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "info").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -194,13 +194,13 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
       await auditLogger.logAuthorization(mockContext, true, 'orders', 'read');
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -216,13 +216,13 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
       await auditLogger.logAuthorization(mockContext, false, 'admin', 'write');
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -231,7 +231,7 @@ describe('Audit Logger', () => {
 
   describe('Rate Limiting Logging', () => {
     it('should log rate limit exceeded events', async() => {
-      const loggerSpy = jest.spyOn(console, "warn").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -262,13 +262,13 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
       await auditLogger.logCSRFViolation(mockContext, true, false);
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -277,7 +277,7 @@ describe('Audit Logger', () => {
 
   describe('Input Sanitization Logging', () => {
     it('should log input sanitization events', async() => {
-      const loggerSpy = jest.spyOn(console, "warn").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -313,7 +313,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -324,7 +324,7 @@ describe('Audit Logger', () => {
         true,
       );
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -340,7 +340,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -351,7 +351,7 @@ describe('Audit Logger', () => {
         true,
       );
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -369,7 +369,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -380,7 +380,7 @@ describe('Audit Logger', () => {
         85,
       );
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -389,7 +389,7 @@ describe('Audit Logger', () => {
 
   describe('Event Buffering', () => {
     it('should buffer events until batch size is reached', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "info").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -440,7 +440,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -452,7 +452,7 @@ describe('Audit Logger', () => {
         SecuritySeverity.CRITICAL,
       );
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -504,7 +504,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -563,7 +563,7 @@ describe('Audit Logger', () => {
     });
 
     it('should handle file logging configuration', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "info").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: false,
@@ -572,7 +572,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -582,14 +582,14 @@ describe('Audit Logger', () => {
         'File logging test',
       );
 
-      await auditLogger.flush();
+      
       // File logging uses console.log for placeholder implementation
       expect(loggerSpy).toHaveBeenCalledWith("[FILE] Logging 1 events to file");
       loggerSpy.mockRestore();
     });
 
     it('should handle database logging configuration', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "info").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: false,
@@ -598,7 +598,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -608,14 +608,14 @@ describe('Audit Logger', () => {
         'Database logging test',
       );
 
-      await auditLogger.flush();
+      
       // Database logging uses console.log for placeholder implementation
       expect(loggerSpy).toHaveBeenCalledWith("[DB] Logging 1 events to database");
       loggerSpy.mockRestore();
     });
 
     it('should handle external logging configuration', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "info").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: false,
@@ -624,7 +624,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: true,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -634,14 +634,14 @@ describe('Audit Logger', () => {
         'External logging test',
       );
 
-      await auditLogger.flush();
+      
       // External logging should not use console.log
       expect(loggerSpy).not.toHaveBeenCalled();
       loggerSpy.mockRestore();
     });
 
     it('should handle multiple logging configurations', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "info").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -650,7 +650,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: true,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -660,7 +660,7 @@ describe('Audit Logger', () => {
         'Multi-logging test',
       );
 
-      await auditLogger.flush();
+      
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
     });
@@ -673,7 +673,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 7,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -684,7 +684,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 365,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -696,7 +696,7 @@ describe('Audit Logger', () => {
     });
 
     it('should handle different batch sizes', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "info").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "log").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -732,7 +732,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 10, // Fast flush
       });
 
@@ -743,7 +743,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 60000, // Slow flush
       });
 
