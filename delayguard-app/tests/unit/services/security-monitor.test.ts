@@ -87,7 +87,7 @@ describe('SecurityMonitor', () => {
     });
 
     it('should handle event processing errors', async() => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const errorSpy = jest.spyOn(require("../../../src/utils/logger").logger, "log").mockImplementation();
       const eventSpy = jest.spyOn(securityMonitor, 'emit');
       
       // Mock a rule that throws an error
@@ -108,7 +108,7 @@ describe('SecurityMonitor', () => {
       securityMonitor.addRule(errorRule);
       
       await expect(securityMonitor.processSecurityEvent(mockEvent)).rejects.toThrow('Rule evaluation failed');
-      expect(errorSpy).toHaveBeenCalledWith("Security monitor error", expect.any(Error));
+      expect(errorSpy).toHaveBeenCalledWith(3, "Security monitor error", undefined, expect.any(Error));
       
       errorSpy.mockRestore();
       eventSpy.mockRestore();

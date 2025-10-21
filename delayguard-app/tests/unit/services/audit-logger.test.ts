@@ -231,7 +231,7 @@ describe('Audit Logger', () => {
 
   describe('Rate Limiting Logging', () => {
     it('should log rate limit exceeded events', async() => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const loggerSpy = jest.spyOn(console, "warn").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -240,13 +240,11 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
       await auditLogger.logRateLimitExceeded(mockContext, 100, 150, 60000);
-
-      await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
@@ -279,7 +277,7 @@ describe('Audit Logger', () => {
 
   describe('Input Sanitization Logging', () => {
     it('should log input sanitization events', async() => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const loggerSpy = jest.spyOn(console, "warn").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -288,7 +286,7 @@ describe('Audit Logger', () => {
         enableExternalLogging: false,
         logLevel: SecuritySeverity.LOW,
         retentionDays: 90,
-        batchSize: 10,
+        batchSize: 1,
         flushInterval: 50,
       });
 
@@ -298,8 +296,6 @@ describe('Audit Logger', () => {
         '<script>alert("xss")</script>',
         'XSS',
       );
-
-      await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(loggerSpy).toHaveBeenCalled();
       loggerSpy.mockRestore();
