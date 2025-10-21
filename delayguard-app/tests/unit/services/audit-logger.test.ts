@@ -73,7 +73,7 @@ describe('Audit Logger', () => {
     });
 
     it('should calculate risk score correctly', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "error").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "error").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -102,7 +102,7 @@ describe('Audit Logger', () => {
     });
 
     it('should generate appropriate tags', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "error").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "error").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -158,7 +158,7 @@ describe('Audit Logger', () => {
     });
 
     it('should log failed authentication', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "error").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "error").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -207,7 +207,7 @@ describe('Audit Logger', () => {
     });
 
     it('should log failed authorization', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "error").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "error").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -253,7 +253,7 @@ describe('Audit Logger', () => {
 
   describe('CSRF Protection Logging', () => {
     it('should log CSRF violations', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "error").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "error").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -304,7 +304,7 @@ describe('Audit Logger', () => {
 
   describe('Attack Attempt Logging', () => {
     it('should log SQL injection attempts', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "error").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "error").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -331,7 +331,7 @@ describe('Audit Logger', () => {
     });
 
     it('should log XSS attempts', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "error").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "error").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -360,7 +360,7 @@ describe('Audit Logger', () => {
 
   describe('Suspicious Activity Logging', () => {
     it('should log suspicious activity with high risk score', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "error").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "error").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -431,7 +431,7 @@ describe('Audit Logger', () => {
     });
 
     it('should flush critical events immediately', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "error").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "error").mockImplementation();
       
       auditLogger = new AuditLogger({
         enableConsoleLogging: true,
@@ -494,7 +494,7 @@ describe('Audit Logger', () => {
 
   describe('Error Handling', () => {
     it('should handle logging errors gracefully', async() => {
-      const loggerSpy = jest.spyOn(require("../../../src/utils/logger").logger, "error").mockImplementation();
+      const loggerSpy = jest.spyOn(console, "error").mockImplementation();
       
       // Create logger with invalid configuration
       const logger = new AuditLogger({
