@@ -1,5 +1,5 @@
 import Koa from 'koa';
-import { logger } from '../utils/logger';
+import { logger } from './utils/logger';
 import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import session from 'koa-session';
@@ -21,6 +21,7 @@ import { apiRoutes } from './routes/api';
 import { authRoutes } from './routes/auth';
 import { monitoringRoutes } from './routes/monitoring';
 import { PerformanceMonitor } from './services/performance-monitor';
+import { requireEnv } from './config/environment';
 
 // Security middleware imports
 import { securityHeaders } from './middleware/security-headers';

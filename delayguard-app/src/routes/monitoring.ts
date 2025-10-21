@@ -1,6 +1,14 @@
 import Router from "koa-router";
-import { MonitoringService } from "../services/monitoring-service";
+import { MonitoringService, HealthCheck, SystemMetrics, Alert } from "../services/monitoring-service";
 import { config } from "../server";
+
+// Type for system status response
+interface SystemStatus {
+  status: "healthy" | "degraded" | "unhealthy";
+  checks: HealthCheck[];
+  metrics: SystemMetrics | null;
+  alerts: Alert[];
+}
 
 const router = new Router();
 const monitoringService = new MonitoringService(config);
@@ -228,18 +236,18 @@ router.get("/diagnostics", async(ctx) => {
 });
 
 // Helper methods
-function calculateHealthScore(status: unknown): number {
+function calculateHealthScore(status: SystemStatus): number {
   let score = 100;
 
   // Deduct points for unhealthy checks
   const unhealthyChecks = status.checks.filter(
-    (c: unknown) => c.status === "unhealthy",
+    (c) => c.status === "unhealthy",
   );
   score -= unhealthyChecks.length * 25;
 
   // Deduct points for degraded checks
   const degradedChecks = status.checks.filter(
-    (c: unknown) => c.status === "degraded",
+    (c) => c.status === "degraded",
   );
   score -= degradedChecks.length * 10;
 
@@ -261,7 +269,7 @@ function calculateHealthScore(status: unknown): number {
   return Math.max(0, Math.min(100, score));
 }
 
-function generateRecommendations(checks: unknown[], status: unknown): string[] {
+function generateRecommendations(checks: HealthCheck[], status: SystemStatus): string[] {
   const recommendations: string[] = [];
 
   // Check for unhealthy services
@@ -304,11 +312,11 @@ function generateRecommendations(checks: unknown[], status: unknown): string[] {
   // Check for active alerts
   if (status.alerts.length > 0) {
     const criticalAlerts = status.alerts.filter(
-      (a: unknown) => a.severity === "critical",
+      (a) => a.severity === "critical",
     );
     if (criticalAlerts.length > 0) {
       recommendations.push(
-        `Critical alerts active: ${criticalAlerts.map((a: unknown) => a.message).join(", ")}`,
+        `Critical alerts active: ${criticalAlerts.map((a) => a.message).join(", ")}`,
       );
     }
   }

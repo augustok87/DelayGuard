@@ -1,5 +1,5 @@
 import { Job } from 'bullmq';
-import { logger } from '../utils/logger';
+import { logger } from '../../utils/logger';
 import { NotificationService } from '../../services/notification-service';
 import { EmailService } from '../../services/email-service';
 import { SMSService } from '../../services/sms-service';

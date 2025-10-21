@@ -7,6 +7,37 @@ import crypto from "crypto";
 
 const router = new Router();
 
+// Shopify webhook payload interfaces
+interface ShopifyCustomer {
+  id?: number;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+}
+
+interface ShopifyTrackingInfo {
+  number?: string;
+  company?: string;
+  url?: string;
+}
+
+interface ShopifyFulfillment {
+  id: number;
+  order_id: number;
+  tracking_info?: ShopifyTrackingInfo;
+  status?: string;
+  shipment_status?: string;
+}
+
+interface ShopifyOrder {
+  id: number;
+  name: string;
+  customer?: ShopifyCustomer;
+  fulfillment_status?: string;
+  fulfillments?: ShopifyFulfillment[];
+}
+
 // HMAC verification for webhooks
 function verifyWebhook(data: string, hmac: string): boolean {
   const apiSecret = process.env.SHOPIFY_API_SECRET;
@@ -36,7 +67,7 @@ router.post("/orders/updated", async(ctx) => {
   logger.info(`📦 Order updated webhook received for shop: ${shop}`);
 
   try {
-    await processOrderUpdate(shop, ctx.request.body);
+    await processOrderUpdate(shop, ctx.request.body as ShopifyOrder);
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
@@ -61,7 +92,7 @@ router.post("/fulfillments/updated", async(ctx) => {
   logger.info(`🚚 Fulfillment updated webhook received for shop: ${shop}`);
 
   try {
-    await processFulfillmentUpdate(shop, ctx.request.body);
+    await processFulfillmentUpdate(shop, ctx.request.body as ShopifyFulfillment);
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
@@ -86,7 +117,7 @@ router.post("/orders/paid", async(ctx) => {
   logger.info(`💳 Order paid webhook received for shop: ${shop}`);
 
   try {
-    await processOrderPaid(shop, ctx.request.body);
+    await processOrderPaid(shop, ctx.request.body as ShopifyOrder);
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
@@ -98,7 +129,7 @@ router.post("/orders/paid", async(ctx) => {
 
 async function processOrderUpdate(
   shopDomain: string,
-  orderData: unknown,
+  orderData: ShopifyOrder,
 ): Promise<void> {
   try {
     // Get shop ID
@@ -172,7 +203,7 @@ async function processOrderUpdate(
 
 async function processFulfillmentUpdate(
   shopDomain: string,
-  fulfillmentData: unknown,
+  fulfillmentData: ShopifyFulfillment,
 ): Promise<void> {
   try {
     // Get shop ID
@@ -215,7 +246,7 @@ async function processFulfillmentUpdate(
 
 async function processOrderPaid(
   shopDomain: string,
-  orderData: unknown,
+  orderData: ShopifyOrder,
 ): Promise<void> {
   try {
     // Get shop ID
@@ -246,7 +277,7 @@ async function processOrderPaid(
 
 async function processFulfillment(
   orderId: number,
-  fulfillmentData: unknown,
+  fulfillmentData: ShopifyFulfillment,
 ): Promise<void> {
   try {
     // Upsert fulfillment

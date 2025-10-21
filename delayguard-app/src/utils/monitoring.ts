@@ -8,7 +8,7 @@ interface ErrorMetrics {
   errorType: string;
   errorMessage: string;
   stackTrace?: string;
-  context?: unknown;
+  context?: Record<string, any>;
   severity: "low" | "medium" | "high" | "critical";
   shopDomain?: string;
   userId?: string;
@@ -99,7 +99,7 @@ class MonitoringService {
   // Performance decorator
   static trackPerformance(operation: string) {
     return function(
-      target: unknown,
+      target: any,
       propertyName: string,
       descriptor: PropertyDescriptor,
     ) {
@@ -186,7 +186,7 @@ class MonitoringService {
         errorType: error.errorType,
         message: error.errorMessage,
         shopDomain: error.shopDomain,
-        stackTrace: error.stack || "",
+        stackTrace: error.stackTrace || "",
       });
     }
   }
@@ -220,19 +220,24 @@ class MonitoringService {
   // Private methods
   private logError(error: ErrorMetrics): void {
     const logMessage = `[${error.severity.toUpperCase()}] ${error.errorType}: ${error.errorMessage}`;
+    const errorContext = {
+      errorType: error.errorType,
+      shopDomain: error.shopDomain,
+      userId: error.userId,
+    };
 
     switch (error.severity) {
       case "critical":
-        logger.error("Failed to store error metrics", error as Error);
+        logger.error(logMessage, undefined, errorContext);
         break;
       case "high":
-        logger.error("Failed to store error metrics", error as Error);
+        logger.error(logMessage, undefined, errorContext);
         break;
       case "medium":
-        logger.warn("Failed to store warning metrics", error as Error);
+        logger.warn(logMessage, errorContext);
         break;
       case "low":
-        logger.info(logMessage, error);
+        logger.info(logMessage, errorContext);
         break;
     }
   }
@@ -250,7 +255,7 @@ class MonitoringService {
           error.timestamp,
           error.errorType,
           error.errorMessage,
-          error.stack || "",
+          error.stackTrace || "",
           JSON.stringify(error.context),
           error.severity,
           error.shopDomain,
@@ -258,7 +263,7 @@ class MonitoringService {
         ],
       );
     } catch (err) {
-      logger.error("Failed to store error in database:", err);
+      logger.error("Failed to store error in database:", err as Error);
     }
   }
 
@@ -386,8 +391,8 @@ class MonitoringService {
     return "healthy";
   }
 
-  private async sendAlert(type: string, data: unknown): Promise<void> {
-    logger.error(`🚨 ALERT: ${type}`, data);
+  private async sendAlert(type: string, data: Record<string, any>): Promise<void> {
+    logger.error(`🚨 ALERT: ${type}`, undefined, data as Record<string, unknown>);
 
     // In production, this would send to monitoring service (e.g., Sentry, PagerDuty)
     // For now, we'll just log and store in database
@@ -400,7 +405,7 @@ class MonitoringService {
         [type, JSON.stringify(data), new Date()],
       );
     } catch (err) {
-      logger.error("Failed to store alert:", err);
+      logger.error("Failed to store alert:", err as Error);
     }
   }
 }

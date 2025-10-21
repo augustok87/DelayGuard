@@ -1,5 +1,5 @@
 import { Job } from 'bullmq';
-import { logger } from '../utils/logger';
+import { logger } from '../../utils/logger';
 import { CarrierService } from '../../services/carrier-service';
 import { DelayDetectionService } from '../../services/delay-detection-service';
 import { query } from '../../database/connection';

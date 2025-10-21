@@ -252,6 +252,30 @@ if (!validation.isValid) {
   }
 }
 
+/**
+ * Helper function to require an environment variable
+ * Throws an error if the variable is not set
+ * @param key The environment variable key
+ * @returns The environment variable value
+ */
+export function requireEnv(key: string): string {
+  const value = process.env[key];
+  if (!value) {
+    const errorMessage = `Missing required environment variable: ${key}`;
+    logger.error(errorMessage);
+    
+    // In production, throw error immediately
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(errorMessage);
+    }
+    
+    // In development/test, log warning but don't throw
+    logger.warn(`Using empty string for ${key} in ${process.env.NODE_ENV} environment`);
+    return '';
+  }
+  return value;
+}
+
 export type { EnvironmentConfig, ValidationResult };
 export { EnvironmentValidator };
 export default envValidator;

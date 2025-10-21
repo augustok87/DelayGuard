@@ -91,7 +91,7 @@ function setupQueueEvents(): void {
   });
 
   delayCheckWorker.on("failed", (job, err) => {
-    logger.error(`❌ Delay check failed for job ${job?.id}:`, err.message);
+    logger.error(`❌ Delay check failed for job ${job?.id}:`, err as Error);
   });
 
   // Notification queue events
@@ -100,7 +100,7 @@ function setupQueueEvents(): void {
   });
 
   notificationWorker.on("failed", (job, err) => {
-    logger.error(`❌ Notification failed for job ${job?.id}:`, err.message);
+    logger.error(`❌ Notification failed for job ${job?.id}:`, err as Error);
   });
 
   // Global error handling

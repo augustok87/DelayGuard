@@ -1,33 +1,32 @@
-// @ts-expect-error - This is a test setup file
 // Test setup and mocks
 import { jest } from '@jest/globals';
 
 // Mock all external dependencies
 jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => ({
-    query: jest.fn().mockResolvedValue({ rows: [{ count: '10' }] }),
-    end: jest.fn(),
+    query: jest.fn<any>().mockResolvedValue({ rows: [{ count: '10' }] }),
+    end: jest.fn<any>(),
     totalCount: 10,
     idleCount: 8,
   })),
 }));
 
 jest.mock('ioredis', () => {
-  const MockRedis = jest.fn().mockImplementation(() => ({
-    get: jest.fn().mockResolvedValue(null),
-    setex: jest.fn().mockResolvedValue('OK'),
-    del: jest.fn().mockResolvedValue(1),
-    mget: jest.fn().mockResolvedValue([null, null]),
-    keys: jest.fn().mockResolvedValue([]),
-    llen: jest.fn().mockResolvedValue(0),
-    pipeline: jest.fn(() => ({
-      setex: jest.fn().mockReturnThis(),
-      exec: jest.fn().mockResolvedValue([['OK'], ['OK']]),
+  const MockRedis = jest.fn<any>().mockImplementation(() => ({
+    get: jest.fn<any>().mockResolvedValue(null),
+    setex: jest.fn<any>().mockResolvedValue('OK'),
+    del: jest.fn<any>().mockResolvedValue(1),
+    mget: jest.fn<any>().mockResolvedValue([null, null]),
+    keys: jest.fn<any>().mockResolvedValue([]),
+    llen: jest.fn<any>().mockResolvedValue(0),
+    pipeline: jest.fn<any>(() => ({
+      setex: jest.fn<any>().mockReturnThis(),
+      exec: jest.fn<any>().mockResolvedValue([['OK'], ['OK']]),
     })),
-    ping: jest.fn().mockResolvedValue('PONG'),
-    info: jest.fn().mockResolvedValue('used_memory:1048576\nused_memory_peak:2097152'),
-    dbsize: jest.fn().mockResolvedValue(100),
-    quit: jest.fn().mockResolvedValue('OK'),
+    ping: jest.fn<any>().mockResolvedValue('PONG'),
+    info: jest.fn<any>().mockResolvedValue('used_memory:1048576\nused_memory_peak:2097152'),
+    dbsize: jest.fn<any>().mockResolvedValue(100),
+    quit: jest.fn<any>().mockResolvedValue('OK'),
     status: 'ready',
   }));
   
@@ -38,10 +37,10 @@ jest.mock('ioredis', () => {
 });
 
 jest.mock('axios', () => ({
-  create: jest.fn(() => ({
-    get: jest.fn(),
+  create: jest.fn<any>(() => ({
+    get: jest.fn<any>(),
   })),
-  isAxiosError: jest.fn((error: any) => error && error.response),
+  isAxiosError: jest.fn<any>((error: any) => error && error.response),
 }));
 
 // Mock global fetch

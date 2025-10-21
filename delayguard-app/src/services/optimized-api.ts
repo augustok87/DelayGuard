@@ -76,7 +76,12 @@ export class OptimizedApiService {
 
   async updateSettings(
     shopDomain: string,
-    settings: unknown,
+    settings: {
+      delayThresholdDays?: number;
+      emailEnabled?: boolean;
+      smsEnabled?: boolean;
+      notificationTemplate?: string;
+    },
   ): Promise<ApiResponse> {
     const start = Date.now();
 

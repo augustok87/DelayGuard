@@ -433,7 +433,10 @@ export class BackupService {
         const content = await fs.readFile(file, "utf-8");
         archive[file] = content;
       } catch (error) {
-        logger.warn("Failed to read file during backup", error as Error);
+        logger.warn("Failed to read file during backup", {
+          file,
+          error: error instanceof Error ? error.message : String(error)
+        });
       }
     }
 
