@@ -95,7 +95,7 @@ npm run dev
 
 # 2. Navigate to http://localhost:3000
 # 3. Use browser DevTools or screenshot tool
-# 4. Capture at 1920x1080 resolution
+# 4. Capture at 1600x1200 resolution
 # 5. Save to app-store-assets/screenshots/
 ```
 
