@@ -111,10 +111,11 @@
   border-top: 2px solid currentColor;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  position: absolute;
 }
 
 .hidden {
-  opacity: 0;
+  visibility: hidden;
 }
 
 @keyframes spin {
