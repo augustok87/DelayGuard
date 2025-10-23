@@ -123,6 +123,7 @@ dump.rdb
 *.old
 *.legacy
 lint-backups/
+lint-reports/
 lint-fix-report.json
 src/backup/
 
@@ -221,5 +222,8 @@ temp/
 .yarn/install-state.gz
 .pnp.*
 
-# Generated documentation
-delayguard-app/docs/
+# Generated documentation (JSDoc/API docs only, keep markdown docs)
+docs/jsdoc/
+docs/api/generated/
+docs/api/swagger.json
+docs/index.html

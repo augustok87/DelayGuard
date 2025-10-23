@@ -130,5 +130,8 @@ Thumbs.db
 # Yarn Integrity file
 .yarn-integrity
 
-# Generated documentation
-delayguard-app/docs/
+# Generated documentation (JSDoc/API docs only, keep markdown docs)
+delayguard-app/docs/jsdoc/
+delayguard-app/docs/api/generated/
+delayguard-app/docs/api/swagger.json
+delayguard-app/docs/index.html
