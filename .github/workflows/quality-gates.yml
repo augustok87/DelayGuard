@@ -10,6 +10,10 @@ jobs:
   quality-gates:
     runs-on: ubuntu-latest
     
+    env:
+      CI: true
+      NODE_ENV: test
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -25,11 +29,18 @@ jobs:
       working-directory: ./delayguard-app
       run: npm ci
       
+    - name: Copy test environment
+      working-directory: ./delayguard-app
+      run: cp .env.test .env
+      
     - name: Run Quality Gates
       working-directory: ./delayguard-app
       run: node scripts/quality-gates.js
+      env:
+        NODE_ENV: test
       
     - name: Upload coverage reports
+      if: always()
       uses: codecov/codecov-action@v3
       with:
         file: ./delayguard-app/coverage/lcov.info
