@@ -200,8 +200,8 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
       <div className={styles.alertsList}>
         <AnimatePresence>
           {paginatedAlerts.map((alert, index) => {
-            const severityClass = `severity-${getSeverityColor(alert.severity)}`;
-            const priorityClass = `priority-${getPriorityColor(alert.priority)}`;
+            const severityClass = `severity-${getSeverityColor(alert.severity || 'low')}`;
+            const priorityClass = `priority-${getPriorityColor(alert.priority || 'low')}`;
             const statusClass = `status-${alert.status === 'resolved' ? 'success' : 'warning'}`;
             
             return (
