@@ -1,0 +1,127 @@
+/**
+ * EmptyState Styles
+ * Beautiful empty states with illustrations
+ */
+
+@import '../../../styles/design-system.css';
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--dg-space-12) var(--dg-space-6);
+  min-height: 400px;
+}
+
+.illustration {
+  width: 200px;
+  height: 200px;
+  margin-bottom: var(--dg-space-8);
+}
+
+.content {
+  max-width: 480px;
+}
+
+.title {
+  font-size: var(--dg-text-2xl);
+  font-weight: var(--dg-font-semibold);
+  color: var(--dg-text-primary);
+  margin: 0 0 var(--dg-space-3) 0;
+  line-height: var(--dg-leading-tight);
+}
+
+.description {
+  font-size: var(--dg-text-base);
+  color: var(--dg-text-secondary);
+  line-height: var(--dg-leading-relaxed);
+  margin: 0 0 var(--dg-space-6) 0;
+}
+
+.actions {
+  display: flex;
+  gap: var(--dg-space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--dg-space-5);
+  height: 44px;
+  font-size: var(--dg-text-base);
+  font-weight: var(--dg-font-medium);
+  border-radius: var(--dg-radius-md);
+  cursor: pointer;
+  transition: var(--dg-transition-all);
+  border: none;
+  outline: none;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--dg-primary-500);
+  outline-offset: 2px;
+}
+
+.buttonPrimary {
+  background: linear-gradient(135deg, var(--dg-primary-600) 0%, var(--dg-primary-500) 100%);
+  color: white;
+  box-shadow: var(--dg-shadow-sm), var(--dg-shadow-primary);
+}
+
+.buttonPrimary:hover {
+  background: linear-gradient(135deg, var(--dg-primary-700) 0%, var(--dg-primary-600) 100%);
+  box-shadow: var(--dg-shadow-base), var(--dg-shadow-primary);
+}
+
+.buttonSecondary {
+  background: white;
+  color: var(--dg-gray-700);
+  border: 1px solid var(--dg-gray-300);
+  box-shadow: var(--dg-shadow-sm);
+}
+
+.buttonSecondary:hover {
+  background: var(--dg-gray-50);
+  border-color: var(--dg-gray-400);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: var(--dg-space-8) var(--dg-space-4);
+    min-height: 300px;
+  }
+  
+  .illustration {
+    width: 150px;
+    height: 150px;
+    margin-bottom: var(--dg-space-6);
+  }
+  
+  .title {
+    font-size: var(--dg-text-xl);
+  }
+  
+  .description {
+    font-size: var(--dg-text-sm);
+  }
+  
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}

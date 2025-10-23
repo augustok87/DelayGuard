@@ -1,0 +1,470 @@
+/**
+ * DelayGuard Design System
+ * World-class design system for professional Shopify app
+ * Version: 2.0.0
+ * Last Updated: October 23, 2025
+ */
+
+:root {
+  /* ========================================
+   * COLOR PALETTE - Modern & Professional
+   * ======================================== */
+  
+  /* Primary - Professional Blue */
+  --dg-primary-50: #eff6ff;
+  --dg-primary-100: #dbeafe;
+  --dg-primary-200: #bfdbfe;
+  --dg-primary-300: #93c5fd;
+  --dg-primary-400: #60a5fa;
+  --dg-primary-500: #3b82f6;   /* Main primary color */
+  --dg-primary-600: #2563eb;
+  --dg-primary-700: #1d4ed8;
+  --dg-primary-800: #1e40af;
+  --dg-primary-900: #1e3a8a;
+  --dg-primary-950: #172554;
+
+  /* Success - Modern Green */
+  --dg-success-50: #f0fdf4;
+  --dg-success-100: #dcfce7;
+  --dg-success-200: #bbf7d0;
+  --dg-success-300: #86efac;
+  --dg-success-400: #4ade80;
+  --dg-success-500: #22c55e;   /* Main success color */
+  --dg-success-600: #16a34a;
+  --dg-success-700: #15803d;
+  --dg-success-800: #166534;
+  --dg-success-900: #14532d;
+
+  /* Warning - Vibrant Orange */
+  --dg-warning-50: #fffbeb;
+  --dg-warning-100: #fef3c7;
+  --dg-warning-200: #fde68a;
+  --dg-warning-300: #fcd34d;
+  --dg-warning-400: #fbbf24;
+  --dg-warning-500: #f59e0b;   /* Main warning color */
+  --dg-warning-600: #d97706;
+  --dg-warning-700: #b45309;
+  --dg-warning-800: #92400e;
+  --dg-warning-900: #78350f;
+
+  /* Error/Danger - Modern Red */
+  --dg-error-50: #fef2f2;
+  --dg-error-100: #fee2e2;
+  --dg-error-200: #fecaca;
+  --dg-error-300: #fca5a5;
+  --dg-error-400: #f87171;
+  --dg-error-500: #ef4444;     /* Main error color */
+  --dg-error-600: #dc2626;
+  --dg-error-700: #b91c1c;
+  --dg-error-800: #991b1b;
+  --dg-error-900: #7f1d1d;
+
+  /* Info - Cyan Blue */
+  --dg-info-50: #ecfeff;
+  --dg-info-100: #cffafe;
+  --dg-info-200: #a5f3fc;
+  --dg-info-300: #67e8f9;
+  --dg-info-400: #22d3ee;
+  --dg-info-500: #06b6d4;     /* Main info color */
+  --dg-info-600: #0891b2;
+  --dg-info-700: #0e7490;
+  --dg-info-800: #155e75;
+  --dg-info-900: #164e63;
+
+  /* Neutrals/Grays - Clean & Modern */
+  --dg-gray-50: #f9fafb;
+  --dg-gray-100: #f3f4f6;
+  --dg-gray-200: #e5e7eb;
+  --dg-gray-300: #d1d5db;
+  --dg-gray-400: #9ca3af;
+  --dg-gray-500: #6b7280;
+  --dg-gray-600: #4b5563;
+  --dg-gray-700: #374151;
+  --dg-gray-800: #1f2937;
+  --dg-gray-900: #111827;
+  --dg-gray-950: #030712;
+
+  /* Semantic Colors */
+  --dg-background: #ffffff;
+  --dg-background-secondary: var(--dg-gray-50);
+  --dg-background-tertiary: var(--dg-gray-100);
+  --dg-surface: #ffffff;
+  --dg-surface-hover: var(--dg-gray-50);
+  --dg-border: var(--dg-gray-200);
+  --dg-border-light: var(--dg-gray-100);
+  --dg-text-primary: var(--dg-gray-900);
+  --dg-text-secondary: var(--dg-gray-600);
+  --dg-text-tertiary: var(--dg-gray-500);
+  --dg-text-disabled: var(--dg-gray-400);
+
+  /* ========================================
+   * TYPOGRAPHY - Modern Scale
+   * ======================================== */
+  
+  /* Font Families */
+  --dg-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --dg-font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+
+  /* Font Sizes */
+  --dg-text-xs: 0.75rem;      /* 12px */
+  --dg-text-sm: 0.875rem;     /* 14px */
+  --dg-text-base: 1rem;       /* 16px */
+  --dg-text-lg: 1.125rem;     /* 18px */
+  --dg-text-xl: 1.25rem;      /* 20px */
+  --dg-text-2xl: 1.5rem;      /* 24px */
+  --dg-text-3xl: 1.875rem;    /* 30px */
+  --dg-text-4xl: 2.25rem;     /* 36px */
+  --dg-text-5xl: 3rem;        /* 48px */
+
+  /* Font Weights */
+  --dg-font-normal: 400;
+  --dg-font-medium: 500;
+  --dg-font-semibold: 600;
+  --dg-font-bold: 700;
+  --dg-font-extrabold: 800;
+
+  /* Line Heights */
+  --dg-leading-none: 1;
+  --dg-leading-tight: 1.25;
+  --dg-leading-snug: 1.375;
+  --dg-leading-normal: 1.5;
+  --dg-leading-relaxed: 1.625;
+  --dg-leading-loose: 2;
+
+  /* ========================================
+   * SPACING - Consistent Scale
+   * ======================================== */
+  
+  --dg-space-0: 0;
+  --dg-space-1: 0.25rem;      /* 4px */
+  --dg-space-2: 0.5rem;       /* 8px */
+  --dg-space-3: 0.75rem;      /* 12px */
+  --dg-space-4: 1rem;         /* 16px */
+  --dg-space-5: 1.25rem;      /* 20px */
+  --dg-space-6: 1.5rem;       /* 24px */
+  --dg-space-8: 2rem;         /* 32px */
+  --dg-space-10: 2.5rem;      /* 40px */
+  --dg-space-12: 3rem;        /* 48px */
+  --dg-space-16: 4rem;        /* 64px */
+  --dg-space-20: 5rem;        /* 80px */
+  --dg-space-24: 6rem;        /* 96px */
+
+  /* ========================================
+   * BORDER RADIUS - Modern Rounded
+   * ======================================== */
+  
+  --dg-radius-none: 0;
+  --dg-radius-sm: 0.25rem;    /* 4px */
+  --dg-radius-base: 0.5rem;   /* 8px */
+  --dg-radius-md: 0.75rem;    /* 12px */
+  --dg-radius-lg: 1rem;       /* 16px */
+  --dg-radius-xl: 1.5rem;     /* 24px */
+  --dg-radius-2xl: 2rem;      /* 32px */
+  --dg-radius-full: 9999px;
+
+  /* ========================================
+   * SHADOWS - Elevation System
+   * ======================================== */
+  
+  --dg-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --dg-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --dg-shadow-base: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --dg-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --dg-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --dg-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --dg-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --dg-shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+  /* Colored Shadows for Depth */
+  --dg-shadow-primary: 0 4px 14px 0 rgba(59, 130, 246, 0.15);
+  --dg-shadow-success: 0 4px 14px 0 rgba(34, 197, 94, 0.15);
+  --dg-shadow-warning: 0 4px 14px 0 rgba(245, 158, 11, 0.15);
+  --dg-shadow-error: 0 4px 14px 0 rgba(239, 68, 68, 0.15);
+
+  /* ========================================
+   * TRANSITIONS & ANIMATIONS
+   * ======================================== */
+  
+  /* Timing Functions */
+  --dg-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --dg-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --dg-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dg-ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --dg-ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Duration */
+  --dg-duration-fast: 150ms;
+  --dg-duration-base: 200ms;
+  --dg-duration-medium: 300ms;
+  --dg-duration-slow: 500ms;
+
+  /* Common Transitions */
+  --dg-transition-all: all var(--dg-duration-base) var(--dg-ease-in-out);
+  --dg-transition-colors: color var(--dg-duration-fast) var(--dg-ease-in-out),
+                          background-color var(--dg-duration-fast) var(--dg-ease-in-out),
+                          border-color var(--dg-duration-fast) var(--dg-ease-in-out);
+  --dg-transition-transform: transform var(--dg-duration-base) var(--dg-ease-smooth);
+  --dg-transition-opacity: opacity var(--dg-duration-base) var(--dg-ease-in-out);
+
+  /* ========================================
+   * Z-INDEX SCALE
+   * ======================================== */
+  
+  --dg-z-base: 0;
+  --dg-z-dropdown: 1000;
+  --dg-z-sticky: 1020;
+  --dg-z-fixed: 1030;
+  --dg-z-modal-backdrop: 1040;
+  --dg-z-modal: 1050;
+  --dg-z-popover: 1060;
+  --dg-z-tooltip: 1070;
+  --dg-z-notification: 1080;
+
+  /* ========================================
+   * BREAKPOINTS (for reference in JS)
+   * ======================================== */
+  
+  --dg-screen-xs: 375px;
+  --dg-screen-sm: 640px;
+  --dg-screen-md: 768px;
+  --dg-screen-lg: 1024px;
+  --dg-screen-xl: 1280px;
+  --dg-screen-2xl: 1536px;
+}
+
+/* ========================================
+ * GLOBAL RESETS & BASE STYLES
+ * ======================================== */
+
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--dg-font-sans);
+  font-size: var(--dg-text-base);
+  line-height: var(--dg-leading-normal);
+  color: var(--dg-text-primary);
+  background-color: var(--dg-background-secondary);
+}
+
+/* ========================================
+ * UTILITY CLASSES
+ * ======================================== */
+
+/* Text Utilities */
+.dg-text-xs { font-size: var(--dg-text-xs); }
+.dg-text-sm { font-size: var(--dg-text-sm); }
+.dg-text-base { font-size: var(--dg-text-base); }
+.dg-text-lg { font-size: var(--dg-text-lg); }
+.dg-text-xl { font-size: var(--dg-text-xl); }
+.dg-text-2xl { font-size: var(--dg-text-2xl); }
+.dg-text-3xl { font-size: var(--dg-text-3xl); }
+
+.dg-font-normal { font-weight: var(--dg-font-normal); }
+.dg-font-medium { font-weight: var(--dg-font-medium); }
+.dg-font-semibold { font-weight: var(--dg-font-semibold); }
+.dg-font-bold { font-weight: var(--dg-font-bold); }
+
+.dg-text-primary { color: var(--dg-text-primary); }
+.dg-text-secondary { color: var(--dg-text-secondary); }
+.dg-text-tertiary { color: var(--dg-text-tertiary); }
+
+/* Spacing Utilities */
+.dg-m-0 { margin: 0; }
+.dg-m-1 { margin: var(--dg-space-1); }
+.dg-m-2 { margin: var(--dg-space-2); }
+.dg-m-3 { margin: var(--dg-space-3); }
+.dg-m-4 { margin: var(--dg-space-4); }
+.dg-m-6 { margin: var(--dg-space-6); }
+.dg-m-8 { margin: var(--dg-space-8); }
+
+.dg-p-0 { padding: 0; }
+.dg-p-1 { padding: var(--dg-space-1); }
+.dg-p-2 { padding: var(--dg-space-2); }
+.dg-p-3 { padding: var(--dg-space-3); }
+.dg-p-4 { padding: var(--dg-space-4); }
+.dg-p-6 { padding: var(--dg-space-6); }
+.dg-p-8 { padding: var(--dg-space-8); }
+
+/* Shadow Utilities */
+.dg-shadow-none { box-shadow: none; }
+.dg-shadow-sm { box-shadow: var(--dg-shadow-sm); }
+.dg-shadow { box-shadow: var(--dg-shadow-base); }
+.dg-shadow-md { box-shadow: var(--dg-shadow-md); }
+.dg-shadow-lg { box-shadow: var(--dg-shadow-lg); }
+.dg-shadow-xl { box-shadow: var(--dg-shadow-xl); }
+
+/* Radius Utilities */
+.dg-rounded-none { border-radius: 0; }
+.dg-rounded-sm { border-radius: var(--dg-radius-sm); }
+.dg-rounded { border-radius: var(--dg-radius-base); }
+.dg-rounded-md { border-radius: var(--dg-radius-md); }
+.dg-rounded-lg { border-radius: var(--dg-radius-lg); }
+.dg-rounded-xl { border-radius: var(--dg-radius-xl); }
+.dg-rounded-full { border-radius: var(--dg-radius-full); }
+
+/* Transition Utilities */
+.dg-transition-all { transition: var(--dg-transition-all); }
+.dg-transition-colors { transition: var(--dg-transition-colors); }
+.dg-transition-transform { transition: var(--dg-transition-transform); }
+.dg-transition-opacity { transition: var(--dg-transition-opacity); }
+
+/* Hover Effects */
+.dg-hover-lift:hover {
+  transform: translateY(-2px);
+  transition: transform var(--dg-duration-base) var(--dg-ease-smooth);
+}
+
+.dg-hover-scale:hover {
+  transform: scale(1.02);
+  transition: transform var(--dg-duration-base) var(--dg-ease-smooth);
+}
+
+.dg-hover-shadow:hover {
+  box-shadow: var(--dg-shadow-lg);
+  transition: box-shadow var(--dg-duration-base) var(--dg-ease-smooth);
+}
+
+/* ========================================
+ * ANIMATIONS
+ * ======================================== */
+
+@keyframes dg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dg-slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes dg-slide-down {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes dg-scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes dg-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes dg-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dg-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Animation Classes */
+.dg-animate-fade-in {
+  animation: dg-fade-in var(--dg-duration-medium) var(--dg-ease-in-out);
+}
+
+.dg-animate-slide-up {
+  animation: dg-slide-up var(--dg-duration-medium) var(--dg-ease-out);
+}
+
+.dg-animate-slide-down {
+  animation: dg-slide-down var(--dg-duration-medium) var(--dg-ease-out);
+}
+
+.dg-animate-scale-in {
+  animation: dg-scale-in var(--dg-duration-base) var(--dg-ease-smooth);
+}
+
+.dg-animate-pulse {
+  animation: dg-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.dg-animate-spin {
+  animation: dg-spin 1s linear infinite;
+}
+
+/* ========================================
+ * RESPONSIVE UTILITIES
+ * ======================================== */
+
+@media (max-width: 768px) {
+  :root {
+    --dg-text-xs: 0.6875rem;  /* 11px */
+    --dg-text-sm: 0.8125rem;  /* 13px */
+    --dg-text-base: 0.9375rem; /* 15px */
+  }
+
+  body {
+    font-size: var(--dg-text-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ========================================
+ * PRINT STYLES
+ * ======================================== */
+
+@media print {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: white !important;
+  }
+}

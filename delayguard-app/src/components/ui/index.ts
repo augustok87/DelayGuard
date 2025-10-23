@@ -21,6 +21,7 @@ export { Toast } from './Toast';
 
 // Common Components
 export { EmptyState } from '../common/EmptyState';
+export { EmptyState as EnhancedEmptyState } from './EmptyState';
 export { ErrorState } from '../common/ErrorState';
 
 // Re-export types

@@ -1,0 +1,352 @@
+/**
+ * Enhanced Button Styles
+ * World-class button styling with modern design system
+ */
+
+@import '../../../styles/design-system.css';
+
+/* ========================================
+ * BASE BUTTON STYLES
+ * ======================================== */
+
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dg-space-2);
+  font-family: var(--dg-font-sans);
+  font-weight: var(--dg-font-medium);
+  line-height: var(--dg-leading-tight);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid transparent;
+  transition: var(--dg-transition-all);
+  outline: none;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--dg-primary-500);
+  outline-offset: 2px;
+}
+
+/* ========================================
+ * SIZE VARIANTS
+ * ======================================== */
+
+.button--xs {
+  height: 28px;
+  padding: 0 var(--dg-space-2);
+  font-size: var(--dg-text-xs);
+  border-radius: var(--dg-radius-sm);
+}
+
+.button--sm {
+  height: 32px;
+  padding: 0 var(--dg-space-3);
+  font-size: var(--dg-text-sm);
+  border-radius: var(--dg-radius-base);
+}
+
+.button--md {
+  height: 40px;
+  padding: 0 var(--dg-space-4);
+  font-size: var(--dg-text-base);
+  border-radius: var(--dg-radius-md);
+}
+
+.button--lg {
+  height: 48px;
+  padding: 0 var(--dg-space-6);
+  font-size: var(--dg-text-lg);
+  border-radius: var(--dg-radius-md);
+}
+
+.button--xl {
+  height: 56px;
+  padding: 0 var(--dg-space-8);
+  font-size: var(--dg-text-xl);
+  border-radius: var(--dg-radius-lg);
+  font-weight: var(--dg-font-semibold);
+}
+
+/* ========================================
+ * PRIMARY VARIANT
+ * ======================================== */
+
+.button--primary {
+  background: linear-gradient(135deg, var(--dg-primary-600) 0%, var(--dg-primary-500) 100%);
+  color: white;
+  border-color: var(--dg-primary-600);
+  box-shadow: var(--dg-shadow-sm), var(--dg-shadow-primary);
+}
+
+.button--primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--dg-primary-700) 0%, var(--dg-primary-600) 100%);
+  border-color: var(--dg-primary-700);
+  box-shadow: var(--dg-shadow-md), var(--dg-shadow-primary);
+}
+
+.button--primary:active:not(:disabled) {
+  background: var(--dg-primary-700);
+  box-shadow: var(--dg-shadow-sm);
+}
+
+/* ========================================
+ * SECONDARY VARIANT
+ * ======================================== */
+
+.button--secondary {
+  background: white;
+  color: var(--dg-gray-700);
+  border-color: var(--dg-gray-300);
+  box-shadow: var(--dg-shadow-sm);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background: var(--dg-gray-50);
+  border-color: var(--dg-gray-400);
+  box-shadow: var(--dg-shadow-base);
+}
+
+.button--secondary:active:not(:disabled) {
+  background: var(--dg-gray-100);
+  box-shadow: var(--dg-shadow-inner);
+}
+
+/* ========================================
+ * SUCCESS VARIANT
+ * ======================================== */
+
+.button--success {
+  background: linear-gradient(135deg, var(--dg-success-600) 0%, var(--dg-success-500) 100%);
+  color: white;
+  border-color: var(--dg-success-600);
+  box-shadow: var(--dg-shadow-sm), var(--dg-shadow-success);
+}
+
+.button--success:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--dg-success-700) 0%, var(--dg-success-600) 100%);
+  border-color: var(--dg-success-700);
+  box-shadow: var(--dg-shadow-md), var(--dg-shadow-success);
+}
+
+.button--success:active:not(:disabled) {
+  background: var(--dg-success-700);
+  box-shadow: var(--dg-shadow-sm);
+}
+
+/* ========================================
+ * WARNING VARIANT
+ * ======================================== */
+
+.button--warning {
+  background: linear-gradient(135deg, var(--dg-warning-500) 0%, var(--dg-warning-400) 100%);
+  color: white;
+  border-color: var(--dg-warning-600);
+  box-shadow: var(--dg-shadow-sm), var(--dg-shadow-warning);
+}
+
+.button--warning:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--dg-warning-600) 0%, var(--dg-warning-500) 100%);
+  border-color: var(--dg-warning-700);
+  box-shadow: var(--dg-shadow-md), var(--dg-shadow-warning);
+}
+
+.button--warning:active:not(:disabled) {
+  background: var(--dg-warning-600);
+  box-shadow: var(--dg-shadow-sm);
+}
+
+/* ========================================
+ * ERROR VARIANT
+ * ======================================== */
+
+.button--error {
+  background: linear-gradient(135deg, var(--dg-error-600) 0%, var(--dg-error-500) 100%);
+  color: white;
+  border-color: var(--dg-error-600);
+  box-shadow: var(--dg-shadow-sm), var(--dg-shadow-error);
+}
+
+.button--error:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--dg-error-700) 0%, var(--dg-error-600) 100%);
+  border-color: var(--dg-error-700);
+  box-shadow: var(--dg-shadow-md), var(--dg-shadow-error);
+}
+
+.button--error:active:not(:disabled) {
+  background: var(--dg-error-700);
+  box-shadow: var(--dg-shadow-sm);
+}
+
+/* ========================================
+ * GHOST VARIANT
+ * ======================================== */
+
+.button--ghost {
+  background: transparent;
+  color: var(--dg-gray-700);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.button--ghost:hover:not(:disabled) {
+  background: var(--dg-gray-100);
+  color: var(--dg-gray-900);
+}
+
+.button--ghost:active:not(:disabled) {
+  background: var(--dg-gray-200);
+}
+
+/* ========================================
+ * LINK VARIANT
+ * ======================================== */
+
+.button--link {
+  background: transparent;
+  color: var(--dg-primary-600);
+  border-color: transparent;
+  box-shadow: none;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: var(--dg-transition-colors);
+}
+
+.button--link:hover:not(:disabled) {
+  color: var(--dg-primary-700);
+  text-decoration-color: var(--dg-primary-700);
+}
+
+.button--link:active:not(:disabled) {
+  color: var(--dg-primary-800);
+}
+
+/* ========================================
+ * STATE MODIFIERS
+ * ======================================== */
+
+.button--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.button--loading {
+  position: relative;
+  cursor: wait;
+  pointer-events: none;
+}
+
+.button--full-width {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ========================================
+ * ICON & CONTENT STYLES
+ * ======================================== */
+
+.leftIcon,
+.rightIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.leftIcon svg,
+.rightIcon svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ========================================
+ * LOADING SPINNER
+ * ======================================== */
+
+.spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinnerSvg {
+  width: 1.25em;
+  height: 1.25em;
+  animation: dg-spin 1s linear infinite;
+}
+
+.spinnerCircle {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-dasharray: 50;
+  stroke-dashoffset: 25;
+  opacity: 0.5;
+}
+
+/* Hide content when loading */
+.button--loading .content,
+.button--loading .leftIcon,
+.button--loading .rightIcon {
+  visibility: hidden;
+}
+
+/* ========================================
+ * RESPONSIVE ADJUSTMENTS
+ * ======================================== */
+
+@media (max-width: 768px) {
+  .button--xl {
+    height: 48px;
+    font-size: var(--dg-text-lg);
+    padding: 0 var(--dg-space-6);
+  }
+  
+  .button--lg {
+    height: 44px;
+    font-size: var(--dg-text-base);
+  }
+}
+
+/* ========================================
+ * ACCESSIBILITY
+ * ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+  
+  .spinnerSvg {
+    animation: none;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.button:focus-visible {
+  outline: 2px solid var(--dg-primary-500);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .button {
+    border-width: 2px;
+  }
+}

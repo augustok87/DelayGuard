@@ -4,11 +4,14 @@ import { AppProvider } from './components/AppProvider';
 import { App } from './components/App';
 import { logError } from './utils/logger';
 
+// Import Design System
+import './styles/design-system.css';
+
 /**
  * Main entry point for DelayGuard
  * 
- * This version uses pure React components with TypeScript for
- * world-class engineering standards.
+ * World-class Shopify app with modern design system
+ * and professional micro-interactions.
  */
 
 const container = document.getElementById('root');
