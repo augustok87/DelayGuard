@@ -130,7 +130,6 @@ export function SettingsCard({
           <Button
             variant="primary"
             onClick={onSave}
-            loading={loading}
             disabled={loading}
           >
             Save Settings

@@ -102,6 +102,7 @@
 /* Loading state */
 .loading {
   cursor: wait;
+  position: relative;
 }
 
 .spinner {
@@ -112,6 +113,8 @@
   border-radius: 50%;
   animation: spin 1s linear infinite;
   position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .hidden {
