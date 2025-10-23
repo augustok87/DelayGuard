@@ -16,7 +16,7 @@
 }
 
 .button:focus {
-  outline: 2px solid var(--delayguard-primary);
+  outline: 2px solid var(--dg-primary-600);
   outline-offset: 2px;
 }
 
@@ -27,28 +27,28 @@
 
 /* Variants */
 .primary {
-  background: linear-gradient(135deg, var(--delayguard-primary) 0%, var(--delayguard-primary-dark) 100%);
+  background: linear-gradient(135deg, var(--dg-primary-600) 0%, var(--dg-primary-700) 100%);
   color: white;
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px -1px rgba(37, 99, 235, 0.3);
 }
 
 .primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 8px -1px rgba(37, 99, 235, 0.4);
 }
 
 .secondary {
   background: white;
-  color: var(--delayguard-gray-700);
-  border: 1px solid var(--delayguard-gray-300);
+  color: var(--dg-gray-700);
+  border: 1px solid var(--dg-gray-300);
 }
 
 .secondary:hover:not(:disabled) {
-  background: var(--delayguard-gray-50);
+  background: var(--dg-gray-50);
 }
 
 .danger {
-  background: linear-gradient(135deg, var(--delayguard-danger) 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, var(--dg-error-600) 0%, var(--dg-error-700) 100%);
   color: white;
   box-shadow: 0 2px 4px -1px rgba(220, 38, 38, 0.3);
 }
@@ -59,7 +59,7 @@
 }
 
 .success {
-  background: linear-gradient(135deg, var(--delayguard-success) 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--dg-success-600) 0%, var(--dg-success-700) 100%);
   color: white;
   box-shadow: 0 2px 4px -1px rgba(16, 185, 129, 0.3);
 }
@@ -70,7 +70,7 @@
 }
 
 .warning {
-  background: linear-gradient(135deg, var(--delayguard-warning) 0%, #d97706 100%);
+  background: linear-gradient(135deg, var(--dg-warning-600) 0%, var(--dg-warning-700) 100%);
   color: white;
   box-shadow: 0 2px 4px -1px rgba(217, 119, 6, 0.3);
 }
