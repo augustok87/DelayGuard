@@ -4,7 +4,6 @@
  */
 
 import Koa from 'koa';
-import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import request from 'supertest';
 import crypto from 'crypto';
@@ -27,7 +26,7 @@ describe('GDPR Routes', () => {
     app = new Koa();
     
     // Add raw body middleware for HMAC verification
-    app.use(async (ctx, next) => {
+    app.use(async(ctx, next) => {
       if (ctx.request.body) {
         ctx.request.rawBody = JSON.stringify(ctx.request.body);
       }
@@ -61,7 +60,7 @@ describe('GDPR Routes', () => {
   }
 
   describe('POST /gdpr/customers/data_request', () => {
-    it('should process valid data request webhook', async () => {
+    it('should process valid data request webhook', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -102,7 +101,7 @@ describe('GDPR Routes', () => {
       expect(mockGdprService.handleDataRequest).toHaveBeenCalledWith(webhookData);
     });
 
-    it('should reject request with invalid HMAC', async () => {
+    it('should reject request with invalid HMAC', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -127,7 +126,7 @@ describe('GDPR Routes', () => {
       expect(mockGdprService.handleDataRequest).not.toHaveBeenCalled();
     });
 
-    it('should handle service errors gracefully', async () => {
+    it('should handle service errors gracefully', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -142,7 +141,7 @@ describe('GDPR Routes', () => {
       };
 
       mockGdprService.handleDataRequest.mockRejectedValue(
-        new Error('Database error')
+        new Error('Database error'),
       );
 
       const body = JSON.stringify(webhookData);
@@ -160,7 +159,7 @@ describe('GDPR Routes', () => {
   });
 
   describe('POST /gdpr/customers/redact', () => {
-    it('should process valid customer redaction webhook', async () => {
+    it('should process valid customer redaction webhook', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -189,7 +188,7 @@ describe('GDPR Routes', () => {
       expect(mockGdprService.handleCustomerRedact).toHaveBeenCalledWith(webhookData);
     });
 
-    it('should reject request with invalid HMAC', async () => {
+    it('should reject request with invalid HMAC', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -211,7 +210,7 @@ describe('GDPR Routes', () => {
       expect(mockGdprService.handleCustomerRedact).not.toHaveBeenCalled();
     });
 
-    it('should handle service errors gracefully', async () => {
+    it('should handle service errors gracefully', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -223,7 +222,7 @@ describe('GDPR Routes', () => {
       };
 
       mockGdprService.handleCustomerRedact.mockRejectedValue(
-        new Error('Redaction failed')
+        new Error('Redaction failed'),
       );
 
       const body = JSON.stringify(webhookData);
@@ -241,7 +240,7 @@ describe('GDPR Routes', () => {
   });
 
   describe('POST /gdpr/shop/redact', () => {
-    it('should process valid shop redaction webhook', async () => {
+    it('should process valid shop redaction webhook', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -264,7 +263,7 @@ describe('GDPR Routes', () => {
       expect(mockGdprService.handleShopRedact).toHaveBeenCalledWith(webhookData);
     });
 
-    it('should reject request with invalid HMAC', async () => {
+    it('should reject request with invalid HMAC', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -281,14 +280,14 @@ describe('GDPR Routes', () => {
       expect(mockGdprService.handleShopRedact).not.toHaveBeenCalled();
     });
 
-    it('should handle service errors gracefully', async () => {
+    it('should handle service errors gracefully', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
       };
 
       mockGdprService.handleShopRedact.mockRejectedValue(
-        new Error('Deletion failed')
+        new Error('Deletion failed'),
       );
 
       const body = JSON.stringify(webhookData);
@@ -306,7 +305,7 @@ describe('GDPR Routes', () => {
   });
 
   describe('HMAC Verification', () => {
-    it('should verify valid HMAC correctly', async () => {
+    it('should verify valid HMAC correctly', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -326,7 +325,7 @@ describe('GDPR Routes', () => {
       expect(response.status).toBe(200);
     });
 
-    it('should reject tampered data', async () => {
+    it('should reject tampered data', async() => {
       const webhookData = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',

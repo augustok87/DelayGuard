@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Audit logging service with dynamic event tracking
 import { Context } from "koa";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 import { EventEmitter } from "events";
 // import { AppConfig } from '../types'; // Available for future use
 
@@ -143,10 +143,9 @@ export class AuditLogger extends EventEmitter {
 
     // Check if buffer needs flushing
     if (this.eventBuffer.length >= this.config.batchSize) {
-      logger.info(
-        "Flushing events due to batch size reached:",
-        { bufferLength: this.eventBuffer.length },
-      );
+      logger.info("Flushing events due to batch size reached:", {
+        bufferLength: this.eventBuffer.length,
+      });
       await this.flushEvents();
     }
   }

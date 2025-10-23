@@ -16,7 +16,7 @@ const app = new Koa();
 const router = new Router();
 
 // Simple middleware
-app.use(async (ctx, next) => {
+app.use(async(ctx, next) => {
   const start = Date.now();
   await next();
   const ms = Date.now() - start;
@@ -30,7 +30,7 @@ app.use(bodyParser());
 app.use(serve(join(__dirname, '../public')));
 
 // Simple health check
-router.get('/health', async (ctx) => {
+router.get('/health', async(ctx) => {
   ctx.body = {
     status: 'ok',
     mode: 'development-simple',
@@ -40,7 +40,7 @@ router.get('/health', async (ctx) => {
 });
 
 // API mock endpoints for frontend development
-router.get('/api/settings', async (ctx) => {
+router.get('/api/settings', async(ctx) => {
   ctx.body = {
     delayThreshold: 2,
     notificationTemplate: 'default',
@@ -49,7 +49,7 @@ router.get('/api/settings', async (ctx) => {
   };
 });
 
-router.get('/api/alerts', async (ctx) => {
+router.get('/api/alerts', async(ctx) => {
   ctx.body = [
     {
       id: '1',
@@ -62,7 +62,7 @@ router.get('/api/alerts', async (ctx) => {
   ];
 });
 
-router.get('/api/orders', async (ctx) => {
+router.get('/api/orders', async(ctx) => {
   ctx.body = [
     {
       id: '1',
@@ -75,7 +75,7 @@ router.get('/api/orders', async (ctx) => {
   ];
 });
 
-router.get('/api/stats', async (ctx) => {
+router.get('/api/stats', async(ctx) => {
   ctx.body = {
     totalAlerts: 10,
     activeAlerts: 3,
@@ -85,20 +85,20 @@ router.get('/api/stats', async (ctx) => {
 });
 
 // GDPR endpoints (mocked)
-router.post('/webhooks/gdpr/customers/data_request', async (ctx) => {
+router.post('/webhooks/gdpr/customers/data_request', async(ctx) => {
   ctx.body = { success: true, message: 'GDPR data request received (dev mode)' };
 });
 
-router.post('/webhooks/gdpr/customers/redact', async (ctx) => {
+router.post('/webhooks/gdpr/customers/redact', async(ctx) => {
   ctx.body = { success: true, message: 'GDPR redaction received (dev mode)' };
 });
 
-router.post('/webhooks/gdpr/shop/redact', async (ctx) => {
+router.post('/webhooks/gdpr/shop/redact', async(ctx) => {
   ctx.body = { success: true, message: 'Shop redaction received (dev mode)' };
 });
 
 // Billing endpoints (mocked)
-router.get('/billing/plans', async (ctx) => {
+router.get('/billing/plans', async(ctx) => {
   ctx.body = {
     success: true,
     plans: {

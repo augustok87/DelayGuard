@@ -67,17 +67,17 @@ function ThemeCustomizer({
   const handleColorChange = (property: keyof ThemeSettings, value: string) => {
     setTheme((prev) => ({ ...prev, [property]: value }));
   };
-handleColorChange.displayName = 'handleColorChange';
+  handleColorChange.displayName = "handleColorChange";
 
   const handleNumberChange = (property: keyof ThemeSettings, value: number) => {
     setTheme((prev) => ({ ...prev, [property]: value }));
   };
-handleNumberChange.displayName = 'handleNumberChange';
+  handleNumberChange.displayName = "handleNumberChange";
 
   const handleStringChange = (property: keyof ThemeSettings, value: string) => {
     setTheme((prev) => ({ ...prev, [property]: value }));
   };
-handleStringChange.displayName = 'handleStringChange';
+  handleStringChange.displayName = "handleStringChange";
 
   const handleBooleanChange = (
     property: keyof ThemeSettings,
@@ -85,33 +85,33 @@ handleStringChange.displayName = 'handleStringChange';
   ) => {
     setTheme((prev) => ({ ...prev, [property]: value }));
   };
-handleBooleanChange.displayName = 'handleBooleanChange';
+  handleBooleanChange.displayName = "handleBooleanChange";
 
   const handleReset = () => {
     setTheme(defaultTheme);
     setToastMessage("Theme reset to defaults!");
     setShowToast(true);
   };
-handleReset.displayName = 'handleReset';
+  handleReset.displayName = "handleReset";
 
   const handleSave = () => {
     setShowModal(false);
     setToastMessage("Theme saved successfully!");
     setShowToast(true);
   };
-handleSave.displayName = 'handleSave';
+  handleSave.displayName = "handleSave";
 
   const handleCloseToast = () => {
     setShowToast(false);
   };
-handleCloseToast.displayName = 'handleCloseToast';
+  handleCloseToast.displayName = "handleCloseToast";
 
   const handlePreviewTheme = () => {
     setShowPreview(true);
     setToastMessage("Theme preview opened!");
     setShowToast(true);
   };
-handlePreviewTheme.displayName = 'handlePreviewTheme';
+  handlePreviewTheme.displayName = "handlePreviewTheme";
 
   const handleExportTheme = () => {
     const themeData = JSON.stringify(theme, null, 2);
@@ -127,7 +127,7 @@ handlePreviewTheme.displayName = 'handlePreviewTheme';
     setToastMessage("Theme exported successfully!");
     setShowToast(true);
   };
-handleExportTheme.displayName = 'handleExportTheme';
+  handleExportTheme.displayName = "handleExportTheme";
 
   const handleImportTheme = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -144,7 +144,7 @@ handleExportTheme.displayName = 'handleExportTheme';
           setShowToast(true);
         }
       };
-// handleImportTheme.displayName = 'handleImportTheme'; // Function expressions don't have displayName
+      // handleImportTheme.displayName = 'handleImportTheme'; // Function expressions don't have displayName
       reader.readAsText(file);
     }
   };
@@ -152,7 +152,7 @@ handleExportTheme.displayName = 'handleExportTheme';
   const handleColorSuggestions = () => {
     setShowColorSuggestions(true);
   };
-handleColorSuggestions.displayName = 'handleColorSuggestions';
+  handleColorSuggestions.displayName = "handleColorSuggestions";
 
   const handleShareTheme = () => {
     const themeUrl = btoa(JSON.stringify(theme));
@@ -172,7 +172,7 @@ handleColorSuggestions.displayName = 'handleColorSuggestions';
     setToastMessage("Theme link copied to clipboard");
     setShowToast(true);
   };
-handleShareTheme.displayName = 'handleShareTheme';
+  handleShareTheme.displayName = "handleShareTheme";
 
   const handleCustomCSSChange = (value: string) => {
     setTheme((prev) => ({ ...prev, customCSS: value }));
@@ -188,7 +188,7 @@ handleShareTheme.displayName = 'handleShareTheme';
       setCustomCSSError("Invalid CSS syntax");
     }
   };
-handleCustomCSSChange.displayName = 'handleCustomCSSChange';
+  handleCustomCSSChange.displayName = "handleCustomCSSChange";
 
   const colorPalettes = [
     {

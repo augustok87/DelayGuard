@@ -44,12 +44,7 @@ export const useSettingsActions = () => {
         return { success: false, error: "An unexpected error occurred" };
       }
     },
-    [
-      updateSettings,
-      validateSettings,
-      showErrorToast,
-      showSaveSuccessToast,
-    ],
+    [updateSettings, validateSettings, showErrorToast, showSaveSuccessToast],
   );
 
   const resetToDefaults = useCallback(async() => {

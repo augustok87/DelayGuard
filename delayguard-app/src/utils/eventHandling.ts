@@ -6,7 +6,7 @@
  */
 
 import * as React from "react";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 
 /**
  * Simple event handler for React components
@@ -55,7 +55,7 @@ export class EventListenerManager {
 
     const elementListeners = this.listeners.get(element);
     if (!elementListeners) {
-      throw new Error('Failed to get element listeners');
+      throw new Error("Failed to get element listeners");
     }
     elementListeners.set(eventType, handler);
     element.addEventListener(eventType, handler, options);

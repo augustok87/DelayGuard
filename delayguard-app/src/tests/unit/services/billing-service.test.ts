@@ -88,7 +88,7 @@ describe('BillingService', () => {
   });
 
   describe('getSubscription', () => {
-    it('should retrieve active subscription', async () => {
+    it('should retrieve active subscription', async() => {
       const mockSubscription: AppSubscription = {
         id: 'sub-123',
         shop_id: 'shop-uuid',
@@ -110,11 +110,11 @@ describe('BillingService', () => {
       expect(result).toEqual(mockSubscription);
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('SELECT * FROM subscriptions'),
-        ['shop-uuid', 'cancelled']
+        ['shop-uuid', 'cancelled'],
       );
     });
 
-    it('should return null if no subscription found', async () => {
+    it('should return null if no subscription found', async() => {
       mockQuery.mockResolvedValueOnce([]);
 
       const result = await billingService.getSubscription('shop-uuid');
@@ -122,17 +122,17 @@ describe('BillingService', () => {
       expect(result).toBeNull();
     });
 
-    it('should handle database errors', async () => {
+    it('should handle database errors', async() => {
       mockQuery.mockRejectedValueOnce(new Error('Database error'));
 
       await expect(
-        billingService.getSubscription('shop-uuid')
+        billingService.getSubscription('shop-uuid'),
       ).rejects.toThrow('Database error');
     });
   });
 
   describe('createSubscription', () => {
-    it('should create free subscription successfully', async () => {
+    it('should create free subscription successfully', async() => {
       const mockSubscription: AppSubscription = {
         id: 'sub-new',
         shop_id: 'shop-uuid',
@@ -149,17 +149,17 @@ describe('BillingService', () => {
 
       const result = await billingService.createSubscription(
         'shop-uuid',
-        'free'
+        'free',
       );
 
       expect(result).toEqual(mockSubscription);
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO subscriptions'),
-        expect.arrayContaining(['shop-uuid', 'free', 'active'])
+        expect.arrayContaining(['shop-uuid', 'free', 'active']),
       );
     });
 
-    it('should create pro subscription with trial', async () => {
+    it('should create pro subscription with trial', async() => {
       const mockSubscription: AppSubscription = {
         id: 'sub-new',
         shop_id: 'shop-uuid',
@@ -178,7 +178,7 @@ describe('BillingService', () => {
       const result = await billingService.createSubscription(
         'shop-uuid',
         'pro',
-        'charge-123'
+        'charge-123',
       );
 
       expect(result.plan_name).toBe('pro');
@@ -187,7 +187,7 @@ describe('BillingService', () => {
   });
 
   describe('updateSubscription', () => {
-    it('should update subscription status', async () => {
+    it('should update subscription status', async() => {
       const mockUpdatedSubscription: AppSubscription = {
         id: 'sub-123',
         shop_id: 'shop-uuid',
@@ -212,7 +212,7 @@ describe('BillingService', () => {
       expect(result.cancelled_at).toBeDefined();
     });
 
-    it('should increment alert count', async () => {
+    it('should increment alert count', async() => {
       const mockSubscription: AppSubscription = {
         id: 'sub-123',
         shop_id: 'shop-uuid',
@@ -231,13 +231,13 @@ describe('BillingService', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE subscriptions'),
-        expect.arrayContaining(['sub-123'])
+        expect.arrayContaining(['sub-123']),
       );
     });
   });
 
   describe('checkAlertLimit', () => {
-    it('should allow alerts within free plan limit', async () => {
+    it('should allow alerts within free plan limit', async() => {
       const mockSubscription: AppSubscription = {
         id: 'sub-123',
         shop_id: 'shop-uuid',
@@ -263,7 +263,7 @@ describe('BillingService', () => {
       });
     });
 
-    it('should block alerts exceeding free plan limit', async () => {
+    it('should block alerts exceeding free plan limit', async() => {
       const mockSubscription: AppSubscription = {
         id: 'sub-123',
         shop_id: 'shop-uuid',
@@ -289,7 +289,7 @@ describe('BillingService', () => {
       });
     });
 
-    it('should always allow alerts for pro plan', async () => {
+    it('should always allow alerts for pro plan', async() => {
       const mockSubscription: AppSubscription = {
         id: 'sub-123',
         shop_id: 'shop-uuid',
@@ -314,7 +314,7 @@ describe('BillingService', () => {
       });
     });
 
-    it('should handle subscription not found', async () => {
+    it('should handle subscription not found', async() => {
       mockQuery.mockResolvedValueOnce([]);
 
       const result = await billingService.checkAlertLimit('shop-uuid');
@@ -334,7 +334,7 @@ describe('BillingService', () => {
       const charge = billingService.generateRecurringCharge(
         'pro',
         'https://example.com/billing/callback',
-        false
+        false,
       );
 
       expect(charge).toEqual({
@@ -350,7 +350,7 @@ describe('BillingService', () => {
       const charge = billingService.generateRecurringCharge(
         'enterprise',
         'https://example.com/billing/callback',
-        true
+        true,
       );
 
       expect(charge).toEqual({
@@ -366,14 +366,14 @@ describe('BillingService', () => {
       expect(() => {
         billingService.generateRecurringCharge(
           'free',
-          'https://example.com/billing/callback'
+          'https://example.com/billing/callback',
         );
       }).toThrow('Cannot create charge for free plan');
     });
   });
 
   describe('cancelSubscription', () => {
-    it('should cancel active subscription', async () => {
+    it('should cancel active subscription', async() => {
       const mockCancelledSubscription: AppSubscription = {
         id: 'sub-123',
         shop_id: 'shop-uuid',
@@ -395,7 +395,7 @@ describe('BillingService', () => {
       expect(result.cancelled_at).toBeDefined();
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Subscription cancelled'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });

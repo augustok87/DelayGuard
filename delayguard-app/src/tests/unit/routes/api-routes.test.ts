@@ -62,7 +62,7 @@ describe('API Routes', () => {
         jti: 'jwt-123',
         sid: 'session-123',
       },
-      'test-secret'
+      'test-secret',
     );
 
     // Reset mocks
@@ -70,7 +70,7 @@ describe('API Routes', () => {
   });
 
   describe('GET /api/alerts', () => {
-    it('should return alerts for authenticated shop', async () => {
+    it('should return alerts for authenticated shop', async() => {
       const mockAlerts = [
         {
           id: '1',
@@ -99,7 +99,7 @@ describe('API Routes', () => {
       });
     });
 
-    it('should return 401 without authentication', async () => {
+    it('should return 401 without authentication', async() => {
       const response = await request(app.callback())
         .get('/api/alerts')
         .expect(401);
@@ -108,7 +108,7 @@ describe('API Routes', () => {
       expect(mockQuery).not.toHaveBeenCalled();
     });
 
-    it('should handle database errors gracefully', async () => {
+    it('should handle database errors gracefully', async() => {
       mockAuth();
       mockQuery.mockRejectedValueOnce(new Error('Database error'));
 
@@ -122,7 +122,7 @@ describe('API Routes', () => {
       });
     });
 
-    it('should return empty array when no alerts found', async () => {
+    it('should return empty array when no alerts found', async() => {
       mockAuth();
       mockQuery.mockResolvedValueOnce([]);
 
@@ -140,7 +140,7 @@ describe('API Routes', () => {
   });
 
   describe('GET /api/orders', () => {
-    it('should return orders for authenticated shop', async () => {
+    it('should return orders for authenticated shop', async() => {
       const mockOrders = [
         {
           id: 'order-1',
@@ -166,7 +166,7 @@ describe('API Routes', () => {
       });
     });
 
-    it('should respect limit query parameter', async () => {
+    it('should respect limit query parameter', async() => {
       mockAuth();
       mockQuery.mockResolvedValueOnce([]);
 
@@ -177,11 +177,11 @@ describe('API Routes', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.any(String),
-        [testShop, 10]
+        [testShop, 10],
       );
     });
 
-    it('should use default limit when not provided', async () => {
+    it('should use default limit when not provided', async() => {
       mockAuth();
       mockQuery.mockResolvedValueOnce([]);
 
@@ -192,13 +192,13 @@ describe('API Routes', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.any(String),
-        [testShop, 50] // Default limit
+        [testShop, 50], // Default limit
       );
     });
   });
 
   describe('GET /api/settings', () => {
-    it('should return settings for authenticated shop', async () => {
+    it('should return settings for authenticated shop', async() => {
       const mockSettings = {
         delay_threshold_days: 2,
         email_enabled: true,
@@ -222,7 +222,7 @@ describe('API Routes', () => {
       });
     });
 
-    it('should create default settings if none exist', async () => {
+    it('should create default settings if none exist', async() => {
       mockAuth();
       // First query returns empty (no settings)
       mockQuery.mockResolvedValueOnce([]);
@@ -247,7 +247,7 @@ describe('API Routes', () => {
   });
 
   describe('PUT /api/settings', () => {
-    it('should update settings for authenticated shop', async () => {
+    it('should update settings for authenticated shop', async() => {
       const updatedSettings = {
         delay_threshold_days: 3,
         email_enabled: true,
@@ -270,7 +270,7 @@ describe('API Routes', () => {
       });
     });
 
-    it('should handle partial updates', async () => {
+    it('should handle partial updates', async() => {
       const partialUpdate = {
         email_enabled: false,
       };
@@ -287,7 +287,7 @@ describe('API Routes', () => {
       expect(response.body.success).toBe(true);
     });
 
-    it('should validate delay_threshold_days', async () => {
+    it('should validate delay_threshold_days', async() => {
       mockAuth();
 
       const response = await request(app.callback())
@@ -302,7 +302,7 @@ describe('API Routes', () => {
       });
     });
 
-    it('should return 401 without authentication', async () => {
+    it('should return 401 without authentication', async() => {
       await request(app.callback())
         .put('/api/settings')
         .send({ email_enabled: false })
@@ -313,7 +313,7 @@ describe('API Routes', () => {
   });
 
   describe('GET /api/analytics', () => {
-    it('should return analytics for authenticated shop', async () => {
+    it('should return analytics for authenticated shop', async() => {
       const mockAlertStats = {
         total_alerts: 10,
         sent_alerts: 8,
@@ -345,7 +345,7 @@ describe('API Routes', () => {
       });
     });
 
-    it('should handle missing data gracefully', async () => {
+    it('should handle missing data gracefully', async() => {
       mockAuth();
       mockQuery
         .mockResolvedValueOnce([])
@@ -362,7 +362,7 @@ describe('API Routes', () => {
   });
 
   describe('GET /api/shop', () => {
-    it('should return shop information', async () => {
+    it('should return shop information', async() => {
       const mockShop = {
         shop_domain: testShop,
         created_at: '2025-10-21T12:00:00.000Z',
@@ -383,7 +383,7 @@ describe('API Routes', () => {
       });
     });
 
-    it('should return 404 when shop not found', async () => {
+    it('should return 404 when shop not found', async() => {
       mockAuth();
       mockQuery.mockResolvedValueOnce([]);
 
@@ -399,7 +399,7 @@ describe('API Routes', () => {
   });
 
   describe('GET /api/health', () => {
-    it('should return health status without authentication', async () => {
+    it('should return health status without authentication', async() => {
       const response = await request(app.callback())
         .get('/api/health')
         .expect(200);

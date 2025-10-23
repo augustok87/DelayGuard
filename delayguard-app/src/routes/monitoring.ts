@@ -1,5 +1,10 @@
 import Router from "koa-router";
-import { MonitoringService, HealthCheck, SystemMetrics, Alert } from "../services/monitoring-service";
+import {
+  MonitoringService,
+  HealthCheck,
+  SystemMetrics,
+  Alert,
+} from "../services/monitoring-service";
 import { appConfig as config } from "../config/app-config";
 
 // Type for system status response
@@ -240,15 +245,11 @@ function calculateHealthScore(status: SystemStatus): number {
   let score = 100;
 
   // Deduct points for unhealthy checks
-  const unhealthyChecks = status.checks.filter(
-    (c) => c.status === "unhealthy",
-  );
+  const unhealthyChecks = status.checks.filter((c) => c.status === "unhealthy");
   score -= unhealthyChecks.length * 25;
 
   // Deduct points for degraded checks
-  const degradedChecks = status.checks.filter(
-    (c) => c.status === "degraded",
-  );
+  const degradedChecks = status.checks.filter((c) => c.status === "degraded");
   score -= degradedChecks.length * 10;
 
   // Deduct points for alerts
@@ -269,7 +270,10 @@ function calculateHealthScore(status: SystemStatus): number {
   return Math.max(0, Math.min(100, score));
 }
 
-function generateRecommendations(checks: HealthCheck[], status: SystemStatus): string[] {
+function generateRecommendations(
+  checks: HealthCheck[],
+  status: SystemStatus,
+): string[] {
   const recommendations: string[] = [];
 
   // Check for unhealthy services

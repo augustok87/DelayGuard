@@ -1,22 +1,22 @@
-import Router from 'koa-router';
-import { Context } from 'koa';
-import { logger } from '../utils/logger';
-import { query } from '../database/connection';
-import { requireAuth, getShopDomain } from '../middleware/shopify-session';
+import Router from "koa-router";
+import { Context } from "koa";
+import { logger } from "../utils/logger";
+import { query } from "../database/connection";
+import { requireAuth, getShopDomain } from "../middleware/shopify-session";
 
-const router = new Router({ prefix: '/api' });
+const router = new Router({ prefix: "/api" });
 
 /**
  * GET /api/alerts
  * Get all delay alerts for authenticated shop
- * 
+ *
  * @returns Array of delay alerts with order information
  */
-router.get('/alerts', requireAuth, async (ctx: Context) => {
+router.get("/alerts", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-    
-    logger.debug('Fetching alerts for shop', { shop: shopDomain });
+
+    logger.debug("Fetching alerts for shop", { shop: shopDomain });
 
     // Query database for shop's alerts with order details
     const alerts = await query(
@@ -42,10 +42,10 @@ router.get('/alerts', requireAuth, async (ctx: Context) => {
       ORDER BY da.created_at DESC
       LIMIT 100
       `,
-      [shopDomain]
+      [shopDomain],
     );
 
-    logger.debug('Fetched alerts', { shop: shopDomain, count: alerts.length });
+    logger.debug("Fetched alerts", { shop: shopDomain, count: alerts.length });
 
     ctx.status = 200;
     ctx.body = {
@@ -54,32 +54,29 @@ router.get('/alerts', requireAuth, async (ctx: Context) => {
       count: alerts.length,
     };
   } catch (error) {
-    logger.error('Error fetching alerts', error as Error, { 
-      shop: ctx.state.shop 
+    logger.error("Error fetching alerts", error as Error, {
+      shop: ctx.state.shop,
     });
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch alerts' };
+    ctx.body = { error: "Failed to fetch alerts" };
   }
 });
 
 /**
  * GET /api/orders
  * Get recent orders for authenticated shop
- * 
+ *
  * @query limit - Number of orders to return (default: 50, max: 200)
  * @returns Array of orders with alert counts
  */
-router.get('/orders', requireAuth, async (ctx: Context) => {
+router.get("/orders", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-    const limit = Math.min(
-      parseInt(ctx.query.limit as string) || 50,
-      200
-    );
-    
-    logger.debug('Fetching orders for shop', { 
-      shop: shopDomain, 
-      limit 
+    const limit = Math.min(parseInt(ctx.query.limit as string) || 50, 200);
+
+    logger.debug("Fetching orders for shop", {
+      shop: shopDomain,
+      limit,
     });
 
     const orders = await query(
@@ -105,12 +102,12 @@ router.get('/orders', requireAuth, async (ctx: Context) => {
       ORDER BY o.created_at DESC
       LIMIT $2
       `,
-      [shopDomain, limit]
+      [shopDomain, limit],
     );
 
-    logger.debug('Fetched orders', { 
-      shop: shopDomain, 
-      count: orders.length 
+    logger.debug("Fetched orders", {
+      shop: shopDomain,
+      count: orders.length,
     });
 
     ctx.status = 200;
@@ -120,11 +117,11 @@ router.get('/orders', requireAuth, async (ctx: Context) => {
       count: orders.length,
     };
   } catch (error) {
-    logger.error('Error fetching orders', error as Error, { 
-      shop: ctx.state.shop 
+    logger.error("Error fetching orders", error as Error, {
+      shop: ctx.state.shop,
     });
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch orders' };
+    ctx.body = { error: "Failed to fetch orders" };
   }
 });
 
@@ -132,14 +129,14 @@ router.get('/orders', requireAuth, async (ctx: Context) => {
  * GET /api/settings
  * Get app settings for authenticated shop
  * Creates default settings if none exist
- * 
+ *
  * @returns Shop's app settings
  */
-router.get('/settings', requireAuth, async (ctx: Context) => {
+router.get("/settings", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-    
-    logger.debug('Fetching settings for shop', { shop: shopDomain });
+
+    logger.debug("Fetching settings for shop", { shop: shopDomain });
 
     const settings = await query(
       `
@@ -155,13 +152,13 @@ router.get('/settings', requireAuth, async (ctx: Context) => {
       JOIN shops sh ON s.shop_id = sh.id
       WHERE sh.shop_domain = $1
       `,
-      [shopDomain]
+      [shopDomain],
     );
 
     // If no settings exist, create default settings
     if (settings.length === 0) {
-      logger.info('Creating default settings for shop', { shop: shopDomain });
-      
+      logger.info("Creating default settings for shop", { shop: shopDomain });
+
       await query(
         `
         INSERT INTO app_settings (
@@ -181,9 +178,9 @@ router.get('/settings', requireAuth, async (ctx: Context) => {
         WHERE shop_domain = $1
         ON CONFLICT (shop_id) DO NOTHING
         `,
-        [shopDomain]
+        [shopDomain],
       );
-      
+
       // Return default settings
       ctx.status = 200;
       ctx.body = {
@@ -192,14 +189,14 @@ router.get('/settings', requireAuth, async (ctx: Context) => {
           delay_threshold_days: 2,
           email_enabled: true,
           sms_enabled: false,
-          notification_template: 'default',
+          notification_template: "default",
           custom_message: null,
         },
       };
       return;
     }
 
-    logger.debug('Fetched settings', { shop: shopDomain });
+    logger.debug("Fetched settings", { shop: shopDomain });
 
     ctx.status = 200;
     ctx.body = {
@@ -207,11 +204,11 @@ router.get('/settings', requireAuth, async (ctx: Context) => {
       data: settings[0],
     };
   } catch (error) {
-    logger.error('Error fetching settings', error as Error, { 
-      shop: ctx.state.shop 
+    logger.error("Error fetching settings", error as Error, {
+      shop: ctx.state.shop,
     });
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch settings' };
+    ctx.body = { error: "Failed to fetch settings" };
   }
 });
 
@@ -219,27 +216,27 @@ router.get('/settings', requireAuth, async (ctx: Context) => {
  * PUT /api/settings
  * Update app settings for authenticated shop
  * Supports partial updates (only provided fields are updated)
- * 
+ *
  * @body delay_threshold_days - Number of days before sending delay alert
  * @body email_enabled - Enable email notifications
  * @body sms_enabled - Enable SMS notifications
  * @body notification_template - Template name for notifications
  * @body custom_message - Custom message for notifications
  */
-router.put('/settings', requireAuth, async (ctx: Context) => {
+router.put("/settings", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-    const { 
-      delay_threshold_days, 
-      email_enabled, 
-      sms_enabled, 
+    const {
+      delay_threshold_days,
+      email_enabled,
+      sms_enabled,
       notification_template,
       custom_message,
     } = ctx.request.body as Record<string, unknown>;
-    
-    logger.debug('Updating settings for shop', { 
-      shop: shopDomain, 
-      settings: ctx.request.body 
+
+    logger.debug("Updating settings for shop", {
+      shop: shopDomain,
+      settings: ctx.request.body,
     });
 
     // Validate input
@@ -247,9 +244,9 @@ router.put('/settings', requireAuth, async (ctx: Context) => {
       const threshold = Number(delay_threshold_days);
       if (isNaN(threshold) || threshold < 1 || threshold > 30) {
         ctx.status = 400;
-        ctx.body = { 
-          error: 'delay_threshold_days must be between 1 and 30',
-          code: 'INVALID_THRESHOLD' 
+        ctx.body = {
+          error: "delay_threshold_days must be between 1 and 30",
+          code: "INVALID_THRESHOLD",
         };
         return;
       }
@@ -269,42 +266,42 @@ router.put('/settings', requireAuth, async (ctx: Context) => {
       WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $6)
       `,
       [
-        delay_threshold_days, 
-        email_enabled, 
-        sms_enabled, 
+        delay_threshold_days,
+        email_enabled,
+        sms_enabled,
         notification_template,
         custom_message,
-        shopDomain
-      ]
+        shopDomain,
+      ],
     );
 
-    logger.info('Settings updated successfully', { shop: shopDomain });
+    logger.info("Settings updated successfully", { shop: shopDomain });
 
     ctx.status = 200;
     ctx.body = {
       success: true,
-      message: 'Settings updated successfully',
+      message: "Settings updated successfully",
     };
   } catch (error) {
-    logger.error('Error updating settings', error as Error, { 
-      shop: ctx.state.shop 
+    logger.error("Error updating settings", error as Error, {
+      shop: ctx.state.shop,
     });
     ctx.status = 500;
-    ctx.body = { error: 'Failed to update settings' };
+    ctx.body = { error: "Failed to update settings" };
   }
 });
 
 /**
  * GET /api/analytics
  * Get analytics and statistics for authenticated shop
- * 
+ *
  * @returns Analytics data including alert stats and order stats
  */
-router.get('/analytics', requireAuth, async (ctx: Context) => {
+router.get("/analytics", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-    
-    logger.debug('Fetching analytics for shop', { shop: shopDomain });
+
+    logger.debug("Fetching analytics for shop", { shop: shopDomain });
 
     // Get alert statistics
     const alertStats = await query(
@@ -321,7 +318,7 @@ router.get('/analytics', requireAuth, async (ctx: Context) => {
       JOIN shops s ON o.shop_id = s.id
       WHERE s.shop_domain = $1
       `,
-      [shopDomain]
+      [shopDomain],
     );
 
     // Get order statistics
@@ -336,10 +333,10 @@ router.get('/analytics', requireAuth, async (ctx: Context) => {
       JOIN shops s ON o.shop_id = s.id
       WHERE s.shop_domain = $1
       `,
-      [shopDomain]
+      [shopDomain],
     );
 
-    logger.debug('Fetched analytics', { shop: shopDomain });
+    logger.debug("Fetched analytics", { shop: shopDomain });
 
     ctx.status = 200;
     ctx.body = {
@@ -350,25 +347,25 @@ router.get('/analytics', requireAuth, async (ctx: Context) => {
       },
     };
   } catch (error) {
-    logger.error('Error fetching analytics', error as Error, { 
-      shop: ctx.state.shop 
+    logger.error("Error fetching analytics", error as Error, {
+      shop: ctx.state.shop,
     });
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch analytics' };
+    ctx.body = { error: "Failed to fetch analytics" };
   }
 });
 
 /**
  * GET /api/shop
  * Get current shop information
- * 
+ *
  * @returns Shop details
  */
-router.get('/shop', requireAuth, async (ctx: Context) => {
+router.get("/shop", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-    
-    logger.debug('Fetching shop information', { shop: shopDomain });
+
+    logger.debug("Fetching shop information", { shop: shopDomain });
 
     const shop = await query(
       `
@@ -383,17 +380,17 @@ router.get('/shop', requireAuth, async (ctx: Context) => {
       FROM shops
       WHERE shop_domain = $1
       `,
-      [shopDomain]
+      [shopDomain],
     );
 
     if (shop.length === 0) {
-      logger.warn('Shop not found in database', { shop: shopDomain });
+      logger.warn("Shop not found in database", { shop: shopDomain });
       ctx.status = 404;
-      ctx.body = { error: 'Shop not found' };
+      ctx.body = { error: "Shop not found" };
       return;
     }
 
-    logger.debug('Fetched shop information', { shop: shopDomain });
+    logger.debug("Fetched shop information", { shop: shopDomain });
 
     ctx.status = 200;
     ctx.body = {
@@ -401,11 +398,11 @@ router.get('/shop', requireAuth, async (ctx: Context) => {
       data: shop[0],
     };
   } catch (error) {
-    logger.error('Error fetching shop', error as Error, { 
-      shop: ctx.state.shop 
+    logger.error("Error fetching shop", error as Error, {
+      shop: ctx.state.shop,
     });
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch shop' };
+    ctx.body = { error: "Failed to fetch shop" };
   }
 });
 
@@ -413,12 +410,12 @@ router.get('/shop', requireAuth, async (ctx: Context) => {
  * Health check endpoint for API routes
  * Does not require authentication
  */
-router.get('/health', async (ctx: Context) => {
+router.get("/health", async(ctx: Context) => {
   ctx.status = 200;
   ctx.body = {
-    status: 'ok',
+    status: "ok",
     timestamp: new Date().toISOString(),
-    service: 'api',
+    service: "api",
   };
 });
 

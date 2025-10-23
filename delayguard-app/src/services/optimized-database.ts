@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Optimized database service with dynamic query building
 import { Pool, PoolClient, QueryResult } from "pg";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 import { AppConfig } from "../types";
 
 export interface QueryOptions {
@@ -13,7 +13,8 @@ export interface QueryOptions {
 
 export class OptimizedDatabase {
   private pool: Pool;
-  private queryCache: Map<string, { result: unknown; expiry: number }> = new Map();
+  private queryCache: Map<string, { result: unknown; expiry: number }> =
+    new Map();
   private readonly maxCacheSize = 1000;
   private readonly defaultCacheTTL = 300000; // 5 minutes
 

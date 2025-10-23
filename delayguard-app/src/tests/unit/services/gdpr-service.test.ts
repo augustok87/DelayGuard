@@ -11,7 +11,6 @@ import type {
   GDPRDataRequestWebhook,
   GDPRCustomerRedactWebhook,
   GDPRShopRedactWebhook,
-  GDPRCustomerData,
 } from '../../../types';
 
 // Mock dependencies
@@ -30,7 +29,7 @@ describe('GDPRService', () => {
   });
 
   describe('handleDataRequest', () => {
-    it('should retrieve all customer data successfully', async () => {
+    it('should retrieve all customer data successfully', async() => {
       const webhook: GDPRDataRequestWebhook = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -105,11 +104,11 @@ describe('GDPRService', () => {
       expect(mockQuery).toHaveBeenCalledTimes(3);
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('GDPR data request processed'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
-    it('should handle customer with no data', async () => {
+    it('should handle customer with no data', async() => {
       const webhook: GDPRDataRequestWebhook = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -135,7 +134,7 @@ describe('GDPRService', () => {
       expect(result.fulfillments).toEqual([]);
     });
 
-    it('should handle database errors gracefully', async () => {
+    it('should handle database errors gracefully', async() => {
       const webhook: GDPRDataRequestWebhook = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -152,18 +151,18 @@ describe('GDPRService', () => {
       mockQuery.mockRejectedValueOnce(new Error('Database connection failed'));
 
       await expect(gdprService.handleDataRequest(webhook)).rejects.toThrow(
-        'Database connection failed'
+        'Database connection failed',
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error processing GDPR data request'),
-        expect.any(Error)
+        expect.any(Error),
       );
     });
   });
 
   describe('handleCustomerRedact', () => {
-    it('should anonymize customer data successfully', async () => {
+    it('should anonymize customer data successfully', async() => {
       const webhook: GDPRCustomerRedactWebhook = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -191,16 +190,16 @@ describe('GDPRService', () => {
           expect.stringMatching(/redacted-customer-\d+@privacy\.invalid/),
           expect.stringMatching(/redacted-customer-\d+/),
           null,
-        ])
+        ]),
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('GDPR customer redaction completed'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
-    it('should handle redaction with no orders', async () => {
+    it('should handle redaction with no orders', async() => {
       const webhook: GDPRCustomerRedactWebhook = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -223,11 +222,11 @@ describe('GDPRService', () => {
         expect.objectContaining({
           customer_id: 456,
           orders_redacted: 0,
-        })
+        }),
       );
     });
 
-    it('should handle redaction errors', async () => {
+    it('should handle redaction errors', async() => {
       const webhook: GDPRCustomerRedactWebhook = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -241,7 +240,7 @@ describe('GDPRService', () => {
       mockQuery.mockRejectedValueOnce(new Error('Redaction failed'));
 
       await expect(gdprService.handleCustomerRedact(webhook)).rejects.toThrow(
-        'Redaction failed'
+        'Redaction failed',
       );
 
       expect(mockLogger.error).toHaveBeenCalled();
@@ -249,7 +248,7 @@ describe('GDPRService', () => {
   });
 
   describe('handleShopRedact', () => {
-    it('should delete all shop data successfully', async () => {
+    it('should delete all shop data successfully', async() => {
       const webhook: GDPRShopRedactWebhook = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -281,11 +280,11 @@ describe('GDPRService', () => {
           shop_domain: 'test-shop.myshopify.com',
           alerts_deleted: 5,
           orders_deleted: 10,
-        })
+        }),
       );
     });
 
-    it('should handle shop not found', async () => {
+    it('should handle shop not found', async() => {
       const webhook: GDPRShopRedactWebhook = {
         shop_id: 999,
         shop_domain: 'nonexistent-shop.myshopify.com',
@@ -297,14 +296,14 @@ describe('GDPRService', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Shop not found for GDPR redaction'),
-        expect.any(Object)
+        expect.any(Object),
       );
 
       // Should not attempt deletions
       expect(mockQuery).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle deletion errors', async () => {
+    it('should handle deletion errors', async() => {
       const webhook: GDPRShopRedactWebhook = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -315,7 +314,7 @@ describe('GDPRService', () => {
         .mockRejectedValueOnce(new Error('Deletion failed'));
 
       await expect(gdprService.handleShopRedact(webhook)).rejects.toThrow(
-        'Deletion failed'
+        'Deletion failed',
       );
 
       expect(mockLogger.error).toHaveBeenCalled();
@@ -323,7 +322,7 @@ describe('GDPRService', () => {
   });
 
   describe('GDPR Compliance', () => {
-    it('should complete data request within 30 days SLA', async () => {
+    it('should complete data request within 30 days SLA', async() => {
       const webhook: GDPRDataRequestWebhook = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',
@@ -350,7 +349,7 @@ describe('GDPRService', () => {
       expect(endTime - startTime).toBeLessThan(5000);
     });
 
-    it('should anonymize PII data properly', async () => {
+    it('should anonymize PII data properly', async() => {
       const webhook: GDPRCustomerRedactWebhook = {
         shop_id: 123,
         shop_domain: 'test-shop.myshopify.com',

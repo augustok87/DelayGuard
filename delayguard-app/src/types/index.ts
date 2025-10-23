@@ -376,8 +376,8 @@ export interface ShopifySubscriptionPlan {
 export interface AppSubscription {
   id: string;
   shop_id: string;
-  plan_name: 'free' | 'pro' | 'enterprise';
-  status: 'active' | 'cancelled' | 'frozen' | 'pending';
+  plan_name: "free" | "pro" | "enterprise";
+  status: "active" | "cancelled" | "frozen" | "pending";
   current_period_start: Date;
   current_period_end: Date;
   trial_ends_at?: Date;

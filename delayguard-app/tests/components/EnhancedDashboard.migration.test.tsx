@@ -28,8 +28,8 @@ jest.mock('../../src/hooks/useApiClient', () => ({
       success: true, 
       data: { 
         alerts: { total_alerts: 0, sent_alerts: 0, pending_alerts: 0 },
-        orders: { total_orders: 0 }
-      }
+        orders: { total_orders: 0 },
+      },
     }),
     updateSettings: jest.fn().mockResolvedValue({ success: true }),
     setApp: jest.fn(),

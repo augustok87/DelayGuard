@@ -186,7 +186,7 @@ function AnalyticsDashboard({
       }
       handleRefresh();
     };
-handleFocus.displayName = 'handleFocus';
+    handleFocus.displayName = "handleFocus";
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
@@ -336,7 +336,7 @@ handleFocus.displayName = 'handleFocus';
       </Card>
     );
   };
-renderReasonBreakdown.displayName = 'renderReasonBreakdown';
+  renderReasonBreakdown.displayName = "renderReasonBreakdown";
 
   const renderNotificationMetrics = () => (
     <Card>
@@ -626,6 +626,6 @@ renderReasonBreakdown.displayName = 'renderReasonBreakdown';
   );
 }
 
-AnalyticsDashboard.displayName = 'AnalyticsDashboard';
+AnalyticsDashboard.displayName = "AnalyticsDashboard";
 
 export default AnalyticsDashboard;

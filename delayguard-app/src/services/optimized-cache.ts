@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Optimized cache service with dynamic serialization
 import { Redis } from "ioredis";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 import { AppConfig } from "../types";
 
 export interface CacheConfig {
@@ -13,7 +13,8 @@ export interface CacheConfig {
 
 export class OptimizedCache {
   private redis: Redis;
-  private localCache: Map<string, { value: unknown; expiry: number }> = new Map();
+  private localCache: Map<string, { value: unknown; expiry: number }> =
+    new Map();
   private readonly maxLocalSize = 1000;
   private readonly localCacheTTL = 60000; // 1 minute
 
@@ -43,7 +44,10 @@ export class OptimizedCache {
         return parsed;
       }
     } catch (error) {
-      logger.warn("Cache operation warning", { error: (error as Error).message, stack: (error as Error).stack });
+      logger.warn("Cache operation warning", {
+        error: (error as Error).message,
+        stack: (error as Error).stack,
+      });
     }
 
     return null;
@@ -60,7 +64,10 @@ export class OptimizedCache {
       const serialized = JSON.stringify(value);
       await this.redis.setex(fullKey, config.ttl, serialized);
     } catch (error) {
-      logger.warn("Cache operation warning", { error: (error as Error).message, stack: (error as Error).stack });
+      logger.warn("Cache operation warning", {
+        error: (error as Error).message,
+        stack: (error as Error).stack,
+      });
     }
   }
 
@@ -74,7 +81,10 @@ export class OptimizedCache {
     try {
       await this.redis.del(fullKey);
     } catch (error) {
-      logger.warn("Cache operation warning", { error: (error as Error).message, stack: (error as Error).stack });
+      logger.warn("Cache operation warning", {
+        error: (error as Error).message,
+        stack: (error as Error).stack,
+      });
     }
   }
 
@@ -114,7 +124,10 @@ export class OptimizedCache {
           }
         }
       } catch (error) {
-        logger.warn("Cache operation warning", { error: (error as Error).message, stack: (error as Error).stack });
+        logger.warn("Cache operation warning", {
+          error: (error as Error).message,
+          stack: (error as Error).stack,
+        });
       }
     }
 
@@ -141,7 +154,10 @@ export class OptimizedCache {
     try {
       await pipeline.exec();
     } catch (error) {
-      logger.warn("Cache operation warning", { error: (error as Error).message, stack: (error as Error).stack });
+      logger.warn("Cache operation warning", {
+        error: (error as Error).message,
+        stack: (error as Error).stack,
+      });
     }
   }
 
@@ -154,7 +170,10 @@ export class OptimizedCache {
         await this.redis.del(...keys);
       }
     } catch (error) {
-      logger.warn("Cache operation warning", { error: (error as Error).message, stack: (error as Error).stack });
+      logger.warn("Cache operation warning", {
+        error: (error as Error).message,
+        stack: (error as Error).stack,
+      });
     }
 
     // Clear local cache entries matching pattern

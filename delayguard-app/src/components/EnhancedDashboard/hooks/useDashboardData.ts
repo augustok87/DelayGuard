@@ -52,7 +52,7 @@ export const useDashboardData = ({
   /**
    * Fetch all dashboard data from API
    */
-  const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async() => {
     // Don't fetch if props are provided (test/preview mode)
     if (!shouldFetchData) {
       setLoading(false);
@@ -139,7 +139,7 @@ export const useDashboardData = ({
   /**
    * Handle settings save
    */
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async() => {
       if (propOnSave) {
         propOnSave();
       return;
@@ -177,7 +177,7 @@ export const useDashboardData = ({
   /**
    * Handle test button click
    */
-  const handleTest = useCallback(async () => {
+  const handleTest = useCallback(async() => {
     if (propOnTest) {
       propOnTest();
       return;

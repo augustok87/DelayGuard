@@ -176,7 +176,7 @@ function MinimalApp() {
         handleRealTimeUpdate();
       }
     };
-handleMessage.displayName = 'handleMessage';
+    handleMessage.displayName = "handleMessage";
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
@@ -224,7 +224,7 @@ handleMessage.displayName = 'handleMessage';
     setToastMessage("Alert resolved successfully!");
     setShowToast(true);
   };
-handleResolveAlert.displayName = 'handleResolveAlert';
+  handleResolveAlert.displayName = "handleResolveAlert";
 
   const handleDismissAlert = (alertId: string) => {
     setAlerts((prev) =>
@@ -237,17 +237,17 @@ handleResolveAlert.displayName = 'handleResolveAlert';
     setToastMessage("Alert dismissed!");
     setShowToast(true);
   };
-handleDismissAlert.displayName = 'handleDismissAlert';
+  handleDismissAlert.displayName = "handleDismissAlert";
 
   const handleTabChange = (tabIndex: number) => {
     setSelectedTab(tabIndex);
   };
-handleTabChange.displayName = 'handleTabChange';
+  handleTabChange.displayName = "handleTabChange";
 
   const handleCloseToast = () => {
     setShowToast(false);
   };
-handleCloseToast.displayName = 'handleCloseToast';
+  handleCloseToast.displayName = "handleCloseToast";
 
   const handleExportAlerts = () => {
     const csvContent = [
@@ -280,19 +280,19 @@ handleCloseToast.displayName = 'handleCloseToast';
     setToastMessage("Export started");
     setShowToast(true);
   };
-handleExportAlerts.displayName = 'handleExportAlerts';
+  handleExportAlerts.displayName = "handleExportAlerts";
 
   const handlePreviousPage = () => {
     setToastMessage("Previous page clicked");
     setShowToast(true);
   };
-handlePreviousPage.displayName = 'handlePreviousPage';
+  handlePreviousPage.displayName = "handlePreviousPage";
 
   const handleNextPage = () => {
     setToastMessage("Next page clicked");
     setShowToast(true);
   };
-handleNextPage.displayName = 'handleNextPage';
+  handleNextPage.displayName = "handleNextPage";
 
   const handleRefresh = async() => {
     try {
@@ -750,7 +750,7 @@ handleNextPage.displayName = 'handleNextPage';
       </Card>
     );
   };
-renderAlertsTable.displayName = 'renderAlertsTable';
+  renderAlertsTable.displayName = "renderAlertsTable";
 
   const renderOrdersTable = () => {
     // Handle error state
@@ -912,7 +912,7 @@ renderAlertsTable.displayName = 'renderAlertsTable';
       </Card>
     );
   };
-renderOrdersTable.displayName = 'renderOrdersTable';
+  renderOrdersTable.displayName = "renderOrdersTable";
 
   const renderSettingsModal = () => (
     <Modal
@@ -1226,7 +1226,7 @@ renderOrdersTable.displayName = 'renderOrdersTable';
   );
 }
 
-MinimalApp.displayName = 'MinimalApp';
+MinimalApp.displayName = "MinimalApp";
 
 export default MinimalApp;
 export { MinimalApp };

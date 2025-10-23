@@ -121,6 +121,10 @@ dump.rdb
 *.backup
 *.bak
 *.old
+*.legacy
+lint-backups/
+lint-fix-report.json
+src/backup/
 
 # IDE specific
 .vscode/settings.json

@@ -3,24 +3,24 @@
  * Handles Shopify subscription management and plan upgrades/downgrades
  */
 
-import Router from 'koa-router';
-import { logger } from '../utils/logger';
-import { billingService } from '../services/billing-service';
-import { query } from '../database/connection';
-import type { Context } from 'koa';
+import Router from "koa-router";
+import { logger } from "../utils/logger";
+import { billingService } from "../services/billing-service";
+import { query } from "../database/connection";
+import type { Context } from "koa";
 
-const router = new Router({ prefix: '/billing' });
+const router = new Router({ prefix: "/billing" });
 
 /**
  * GET /billing/plans
  * Get available subscription plans
  */
-router.get('/plans', async (ctx: Context) => {
+router.get("/plans", async(ctx: Context) => {
   try {
     const plans = {
-      free: billingService.getPlanConfig('free'),
-      pro: billingService.getPlanConfig('pro'),
-      enterprise: billingService.getPlanConfig('enterprise'),
+      free: billingService.getPlanConfig("free"),
+      pro: billingService.getPlanConfig("pro"),
+      enterprise: billingService.getPlanConfig("enterprise"),
     };
 
     ctx.status = 200;
@@ -29,9 +29,9 @@ router.get('/plans', async (ctx: Context) => {
       plans,
     };
   } catch (error) {
-    logger.error('Error fetching billing plans', error as Error);
+    logger.error("Error fetching billing plans", error as Error);
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch billing plans' };
+    ctx.body = { error: "Failed to fetch billing plans" };
   }
 });
 
@@ -39,26 +39,26 @@ router.get('/plans', async (ctx: Context) => {
  * GET /billing/subscription
  * Get current subscription for authenticated shop
  */
-router.get('/subscription', async (ctx: Context) => {
+router.get("/subscription", async(ctx: Context) => {
   try {
     // Get shop from session (set by Shopify auth middleware)
     const shop = ctx.session?.shop;
-    
+
     if (!shop) {
       ctx.status = 401;
-      ctx.body = { error: 'Not authenticated' };
+      ctx.body = { error: "Not authenticated" };
       return;
     }
 
     // Get shop UUID from domain
     const shopResult = await query<{ id: string }>(
-      'SELECT id FROM shops WHERE shop_domain = $1',
-      [shop]
+      "SELECT id FROM shops WHERE shop_domain = $1",
+      [shop],
     );
 
     if (shopResult.length === 0) {
       ctx.status = 404;
-      ctx.body = { error: 'Shop not found' };
+      ctx.body = { error: "Shop not found" };
       return;
     }
 
@@ -71,57 +71,59 @@ router.get('/subscription', async (ctx: Context) => {
       data: summary,
     };
   } catch (error) {
-    logger.error('Error fetching subscription', error as Error);
+    logger.error("Error fetching subscription", error as Error);
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch subscription' };
+    ctx.body = { error: "Failed to fetch subscription" };
   }
 });
 
 /**
  * POST /billing/subscribe
  * Create or upgrade subscription
- * 
+ *
  * For Shopify Billing API integration, this endpoint should:
  * 1. Create a RecurringApplicationCharge
  * 2. Redirect merchant to charge confirmation URL
  * 3. Handle callback after confirmation
  */
-router.post('/subscribe', async (ctx: Context) => {
+router.post("/subscribe", async(ctx: Context) => {
   try {
-    const { plan_name } = ctx.request.body as { plan_name: 'free' | 'pro' | 'enterprise' };
+    const { plan_name } = ctx.request.body as {
+      plan_name: "free" | "pro" | "enterprise";
+    };
     const shop = ctx.session?.shop;
 
     if (!shop) {
       ctx.status = 401;
-      ctx.body = { error: 'Not authenticated' };
+      ctx.body = { error: "Not authenticated" };
       return;
     }
 
-    if (!['free', 'pro', 'enterprise'].includes(plan_name)) {
+    if (!["free", "pro", "enterprise"].includes(plan_name)) {
       ctx.status = 400;
-      ctx.body = { error: 'Invalid plan name' };
+      ctx.body = { error: "Invalid plan name" };
       return;
     }
 
     // Get shop UUID
     const shopResult = await query<{ id: string }>(
-      'SELECT id FROM shops WHERE shop_domain = $1',
-      [shop]
+      "SELECT id FROM shops WHERE shop_domain = $1",
+      [shop],
     );
 
     if (shopResult.length === 0) {
       ctx.status = 404;
-      ctx.body = { error: 'Shop not found' };
+      ctx.body = { error: "Shop not found" };
       return;
     }
 
     const shopId = shopResult[0].id;
 
     // For free plan, create subscription directly
-    if (plan_name === 'free') {
+    if (plan_name === "free") {
       const subscription = await billingService.createSubscription(
         shopId,
-        'free'
+        "free",
       );
 
       ctx.status = 200;
@@ -133,21 +135,21 @@ router.post('/subscribe', async (ctx: Context) => {
     }
 
     // For paid plans, generate Shopify charge
-    const returnUrl = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/billing/callback`;
-    const isTest = process.env.NODE_ENV !== 'production';
+    const returnUrl = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/billing/callback`;
+    const isTest = process.env.NODE_ENV !== "production";
 
     const charge = billingService.generateRecurringCharge(
       plan_name,
       returnUrl,
-      isTest
+      isTest,
     );
 
     // In a real implementation, you would:
     // 1. Create RecurringApplicationCharge via Shopify API
     // 2. Return confirmation URL to redirect merchant
     // 3. Store pending charge ID
-    
-    logger.info('Billing charge generated', {
+
+    logger.info("Billing charge generated", {
       shop,
       plan_name,
       charge,
@@ -157,7 +159,7 @@ router.post('/subscribe', async (ctx: Context) => {
     const subscription = await billingService.createSubscription(
       shopId,
       plan_name,
-      'test-charge-id'
+      "test-charge-id",
     );
 
     ctx.status = 200;
@@ -168,9 +170,9 @@ router.post('/subscribe', async (ctx: Context) => {
       // confirmation_url: 'https://...' // Would be returned from Shopify API
     };
   } catch (error) {
-    logger.error('Error creating subscription', error as Error);
+    logger.error("Error creating subscription", error as Error);
     ctx.status = 500;
-    ctx.body = { error: 'Failed to create subscription' };
+    ctx.body = { error: "Failed to create subscription" };
   }
 });
 
@@ -178,20 +180,20 @@ router.post('/subscribe', async (ctx: Context) => {
  * GET /billing/callback
  * Handle Shopify billing callback after charge confirmation
  */
-router.get('/callback', async (ctx: Context) => {
+router.get("/callback", async(ctx: Context) => {
   try {
     const { charge_id } = ctx.query as { charge_id: string };
     const shop = ctx.session?.shop;
 
     if (!shop) {
       ctx.status = 401;
-      ctx.body = { error: 'Not authenticated' };
+      ctx.body = { error: "Not authenticated" };
       return;
     }
 
     if (!charge_id) {
       ctx.status = 400;
-      ctx.body = { error: 'Missing charge_id parameter' };
+      ctx.body = { error: "Missing charge_id parameter" };
       return;
     }
 
@@ -201,16 +203,16 @@ router.get('/callback', async (ctx: Context) => {
     // 3. Activate the charge
     // 4. Create/update subscription in database
 
-    logger.info('Billing callback received', {
+    logger.info("Billing callback received", {
       shop,
       charge_id,
     });
 
-    ctx.redirect('/dashboard?billing_success=true');
+    ctx.redirect("/dashboard?billing_success=true");
   } catch (error) {
-    logger.error('Error handling billing callback', error as Error);
+    logger.error("Error handling billing callback", error as Error);
     ctx.status = 500;
-    ctx.body = { error: 'Failed to process billing callback' };
+    ctx.body = { error: "Failed to process billing callback" };
   }
 });
 
@@ -218,30 +220,31 @@ router.get('/callback', async (ctx: Context) => {
  * POST /billing/cancel
  * Cancel current subscription
  */
-router.post('/cancel', async (ctx: Context) => {
+router.post("/cancel", async(ctx: Context) => {
   try {
     const shop = ctx.session?.shop;
 
     if (!shop) {
       ctx.status = 401;
-      ctx.body = { error: 'Not authenticated' };
+      ctx.body = { error: "Not authenticated" };
       return;
     }
 
     // Get shop UUID
     const shopResult = await query<{ id: string }>(
-      'SELECT id FROM shops WHERE shop_domain = $1',
-      [shop]
+      "SELECT id FROM shops WHERE shop_domain = $1",
+      [shop],
     );
 
     if (shopResult.length === 0) {
       ctx.status = 404;
-      ctx.body = { error: 'Shop not found' };
+      ctx.body = { error: "Shop not found" };
       return;
     }
 
     const shopId = shopResult[0].id;
-    const cancelledSubscription = await billingService.cancelSubscription(shopId);
+    const cancelledSubscription =
+      await billingService.cancelSubscription(shopId);
 
     // In a real implementation, also cancel the charge via Shopify API
 
@@ -251,9 +254,9 @@ router.post('/cancel', async (ctx: Context) => {
       subscription: cancelledSubscription,
     };
   } catch (error) {
-    logger.error('Error cancelling subscription', error as Error);
+    logger.error("Error cancelling subscription", error as Error);
     ctx.status = 500;
-    ctx.body = { error: 'Failed to cancel subscription' };
+    ctx.body = { error: "Failed to cancel subscription" };
   }
 });
 
@@ -261,25 +264,25 @@ router.post('/cancel', async (ctx: Context) => {
  * GET /billing/usage
  * Get current billing period usage
  */
-router.get('/usage', async (ctx: Context) => {
+router.get("/usage", async(ctx: Context) => {
   try {
     const shop = ctx.session?.shop;
 
     if (!shop) {
       ctx.status = 401;
-      ctx.body = { error: 'Not authenticated' };
+      ctx.body = { error: "Not authenticated" };
       return;
     }
 
     // Get shop UUID
     const shopResult = await query<{ id: string }>(
-      'SELECT id FROM shops WHERE shop_domain = $1',
-      [shop]
+      "SELECT id FROM shops WHERE shop_domain = $1",
+      [shop],
     );
 
     if (shopResult.length === 0) {
       ctx.status = 404;
-      ctx.body = { error: 'Shop not found' };
+      ctx.body = { error: "Shop not found" };
       return;
     }
 
@@ -292,11 +295,10 @@ router.get('/usage', async (ctx: Context) => {
       usage: limitCheck,
     };
   } catch (error) {
-    logger.error('Error fetching billing usage', error as Error);
+    logger.error("Error fetching billing usage", error as Error);
     ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch billing usage' };
+    ctx.body = { error: "Failed to fetch billing usage" };
   }
 });
 
 export { router as billingRoutes };
-

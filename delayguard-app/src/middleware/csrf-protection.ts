@@ -103,7 +103,9 @@ export class CSRFProtectionMiddleware {
    * Validate CSRF token
    */
   private validateToken(ctx: Context): boolean {
-    const cookieToken = ctx.cookies.get(this.config?.cookieName || "csrf-token");
+    const cookieToken = ctx.cookies.get(
+      this.config?.cookieName || "csrf-token",
+    );
     const headerToken = ctx.get(this.config?.headerName || "x-csrf-token");
     const bodyToken = (ctx.request as any).body?.csrfToken;
 
@@ -259,7 +261,9 @@ export class APICSRFProtection {
    * Validate CSRF token
    */
   private validateToken(ctx: Context): boolean {
-    const cookieToken = ctx.cookies.get(this.config?.cookieName || "csrf-token");
+    const cookieToken = ctx.cookies.get(
+      this.config?.cookieName || "csrf-token",
+    );
     const headerToken = ctx.get(this.config?.headerName || "x-csrf-token");
     const bodyToken = (ctx.request as any).body?.csrfToken;
 

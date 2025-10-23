@@ -1,16 +1,16 @@
-import React, { ReactNode, createContext, useContext, useMemo } from 'react';
-import { createApp } from '@shopify/app-bridge';
+import React, { ReactNode, createContext, useContext, useMemo } from "react";
+import { createApp } from "@shopify/app-bridge";
 
 /**
  * Shopify App Bridge Provider
- * 
+ *
  * This component initializes the Shopify App Bridge for embedded apps.
  * It must wrap your entire app to enable Shopify-specific features like:
  * - Session token authentication
- * - Toast notifications  
+ * - Toast notifications
  * - Navigation
  * - Modal/Fullscreen APIs
- * 
+ *
  * @see https://shopify.dev/docs/api/app-bridge-library
  */
 
@@ -24,13 +24,14 @@ interface ShopifyProviderProps {
  * In development, load from .env file
  */
 const getApiKey = (): string => {
-  const apiKey = process.env.REACT_APP_SHOPIFY_API_KEY || process.env.SHOPIFY_API_KEY;
-  
+  const apiKey =
+    process.env.REACT_APP_SHOPIFY_API_KEY || process.env.SHOPIFY_API_KEY;
+
   if (!apiKey) {
-    console.warn('SHOPIFY_API_KEY not found in environment variables');
-    return 'development-api-key'; // Fallback for local development
+    console.warn("SHOPIFY_API_KEY not found in environment variables");
+    return "development-api-key"; // Fallback for local development
   }
-  
+
   return apiKey;
 };
 
@@ -40,7 +41,7 @@ const getApiKey = (): string => {
  */
 const getShopFromUrl = (): string | undefined => {
   const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get('shop') || undefined;
+  return urlParams.get("shop") || undefined;
 };
 
 /**
@@ -49,7 +50,7 @@ const getShopFromUrl = (): string | undefined => {
  */
 const getHostFromUrl = (): string | undefined => {
   const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get('host') || undefined;
+  return urlParams.get("host") || undefined;
 };
 
 // Create context for App Bridge instance
@@ -62,12 +63,14 @@ const AppBridgeContext = createContext<any>(null);
 export const useAppBridge = () => {
   const app = useContext(AppBridgeContext);
   if (!app) {
-    console.warn('useAppBridge called outside of ShopifyProvider');
+    console.warn("useAppBridge called outside of ShopifyProvider");
   }
   return app;
 };
 
-export const ShopifyProvider: React.FC<ShopifyProviderProps> = ({ children }) => {
+export const ShopifyProvider: React.FC<ShopifyProviderProps> = ({
+  children,
+}) => {
   const config = useMemo(() => {
     const apiKey = getApiKey();
     const shop = getShopFromUrl();
@@ -75,7 +78,7 @@ export const ShopifyProvider: React.FC<ShopifyProviderProps> = ({ children }) =>
 
     // Check if we're in an embedded context
     if (shop && host) {
-      console.log('✅ Running in Shopify embedded context');
+      console.log("✅ Running in Shopify embedded context");
       return {
         apiKey,
         host,
@@ -84,21 +87,23 @@ export const ShopifyProvider: React.FC<ShopifyProviderProps> = ({ children }) =>
     }
 
     // Development mode fallback
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔧 Development mode: Running without Shopify parameters');
-      console.log('ℹ️  App will render but API calls will be mocked/bypassed');
-      console.log('ℹ️  To test with real Shopify: deploy and open from Shopify Admin');
-      
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔧 Development mode: Running without Shopify parameters");
+      console.log("ℹ️  App will render but API calls will be mocked/bypassed");
+      console.log(
+        "ℹ️  To test with real Shopify: deploy and open from Shopify Admin",
+      );
+
       // Return a minimal config that won't crash App Bridge
       return {
         apiKey,
-        host: btoa('development.myshopify.com/admin'),
+        host: btoa("development.myshopify.com/admin"),
         forceRedirect: false,
       };
     }
 
     // Production without parameters - should redirect to OAuth
-    console.warn('⚠️  No shop or host parameters found');
+    console.warn("⚠️  No shop or host parameters found");
     return null;
   }, []);
 
@@ -106,19 +111,19 @@ export const ShopifyProvider: React.FC<ShopifyProviderProps> = ({ children }) =>
   const app = useMemo(() => {
     // Don't create App Bridge if no config
     if (!config) {
-      console.log('Skipping App Bridge initialization - no config');
+      console.log("Skipping App Bridge initialization - no config");
       return null;
     }
 
     try {
       const appInstance = createApp(config);
-      console.log('✅ App Bridge initialized successfully');
+      console.log("✅ App Bridge initialized successfully");
       return appInstance;
     } catch (error) {
-      console.error('❌ Failed to create App Bridge instance:', error);
+      console.error("❌ Failed to create App Bridge instance:", error);
       // In development, return null so app can still render
-      if (process.env.NODE_ENV === 'development') {
-        console.log('ℹ️  Continuing without App Bridge in development mode');
+      if (process.env.NODE_ENV === "development") {
+        console.log("ℹ️  Continuing without App Bridge in development mode");
         return null;
       }
       throw error;
@@ -133,4 +138,3 @@ export const ShopifyProvider: React.FC<ShopifyProviderProps> = ({ children }) =>
 };
 
 export default ShopifyProvider;
-

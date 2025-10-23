@@ -1,5 +1,5 @@
 import { Queue, Worker } from "bullmq";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 import IORedis from "ioredis";
 // import { QueueEvents } from 'bullmq'; // Available for future use
 // import { AppConfig } from '../types'; // Available for future use
@@ -17,7 +17,7 @@ export async function setupQueues(): Promise<void> {
     // Initialize Redis connection
     const redisUrl = process.env.REDIS_URL;
     if (!redisUrl) {
-      throw new Error('REDIS_URL environment variable is required');
+      throw new Error("REDIS_URL environment variable is required");
     }
     redis = new IORedis(redisUrl, {
       maxRetriesPerRequest: 3,
@@ -79,7 +79,7 @@ export async function setupQueues(): Promise<void> {
 
     logger.info("✅ Queues and workers initialized");
   } catch (error) {
-    logger.error('Error setting up queues', error as Error);
+    logger.error("Error setting up queues", error as Error);
     throw error;
   }
 }

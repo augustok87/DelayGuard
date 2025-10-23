@@ -1,5 +1,5 @@
 import IORedis from "ioredis";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 
 interface CacheConfig {
   defaultTTL: number; // seconds
@@ -163,12 +163,9 @@ export function getCache(type: keyof typeof CACHE_CONFIGS): CacheManager {
   if (!cacheInstances[type]) {
     const redisUrl = process.env.REDIS_URL;
     if (!redisUrl) {
-      throw new Error('REDIS_URL environment variable is required');
+      throw new Error("REDIS_URL environment variable is required");
     }
-    cacheInstances[type] = new CacheManager(
-      redisUrl,
-      CACHE_CONFIGS[type],
-    );
+    cacheInstances[type] = new CacheManager(redisUrl, CACHE_CONFIGS[type]);
   }
   return cacheInstances[type];
 }
@@ -230,7 +227,9 @@ export async function cacheShopSettings(
   await cache.set(key, settings, 86400); // 24 hours TTL
 }
 
-export async function getCachedShopSettings(shopDomain: string): Promise<unknown> {
+export async function getCachedShopSettings(
+  shopDomain: string,
+): Promise<unknown> {
   const cache = getCache("settings");
   const key = `shop:${shopDomain}`;
   return await cache.get(key);

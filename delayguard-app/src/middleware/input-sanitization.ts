@@ -58,7 +58,9 @@ export class InputSanitizationMiddleware {
 
       // Sanitize query parameters
       if (ctx.query) {
-        ctx.query = this.sanitizeObject(ctx.query as Record<string, unknown>) as any;
+        ctx.query = this.sanitizeObject(
+          ctx.query as Record<string, unknown>,
+        ) as any;
       }
 
       // Sanitize headers (basic sanitization)
@@ -100,7 +102,8 @@ export class InputSanitizationMiddleware {
       for (const [key, value] of Object.entries(obj)) {
         // Sanitize key
         const sanitizedKey = this.sanitizeString(key);
-        (sanitized as Record<string, unknown>)[sanitizedKey] = this.sanitizeObject(value);
+        (sanitized as Record<string, unknown>)[sanitizedKey] =
+          this.sanitizeObject(value);
       }
       return sanitized;
     }

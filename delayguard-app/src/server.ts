@@ -13,7 +13,6 @@ import { verifyRequest } from '@shopify/koa-shopify-auth';
 // import createShopifyGraphQLClient from '@shopify/koa-shopify-graphql-proxy'; // Available for future use
 
 // Internal imports
-import { AppConfig } from './types';
 import { setupDatabase } from './database/connection';
 import { setupQueues } from './queue/setup';
 import { webhookRoutes } from './routes/webhooks';

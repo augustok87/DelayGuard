@@ -1,5 +1,5 @@
 import Router from "koa-router";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 import { query } from "../database/connection";
 import { addDelayCheckJob } from "../queue/setup";
 // import { OrderUpdateWebhook } from '../types'; // Available for future use
@@ -42,7 +42,7 @@ interface ShopifyOrder {
 function verifyWebhook(data: string, hmac: string): boolean {
   const apiSecret = process.env.SHOPIFY_API_SECRET;
   if (!apiSecret) {
-    throw new Error('SHOPIFY_API_SECRET environment variable is required');
+    throw new Error("SHOPIFY_API_SECRET environment variable is required");
   }
   const hash = crypto
     .createHmac("sha256", apiSecret)
@@ -71,7 +71,7 @@ router.post("/orders/updated", async(ctx) => {
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
-    logger.error('Error processing order update webhook', error as Error);
+    logger.error("Error processing order update webhook", error as Error);
     ctx.status = 500;
     ctx.body = { error: "Internal server error" };
   }
@@ -92,11 +92,14 @@ router.post("/fulfillments/updated", async(ctx) => {
   logger.info(`🚚 Fulfillment updated webhook received for shop: ${shop}`);
 
   try {
-    await processFulfillmentUpdate(shop, ctx.request.body as ShopifyFulfillment);
+    await processFulfillmentUpdate(
+      shop,
+      ctx.request.body as ShopifyFulfillment,
+    );
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
-    logger.error('Error processing fulfillment update webhook', error as Error);
+    logger.error("Error processing fulfillment update webhook", error as Error);
     ctx.status = 500;
     ctx.body = { error: "Internal server error" };
   }
@@ -121,7 +124,7 @@ router.post("/orders/paid", async(ctx) => {
     ctx.status = 200;
     ctx.body = { success: true };
   } catch (error) {
-    logger.error('Error processing order paid webhook', error as Error);
+    logger.error("Error processing order paid webhook", error as Error);
     ctx.status = 500;
     ctx.body = { error: "Internal server error" };
   }
@@ -196,7 +199,7 @@ async function processOrderUpdate(
 
     logger.info(`✅ Order ${orderData.name} processed successfully`);
   } catch (error) {
-    logger.error('Error in processOrderUpdate', error as Error);
+    logger.error("Error in processOrderUpdate", error as Error);
     throw error;
   }
 }
@@ -239,7 +242,7 @@ async function processFulfillmentUpdate(
 
     logger.info(`✅ Fulfillment ${fulfillmentData.id} processed successfully`);
   } catch (error) {
-    logger.error('Error in processFulfillmentUpdate', error as Error);
+    logger.error("Error in processFulfillmentUpdate", error as Error);
     throw error;
   }
 }
@@ -270,7 +273,7 @@ async function processOrderPaid(
 
     logger.info(`✅ Order ${orderData.name} marked as paid`);
   } catch (error) {
-    logger.error('Error in processOrderPaid', error as Error);
+    logger.error("Error in processOrderPaid", error as Error);
     throw error;
   }
 }
@@ -333,7 +336,7 @@ async function processFulfillment(
       }
     }
   } catch (error) {
-    logger.error('Error in processFulfillment', error as Error);
+    logger.error("Error in processFulfillment", error as Error);
     throw error;
   }
 }

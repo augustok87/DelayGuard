@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Comprehensive monitoring utility with dynamic metric collection
 import { query } from "../database/connection";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 
 interface ErrorMetrics {
   timestamp: Date;
@@ -391,8 +391,15 @@ class MonitoringService {
     return "healthy";
   }
 
-  private async sendAlert(type: string, data: Record<string, any>): Promise<void> {
-    logger.error(`🚨 ALERT: ${type}`, undefined, data as Record<string, unknown>);
+  private async sendAlert(
+    type: string,
+    data: Record<string, any>,
+  ): Promise<void> {
+    logger.error(
+      `🚨 ALERT: ${type}`,
+      undefined,
+      data as Record<string, unknown>,
+    );
 
     // In production, this would send to monitoring service (e.g., Sentry, PagerDuty)
     // For now, we'll just log and store in database

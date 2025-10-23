@@ -6,7 +6,7 @@
  */
 
 import Redis from "ioredis";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 import envValidator from "../config/environment";
 
 interface RedisConfig {

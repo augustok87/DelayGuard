@@ -47,7 +47,7 @@ describe('Shopify Session Middleware', () => {
   });
 
   describe('requireAuth middleware', () => {
-    it('should authenticate with valid session token', async () => {
+    it('should authenticate with valid session token', async() => {
       const mockShopData = {
         id: 'shop-123',
         access_token: 'test-access-token',
@@ -67,7 +67,7 @@ describe('Shopify Session Middleware', () => {
           jti: 'jwt-123',
           sid: 'session-123',
         },
-        testApiSecret
+        testApiSecret,
       );
 
       mockCtx.headers = { authorization: `Bearer ${token}` };
@@ -81,7 +81,7 @@ describe('Shopify Session Middleware', () => {
       expect(mockCtx.state?.shopify?.session.accessToken).toBe('test-access-token');
     });
 
-    it('should reject request without Authorization header', async () => {
+    it('should reject request without Authorization header', async() => {
       await requireAuth(mockCtx as Context, mockNext);
 
       expect(mockNext).not.toHaveBeenCalled();
@@ -92,7 +92,7 @@ describe('Shopify Session Middleware', () => {
       });
     });
 
-    it('should reject request with empty Bearer token', async () => {
+    it('should reject request with empty Bearer token', async() => {
       mockCtx.headers = { authorization: 'Bearer ' };
 
       await requireAuth(mockCtx as Context, mockNext);
@@ -105,7 +105,7 @@ describe('Shopify Session Middleware', () => {
       });
     });
 
-    it('should handle expired tokens', async () => {
+    it('should handle expired tokens', async() => {
       const expiredToken = jwt.sign(
         {
           iss: `https://${testShop}/admin`,
@@ -118,7 +118,7 @@ describe('Shopify Session Middleware', () => {
           jti: 'jwt-123',
           sid: 'session-123',
         },
-        testApiSecret
+        testApiSecret,
       );
 
       mockCtx.headers = { authorization: `Bearer ${expiredToken}` };
@@ -133,7 +133,7 @@ describe('Shopify Session Middleware', () => {
       });
     });
 
-    it('should reject token with invalid signature', async () => {
+    it('should reject token with invalid signature', async() => {
       const invalidToken = jwt.sign(
         {
           iss: `https://${testShop}/admin`,
@@ -146,7 +146,7 @@ describe('Shopify Session Middleware', () => {
           jti: 'jwt-123',
           sid: 'session-123',
         },
-        'wrong-secret' // Wrong secret
+        'wrong-secret', // Wrong secret
       );
 
       mockCtx.headers = { authorization: `Bearer ${invalidToken}` };
@@ -161,7 +161,7 @@ describe('Shopify Session Middleware', () => {
       });
     });
 
-    it('should reject token with missing required claims', async () => {
+    it('should reject token with missing required claims', async() => {
       const invalidToken = jwt.sign(
         {
           // Missing iss and dest
@@ -169,7 +169,7 @@ describe('Shopify Session Middleware', () => {
           sub: 'user-123',
           exp: Math.floor(Date.now() / 1000) + 3600,
         },
-        testApiSecret
+        testApiSecret,
       );
 
       mockCtx.headers = { authorization: `Bearer ${invalidToken}` };
@@ -184,7 +184,7 @@ describe('Shopify Session Middleware', () => {
       });
     });
 
-    it('should reject when shop not found in database', async () => {
+    it('should reject when shop not found in database', async() => {
       const token = jwt.sign(
         {
           iss: `https://${testShop}/admin`,
@@ -197,7 +197,7 @@ describe('Shopify Session Middleware', () => {
           jti: 'jwt-123',
           sid: 'session-123',
         },
-        testApiSecret
+        testApiSecret,
       );
 
       mockCtx.headers = { authorization: `Bearer ${token}` };
@@ -213,7 +213,7 @@ describe('Shopify Session Middleware', () => {
       });
     });
 
-    it('should handle database errors gracefully', async () => {
+    it('should handle database errors gracefully', async() => {
       const token = jwt.sign(
         {
           iss: `https://${testShop}/admin`,
@@ -226,7 +226,7 @@ describe('Shopify Session Middleware', () => {
           jti: 'jwt-123',
           sid: 'session-123',
         },
-        testApiSecret
+        testApiSecret,
       );
 
       mockCtx.headers = { authorization: `Bearer ${token}` };
@@ -242,7 +242,7 @@ describe('Shopify Session Middleware', () => {
       });
     });
 
-    it('should handle missing SHOPIFY_API_SECRET', async () => {
+    it('should handle missing SHOPIFY_API_SECRET', async() => {
       const originalSecret = process.env.SHOPIFY_API_SECRET;
       delete process.env.SHOPIFY_API_SECRET;
 
@@ -261,7 +261,7 @@ describe('Shopify Session Middleware', () => {
       process.env.SHOPIFY_API_SECRET = originalSecret;
     });
 
-    it('should allow token without Bearer prefix', async () => {
+    it('should allow token without Bearer prefix', async() => {
       const mockShopData = {
         id: 'shop-123',
         access_token: 'test-access-token',
@@ -281,7 +281,7 @@ describe('Shopify Session Middleware', () => {
           jti: 'jwt-123',
           sid: 'session-123',
         },
-        testApiSecret
+        testApiSecret,
       );
 
       mockCtx.headers = { authorization: token }; // Without "Bearer " prefix
@@ -298,7 +298,7 @@ describe('Shopify Session Middleware', () => {
         process.env.NODE_ENV = 'development';
       });
 
-      it('should allow unauthenticated requests in development mode', async () => {
+      it('should allow unauthenticated requests in development mode', async() => {
         await requireAuth(mockCtx as Context, mockNext);
 
         expect(mockNext).toHaveBeenCalled();
@@ -307,7 +307,7 @@ describe('Shopify Session Middleware', () => {
         expect(mockQuery).not.toHaveBeenCalled();
       });
 
-      it('should still validate token if provided in development', async () => {
+      it('should still validate token if provided in development', async() => {
         const mockShopData = {
           id: 'shop-123',
           access_token: 'test-access-token',
@@ -326,7 +326,7 @@ describe('Shopify Session Middleware', () => {
             jti: 'jwt-123',
             sid: 'session-123',
           },
-          testApiSecret
+          testApiSecret,
         );
 
         mockCtx.headers = { authorization: `Bearer ${token}` };
@@ -357,13 +357,13 @@ describe('Shopify Session Middleware', () => {
     it('should throw error when shop domain not found', () => {
       mockCtx.state = {};
       expect(() => getShopDomain(mockCtx as Context)).toThrow(
-        'Shop domain not found in context'
+        'Shop domain not found in context',
       );
     });
   });
 
   describe('optionalAuth middleware', () => {
-    it('should authenticate with valid token', async () => {
+    it('should authenticate with valid token', async() => {
       const mockShopData = {
         id: 'shop-123',
         access_token: 'test-access-token',
@@ -382,7 +382,7 @@ describe('Shopify Session Middleware', () => {
           jti: 'jwt-123',
           sid: 'session-123',
         },
-        testApiSecret
+        testApiSecret,
       );
 
       mockCtx.headers = { authorization: `Bearer ${token}` };
@@ -394,7 +394,7 @@ describe('Shopify Session Middleware', () => {
       expect(mockCtx.state?.shopDomain).toBe(testShop);
     });
 
-    it('should continue without authentication on invalid token', async () => {
+    it('should continue without authentication on invalid token', async() => {
       mockCtx.headers = { authorization: 'Bearer invalid-token' };
 
       await optionalAuth(mockCtx as Context, mockNext);
@@ -403,7 +403,7 @@ describe('Shopify Session Middleware', () => {
       expect(mockCtx.state?.shopDomain).toBeUndefined();
     });
 
-    it('should continue without authentication when no token provided', async () => {
+    it('should continue without authentication when no token provided', async() => {
       await optionalAuth(mockCtx as Context, mockNext);
 
       expect(mockNext).toHaveBeenCalled();

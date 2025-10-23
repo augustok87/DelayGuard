@@ -1,15 +1,15 @@
-import { getSessionToken } from '@shopify/app-bridge/utilities';
-import { logger } from './logger';
+import { getSessionToken } from "@shopify/app-bridge/utilities";
+import { logger } from "./logger";
 
 /**
  * Authenticated API Client for Shopify Embedded Apps
- * 
+ *
  * This client automatically:
  * 1. Retrieves session tokens from App Bridge
  * 2. Includes the token in Authorization headers
  * 3. Handles token refresh automatically
  * 4. Provides type-safe API methods
- * 
+ *
  * @see https://shopify.dev/docs/apps/auth/oauth/session-tokens
  */
 
@@ -32,7 +32,7 @@ class ApiClient {
   private app: any; // App Bridge app instance
 
   constructor(config: ApiClientConfig = {}) {
-    this.baseUrl = config.baseUrl || '/api';
+    this.baseUrl = config.baseUrl || "/api";
     this.app = config.app;
   }
 
@@ -42,7 +42,7 @@ class ApiClient {
    */
   setApp(app: any) {
     this.app = app;
-    logger.debug('App Bridge instance set for API client');
+    logger.debug("App Bridge instance set for API client");
   }
 
   /**
@@ -51,16 +51,16 @@ class ApiClient {
    */
   private async getToken(): Promise<string | null> {
     if (!this.app) {
-      logger.warn('App Bridge not initialized. Returning null token.');
+      logger.warn("App Bridge not initialized. Returning null token.");
       return null;
     }
 
     try {
       const token = await getSessionToken(this.app);
-      logger.debug('Session token retrieved successfully');
+      logger.debug("Session token retrieved successfully");
       return token;
     } catch (error) {
-      logger.error('Failed to get session token', error as Error);
+      logger.error("Failed to get session token", error as Error);
       return null;
     }
   }
@@ -70,24 +70,24 @@ class ApiClient {
    */
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<ApiResponse<T>> {
     try {
       const token = await this.getToken();
       const url = `${this.baseUrl}${endpoint}`;
 
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(options.headers as Record<string, string>),
       };
 
       // Add Authorization header if we have a token
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
-      logger.debug('Making API request', { 
-        method: options.method || 'GET', 
+      logger.debug("Making API request", {
+        method: options.method || "GET",
         url,
         hasToken: !!token,
       });
@@ -100,7 +100,7 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
-        logger.warn('API request failed', {
+        logger.warn("API request failed", {
           status: response.status,
           statusText: response.statusText,
           error: data.error,
@@ -108,23 +108,23 @@ class ApiClient {
 
         return {
           success: false,
-          error: data.error || data.message || 'Request failed',
+          error: data.error || data.message || "Request failed",
           code: data.code,
         };
       }
 
-      logger.debug('API request successful', { url });
+      logger.debug("API request successful", { url });
 
       return {
         success: true,
         ...data,
       };
     } catch (error) {
-      logger.error('API request error', error as Error, { endpoint });
-      
+      logger.error("API request error", error as Error, { endpoint });
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -136,7 +136,7 @@ class ApiClient {
    * Fetch all delay alerts for the authenticated shop
    */
   async getAlerts() {
-    return this.request<any[]>('/alerts');
+    return this.request<any[]>("/alerts");
   }
 
   /**
@@ -144,7 +144,7 @@ class ApiClient {
    * Fetch orders with optional limit
    */
   async getOrders(limit?: number) {
-    const query = limit ? `?limit=${limit}` : '';
+    const query = limit ? `?limit=${limit}` : "";
     return this.request<any[]>(`/orders${query}`);
   }
 
@@ -153,7 +153,7 @@ class ApiClient {
    * Fetch app settings for the authenticated shop
    */
   async getSettings() {
-    return this.request<any>('/settings');
+    return this.request<any>("/settings");
   }
 
   /**
@@ -161,8 +161,8 @@ class ApiClient {
    * Update app settings
    */
   async updateSettings(settings: Record<string, any>) {
-    return this.request<any>('/settings', {
-      method: 'PUT',
+    return this.request<any>("/settings", {
+      method: "PUT",
       body: JSON.stringify(settings),
     });
   }
@@ -175,7 +175,7 @@ class ApiClient {
     return this.request<{
       alerts: any;
       orders: any;
-    }>('/analytics');
+    }>("/analytics");
   }
 
   /**
@@ -183,7 +183,7 @@ class ApiClient {
    * Fetch shop information
    */
   async getShop() {
-    return this.request<any>('/shop');
+    return this.request<any>("/shop");
   }
 
   /**
@@ -191,7 +191,7 @@ class ApiClient {
    * Check API health (no authentication required)
    */
   async health() {
-    return this.request<{ status: string; timestamp: string }>('/health');
+    return this.request<{ status: string; timestamp: string }>("/health");
   }
 }
 
@@ -201,4 +201,3 @@ export const apiClient = new ApiClient();
 // Export the class for testing
 export { ApiClient };
 export type { ApiResponse };
-

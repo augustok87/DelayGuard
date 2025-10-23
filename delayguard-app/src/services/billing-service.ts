@@ -1,62 +1,62 @@
 /**
  * Billing Service
  * Handles Shopify Billing API integration and subscription management
- * 
+ *
  * Supports:
  * - Free tier (50 alerts/month)
  * - Pro tier ($7/month, unlimited alerts, 14-day trial)
  * - Enterprise tier ($25/month, white-label + API, 14-day trial)
  */
 
-import { query } from '../database/connection';
-import { logger } from '../utils/logger';
+import { query } from "../database/connection";
+import { logger } from "../utils/logger";
 import type {
   AppSubscription,
   BillingConfig,
   RecurringCharge,
   ShopifySubscriptionPlan,
-} from '../types';
+} from "../types";
 
 export class BillingService {
   private readonly billingConfig: BillingConfig = {
     plans: {
       free: {
-        name: 'Free Plan',
+        name: "Free Plan",
         price: 0,
         trial_days: 0,
         features: [
-          '50 delay alerts per month',
-          'Email notifications',
-          'Basic analytics',
-          'Email support',
+          "50 delay alerts per month",
+          "Email notifications",
+          "Basic analytics",
+          "Email support",
         ],
         monthly_alert_limit: 50,
       },
       pro: {
-        name: 'Pro Plan',
+        name: "Pro Plan",
         price: 7,
         trial_days: 14,
         features: [
-          'Unlimited delay alerts',
-          'Email and SMS notifications',
-          'Advanced analytics',
-          'Custom templates',
-          'Priority email support',
+          "Unlimited delay alerts",
+          "Email and SMS notifications",
+          "Advanced analytics",
+          "Custom templates",
+          "Priority email support",
         ],
       },
       enterprise: {
-        name: 'Enterprise Plan',
+        name: "Enterprise Plan",
         price: 25,
         trial_days: 14,
         features: [
-          'Unlimited delay alerts',
-          'Email and SMS notifications',
-          'Advanced analytics with custom reports',
-          'White-label notifications',
-          'API access',
-          'Custom integrations',
-          'Dedicated account manager',
-          '24/7 phone support',
+          "Unlimited delay alerts",
+          "Email and SMS notifications",
+          "Advanced analytics with custom reports",
+          "White-label notifications",
+          "API access",
+          "Custom integrations",
+          "Dedicated account manager",
+          "24/7 phone support",
         ],
       },
     },
@@ -66,7 +66,7 @@ export class BillingService {
    * Get plan configuration by name
    */
   getPlanConfig(
-    planName: 'free' | 'pro' | 'enterprise'
+    planName: "free" | "pro" | "enterprise",
   ): ShopifySubscriptionPlan {
     const plan = this.billingConfig.plans[planName];
     if (!plan) {
@@ -81,13 +81,13 @@ export class BillingService {
   async getSubscription(shopId: string): Promise<AppSubscription | null> {
     try {
       const result = await query<AppSubscription>(
-        'SELECT * FROM subscriptions WHERE shop_id = $1 AND status != $2',
-        [shopId, 'cancelled']
+        "SELECT * FROM subscriptions WHERE shop_id = $1 AND status != $2",
+        [shopId, "cancelled"],
       );
 
       return result.length > 0 ? result[0] : null;
     } catch (error) {
-      logger.error('Error fetching subscription', error as Error);
+      logger.error("Error fetching subscription", error as Error);
       throw error;
     }
   }
@@ -97,8 +97,8 @@ export class BillingService {
    */
   async createSubscription(
     shopId: string,
-    planName: 'free' | 'pro' | 'enterprise',
-    shopifyChargeId?: string
+    planName: "free" | "pro" | "enterprise",
+    shopifyChargeId?: string,
   ): Promise<AppSubscription> {
     try {
       const plan = this.getPlanConfig(planName);
@@ -127,16 +127,16 @@ export class BillingService {
         [
           shopId,
           planName,
-          'active',
+          "active",
           now,
           periodEnd,
           trialEndsAt || null,
           shopifyChargeId || null,
           0,
-        ]
+        ],
       );
 
-      logger.info('Subscription created successfully', {
+      logger.info("Subscription created successfully", {
         shop_id: shopId,
         plan_name: planName,
         trial_ends_at: trialEndsAt,
@@ -144,7 +144,7 @@ export class BillingService {
 
       return result[0];
     } catch (error) {
-      logger.error('Error creating subscription', error as Error);
+      logger.error("Error creating subscription", error as Error);
       throw error;
     }
   }
@@ -154,7 +154,7 @@ export class BillingService {
    */
   async updateSubscription(
     subscriptionId: string,
-    updates: Partial<AppSubscription>
+    updates: Partial<AppSubscription>,
   ): Promise<AppSubscription> {
     try {
       const updateFields: string[] = [];
@@ -162,32 +162,32 @@ export class BillingService {
       let paramIndex = 1;
 
       Object.entries(updates).forEach(([key, value]) => {
-        if (key !== 'id' && key !== 'shop_id' && key !== 'created_at') {
+        if (key !== "id" && key !== "shop_id" && key !== "created_at") {
           updateFields.push(`${key} = $${paramIndex}`);
           updateValues.push(value);
           paramIndex++;
         }
       });
 
-      updateFields.push('updated_at = CURRENT_TIMESTAMP');
+      updateFields.push("updated_at = CURRENT_TIMESTAMP");
       updateValues.push(subscriptionId);
 
       const result = await query<AppSubscription>(
         `UPDATE subscriptions 
-         SET ${updateFields.join(', ')}
+         SET ${updateFields.join(", ")}
          WHERE id = $${paramIndex}
          RETURNING *`,
-        updateValues
+        updateValues,
       );
 
-      logger.info('Subscription updated successfully', {
+      logger.info("Subscription updated successfully", {
         subscription_id: subscriptionId,
         updates: Object.keys(updates),
       });
 
       return result[0];
     } catch (error) {
-      logger.error('Error updating subscription', error as Error);
+      logger.error("Error updating subscription", error as Error);
       throw error;
     }
   }
@@ -202,10 +202,10 @@ export class BillingService {
          SET monthly_alert_count = monthly_alert_count + 1,
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $1`,
-        [subscriptionId]
+        [subscriptionId],
       );
     } catch (error) {
-      logger.error('Error incrementing alert count', error as Error);
+      logger.error("Error incrementing alert count", error as Error);
       throw error;
     }
   }
@@ -229,8 +229,8 @@ export class BillingService {
           allowed: false,
           current_count: 0,
           limit: 0,
-          plan_name: 'none',
-          error: 'No active subscription found',
+          plan_name: "none",
+          error: "No active subscription found",
         };
       }
 
@@ -259,7 +259,7 @@ export class BillingService {
         upgrade_required: upgradeRequired,
       };
     } catch (error) {
-      logger.error('Error checking alert limit', error as Error);
+      logger.error("Error checking alert limit", error as Error);
       throw error;
     }
   }
@@ -268,14 +268,14 @@ export class BillingService {
    * Generate Shopify recurring charge object
    */
   generateRecurringCharge(
-    planName: 'free' | 'pro' | 'enterprise',
+    planName: "free" | "pro" | "enterprise",
     returnUrl: string,
-    test: boolean = false
+    test: boolean = false,
   ): RecurringCharge {
     const plan = this.getPlanConfig(planName);
 
     if (plan.price === 0) {
-      throw new Error('Cannot create charge for free plan');
+      throw new Error("Cannot create charge for free plan");
     }
 
     return {
@@ -299,16 +299,16 @@ export class BillingService {
              updated_at = CURRENT_TIMESTAMP
          WHERE shop_id = $2 AND status = $3
          RETURNING *`,
-        ['cancelled', shopId, 'active']
+        ["cancelled", shopId, "active"],
       );
 
-      logger.info('Subscription cancelled successfully', {
+      logger.info("Subscription cancelled successfully", {
         shop_id: shopId,
       });
 
       return result[0];
     } catch (error) {
-      logger.error('Error cancelling subscription', error as Error);
+      logger.error("Error cancelling subscription", error as Error);
       throw error;
     }
   }
@@ -325,14 +325,14 @@ export class BillingService {
              current_period_end = CURRENT_TIMESTAMP + INTERVAL '1 month',
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $1`,
-        [subscriptionId]
+        [subscriptionId],
       );
 
-      logger.info('Monthly alert count reset', {
+      logger.info("Monthly alert count reset", {
         subscription_id: subscriptionId,
       });
     } catch (error) {
-      logger.error('Error resetting monthly alert count', error as Error);
+      logger.error("Error resetting monthly alert count", error as Error);
       throw error;
     }
   }
@@ -360,7 +360,7 @@ export class BillingService {
       limit?: number;
       percentage?: number;
     };
-    billing_status: 'active' | 'trial' | 'cancelled' | 'none';
+    billing_status: "active" | "trial" | "cancelled" | "none";
   }> {
     try {
       const subscription = await this.getSubscription(shopId);
@@ -374,18 +374,18 @@ export class BillingService {
             current_count: 0,
             limit: 0,
           },
-          billing_status: 'none',
+          billing_status: "none",
         };
       }
 
       const planConfig = this.getPlanConfig(subscription.plan_name);
       const inTrial = this.isInTrial(subscription);
 
-      let billingStatus: 'active' | 'trial' | 'cancelled' | 'none' = 'active';
-      if (subscription.status === 'cancelled') {
-        billingStatus = 'cancelled';
+      let billingStatus: "active" | "trial" | "cancelled" | "none" = "active";
+      if (subscription.status === "cancelled") {
+        billingStatus = "cancelled";
       } else if (inTrial) {
-        billingStatus = 'trial';
+        billingStatus = "trial";
       }
 
       const usage: {
@@ -399,7 +399,7 @@ export class BillingService {
 
       if (usage.limit) {
         usage.percentage = Math.round(
-          (usage.current_count / usage.limit) * 100
+          (usage.current_count / usage.limit) * 100,
         );
       }
 
@@ -411,7 +411,7 @@ export class BillingService {
         billing_status: billingStatus,
       };
     } catch (error) {
-      logger.error('Error getting billing summary', error as Error);
+      logger.error("Error getting billing summary", error as Error);
       throw error;
     }
   }
@@ -419,4 +419,3 @@ export class BillingService {
 
 // Export singleton instance
 export const billingService = new BillingService();
-

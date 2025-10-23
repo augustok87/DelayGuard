@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 import {
   TrackingInfo,
   CarrierService as ICarrierService,
@@ -11,7 +11,7 @@ export class CarrierService implements ICarrierService {
   private apiKey: string;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.SHIPENGINE_API_KEY || '';
+    this.apiKey = apiKey || process.env.SHIPENGINE_API_KEY || "";
 
     if (!this.apiKey) {
       throw new Error("ShipEngine API key is required");
@@ -67,7 +67,8 @@ export class CarrierService implements ICarrierService {
               location: shipEngineEvent.city_locality
                 ? `${shipEngineEvent.city_locality}, ${shipEngineEvent.state_province}`
                 : undefined,
-              description: shipEngineEvent.description || shipEngineEvent.status_code,
+              description:
+                shipEngineEvent.description || shipEngineEvent.status_code,
             };
           }) || [],
       };
@@ -132,7 +133,10 @@ export class CarrierService implements ICarrierService {
       const response = await this.client.get("/v1/carriers");
 
       return response.data.carriers.map((carrier: unknown) => {
-        const shipEngineCarrier = carrier as { carrier_code: string; friendly_name: string };
+        const shipEngineCarrier = carrier as {
+          carrier_code: string;
+          friendly_name: string;
+        };
         return {
           code: shipEngineCarrier.carrier_code,
           name: shipEngineCarrier.friendly_name,

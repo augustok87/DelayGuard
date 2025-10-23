@@ -32,7 +32,7 @@ describe('ApiClient', () => {
   });
 
   describe('Token Management', () => {
-    it('should get session token from App Bridge', async () => {
+    it('should get session token from App Bridge', async() => {
       const testToken = 'test-session-token';
       mockGetSessionToken.mockResolvedValueOnce(testToken);
       
@@ -40,7 +40,7 @@ describe('ApiClient', () => {
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: [] }),
+        json: async() => ({ success: true, data: [] }),
       } as Response);
 
       await client.getAlerts();
@@ -52,15 +52,15 @@ describe('ApiClient', () => {
           headers: expect.objectContaining({
             'Authorization': `Bearer ${testToken}`,
           }),
-        })
+        }),
       );
     });
 
-    it('should make request without token if App Bridge not initialized', async () => {
+    it('should make request without token if App Bridge not initialized', async() => {
       // Don't set app
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: [] }),
+        json: async() => ({ success: true, data: [] }),
       } as Response);
 
       await client.getAlerts();
@@ -72,18 +72,18 @@ describe('ApiClient', () => {
           headers: expect.not.objectContaining({
             'Authorization': expect.anything(),
           }),
-        })
+        }),
       );
     });
 
-    it('should handle token retrieval errors gracefully', async () => {
+    it('should handle token retrieval errors gracefully', async() => {
       mockGetSessionToken.mockRejectedValueOnce(new Error('Token error'));
       
       client.setApp(mockApp);
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: [] }),
+        json: async() => ({ success: true, data: [] }),
       } as Response);
 
       const result = await client.getAlerts();
@@ -94,7 +94,7 @@ describe('ApiClient', () => {
   });
 
   describe('GET /api/alerts', () => {
-    it('should fetch alerts successfully', async () => {
+    it('should fetch alerts successfully', async() => {
       const mockAlerts = [{ id: '1', status: 'sent' }];
       mockGetSessionToken.mockResolvedValueOnce('token');
       
@@ -102,7 +102,7 @@ describe('ApiClient', () => {
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockAlerts }),
+        json: async() => ({ success: true, data: mockAlerts }),
       } as Response);
 
       const result = await client.getAlerts();
@@ -111,7 +111,7 @@ describe('ApiClient', () => {
       expect(result.data).toEqual(mockAlerts);
     });
 
-    it('should handle API errors', async () => {
+    it('should handle API errors', async() => {
       mockGetSessionToken.mockResolvedValueOnce('token');
       
       client.setApp(mockApp);
@@ -120,7 +120,7 @@ describe('ApiClient', () => {
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
-        json: async () => ({ error: 'Unauthorized', code: 'AUTH_ERROR' }),
+        json: async() => ({ error: 'Unauthorized', code: 'AUTH_ERROR' }),
       } as Response);
 
       const result = await client.getAlerts();
@@ -130,7 +130,7 @@ describe('ApiClient', () => {
       expect(result.code).toBe('AUTH_ERROR');
     });
 
-    it('should handle network errors', async () => {
+    it('should handle network errors', async() => {
       mockGetSessionToken.mockResolvedValueOnce('token');
       
       client.setApp(mockApp);
@@ -145,45 +145,45 @@ describe('ApiClient', () => {
   });
 
   describe('GET /api/orders', () => {
-    it('should fetch orders with default limit', async () => {
+    it('should fetch orders with default limit', async() => {
       mockGetSessionToken.mockResolvedValueOnce('token');
       
       client.setApp(mockApp);
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: [] }),
+        json: async() => ({ success: true, data: [] }),
       } as Response);
 
       await client.getOrders();
 
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/orders',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
-    it('should fetch orders with custom limit', async () => {
+    it('should fetch orders with custom limit', async() => {
       mockGetSessionToken.mockResolvedValueOnce('token');
       
       client.setApp(mockApp);
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: [] }),
+        json: async() => ({ success: true, data: [] }),
       } as Response);
 
       await client.getOrders(10);
 
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/orders?limit=10',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
 
   describe('GET /api/settings', () => {
-    it('should fetch settings successfully', async () => {
+    it('should fetch settings successfully', async() => {
       const mockSettings = { delay_threshold_days: 2, email_enabled: true };
       mockGetSessionToken.mockResolvedValueOnce('token');
       
@@ -191,7 +191,7 @@ describe('ApiClient', () => {
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockSettings }),
+        json: async() => ({ success: true, data: mockSettings }),
       } as Response);
 
       const result = await client.getSettings();
@@ -202,7 +202,7 @@ describe('ApiClient', () => {
   });
 
   describe('PUT /api/settings', () => {
-    it('should update settings successfully', async () => {
+    it('should update settings successfully', async() => {
       const newSettings = { delay_threshold_days: 3 };
       mockGetSessionToken.mockResolvedValueOnce('token');
       
@@ -210,7 +210,7 @@ describe('ApiClient', () => {
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, message: 'Settings updated' }),
+        json: async() => ({ success: true, message: 'Settings updated' }),
       } as Response);
 
       const result = await client.updateSettings(newSettings);
@@ -221,11 +221,11 @@ describe('ApiClient', () => {
         expect.objectContaining({
           method: 'PUT',
           body: JSON.stringify(newSettings),
-        })
+        }),
       );
     });
 
-    it('should handle validation errors', async () => {
+    it('should handle validation errors', async() => {
       mockGetSessionToken.mockResolvedValueOnce('token');
       
       client.setApp(mockApp);
@@ -234,7 +234,7 @@ describe('ApiClient', () => {
         ok: false,
         status: 400,
         statusText: 'Bad Request',
-        json: async () => ({
+        json: async() => ({
           error: 'Invalid threshold',
           code: 'INVALID_THRESHOLD',
         }),
@@ -248,7 +248,7 @@ describe('ApiClient', () => {
   });
 
   describe('GET /api/analytics', () => {
-    it('should fetch analytics data', async () => {
+    it('should fetch analytics data', async() => {
       const mockAnalytics = {
         alerts: { total_alerts: 10 },
         orders: { total_orders: 100 },
@@ -259,7 +259,7 @@ describe('ApiClient', () => {
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockAnalytics }),
+        json: async() => ({ success: true, data: mockAnalytics }),
       } as Response);
 
       const result = await client.getAnalytics();
@@ -270,7 +270,7 @@ describe('ApiClient', () => {
   });
 
   describe('GET /api/shop', () => {
-    it('should fetch shop information', async () => {
+    it('should fetch shop information', async() => {
       const mockShop = { shop_domain: 'test.myshopify.com' };
       mockGetSessionToken.mockResolvedValueOnce('token');
       
@@ -278,7 +278,7 @@ describe('ApiClient', () => {
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockShop }),
+        json: async() => ({ success: true, data: mockShop }),
       } as Response);
 
       const result = await client.getShop();
@@ -289,10 +289,10 @@ describe('ApiClient', () => {
   });
 
   describe('GET /api/health', () => {
-    it('should check API health without authentication', async () => {
+    it('should check API health without authentication', async() => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({
+        json: async() => ({
           success: true,
           data: { status: 'ok', timestamp: new Date().toISOString() },
         }),
@@ -306,14 +306,14 @@ describe('ApiClient', () => {
   });
 
   describe('Request Headers', () => {
-    it('should include Content-Type header', async () => {
+    it('should include Content-Type header', async() => {
       mockGetSessionToken.mockResolvedValueOnce('token');
       
       client.setApp(mockApp);
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: [] }),
+        json: async() => ({ success: true, data: [] }),
       } as Response);
 
       await client.getAlerts();
@@ -324,7 +324,7 @@ describe('ApiClient', () => {
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
           }),
-        })
+        }),
       );
     });
   });

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { logger } from '../utils/logger';
+import { logger } from "../utils/logger";
 /**
  * Environment Configuration and Validation
  *
@@ -263,15 +263,17 @@ export function requireEnv(key: string): string {
   if (!value) {
     const errorMessage = `Missing required environment variable: ${key}`;
     logger.error(errorMessage);
-    
+
     // In production, throw error immediately
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       throw new Error(errorMessage);
     }
-    
+
     // In development/test, log warning but don't throw
-    logger.warn(`Using empty string for ${key} in ${process.env.NODE_ENV} environment`);
-    return '';
+    logger.warn(
+      `Using empty string for ${key} in ${process.env.NODE_ENV} environment`,
+    );
+    return "";
   }
   return value;
 }

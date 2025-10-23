@@ -3,7 +3,11 @@ import { OrderInfo, DelayDetails } from "../types";
 
 interface TwilioClient {
   messages: {
-    create: (params: { body: string; from: string; to: string }) => Promise<unknown>;
+    create: (params: {
+      body: string;
+      from: string;
+      to: string;
+    }) => Promise<unknown>;
   };
 }
 

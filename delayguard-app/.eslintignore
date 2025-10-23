@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+public/
+coverage/
+
+# Config files
+*.config.js
+*.config.ts
+webpack*.js
+babel.config.js
+jest.config.ts
+
+# Scripts
+scripts/
+
+# Backups and legacy
+lint-backups/
+*.backup
+*.bak
+*.old
+*.legacy
+src/backup/
+
+# Test snapshots
+**/__snapshots__/
+
+# Generated files
+docs/
+
+# Vercel
+.vercel/
+api/
+
+# Logs
+logs/
+*.log

@@ -46,7 +46,9 @@ export function useAsyncResource<T>(
 
   // Create new item
   const createItem = useCallback(
-    async(itemData: Partial<T>): Promise<{ success: boolean; error?: string }> => {
+    async(
+      itemData: Partial<T>,
+    ): Promise<{ success: boolean; error?: string }> => {
       try {
         if (createAction) {
           await dispatch(createAction(itemData)).unwrap();
@@ -57,7 +59,8 @@ export function useAsyncResource<T>(
           return { success: true };
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
         logError(`Failed to create ${resourceName}`, error as Error);
         return { success: false, error: errorMessage };
       }
@@ -67,13 +70,17 @@ export function useAsyncResource<T>(
 
   // Update existing item
   const updateItem = useCallback(
-    async(id: string, updates: Partial<T>): Promise<{ success: boolean; error?: string }> => {
+    async(
+      id: string,
+      updates: Partial<T>,
+    ): Promise<{ success: boolean; error?: string }> => {
       try {
         await dispatch(updateAction({ id, updates })).unwrap();
         logInfo(`Updated ${resourceName}`, { id, updates });
         return { success: true };
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
         logError(`Failed to update ${resourceName}`, error as Error);
         return { success: false, error: errorMessage };
       }
@@ -89,7 +96,8 @@ export function useAsyncResource<T>(
         logInfo(`Deleted ${resourceName}`, { id });
         return { success: true };
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
         logError(`Failed to delete ${resourceName}`, error as Error);
         return { success: false, error: errorMessage };
       }

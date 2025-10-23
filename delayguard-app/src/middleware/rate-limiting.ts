@@ -40,7 +40,7 @@ export class RateLimitingMiddleware {
    */
   async apply(ctx: Context, next: Next): Promise<void> {
     if (!this.config.keyGenerator) {
-      throw new Error('keyGenerator is required for rate limiting');
+      throw new Error("keyGenerator is required for rate limiting");
     }
     const key = this.config.keyGenerator(ctx);
     const now = Date.now();
