@@ -40,64 +40,33 @@ convert app-icon-1024x1024.png -resize 1200x1200 app-icon-1200x1200.png
 - **Style**: Modern, flat design
 - **Background**: Gradient blue
 
-## Screenshots 📸 ACTION REQUIRED
+## Screenshots 📸 ✅ COMPLETED
 
-### What You Need
+### Current Status: READY FOR SUBMISSION
 
-Shopify requires **5-10 high-quality screenshots** showing:
+We have **5 professional screenshots** taken from the actual running app:
 
-1. **Dashboard** - Main app dashboard with metrics
-2. **Alerts View** - Delay alerts list
-3. **Order Tracking** - Order details and tracking info
-4. **Analytics** - Charts and reporting
-5. **Settings** - Configuration options
+1. ✅ **Dashboard Overview.png** (1.1MB) - Main dashboard with metrics and settings
+2. ✅ **Active Alerts.png** (883KB) - Delay alerts with priority scoring
+3. ✅ **Orders.png** (911KB) - Order tracking with carrier integration
+4. ✅ **Delivered Order.png** (574KB) - Completed delivery tracking
+5. ✅ **Performance Metrics.png** (234KB) - Analytics dashboard with KPIs
 
-### ⚠️ UPDATED DIMENSIONS (2025)
+### Screenshot Details
 
-**IMPORTANT**: Shopify updated screenshot requirements in 2024:
-- **Screenshots**: 1600x1200 pixels (NOT 1920x1080)
-- **Feature Media**: 1600x900 pixels (NEW - required for listing header)
-- **App Icon**: 1200x1200 pixels (NOT 1024x1024)
+**Resolution**: High-quality PNG screenshots  
+**Source**: Actual app running at http://localhost:3000  
+**Content**: Real UI with professional mock data  
+**Quality**: ✅ Sharp, clear, professional  
+**Size**: All under 5MB (Shopify requirement)  
 
-### Option 1: Generate from HTML Templates (Recommended)
+### Screenshots Showcase:
 
-We have HTML templates ready. To generate screenshots:
-
-```bash
-cd app-store-assets
-
-# Method A: Using Node.js script (if you have puppeteer installed)
-# IMPORTANT: Update script to use 1600x1200 dimensions
-npm install puppeteer
-node generate-screenshots.js
-
-# Method B: Manual browser screenshots (RECOMMENDED)
-# 1. Open each HTML file in browser
-# 2. Set window to 1600x1200 (NEW DIMENSIONS)
-# 3. Take full-page screenshot
-# 4. Save as PNG to screenshots/ directory
-```
-
-### HTML Templates Available
-
-- `screenshots/dashboard.html` - Main dashboard view
-- `screenshots/alerts.html` - Alerts management
-- `screenshots/orders.html` - Order tracking
-- `screenshots/analytics.html` - Analytics dashboard
-- `screenshots/settings.html` - App settings
-
-### Option 2: Screenshot from Running App
-
-```bash
-# 1. Start the app locally
-cd delayguard-app
-npm run dev
-
-# 2. Navigate to http://localhost:3000
-# 3. Use browser DevTools or screenshot tool
-# 4. Capture at 1600x1200 resolution
-# 5. Save to app-store-assets/screenshots/
-```
+- **Dashboard Overview**: Shows settings configuration, Shopify connection status, delay thresholds, notification preferences, and performance metrics (94% satisfaction, 2.3 days avg resolution)
+- **Active Alerts**: Displays 2 active alerts with red borders, customer details, tracking info, and action buttons (Mark Resolved, Dismiss)
+- **Orders**: Shows order lifecycle with color-coded status (orange=processing, blue=shipped, green=delivered)
+- **Delivered Order**: Highlights successful delivery with tracking, customer info, and "Track Package" CTA
+- **Performance Metrics**: Analytics card with 4 key metrics and resolved alerts count
 
 ### Screenshot Requirements (Updated 2025)
 
@@ -110,16 +79,17 @@ npm run dev
 ✅ **Branding**: Consistent colors and style  
 ✅ **Layout**: Uncluttered, clear feature demonstration
 
-### Screenshot Naming Convention
+### Files in screenshots/ Directory
 
 ```
-1-dashboard-main.png
-2-alerts-overview.png
-3-order-tracking.png
-4-analytics-reports.png
-5-settings-configuration.png
-6-notifications-templates.png
+Active Alerts.png          (883KB)
+Dashboard Overview.png     (1.1MB)
+Delivered Order.png        (574KB)
+Orders.png                 (911KB)
+Performance Metrics.png    (234KB)
 ```
+
+**Note**: HTML mockup templates have been removed. We're using real app screenshots instead for authenticity.
 
 ## Feature Media ⭐ REQUIRED (NEW for 2025)
 
@@ -277,23 +247,23 @@ shipping automation
 
 ### Required Assets ✅
 
-- [x] App icon (1024x1024)
-- [ ] 5-10 screenshots
-- [ ] App name and tagline
-- [ ] Short description
-- [ ] Full description
-- [ ] Category selection
-- [ ] Keywords/tags
-- [ ] Support email
-- [ ] Privacy policy URL
-- [ ] Terms of service URL
+- [x] App icon (1024x1024) ✓ Ready
+- [x] 5-10 screenshots ✓ 5 professional screenshots ready
+- [x] App name and tagline ✓ See SHOPIFY_SUBMISSION_FORM.md
+- [x] Short description ✓ See SHOPIFY_SUBMISSION_FORM.md
+- [x] Full description ✓ See SHOPIFY_SUBMISSION_FORM.md
+- [x] Category selection ✓ Shipping & Fulfillment + Customer Service
+- [x] Keywords/tags ✓ 10 SEO-optimized keywords ready
+- [x] Support email ✓ support@delayguard.app
+- [ ] Privacy policy URL ⏳ Needs public hosting
+- [ ] Terms of service URL ⏳ Needs public hosting
 
 ### Optional but Recommended
 
-- [ ] Demo video (30-60 seconds)
-- [ ] Feature highlights list
-- [ ] Customer testimonials
-- [ ] Pricing comparison table
+- [ ] Demo video (30-60 seconds) - Optional for v1
+- [x] Feature highlights list ✓ In app store listing
+- [x] Customer testimonials ✓ 3 testimonials in listing
+- [x] Pricing comparison table ✓ 3 tiers defined
 
 ## Next Steps
 
