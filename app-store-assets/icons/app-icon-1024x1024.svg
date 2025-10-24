@@ -1,73 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background Circle with Gradient -->
   <defs>
-    <linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Background Gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+    <!-- Shield Gradient -->
+    <linearGradient id="shieldGradient" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0f0f0;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="clockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffecd2;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#fcb69f;stop-opacity:1" />
-    </linearGradient>
+    <!-- Shadow Filter -->
     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000000" flood-opacity="0.15"/>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12"/>
+      <feOffset dx="0" dy="6" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.25"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
   </defs>
   
-  <!-- Background Circle -->
-  <circle cx="512" cy="512" r="480" fill="url(#backgroundGradient)" filter="url(#shadow)"/>
+  <!-- Background with Rounded Corners -->
+  <rect width="1024" height="1024" fill="url(#bgGradient)" rx="200"/>
   
-  <!-- Inner Circle for Depth -->
-  <circle cx="512" cy="512" r="420" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
+  <!-- Shield Shape with Shadow -->
+  <g filter="url(#shadow)">
+    <path d="M 512 220 
+             L 750 290 
+             C 762 295, 772 305, 772 320
+             L 772 520
+             C 772 650, 670 750, 512 840
+             C 354 750, 252 650, 252 520
+             L 252 320
+             C 252 305, 262 295, 274 290
+             Z" 
+          fill="url(#shieldGradient)" 
+          stroke="rgba(255,255,255,0.6)" 
+          stroke-width="4"/>
+  </g>
   
-  <!-- Shield Shape (Main Protection Symbol) -->
-  <path d="M512 200 L700 300 L700 500 C700 600 600 700 512 750 C424 700 324 600 324 500 L324 300 Z" 
-        fill="url(#shieldGradient)" 
-        stroke="rgba(255,255,255,0.2)" 
-        stroke-width="3"
-        filter="url(#shadow)"/>
+  <!-- DG Letters -->
+  <text x="512" y="580" 
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" 
+        font-size="300" 
+        font-weight="900" 
+        fill="#667eea" 
+        text-anchor="middle" 
+        dominant-baseline="middle"
+        style="letter-spacing: -15px;">DG</text>
   
-  <!-- Clock/Timer Element (Proactive Timing) -->
-  <circle cx="512" cy="400" r="80" fill="url(#clockGradient)" stroke="rgba(255,255,255,0.3)" stroke-width="4"/>
+  <!-- Checkmark Accent at Top -->
+  <g transform="translate(512, 360)">
+    <circle cx="0" cy="0" r="48" fill="#667eea" opacity="0.15"/>
+    <path d="M -18 0 L -6 14 L 22 -18" 
+          stroke="#667eea" 
+          stroke-width="10" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          fill="none"/>
+  </g>
   
-  <!-- Clock Hands -->
-  <line x1="512" y1="400" x2="512" y2="360" stroke="#2c3e50" stroke-width="6" stroke-linecap="round"/>
-  <line x1="512" y1="400" x2="540" y2="400" stroke="#2c3e50" stroke-width="4" stroke-linecap="round"/>
-  
-  <!-- Clock Center Dot -->
-  <circle cx="512" cy="400" r="8" fill="#2c3e50"/>
-  
-  <!-- Clock Numbers (12, 3, 6, 9) -->
-  <text x="512" y="330" text-anchor="middle" fill="#2c3e50" font-family="Arial, sans-serif" font-size="20" font-weight="bold">12</text>
-  <text x="590" y="410" text-anchor="middle" fill="#2c3e50" font-family="Arial, sans-serif" font-size="20" font-weight="bold">3</text>
-  <text x="512" y="490" text-anchor="middle" fill="#2c3e50" font-family="Arial, sans-serif" font-size="20" font-weight="bold">6</text>
-  <text x="434" y="410" text-anchor="middle" fill="#2c3e50" font-family="Arial, sans-serif" font-size="20" font-weight="bold">9</text>
-  
-  <!-- Notification Bell (Alert Symbol) -->
-  <path d="M512 500 L480 520 L480 540 C480 560 500 580 512 580 C524 580 544 560 544 540 L544 520 Z" 
-        fill="#ff6b6b" 
-        stroke="rgba(255,255,255,0.2)" 
-        stroke-width="2"/>
-  
-  <!-- Bell Clapper -->
-  <circle cx="512" cy="530" r="4" fill="#2c3e50"/>
-  
-  <!-- Check Mark (Success/Protection) -->
-  <path d="M480 620 L500 640 L540 600" 
-        stroke="#27ae60" 
-        stroke-width="8" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
-        fill="none"/>
-  
-  <!-- App Name Text -->
-  <text x="512" y="850" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold">DelayGuard</text>
-  
-  <!-- Tagline -->
-  <text x="512" y="900" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="Arial, sans-serif" font-size="24">Proactive Protection</text>
+  <!-- Subtle Highlight Effect -->
+  <ellipse cx="512" cy="280" rx="180" ry="40" fill="rgba(255,255,255,0.1)"/>
 </svg>
