@@ -263,15 +263,15 @@ File: Performance Metrics.png
 
 ### **Privacy Policy URL:**
 ```
-https://delayguard.app/privacy-policy
+https://augustok87.github.io/DelayGuard/privacy-policy.html
 ```
-*Note: Must be publicly accessible before submission*
+✅ *Live at GitHub Pages (free hosting)*
 
 ### **Terms of Service URL:**
 ```
-https://delayguard.app/terms-of-service
+https://augustok87.github.io/DelayGuard/terms-of-service.html
 ```
-*Note: Must be publicly accessible before submission*
+✅ *Live at GitHub Pages (free hosting)*
 
 ### **Support URL:**
 ```
@@ -312,16 +312,16 @@ DelayGuard requires read access to orders and shipping information to monitor de
 
 ### **Before Submitting:**
 - ✅ All 5 screenshots uploaded (1920x1080 PNG/JPG)
-- ⏳ App icon uploaded (1024x1024 PNG) - TO DO
+- ⏳ App icon uploaded (1024x1024 PNG) - OPTIONAL (can improve later)
 - ✅ App description complete and proofread
 - ✅ Pricing plans configured
-- ✅ Privacy Policy live and accessible
-- ✅ Terms of Service live and accessible
-- ✅ Support email/URL working
-- ✅ App fully deployed to production
-- ✅ All tests passing
+- ✅ Privacy Policy live and accessible at GitHub Pages
+- ✅ Terms of Service live and accessible at GitHub Pages
+- ✅ Support email working (augustok87@gmail.com)
+- ✅ App fully deployed to production (Vercel)
+- ✅ All tests passing (50/50 button tests)
 - ✅ Demo/test store set up for Shopify review
-- ⏳ Billing configured in Partner Dashboard - TO DO
+- ⏳ Billing configured in Partner Dashboard - TO DO (takes 5 minutes)
 
 ### **Test Checklist for Reviewers:**
 1. Install app on test store ✓
