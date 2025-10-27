@@ -8,7 +8,7 @@ export const LazyAlertsTab = lazy(() => import('./AlertsTab/AlertsTab.memo').the
 export const LazyOrdersTab = lazy(() => import('./OrdersTab/OrdersTab.memo').then(module => ({ default: module.OrdersTab })));
 
 // Lazy load individual components
-export const LazyAlertCard = lazy(() => import('./AlertsTab/AlertCard.memo').then(module => ({ default: module.AlertCard })));
+export const LazyAlertCard = lazy(() => import('./AlertsTab/AlertCard').then(module => ({ default: module.AlertCard })));
 export const LazyOrderCard = lazy(() => import('./OrdersTab/OrderCard.memo').then(module => ({ default: module.OrderCard })));
 export const LazySettingsCard = lazy(() => import('./DashboardTab/SettingsCard').then(module => ({ default: module.SettingsCard })));
 export const LazyStatsCard = lazy(() => import('./DashboardTab/StatsCard').then(module => ({ default: module.StatsCard })));

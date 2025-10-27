@@ -48,7 +48,7 @@ export interface DelayDetails {
   delayReason: string;
 }
 
-// Enhanced UI Types
+// Enhanced UI Types - Keep existing for backward compatibility
 export interface AppSettings {
   delayThreshold: number;
   notificationTemplate: string;
@@ -59,6 +59,23 @@ export interface AppSettings {
   theme?: "light" | "dark";
   language?: string;
 }
+
+// Export new settings types with different names to avoid conflicts
+export type {
+  AppSettings as AppSettingsV2,
+  DelayDetectionRules,
+  NotificationPreferences,
+  MonitoringConfig,
+  SettingsUpdatePayload,
+} from './settings';
+
+export {
+  DEFAULT_SETTINGS as DEFAULT_SETTINGS_V2,
+  validateDetectionRules,
+  validateMonitoringConfig,
+  validateSettings as validateSettingsV2,
+  mergeWithDefaults,
+} from './settings';
 
 export interface DelayAlert {
   id: string;
@@ -74,6 +91,27 @@ export interface DelayAlert {
   severity?: "low" | "medium" | "high" | "critical";
   delayReason?: string;
   priority?: "low" | "medium" | "high" | "critical";
+
+  // Priority 3: Enhanced fields for better UX
+  originalEta?: string;           // Original estimated delivery date
+  revisedEta?: string;             // New/revised estimated delivery date from carrier
+  notificationStatus?: {
+    emailSent?: boolean;
+    emailSentAt?: string;
+    smsSent?: boolean;
+    smsSentAt?: string;
+  };
+  suggestedActions?: string[];     // Actionable recommendations for merchant
+  trackingEvents?: TrackingEvent[]; // Timeline of tracking events
+}
+
+export interface TrackingEvent {
+  id: string;
+  timestamp: string;
+  status: string;
+  description: string;
+  location?: string;
+  carrierStatus?: string;
 }
 
 export interface Order {

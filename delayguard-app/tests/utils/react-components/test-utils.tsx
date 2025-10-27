@@ -138,8 +138,8 @@ export const mockStatsData = () => ({
   activeAlerts: 3,
   resolvedAlerts: 9,
   avgResolutionTime: '2.3 days',
-  customerSatisfaction: '94%',
-  supportTicketReduction: '35%',
+  customerSatisfaction: '',
+  supportTicketReduction: '',
 });
 
 // Component testing helpers

@@ -4,9 +4,33 @@
   gap: 1.5rem;
 }
 
+/* Section Styles */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* Alert Styles */
 .alert {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem;
   border-radius: 0.5rem;
@@ -29,6 +53,20 @@
 .alertIcon {
   font-size: 1.25rem;
   flex-shrink: 0;
+  line-height: 1;
+}
+
+.alertContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.alertText {
+  margin: 0;
+  font-size: 0.875rem;
+  color: inherit;
 }
 
 .setting {
@@ -37,10 +75,31 @@
   gap: 0.5rem;
 }
 
+.settingLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
 .label {
   font-weight: 500;
   color: #374151;
   font-size: 0.875rem;
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inputSuffix {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .input,
@@ -69,6 +128,42 @@
   font-size: 0.75rem;
   color: #6b7280;
   margin: 0;
+  display: block;
+}
+
+/* Info Box */
+.infoBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.infoIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.infoContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.infoContent strong {
+  color: #1e40af;
+}
+
+.infoContent p {
+  margin: 0;
+  color: #1e40af;
+  line-height: 1.5;
 }
 
 .checkboxGroup {
@@ -79,17 +174,29 @@
 
 .checkboxLabel {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 0.75rem;
   cursor: pointer;
   font-size: 0.875rem;
   color: #374151;
 }
 
 .checkboxLabel input[type="checkbox"] {
-  width: 1rem;
-  height: 1rem;
+  width: 1.125rem;
+  height: 1.125rem;
   cursor: pointer;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.checkboxLabel span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.checkboxLabel strong {
+  color: #1f2937;
 }
 
 .actions {

@@ -68,6 +68,7 @@ describe('DelayDetectionService', () => {
         originalEstimatedDeliveryDate: '2024-02-10',
         events: [
           {
+            id: 'evt-1',
             timestamp: '2024-02-01T10:00:00Z',
             status: 'IN_TRANSIT',
             description: 'Package delayed due to weather',

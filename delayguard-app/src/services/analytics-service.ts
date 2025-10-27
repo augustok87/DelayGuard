@@ -15,7 +15,6 @@ export interface AnalyticsMetrics {
     email: number;
     sms: number;
   };
-  customerSatisfaction: number;
   resolutionTime: {
     average: number;
     median: number;

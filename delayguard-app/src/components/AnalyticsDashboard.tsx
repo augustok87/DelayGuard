@@ -46,7 +46,6 @@ const defaultMetrics: AnalyticsMetrics = {
     email: 95.5,
     sms: 87.2,
   },
-  customerSatisfaction: 4.2,
   resolutionTime: {
     average: 2.3,
     median: 1.8,
@@ -243,10 +242,10 @@ function AnalyticsDashboard({
       <Card>
         <div style={{ textAlign: "center" }}>
           <Text variant="headingLg" as="h3">
-            {metrics.customerSatisfaction}/5
+            {metrics.resolutionTime.average} days
           </Text>
           <Text variant="bodyMd" tone="subdued">
-            Satisfaction
+            Avg Resolution
           </Text>
         </div>
       </Card>
