@@ -22,14 +22,14 @@ export const useSettings = () => {
 
   // Individual setting updates
   const updateDelayThreshold = useCallback(
-    async(threshold: number) => {
+    async (threshold: number) => {
       return dispatch(saveSettings({ ...settings, delayThreshold: threshold }));
     },
     [dispatch, settings],
   );
 
   const updateNotificationTemplate = useCallback(
-    async(template: string) => {
+    async (template: string) => {
       return dispatch(
         saveSettings({ ...settings, notificationTemplate: template }),
       );
@@ -37,7 +37,7 @@ export const useSettings = () => {
     [dispatch, settings],
   );
 
-  const toggleEmailNotifications = useCallback(async() => {
+  const toggleEmailNotifications = useCallback(async () => {
     return dispatch(
       saveSettings({
         ...settings,
@@ -46,7 +46,7 @@ export const useSettings = () => {
     );
   }, [dispatch, settings]);
 
-  const toggleSmsNotifications = useCallback(async() => {
+  const toggleSmsNotifications = useCallback(async () => {
     return dispatch(
       saveSettings({
         ...settings,
@@ -56,27 +56,27 @@ export const useSettings = () => {
   }, [dispatch, settings]);
 
   const updateTheme = useCallback(
-    async(theme: "light" | "dark") => {
+    async (theme: "light" | "dark") => {
       return dispatch(saveSettings({ ...settings, theme }));
     },
     [dispatch, settings],
   );
 
   const updateLanguage = useCallback(
-    async(language: string) => {
+    async (language: string) => {
       return dispatch(saveSettings({ ...settings, language }));
     },
     [dispatch, settings],
   );
 
   const updateAutoResolveDays = useCallback(
-    async(days: number) => {
+    async (days: number) => {
       return dispatch(saveSettings({ ...settings, autoResolveDays: days }));
     },
     [dispatch, settings],
   );
 
-  const toggleAnalytics = useCallback(async() => {
+  const toggleAnalytics = useCallback(async () => {
     return dispatch(
       saveSettings({ ...settings, enableAnalytics: !settings.enableAnalytics }),
     );
@@ -120,7 +120,7 @@ export const useSettings = () => {
 
   // Settings presets
   const applyPreset = useCallback(
-    async(preset: "conservative" | "balanced" | "aggressive") => {
+    async (preset: "conservative" | "balanced" | "aggressive") => {
       const presets: Record<string, Partial<AppSettings>> = {
         conservative: {
           delayThreshold: 5,
@@ -163,7 +163,7 @@ export const useSettings = () => {
   }, [settings]);
 
   const importSettings = useCallback(
-    async(file: File) => {
+    async (file: File) => {
       try {
         const text = await file.text();
         const importedSettings = JSON.parse(text) as AppSettings;
@@ -183,19 +183,19 @@ export const useSettings = () => {
 
   // Bulk update
   const updateSettings = useCallback(
-    async(newSettings: Partial<AppSettings>) => {
+    async (newSettings: Partial<AppSettings>) => {
       return dispatch(saveSettings({ ...settings, ...newSettings }));
     },
     [dispatch, settings],
   );
 
   // Reset to defaults
-  const resetToDefaults = useCallback(async() => {
+  const resetToDefaults = useCallback(async () => {
     return dispatch(resetSettings());
   }, [dispatch]);
 
   // Refresh settings
-  const refreshSettings = useCallback(async() => {
+  const refreshSettings = useCallback(async () => {
     return dispatch(fetchSettings());
   }, [dispatch]);
 

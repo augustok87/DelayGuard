@@ -2,6 +2,7 @@ import Router from "koa-router";
 import { logger } from "../utils/logger";
 import { query } from "../database/connection";
 import { addDelayCheckJob } from "../queue/setup";
+import { saveOrderLineItems } from "../services/shopify-service"; // Phase 1.2
 // import { OrderUpdateWebhook } from '../types'; // Available for future use
 import crypto from "crypto";
 
@@ -135,9 +136,9 @@ async function processOrderUpdate(
   orderData: ShopifyOrder,
 ): Promise<void> {
   try {
-    // Get shop ID
-    const shopResult = await query(
-      "SELECT id FROM shops WHERE shop_domain = $1",
+    // Get shop ID and access token (Phase 1.2: Need access token for product fetching)
+    const shopResult = await query<{ id: string; access_token: string }>(
+      "SELECT id, access_token FROM shops WHERE shop_domain = $1",
       [shopDomain],
     );
 
@@ -146,7 +147,8 @@ async function processOrderUpdate(
       return;
     }
 
-    const shopId = (shopResult[0] as { id: string }).id;
+    const shopId = shopResult[0].id;
+    const accessToken = shopResult[0].access_token;
 
     // Upsert order
     await query(
@@ -189,6 +191,23 @@ async function processOrderUpdate(
     );
 
     const orderId = (orderResult[0] as { id: string }).id;
+
+    // Phase 1.2: Fetch and save product line items from Shopify
+    try {
+      await saveOrderLineItems(
+        parseInt(orderId),
+        shopDomain,
+        accessToken,
+        orderData.id.toString(),
+      );
+      logger.info(`✅ Line items saved for order ${orderData.name}`);
+    } catch (lineItemError) {
+      // Don't fail the whole webhook if line items fail
+      logger.error("Failed to fetch/save line items", lineItemError as Error, {
+        orderId,
+        shopifyOrderId: orderData.id,
+      });
+    }
 
     // Process fulfillments if they exist
     if (orderData.fulfillments && orderData.fulfillments.length > 0) {

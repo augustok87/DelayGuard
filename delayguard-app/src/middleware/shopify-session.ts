@@ -61,7 +61,7 @@ export const getShopDomain = (ctx: Context): string => {
  *
  * @see https://shopify.dev/docs/apps/auth/oauth/session-tokens
  */
-export const requireAuth = async(ctx: Context, next: Next) => {
+export const requireAuth = async (ctx: Context, next: Next) => {
   // Development mode: Skip authentication for easier testing
   if (process.env.NODE_ENV === "development" && !ctx.headers.authorization) {
     logger.debug("Development mode: Allowing request without authentication");
@@ -242,7 +242,7 @@ export const requireAuth = async(ctx: Context, next: Next) => {
  * Similar to requireAuth but doesn't reject unauthenticated requests
  * Useful for endpoints that have different behavior for authenticated/unauthenticated users
  */
-export const optionalAuth = async(ctx: Context, next: Next) => {
+export const optionalAuth = async (ctx: Context, next: Next) => {
   const authHeader = ctx.headers.authorization;
 
   if (!authHeader) {

@@ -12,7 +12,7 @@ export const useAlertActions = () => {
   } = useToasts();
 
   const resolveAlert = useCallback(
-    async(alertId: string) => {
+    async (alertId: string) => {
       try {
         const result = await updateExistingAlert(alertId, {
           status: "resolved",
@@ -35,7 +35,7 @@ export const useAlertActions = () => {
   );
 
   const dismissAlert = useCallback(
-    async(alertId: string) => {
+    async (alertId: string) => {
       try {
         const result = await updateExistingAlert(alertId, {
           status: "dismissed",
@@ -57,7 +57,7 @@ export const useAlertActions = () => {
   );
 
   const deleteAlertPermanently = useCallback(
-    async(alertId: string) => {
+    async (alertId: string) => {
       try {
         const result = await deleteExistingAlert(alertId);
 
@@ -77,9 +77,9 @@ export const useAlertActions = () => {
   );
 
   const bulkResolveAlerts = useCallback(
-    async(alertIds: string[]) => {
+    async (alertIds: string[]) => {
       const results = await Promise.allSettled(
-        alertIds.map(async(id) => {
+        alertIds.map(async (id) => {
           try {
             const result = await updateExistingAlert(id, {
               status: "resolved",
@@ -121,9 +121,9 @@ export const useAlertActions = () => {
   );
 
   const bulkDismissAlerts = useCallback(
-    async(alertIds: string[]) => {
+    async (alertIds: string[]) => {
       const results = await Promise.allSettled(
-        alertIds.map(async(id) => {
+        alertIds.map(async (id) => {
           try {
             const result = await updateExistingAlert(id, {
               status: "dismissed",
@@ -162,9 +162,9 @@ export const useAlertActions = () => {
   );
 
   const bulkDeleteAlerts = useCallback(
-    async(alertIds: string[]) => {
+    async (alertIds: string[]) => {
       const results = await Promise.allSettled(
-        alertIds.map(async(id) => {
+        alertIds.map(async (id) => {
           try {
             const result = await deleteExistingAlert(id);
             return result;

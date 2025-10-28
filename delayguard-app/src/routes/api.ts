@@ -12,7 +12,7 @@ const router = new Router({ prefix: "/api" });
  *
  * @returns Array of delay alerts with order information
  */
-router.get("/alerts", requireAuth, async(ctx: Context) => {
+router.get("/alerts", requireAuth, async (ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
 
@@ -69,7 +69,7 @@ router.get("/alerts", requireAuth, async(ctx: Context) => {
  * @query limit - Number of orders to return (default: 50, max: 200)
  * @returns Array of orders with alert counts
  */
-router.get("/orders", requireAuth, async(ctx: Context) => {
+router.get("/orders", requireAuth, async (ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
     const limit = Math.min(parseInt(ctx.query.limit as string) || 50, 200);
@@ -132,7 +132,7 @@ router.get("/orders", requireAuth, async(ctx: Context) => {
  *
  * @returns Shop's app settings
  */
-router.get("/settings", requireAuth, async(ctx: Context) => {
+router.get("/settings", requireAuth, async (ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
 
@@ -223,7 +223,7 @@ router.get("/settings", requireAuth, async(ctx: Context) => {
  * @body notification_template - Template name for notifications
  * @body custom_message - Custom message for notifications
  */
-router.put("/settings", requireAuth, async(ctx: Context) => {
+router.put("/settings", requireAuth, async (ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
     const {
@@ -297,7 +297,7 @@ router.put("/settings", requireAuth, async(ctx: Context) => {
  *
  * @returns Analytics data including alert stats and order stats
  */
-router.get("/analytics", requireAuth, async(ctx: Context) => {
+router.get("/analytics", requireAuth, async (ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
 
@@ -361,7 +361,7 @@ router.get("/analytics", requireAuth, async(ctx: Context) => {
  *
  * @returns Shop details
  */
-router.get("/shop", requireAuth, async(ctx: Context) => {
+router.get("/shop", requireAuth, async (ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
 
@@ -410,7 +410,7 @@ router.get("/shop", requireAuth, async(ctx: Context) => {
  * Health check endpoint for API routes
  * Does not require authentication
  */
-router.get("/health", async(ctx: Context) => {
+router.get("/health", async (ctx: Context) => {
   ctx.status = 200;
   ctx.body = {
     status: "ok",

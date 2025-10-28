@@ -110,7 +110,7 @@ export function withErrorHandling<T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
   context: ErrorContext = {},
 ) {
-  return async(...args: T): Promise<Result<R>> => {
+  return async (...args: T): Promise<Result<R>> => {
     try {
       const data = await fn(...args);
       return { success: true, data };
@@ -208,7 +208,7 @@ export function createSafeAsyncFunction<T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
   context: ErrorContext = {},
 ) {
-  return async(...args: T): Promise<Result<R>> => {
+  return async (...args: T): Promise<Result<R>> => {
     return withErrorHandling(fn, context)(...args);
   };
 }

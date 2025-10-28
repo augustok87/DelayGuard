@@ -90,7 +90,7 @@ function AnalyticsDashboard({
 
   useEffect(() => {
     // Load initial data
-    const loadInitialData = async() => {
+    const loadInitialData = async () => {
       try {
         setLoading(true);
         setError(null);

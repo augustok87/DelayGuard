@@ -96,7 +96,7 @@ function MinimalApp() {
 
   // Data initialization - use mock API if available, otherwise use local mock data
   useEffect(() => {
-    const loadData = async() => {
+    const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -182,7 +182,7 @@ function MinimalApp() {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  const handleSaveSettings = async() => {
+  const handleSaveSettings = async () => {
     try {
       logInfo("Saving settings", {
         component: "MinimalApp",
@@ -294,7 +294,7 @@ function MinimalApp() {
   };
   handleNextPage.displayName = "handleNextPage";
 
-  const handleRefresh = async() => {
+  const handleRefresh = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -407,7 +407,7 @@ function MinimalApp() {
             description="No delay alerts are currently active. New alerts will appear here when shipping delays are detected."
             action={{
               label: "Test Delay Detection",
-              onClick: async() => {
+              onClick: async () => {
                 try {
                   logInfo("Testing delay detection", {
                     component: "MinimalApp",
@@ -477,7 +477,7 @@ function MinimalApp() {
             <Button
               size="sm"
               variant="secondary"
-              onClick={async() => {
+              onClick={async () => {
                 try {
                   logInfo("Testing delay detection", {
                     component: "MinimalApp",
@@ -1070,7 +1070,7 @@ function MinimalApp() {
             type="date"
             data-testid="start-date"
             value={settings.dateRange.start}
-            onChange={async(e) => {
+            onChange={async (e) => {
               const newStartDate = e.target.value;
               setSettings((prev) => ({
                 ...prev,

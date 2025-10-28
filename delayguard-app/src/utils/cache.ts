@@ -172,7 +172,7 @@ export function getCache(type: keyof typeof CACHE_CONFIGS): CacheManager {
 
 // Cache decorator for methods
 export function cached(cacheType: keyof typeof CACHE_CONFIGS, ttl?: number) {
-  return function(
+  return function (
     target: unknown,
     propertyName: string,
     descriptor: PropertyDescriptor,
@@ -180,7 +180,7 @@ export function cached(cacheType: keyof typeof CACHE_CONFIGS, ttl?: number) {
     const method = descriptor.value;
     const cache = getCache(cacheType);
 
-    descriptor.value = async function(...args: unknown[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const cacheKey = `${propertyName}:${JSON.stringify(args)}`;
 
       // Try to get from cache

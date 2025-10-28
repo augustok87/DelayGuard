@@ -15,7 +15,7 @@ const router = new Router({ prefix: "/billing" });
  * GET /billing/plans
  * Get available subscription plans
  */
-router.get("/plans", async(ctx: Context) => {
+router.get("/plans", async (ctx: Context) => {
   try {
     const plans = {
       free: billingService.getPlanConfig("free"),
@@ -39,7 +39,7 @@ router.get("/plans", async(ctx: Context) => {
  * GET /billing/subscription
  * Get current subscription for authenticated shop
  */
-router.get("/subscription", async(ctx: Context) => {
+router.get("/subscription", async (ctx: Context) => {
   try {
     // Get shop from session (set by Shopify auth middleware)
     const shop = ctx.session?.shop;
@@ -86,7 +86,7 @@ router.get("/subscription", async(ctx: Context) => {
  * 2. Redirect merchant to charge confirmation URL
  * 3. Handle callback after confirmation
  */
-router.post("/subscribe", async(ctx: Context) => {
+router.post("/subscribe", async (ctx: Context) => {
   try {
     const { plan_name } = ctx.request.body as {
       plan_name: "free" | "pro" | "enterprise";
@@ -180,7 +180,7 @@ router.post("/subscribe", async(ctx: Context) => {
  * GET /billing/callback
  * Handle Shopify billing callback after charge confirmation
  */
-router.get("/callback", async(ctx: Context) => {
+router.get("/callback", async (ctx: Context) => {
   try {
     const { charge_id } = ctx.query as { charge_id: string };
     const shop = ctx.session?.shop;
@@ -220,7 +220,7 @@ router.get("/callback", async(ctx: Context) => {
  * POST /billing/cancel
  * Cancel current subscription
  */
-router.post("/cancel", async(ctx: Context) => {
+router.post("/cancel", async (ctx: Context) => {
   try {
     const shop = ctx.session?.shop;
 
@@ -264,7 +264,7 @@ router.post("/cancel", async(ctx: Context) => {
  * GET /billing/usage
  * Get current billing period usage
  */
-router.get("/usage", async(ctx: Context) => {
+router.get("/usage", async (ctx: Context) => {
   try {
     const shop = ctx.session?.shop;
 

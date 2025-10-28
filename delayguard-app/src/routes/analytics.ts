@@ -7,7 +7,7 @@ const router = new Router();
 const analyticsService = new AnalyticsService();
 
 // Get analytics metrics
-router.get("/analytics", async(ctx) => {
+router.get("/analytics", async (ctx) => {
   try {
     const shopId = ctx.state.shopify?.session?.shop || ctx.query.shop;
     const timeRange =
@@ -46,7 +46,7 @@ router.get("/analytics", async(ctx) => {
 });
 
 // Get real-time metrics
-router.get("/analytics/realtime", async(ctx) => {
+router.get("/analytics/realtime", async (ctx) => {
   try {
     const shopId = ctx.state.shopify?.session?.shop || ctx.query.shop;
 
@@ -79,7 +79,7 @@ router.get("/analytics/realtime", async(ctx) => {
 });
 
 // Get analytics summary
-router.get("/analytics/summary", async(ctx) => {
+router.get("/analytics/summary", async (ctx) => {
   try {
     const shopId = ctx.state.shopify?.session?.shop || ctx.query.shop;
 
@@ -139,7 +139,7 @@ router.get("/analytics/summary", async(ctx) => {
 });
 
 // Clear analytics cache
-router.delete("/analytics/cache", async(ctx) => {
+router.delete("/analytics/cache", async (ctx) => {
   try {
     const shopId = ctx.state.shopify?.session?.shop || ctx.query.shop;
 
@@ -171,7 +171,7 @@ router.delete("/analytics/cache", async(ctx) => {
 });
 
 // Get analytics export data
-router.get("/analytics/export", async(ctx) => {
+router.get("/analytics/export", async (ctx) => {
   try {
     const shopId = ctx.state.shopify?.session?.shop || ctx.query.shop;
     const format = (ctx.query.format as "json" | "csv") || "json";

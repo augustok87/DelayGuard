@@ -170,7 +170,7 @@ describe("ErrorBoundary", () => {
   });
 
   describe("Accessibility", () => {
-    it("should be accessible", async() => {
+    it("should be accessible", async () => {
       const { container } = render(
         <ErrorBoundary>
           <ThrowError shouldThrow={true} />

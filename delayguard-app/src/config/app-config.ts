@@ -46,6 +46,7 @@ export const appConfig: AppConfig = {
       "write_orders",
       "read_fulfillments",
       "write_fulfillments",
+      "read_products", // Phase 1.2: Required for fetching product line items
     ],
   },
   database: {

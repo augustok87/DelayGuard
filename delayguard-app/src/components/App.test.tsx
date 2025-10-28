@@ -31,7 +31,7 @@ describe("App", () => {
   });
 
   describe("Accessibility", () => {
-    it("should be accessible", async() => {
+    it("should be accessible", async () => {
       const { container } = render(<App />);
 
       const results = await axe(container);

@@ -116,7 +116,7 @@ export const EventUtils = {
   /**
    * Debounce function for event handlers
    */
-  debounce<T extends(...args: unknown[]) => void>(
+  debounce<T extends (...args: unknown[]) => void>(
     func: T,
     wait: number,
   ): (...args: Parameters<T>) => void {
@@ -130,7 +130,7 @@ export const EventUtils = {
   /**
    * Throttle function for event handlers
    */
-  throttle<T extends(...args: unknown[]) => void>(
+  throttle<T extends (...args: unknown[]) => void>(
     func: T,
     limit: number,
   ): (...args: Parameters<T>) => void {

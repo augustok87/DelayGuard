@@ -32,7 +32,7 @@ export const useAsync = <T, Args extends unknown[] = unknown[]>(
   }, []);
 
   const execute = useCallback(
-    async(...args: Args) => {
+    async (...args: Args) => {
       if (!isMountedRef.current) return;
 
       if (resetOnExecute) {
@@ -110,7 +110,7 @@ export const useAsyncCallback = <
   }, []);
 
   const execute = useCallback(
-    async(...args: Parameters<T>) => {
+    async (...args: Parameters<T>) => {
       if (!isMountedRef.current) return;
 
       setState((prev) => ({ ...prev, loading: true, error: null }));

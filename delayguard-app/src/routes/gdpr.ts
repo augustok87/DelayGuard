@@ -39,7 +39,7 @@ function verifyGDPRWebhook(data: string, hmac: string): boolean {
  * Shopify sends this when a customer requests their data
  * Must respond with all customer data within 30 days
  */
-router.post("/customers/data_request", async(ctx) => {
+router.post("/customers/data_request", async (ctx) => {
   const hmac = ctx.get("X-Shopify-Hmac-Sha256");
   const body = ctx.request.rawBody || JSON.stringify(ctx.request.body);
   const shop = ctx.get("X-Shopify-Shop-Domain");
@@ -81,7 +81,7 @@ router.post("/customers/data_request", async(ctx) => {
  * Shopify sends this when a customer requests data deletion
  * Must anonymize/delete customer data within 30 days
  */
-router.post("/customers/redact", async(ctx) => {
+router.post("/customers/redact", async (ctx) => {
   const hmac = ctx.get("X-Shopify-Hmac-Sha256");
   const body = ctx.request.rawBody || JSON.stringify(ctx.request.body);
   const shop = ctx.get("X-Shopify-Shop-Domain");
@@ -123,7 +123,7 @@ router.post("/customers/redact", async(ctx) => {
  * Shopify sends this 48 hours after app uninstall
  * Must delete all shop data
  */
-router.post("/shop/redact", async(ctx) => {
+router.post("/shop/redact", async (ctx) => {
   const hmac = ctx.get("X-Shopify-Hmac-Sha256");
   const body = ctx.request.rawBody || JSON.stringify(ctx.request.body);
   const shop = ctx.get("X-Shopify-Shop-Domain");
