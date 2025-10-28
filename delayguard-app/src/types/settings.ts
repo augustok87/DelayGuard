@@ -53,7 +53,7 @@ export interface NotificationPreferences {
    * Email notification recipients
    * @default ['customers']
    */
-  emailRecipients: Array<'merchant' | 'customers'>;
+  emailRecipients: Array<"merchant" | "customers">;
 
   /**
    * Enable SMS notifications (requires Pro plan)
@@ -65,7 +65,7 @@ export interface NotificationPreferences {
    * SMS notification recipients
    * @default ['customers']
    */
-  smsRecipients: Array<'merchant' | 'customers'>;
+  smsRecipients: Array<"merchant" | "customers">;
 }
 
 /**
@@ -95,7 +95,7 @@ export interface MonitoringConfig {
   /**
    * System status indicator
    */
-  systemStatus?: 'active' | 'paused' | 'error';
+  systemStatus?: "active" | "paused" | "error";
 }
 
 /**
@@ -152,13 +152,13 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   notifications: {
     emailEnabled: true,
-    emailRecipients: ['customers'],
+    emailRecipients: ["customers"],
     smsEnabled: false,
-    smsRecipients: ['customers'],
+    smsRecipients: ["customers"],
   },
   monitoring: {
     updateIntervalMinutes: 120, // 2 hours
-    systemStatus: 'active',
+    systemStatus: "active",
   },
 };
 
@@ -166,26 +166,27 @@ export const DEFAULT_SETTINGS: AppSettings = {
  * Validates delay detection rules
  * Ensures all values are within acceptable ranges
  */
-export function validateDetectionRules(
-  rules: Partial<DelayDetectionRules>,
-): { valid: boolean; errors: string[] } {
+export function validateDetectionRules(rules: Partial<DelayDetectionRules>): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   if (rules.preShipmentAlertDays !== undefined) {
     if (rules.preShipmentAlertDays < 0) {
-      errors.push('Pre-shipment alert days cannot be negative');
+      errors.push("Pre-shipment alert days cannot be negative");
     }
     if (rules.preShipmentAlertDays > 30) {
-      errors.push('Pre-shipment alert days cannot exceed 30');
+      errors.push("Pre-shipment alert days cannot exceed 30");
     }
   }
 
   if (rules.extendedTransitAlertDays !== undefined) {
     if (rules.extendedTransitAlertDays < 0) {
-      errors.push('Extended transit alert days cannot be negative');
+      errors.push("Extended transit alert days cannot be negative");
     }
     if (rules.extendedTransitAlertDays > 30) {
-      errors.push('Extended transit alert days cannot exceed 30');
+      errors.push("Extended transit alert days cannot exceed 30");
     }
   }
 
@@ -199,17 +200,18 @@ export function validateDetectionRules(
  * Validates monitoring configuration
  * Ensures update interval is within acceptable range
  */
-export function validateMonitoringConfig(
-  config: Partial<MonitoringConfig>,
-): { valid: boolean; errors: string[] } {
+export function validateMonitoringConfig(config: Partial<MonitoringConfig>): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   if (config.updateIntervalMinutes !== undefined) {
     if (config.updateIntervalMinutes < 30) {
-      errors.push('Update interval cannot be less than 30 minutes');
+      errors.push("Update interval cannot be less than 30 minutes");
     }
     if (config.updateIntervalMinutes > 1440) {
-      errors.push('Update interval cannot exceed 24 hours (1440 minutes)');
+      errors.push("Update interval cannot exceed 24 hours (1440 minutes)");
     }
   }
 
@@ -223,9 +225,10 @@ export function validateMonitoringConfig(
  * Validates complete settings object
  * Performs comprehensive validation across all sections
  */
-export function validateSettings(
-  settings: Partial<AppSettings>,
-): { valid: boolean; errors: string[] } {
+export function validateSettings(settings: Partial<AppSettings>): {
+  valid: boolean;
+  errors: string[];
+} {
   const allErrors: string[] = [];
 
   if (settings.detectionRules) {
@@ -248,9 +251,7 @@ export function validateSettings(
  * Merges partial settings with defaults
  * Creates a complete AppSettings object from partial updates
  */
-export function mergeWithDefaults(
-  partial: Partial<AppSettings>,
-): AppSettings {
+export function mergeWithDefaults(partial: Partial<AppSettings>): AppSettings {
   return {
     detectionRules: {
       ...DEFAULT_SETTINGS.detectionRules,

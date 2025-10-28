@@ -36,11 +36,44 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     return <span className={`${styles.badge} ${statusInfo.class}`}>{statusInfo.text}</span>;
   };
 
-  const getPriorityColor = (delayDays: number) => {
-    if (delayDays >= 7) return '#dc2626'; // Critical - red
-    if (delayDays >= 4) return '#ea580c'; // High - orange
-    if (delayDays >= 2) return '#d97706'; // Medium - amber
+  // Phase 1.1: Enhanced priority color that considers both delay days AND order value
+  const getPriorityColor = (delayDays: number, orderTotal?: number) => {
+    // Critical: 7+ days OR high-value orders ($500+) with any delay
+    if (delayDays >= 7 || (orderTotal && orderTotal >= 500 && delayDays >= 3)) {
+      return '#dc2626'; // Critical - red
+    }
+    // High: 4+ days OR medium-value orders ($200+) with 3+ day delay
+    if (delayDays >= 4 || (orderTotal && orderTotal >= 200 && delayDays >= 2)) {
+      return '#ea580c'; // High - orange
+    }
+    // Medium: 2+ days
+    if (delayDays >= 2) {
+      return '#d97706'; // Medium - amber
+    }
+    // Low: < 2 days
     return '#059669'; // Low - green
+  };
+
+  // Phase 1.1: Get priority level badge
+  const getPriorityBadge = (delayDays: number, orderTotal?: number) => {
+    if (delayDays >= 7 || (orderTotal && orderTotal >= 500 && delayDays >= 3)) {
+      return { label: 'CRITICAL', color: '#dc2626', bgColor: '#fee2e2', borderColor: '#fecaca' };
+    }
+    if (delayDays >= 4 || (orderTotal && orderTotal >= 200 && delayDays >= 2)) {
+      return { label: 'HIGH', color: '#ea580c', bgColor: '#ffedd5', borderColor: '#fed7aa' };
+    }
+    if (delayDays >= 2) {
+      return { label: 'MEDIUM', color: '#d97706', bgColor: '#fef3c7', borderColor: '#fde68a' };
+    }
+    return { label: 'LOW', color: '#059669', bgColor: '#d1fae5', borderColor: '#a7f3d0' };
+  };
+
+  // Phase 1.1: Format currency
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+    }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
@@ -111,10 +144,20 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     );
   };
 
+  // Phase 1.1 & 1.3: Enhanced notification status with engagement tracking
   const renderNotificationStatus = () => {
     if (!alert.notificationStatus) return null;
 
-    const { emailSent, emailSentAt, smsSent, smsSentAt } = alert.notificationStatus;
+    const {
+      emailSent,
+      emailSentAt,
+      emailOpened,
+      emailOpenedAt,
+      emailClicked,
+      emailClickedAt,
+      smsSent,
+      smsSentAt,
+    } = alert.notificationStatus;
     const hasNotifications = emailSent || smsSent;
 
     if (!hasNotifications && emailSent === false && smsSent === false) {
@@ -137,10 +180,29 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
         <div className={styles.notificationList}>
           {emailSent && (
             <div className={styles.notificationItem}>
-              <span className={styles.notificationIcon}>✉️</span>
-              <span className={styles.notificationText}>
-                Email sent {emailSentAt && `on ${formatDateShort(emailSentAt)}`}
+              <span className={styles.notificationIcon}>
+                {emailOpened ? '📧' : '✉️'}
               </span>
+              <div className={styles.notificationDetails}>
+                <span className={styles.notificationText}>
+                  Email sent {emailSentAt && `on ${formatDateShort(emailSentAt)}`}
+                </span>
+                {emailOpened && (
+                  <span className={`${styles.badge} ${styles.badgeSuccess}`} style={{ marginLeft: '0.5rem', fontSize: '0.7rem' }}>
+                    ✓ Opened {emailOpenedAt && `on ${formatDateShort(emailOpenedAt)}`}
+                  </span>
+                )}
+                {emailClicked && (
+                  <span className={`${styles.badge} ${styles.badgeInfo}`} style={{ marginLeft: '0.5rem', fontSize: '0.7rem' }}>
+                    🔗 Clicked {emailClickedAt && `on ${formatDateShort(emailClickedAt)}`}
+                  </span>
+                )}
+                {emailSent && !emailOpened && (
+                  <span className={styles.notificationHint} style={{ marginLeft: '0.5rem', fontSize: '0.7rem', color: '#6b7280' }}>
+                    Not opened yet
+                  </span>
+                )}
+              </div>
             </div>
           )}
           {smsSent && (
@@ -149,6 +211,65 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
               <span className={styles.notificationText}>
                 SMS sent {smsSentAt && `on ${formatDateShort(smsSentAt)}`}
               </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Phase 1.2: Product Information Display
+  const renderProductDetails = () => {
+    if (!alert.lineItems || alert.lineItems.length === 0) return null;
+
+    const MAX_ITEMS_TO_SHOW = 5;
+    const displayItems = alert.lineItems.slice(0, MAX_ITEMS_TO_SHOW);
+    const remainingCount = alert.lineItems.length - MAX_ITEMS_TO_SHOW;
+
+    return (
+      <div className={styles.productDetails}>
+        <h5 className={styles.sectionTitle}>Order Contents ({alert.lineItems.length} items)</h5>
+        <div className={styles.lineItemsContainer}>
+          {displayItems.map((item) => (
+            <div key={item.id} className={styles.lineItem}>
+              {/* Product image or placeholder */}
+              {item.imageUrl ? (
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className={styles.productThumbnail}
+                />
+              ) : (
+                <div className={styles.productPlaceholder}>📦</div>
+              )}
+
+              {/* Product information */}
+              <div className={styles.itemInfo}>
+                <p className={styles.productTitle}>{item.title}</p>
+                {item.variantTitle && (
+                  <p className={styles.variant}>{item.variantTitle}</p>
+                )}
+                <div className={styles.itemMeta}>
+                  <span className={styles.metaItem}>SKU: {item.sku || 'N/A'}</span>
+                  <span className={styles.metaSeparator}>•</span>
+                  <span className={styles.metaItem}>Qty: {item.quantity}</span>
+                  <span className={styles.metaSeparator}>•</span>
+                  <span className={styles.metaItem}>${item.price.toFixed(2)}</span>
+                </div>
+                {/* Product type badge */}
+                {item.productType && (
+                  <span className={styles.productTypeBadge}>{item.productType}</span>
+                )}
+                {/* Vendor name */}
+                {item.vendor && (
+                  <span className={styles.vendorName}>by {item.vendor}</span>
+                )}
+              </div>
+            </div>
+          ))}
+          {remainingCount > 0 && (
+            <div className={styles.moreItems}>
+              +{remainingCount} more items
             </div>
           )}
         </div>
@@ -228,22 +349,59 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     );
   };
 
+  // Phase 1.1: Get priority info
+  const priorityBadge = getPriorityBadge(alert.delayDays, alert.totalAmount);
+
   return (
     <div className={`${styles.alertCard} ${styles[variant]}`}>
       <div className={styles.header}>
         <div className={styles.orderInfo}>
-          <h4 className={styles.orderId}>Order #{alert.orderId}</h4>
+          <div className={styles.orderHeader}>
+            <h4 className={styles.orderId}>Order #{alert.orderId}</h4>
+            {/* Phase 1.1: Order total prominently displayed */}
+            {alert.totalAmount && (
+              <span className={styles.orderTotal}>
+                {formatCurrency(alert.totalAmount, alert.currency)}
+              </span>
+            )}
+          </div>
           <p className={styles.customerName}>{alert.customerName}</p>
+          {/* Phase 1.1: Email and phone more prominent */}
+          <div className={styles.contactDetails}>
+            {alert.customerEmail && (
+              <span className={styles.contactItem}>
+                <span className={styles.contactIcon}>✉️</span>
+                {alert.customerEmail}
+              </span>
+            )}
+            {alert.customerPhone && (
+              <span className={styles.contactItem}>
+                <span className={styles.contactIcon}>📞</span>
+                {alert.customerPhone}
+              </span>
+            )}
+          </div>
         </div>
         <div className={styles.status}>
           {getStatusBadge(alert.status)}
+          {/* Phase 1.1: Priority badge */}
+          <span
+            className={styles.priorityBadge}
+            style={{
+              color: priorityBadge.color,
+              backgroundColor: priorityBadge.bgColor,
+              borderColor: priorityBadge.borderColor,
+            }}
+          >
+            {priorityBadge.label}
+          </span>
         </div>
       </div>
 
       <div className={styles.content}>
         {/* Delay Information */}
         <div className={styles.delayInfo}>
-          <div className={styles.delayDays} style={{ color: getPriorityColor(alert.delayDays) }}>
+          <div className={styles.delayDays} style={{ color: getPriorityColor(alert.delayDays, alert.totalAmount) }}>
             {getDaysText(alert.delayDays)} delay
           </div>
           <div className={styles.createdAt}>
@@ -259,14 +417,7 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
         {/* Priority 3: Delay Reason */}
         {renderDelayReason()}
 
-        {/* Basic Contact/Tracking Info */}
-        {alert.customerEmail && (
-          <div className={styles.contactInfo}>
-            <span className={styles.label}>Email:</span>
-            <span className={styles.value}>{alert.customerEmail}</span>
-          </div>
-        )}
-
+        {/* Tracking Info */}
         {alert.trackingNumber && (
           <div className={styles.trackingInfo}>
             <span className={styles.label}>Tracking:</span>
@@ -282,6 +433,9 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
 
         {/* Priority 3: Notification Status */}
         {renderNotificationStatus()}
+
+        {/* Phase 1.2: Product Information */}
+        {renderProductDetails()}
 
         {/* Priority 3: Suggested Actions */}
         {renderSuggestedActions()}

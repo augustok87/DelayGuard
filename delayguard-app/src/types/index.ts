@@ -67,7 +67,7 @@ export type {
   NotificationPreferences,
   MonitoringConfig,
   SettingsUpdatePayload,
-} from './settings';
+} from "./settings";
 
 export {
   DEFAULT_SETTINGS as DEFAULT_SETTINGS_V2,
@@ -75,7 +75,21 @@ export {
   validateMonitoringConfig,
   validateSettings as validateSettingsV2,
   mergeWithDefaults,
-} from './settings';
+} from "./settings";
+
+// Phase 1.2: Order Line Item (Product Information)
+export interface OrderLineItem {
+  id: string;
+  productId: string;
+  title: string;
+  variantTitle?: string;
+  sku?: string;
+  quantity: number;
+  price: number;
+  productType?: string;
+  vendor?: string;
+  imageUrl?: string;
+}
 
 export interface DelayAlert {
   id: string;
@@ -86,22 +100,34 @@ export interface DelayAlert {
   createdAt: string;
   resolvedAt?: string;
   customerEmail?: string;
+  customerPhone?: string;
   trackingNumber?: string;
   carrierCode?: string;
   severity?: "low" | "medium" | "high" | "critical";
   delayReason?: string;
   priority?: "low" | "medium" | "high" | "critical";
 
+  // Phase 1.1: Financial context
+  totalAmount?: number; // Order total value
+  currency?: string; // Order currency (USD, EUR, etc.)
+
+  // Phase 1.2: Product information
+  lineItems?: OrderLineItem[]; // Products in the order
+
   // Priority 3: Enhanced fields for better UX
-  originalEta?: string;           // Original estimated delivery date
-  revisedEta?: string;             // New/revised estimated delivery date from carrier
+  originalEta?: string; // Original estimated delivery date
+  revisedEta?: string; // New/revised estimated delivery date from carrier
   notificationStatus?: {
     emailSent?: boolean;
     emailSentAt?: string;
+    emailOpened?: boolean; // Phase 1.3: Email engagement tracking
+    emailOpenedAt?: string; // Phase 1.3: When email was opened
+    emailClicked?: boolean; // Phase 1.3: Email link click tracking
+    emailClickedAt?: string; // Phase 1.3: When email link was clicked
     smsSent?: boolean;
     smsSentAt?: string;
   };
-  suggestedActions?: string[];     // Actionable recommendations for merchant
+  suggestedActions?: string[]; // Actionable recommendations for merchant
   trackingEvents?: TrackingEvent[]; // Timeline of tracking events
 }
 
@@ -125,6 +151,8 @@ export interface Order {
   customerEmail?: string;
   totalAmount?: number;
   currency?: string;
+  // Phase 1.2: Product information
+  lineItems?: OrderLineItem[];
 }
 
 export interface StatsData {

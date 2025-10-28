@@ -135,6 +135,27 @@ async function runMigrations(): Promise<void> {
       )
     `);
 
+    // Phase 1.2: Create order_line_items table for product information
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS order_line_items (
+        id SERIAL PRIMARY KEY,
+        order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+        shopify_line_item_id VARCHAR(255) NOT NULL,
+        product_id VARCHAR(255) NOT NULL,
+        title VARCHAR(500) NOT NULL,
+        variant_title VARCHAR(500),
+        sku VARCHAR(255),
+        quantity INTEGER NOT NULL,
+        price NUMERIC(10, 2) NOT NULL,
+        product_type VARCHAR(255),
+        vendor VARCHAR(255),
+        image_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(order_id, shopify_line_item_id)
+      )
+    `);
+
     // Create indexes for performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_orders_shop_id ON orders(shop_id);
@@ -142,6 +163,8 @@ async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_fulfillments_order_id ON fulfillments(order_id);
       CREATE INDEX IF NOT EXISTS idx_delay_alerts_order_id ON delay_alerts(order_id);
       CREATE INDEX IF NOT EXISTS idx_delay_alerts_created_at ON delay_alerts(created_at);
+      CREATE INDEX IF NOT EXISTS idx_order_line_items_order_id ON order_line_items(order_id);
+      CREATE INDEX IF NOT EXISTS idx_order_line_items_shopify_id ON order_line_items(shopify_line_item_id);
     `);
 
     logInfo("Database migrations completed", { component: "database" });

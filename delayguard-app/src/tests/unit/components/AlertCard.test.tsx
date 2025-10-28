@@ -1,11 +1,10 @@
 /**
- * AlertCard Component Tests
+ * AlertCard Component Tests (Updated for Phase 1.1)
  *
  * Test suite for the enhanced AlertCard component that displays comprehensive
- * delay alert information including delay reason, revised ETA, notification status,
- * suggested actions, and tracking timeline.
- *
- * Priority 3: Tests for missing critical information now included in alert cards.
+ * delay alert information including:
+ * - Phase 1.1: Order total, priority badges, enhanced contact info, email engagement tracking
+ * - Priority 3: Delay reason, revised ETA, notification status, suggested actions, tracking timeline
  */
 
 import React from 'react';
@@ -46,6 +45,286 @@ describe('AlertCard', () => {
     });
   });
 
+  describe('Phase 1.1: Order Total Display', () => {
+    it('should display order total when provided', () => {
+      const alertWithTotal = {
+        ...baseAlert,
+        totalAmount: 384.99,
+        currency: 'USD',
+      };
+
+      render(<AlertCard alert={alertWithTotal} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('$384.99')).toBeInTheDocument();
+    });
+
+    it('should format currency correctly for different currencies', () => {
+      const alertWithEuro = {
+        ...baseAlert,
+        totalAmount: 299.50,
+        currency: 'EUR',
+      };
+
+      render(<AlertCard alert={alertWithEuro} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(/299.50/)).toBeInTheDocument();
+    });
+
+    it('should not display order total when not provided', () => {
+      render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+
+      // Should not have the orderTotal class
+      const { container } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+      expect(container.querySelector('.orderTotal')).not.toBeInTheDocument();
+    });
+
+    it('should display order total with proper styling', () => {
+      const alertWithTotal = {
+        ...baseAlert,
+        totalAmount: 500.00,
+        currency: 'USD',
+      };
+
+      const { container } = render(<AlertCard alert={alertWithTotal} onAction={mockOnAction} variant="active" />);
+
+      const orderTotal = container.querySelector('.orderTotal');
+      expect(orderTotal).toBeInTheDocument();
+    });
+  });
+
+  describe('Phase 1.1: Priority Badge System', () => {
+    it('should display CRITICAL priority for 7+ day delays', () => {
+      const criticalAlert = {
+        ...baseAlert,
+        delayDays: 7,
+        totalAmount: 200,
+      };
+
+      render(<AlertCard alert={criticalAlert} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('CRITICAL')).toBeInTheDocument();
+    });
+
+    it('should display CRITICAL priority for high-value orders ($500+) with 3+ day delays', () => {
+      const highValueAlert = {
+        ...baseAlert,
+        delayDays: 3,
+        totalAmount: 550,
+      };
+
+      render(<AlertCard alert={highValueAlert} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('CRITICAL')).toBeInTheDocument();
+    });
+
+    it('should display HIGH priority for 4+ day delays', () => {
+      const highAlert = {
+        ...baseAlert,
+        delayDays: 4,
+        totalAmount: 100,
+      };
+
+      render(<AlertCard alert={highAlert} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('HIGH')).toBeInTheDocument();
+    });
+
+    it('should display HIGH priority for $200+ orders with 2+ day delays', () => {
+      const mediumValueAlert = {
+        ...baseAlert,
+        delayDays: 2,
+        totalAmount: 250,
+      };
+
+      render(<AlertCard alert={mediumValueAlert} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('HIGH')).toBeInTheDocument();
+    });
+
+    it('should display MEDIUM priority for 2-3 day delays', () => {
+      const mediumAlert = {
+        ...baseAlert,
+        delayDays: 2,
+        totalAmount: 50,
+      };
+
+      render(<AlertCard alert={mediumAlert} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('MEDIUM')).toBeInTheDocument();
+    });
+
+    it('should display LOW priority for < 2 day delays', () => {
+      const lowAlert = {
+        ...baseAlert,
+        delayDays: 1,
+        totalAmount: 30,
+      };
+
+      render(<AlertCard alert={lowAlert} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('LOW')).toBeInTheDocument();
+    });
+
+    it('should display priority badge with correct styling', () => {
+      const { container } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+
+      const priorityBadge = container.querySelector('.priorityBadge');
+      expect(priorityBadge).toBeInTheDocument();
+    });
+  });
+
+  describe('Phase 1.1: Enhanced Contact Information', () => {
+    it('should display customer email prominently', () => {
+      render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(baseAlert.customerEmail!)).toBeInTheDocument();
+    });
+
+    it('should display customer phone when provided', () => {
+      const alertWithPhone = {
+        ...baseAlert,
+        customerPhone: '+1-555-0123',
+      };
+
+      render(<AlertCard alert={alertWithPhone} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('+1-555-0123')).toBeInTheDocument();
+    });
+
+    it('should display both email and phone in contact details section', () => {
+      const alertWithContact = {
+        ...baseAlert,
+        customerEmail: 'john@example.com',
+        customerPhone: '+1-555-0123',
+      };
+
+      const { container } = render(<AlertCard alert={alertWithContact} onAction={mockOnAction} variant="active" />);
+
+      const contactDetails = container.querySelector('.contactDetails');
+      expect(contactDetails).toBeInTheDocument();
+
+      const contactItems = container.querySelectorAll('.contactItem');
+      expect(contactItems.length).toBe(2); // Email and phone
+    });
+
+    it('should display contact info with icons', () => {
+      const alertWithContact = {
+        ...baseAlert,
+        customerPhone: '+1-555-0123',
+      };
+
+      render(<AlertCard alert={alertWithContact} onAction={mockOnAction} variant="active" />);
+
+      // Check for presence of icons (emojis in this case)
+      expect(screen.getByText(/✉️/)).toBeInTheDocument();
+      expect(screen.getByText(/📞/)).toBeInTheDocument();
+    });
+  });
+
+  describe('Phase 1.1: Email Engagement Tracking', () => {
+    it('should display "Opened" badge when email is opened', () => {
+      const alertWithOpened = {
+        ...baseAlert,
+        notificationStatus: {
+          emailSent: true,
+          emailSentAt: '2025-10-20T10:05:00Z',
+          emailOpened: true,
+          emailOpenedAt: '2025-10-21T14:30:00Z', // Different date for opened
+        },
+      };
+
+      render(<AlertCard alert={alertWithOpened} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(/Opened/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Oct \d{1,2}, 2025/).length).toBeGreaterThan(0);
+    });
+
+    it('should display "Clicked" badge when email link is clicked', () => {
+      const alertWithClicked = {
+        ...baseAlert,
+        notificationStatus: {
+          emailSent: true,
+          emailSentAt: '2025-10-21T10:05:00Z',
+          emailOpened: true,
+          emailOpenedAt: '2025-10-21T14:30:00Z',
+          emailClicked: true,
+          emailClickedAt: '2025-10-21T14:32:00Z',
+        },
+      };
+
+      render(<AlertCard alert={alertWithClicked} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(/Clicked/)).toBeInTheDocument();
+    });
+
+    it('should display "Not opened yet" when email sent but not opened', () => {
+      const alertNotOpened = {
+        ...baseAlert,
+        notificationStatus: {
+          emailSent: true,
+          emailSentAt: '2025-10-21T10:05:00Z',
+          emailOpened: false,
+        },
+      };
+
+      render(<AlertCard alert={alertNotOpened} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(/Not opened yet/)).toBeInTheDocument();
+    });
+
+    it('should use different icon for opened emails', () => {
+      const alertWithOpened = {
+        ...baseAlert,
+        notificationStatus: {
+          emailSent: true,
+          emailSentAt: '2025-10-21T10:05:00Z',
+          emailOpened: true,
+          emailOpenedAt: '2025-10-21T14:30:00Z',
+        },
+      };
+
+      render(<AlertCard alert={alertWithOpened} onAction={mockOnAction} variant="active" />);
+
+      // Opened emails should show 📧 instead of ✉️
+      expect(screen.getByText(/📧/)).toBeInTheDocument();
+    });
+
+    it('should show all engagement states together', () => {
+      const alertFullEngagement = {
+        ...baseAlert,
+        notificationStatus: {
+          emailSent: true,
+          emailSentAt: '2025-10-21T10:05:00Z',
+          emailOpened: true,
+          emailOpenedAt: '2025-10-21T14:30:00Z',
+          emailClicked: true,
+          emailClickedAt: '2025-10-21T14:32:00Z',
+        },
+      };
+
+      render(<AlertCard alert={alertFullEngagement} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(/Opened/)).toBeInTheDocument();
+      expect(screen.getByText(/Clicked/)).toBeInTheDocument();
+    });
+
+    it('should display notification details in a separate container', () => {
+      const alertWithEngagement = {
+        ...baseAlert,
+        notificationStatus: {
+          emailSent: true,
+          emailSentAt: '2025-10-21T10:05:00Z',
+          emailOpened: true,
+        },
+      };
+
+      const { container } = render(<AlertCard alert={alertWithEngagement} onAction={mockOnAction} variant="active" />);
+
+      const notificationDetails = container.querySelector('.notificationDetails');
+      expect(notificationDetails).toBeInTheDocument();
+    });
+  });
+
   describe('Delay Reason Display', () => {
     it('should display delay reason when provided', () => {
       const alertWithReason = {
@@ -73,7 +352,6 @@ describe('AlertCard', () => {
       const { container } = render(<AlertCard alert={alertWithReason} onAction={mockOnAction} variant="active" />);
 
       expect(screen.getByText(/Carrier facility delay/i)).toBeInTheDocument();
-      // Check for delay reason section
       const reasonSection = container.querySelector('.delayReason');
       expect(reasonSection).toBeInTheDocument();
     });
@@ -116,7 +394,6 @@ describe('AlertCard', () => {
 
       const { container } = render(<AlertCard alert={alertWithEta} onAction={mockOnAction} variant="active" />);
 
-      // Revised ETA should have special styling
       const revisedEta = container.querySelector('.revisedEta');
       expect(revisedEta).toBeInTheDocument();
     });
@@ -135,7 +412,7 @@ describe('AlertCard', () => {
         ...baseAlert,
         notificationStatus: {
           emailSent: true,
-          emailSentAt: '2025-10-21T10:05:00Z',  // Different date to avoid conflict with createdAt
+          emailSentAt: '2025-10-21T10:05:00Z',
         },
       };
 
@@ -320,7 +597,6 @@ describe('AlertCard', () => {
 
       const { container } = render(<AlertCard alert={alertWithManyEvents} onAction={mockOnAction} variant="active" />);
 
-      // Should limit to 5 most recent events
       const timelineItems = container.querySelectorAll('.timelineEvent');
       expect(timelineItems.length).toBeLessThanOrEqual(5);
     });
@@ -384,16 +660,23 @@ describe('AlertCard', () => {
     });
   });
 
-  describe('Comprehensive Alert Display', () => {
-    it('should display all enhanced information when provided', () => {
+  describe('Comprehensive Alert Display (Phase 1.1)', () => {
+    it('should display all Phase 1.1 enhanced information when provided', () => {
       const comprehensiveAlert: DelayAlert = {
         ...baseAlert,
+        totalAmount: 384.99,
+        currency: 'USD',
+        customerPhone: '+1-555-0123',
         delayReason: 'Weather delay in Memphis',
         originalEta: '2025-10-22T18:00:00Z',
         revisedEta: '2025-10-25T18:00:00Z',
         notificationStatus: {
           emailSent: true,
           emailSentAt: '2025-10-20T10:05:00Z',
+          emailOpened: true,
+          emailOpenedAt: '2025-10-20T14:30:00Z',
+          emailClicked: true,
+          emailClickedAt: '2025-10-20T14:32:00Z',
           smsSent: true,
           smsSentAt: '2025-10-20T10:06:00Z',
         },
@@ -414,7 +697,13 @@ describe('AlertCard', () => {
 
       render(<AlertCard alert={comprehensiveAlert} onAction={mockOnAction} variant="active" />);
 
-      // Check all sections are present
+      // Phase 1.1 features
+      expect(screen.getByText('$384.99')).toBeInTheDocument();
+      expect(screen.getByText('+1-555-0123')).toBeInTheDocument();
+      expect(screen.getByText(/Opened/)).toBeInTheDocument();
+      expect(screen.getByText(/Clicked/)).toBeInTheDocument();
+
+      // Original features
       expect(screen.getByText(/Weather delay in Memphis/i)).toBeInTheDocument();
       expect(screen.getByText(/Original ETA:/i)).toBeInTheDocument();
       expect(screen.getByText(/Revised ETA:/i)).toBeInTheDocument();
@@ -485,6 +774,318 @@ describe('AlertCard', () => {
       render(<AlertCard alert={alertWithDates} onAction={mockOnAction} variant="active" />);
 
       expect(screen.getByText(`Order #${alertWithDates.orderId}`)).toBeInTheDocument();
+    });
+
+    it('should handle very large order values', () => {
+      const largeOrderAlert = {
+        ...baseAlert,
+        totalAmount: 9999.99,
+        currency: 'USD',
+      };
+
+      render(<AlertCard alert={largeOrderAlert} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('$9,999.99')).toBeInTheDocument();
+    });
+
+    it('should handle missing phone number gracefully', () => {
+      const alertNoPhone = {
+        ...baseAlert,
+        customerEmail: 'test@example.com',
+        customerPhone: undefined,
+      };
+
+      const { container } = render(<AlertCard alert={alertNoPhone} onAction={mockOnAction} variant="active" />);
+
+      const contactItems = container.querySelectorAll('.contactItem');
+      expect(contactItems.length).toBe(1); // Only email
+    });
+  });
+
+  describe('Phase 1.2: Product Information Display', () => {
+    const mockLineItems = [
+      {
+        id: 'item-1',
+        productId: 'prod-123',
+        title: 'Wireless Headphones',
+        variantTitle: 'Black / Medium',
+        sku: 'WH-BLK-M',
+        quantity: 2,
+        price: 79.99,
+        productType: 'Electronics',
+        vendor: 'AudioTech',
+        imageUrl: 'https://example.com/headphones.jpg',
+      },
+      {
+        id: 'item-2',
+        productId: 'prod-456',
+        title: 'Phone Case',
+        variantTitle: 'Blue',
+        sku: 'PC-BLU',
+        quantity: 1,
+        price: 19.99,
+        productType: 'Accessories',
+        vendor: 'CaseMaster',
+        imageUrl: 'https://example.com/case.jpg',
+      },
+      {
+        id: 'item-3',
+        productId: 'prod-789',
+        title: 'USB-C Cable',
+        sku: 'USBC-01',
+        quantity: 3,
+        price: 12.99,
+        productType: 'Accessories',
+        imageUrl: 'https://example.com/cable.jpg',
+      },
+    ];
+
+    it('should display "Order Contents" section when line items are provided', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(/Order Contents/i)).toBeInTheDocument();
+      expect(screen.getByText(/3 items/i)).toBeInTheDocument();
+    });
+
+    it('should not display "Order Contents" section when no line items', () => {
+      render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+      expect(screen.queryByText(/Order Contents/i)).not.toBeInTheDocument();
+    });
+
+    it('should display product thumbnail images for each line item', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      const { container } = render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      const images = container.querySelectorAll('.productThumbnail');
+      expect(images.length).toBe(3);
+
+      const firstImage = images[0] as HTMLImageElement;
+      expect(firstImage.src).toContain('headphones.jpg');
+      expect(firstImage.alt).toBe('Wireless Headphones');
+    });
+
+    it('should display product title for each line item', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('Wireless Headphones')).toBeInTheDocument();
+      expect(screen.getByText('Phone Case')).toBeInTheDocument();
+      expect(screen.getByText('USB-C Cable')).toBeInTheDocument();
+    });
+
+    it('should display variant title when provided', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('Black / Medium')).toBeInTheDocument();
+      expect(screen.getByText('Blue')).toBeInTheDocument();
+    });
+
+    it('should not display variant section when no variant title', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: [mockLineItems[2]], // USB-C Cable has no variant
+      };
+      render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.queryByText('Black / Medium')).not.toBeInTheDocument();
+    });
+
+    it('should display quantity for each line item', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(/Qty:\s*2/i)).toBeInTheDocument();
+      expect(screen.getByText(/Qty:\s*1/i)).toBeInTheDocument();
+      expect(screen.getByText(/Qty:\s*3/i)).toBeInTheDocument();
+    });
+
+    it('should display SKU for each line item', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(/SKU:\s*WH-BLK-M/i)).toBeInTheDocument();
+      expect(screen.getByText(/SKU:\s*PC-BLU/i)).toBeInTheDocument();
+      expect(screen.getByText(/SKU:\s*USBC-01/i)).toBeInTheDocument();
+    });
+
+    it('should display price for each line item', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(/\$79\.99/i)).toBeInTheDocument();
+      expect(screen.getByText(/\$19\.99/i)).toBeInTheDocument();
+      expect(screen.getByText(/\$12\.99/i)).toBeInTheDocument();
+    });
+
+    it('should handle missing product images gracefully', () => {
+      const lineItemsNoImage = [
+        {
+          id: 'item-1',
+          productId: 'prod-123',
+          title: 'Product Without Image',
+          quantity: 1,
+          price: 50,
+          sku: 'NO-IMG',
+        },
+      ];
+
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: lineItemsNoImage,
+      };
+      const { container } = render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      const images = container.querySelectorAll('.productThumbnail');
+      expect(images.length).toBe(0); // No image should be rendered
+      expect(screen.getByText('Product Without Image')).toBeInTheDocument();
+    });
+
+    it('should display placeholder icon when image URL is missing', () => {
+      const lineItemsNoImage = [
+        {
+          id: 'item-1',
+          productId: 'prod-123',
+          title: 'Product Without Image',
+          quantity: 1,
+          price: 50,
+          sku: 'NO-IMG',
+        },
+      ];
+
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: lineItemsNoImage,
+      };
+      const { container } = render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      const placeholderIcon = container.querySelector('.productPlaceholder');
+      expect(placeholderIcon).toBeInTheDocument();
+      expect(placeholderIcon?.textContent).toContain('📦');
+    });
+
+    it('should display empty state when lineItems array is empty', () => {
+      const alertWithEmptyProducts = {
+        ...baseAlert,
+        lineItems: [],
+      };
+      render(<AlertCard alert={alertWithEmptyProducts} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.queryByText(/Order Contents/i)).not.toBeInTheDocument();
+    });
+
+    it('should limit display to first 5 line items if more than 5 products', () => {
+      const manyLineItems = Array.from({ length: 10 }, (_, i) => ({
+        id: `item-${i}`,
+        productId: `prod-${i}`,
+        title: `Product ${i + 1}`,
+        quantity: 1,
+        price: 10 + i,
+        sku: `SKU-${i}`,
+        imageUrl: `https://example.com/product${i}.jpg`,
+      }));
+
+      const alertWithManyProducts = {
+        ...baseAlert,
+        lineItems: manyLineItems,
+      };
+      const { container } = render(<AlertCard alert={alertWithManyProducts} onAction={mockOnAction} variant="active" />);
+
+      const lineItemElements = container.querySelectorAll('.lineItem');
+      expect(lineItemElements.length).toBeLessThanOrEqual(5);
+      expect(screen.getByText(/\+5 more items/i)).toBeInTheDocument();
+    });
+
+    it('should display product type badge when available', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText('Electronics')).toBeInTheDocument();
+      expect(screen.getAllByText('Accessories').length).toBe(2);
+    });
+
+    it('should display vendor name when available', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      expect(screen.getByText(/AudioTech/i)).toBeInTheDocument();
+      expect(screen.getByText(/CaseMaster/i)).toBeInTheDocument();
+    });
+
+    it('should have proper styling for line items container', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      const { container } = render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      const productContainer = container.querySelector('.productDetails');
+      expect(productContainer).toBeInTheDocument();
+      expect(productContainer).toHaveClass('productDetails');
+    });
+
+    it('should display line items in a collapsible section (initially expanded)', () => {
+      const alertWithProducts = {
+        ...baseAlert,
+        lineItems: mockLineItems,
+      };
+      const { container } = render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+      const productSection = container.querySelector('.productDetails');
+      expect(productSection).toBeVisible();
+    });
+
+    it('should handle very long product titles gracefully with truncation', () => {
+      const longTitleItem = [
+        {
+          id: 'item-1',
+          productId: 'prod-123',
+          title: 'This is a very long product title that should be truncated to prevent layout issues in the UI',
+          quantity: 1,
+          price: 50,
+          sku: 'LONG-TITLE',
+          imageUrl: 'https://example.com/product.jpg',
+        },
+      ];
+
+      const alertWithLongTitle = {
+        ...baseAlert,
+        lineItems: longTitleItem,
+      };
+      const { container } = render(<AlertCard alert={alertWithLongTitle} onAction={mockOnAction} variant="active" />);
+
+      const titleElement = container.querySelector('.productTitle');
+      expect(titleElement).toBeInTheDocument();
+      expect(titleElement).toHaveClass('productTitle');
+      // CSS module will apply truncation styles (overflow: hidden, text-overflow: ellipsis, white-space: nowrap)
     });
   });
 });

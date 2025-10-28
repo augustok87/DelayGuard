@@ -1,13 +1,14 @@
 /**
- * SettingsCard Component (Enhanced UX - Priority 1)
+ * SettingsCard Component V2 (Phase 1.4)
  *
- * Improved settings interface with:
- * - Clearer delay threshold explanation
- * - Better organized sections
- * - Removed fake "Notification Template" dropdown
- * - System status visibility
+ * Enhanced settings interface with:
+ * - Plain language rule names (Warehouse Delays, Carrier Reported Delays, Stuck in Transit)
+ * - Merchant benchmarks (avg fulfillment time, avg delivery time, delay trends)
+ * - Improved help text with inline examples
+ * - Better visual hierarchy
  *
- * Maintains backward compatibility with existing AppSettings interface
+ * Implements IMPLEMENTATION_PLAN.md Phase 1.4 requirements
+ * Using existing AppSettings type for compatibility with Redux store
  */
 
 import React from 'react';
@@ -24,6 +25,13 @@ interface SettingsCardProps {
   onTest: () => void;
   onConnect: () => void;
   onSettingsChange: (settings: AppSettings) => void;
+  // Phase 1.4: Merchant benchmarks
+  benchmarks?: {
+    avgFulfillmentDays: number;
+    avgDeliveryDays: number;
+    delaysThisMonth: number;
+    delaysTrend?: number; // Percentage change from last month
+  };
 }
 
 export function SettingsCard({
@@ -34,17 +42,38 @@ export function SettingsCard({
   onTest,
   onConnect,
   onSettingsChange,
+  benchmarks,
 }: SettingsCardProps) {
+  // Phase 1.4: Handle delay threshold change (maps to all 3 rules for now)
   const handleDelayThresholdChange = (value: number) => {
     onSettingsChange({ ...settings, delayThreshold: value });
   };
 
+  // Handle notification changes
   const handleEmailToggle = () => {
     onSettingsChange({ ...settings, emailNotifications: !settings.emailNotifications });
   };
 
   const handleSmsToggle = () => {
     onSettingsChange({ ...settings, smsNotifications: !settings.smsNotifications });
+  };
+
+  // Phase 1.4: Render benchmark with comparison text
+  const renderBenchmark = (value: number, label: string, suffix: string = 'days') => {
+    let comparison = '';
+    if (value < 2) {
+      comparison = " (you're fast!)";
+    } else if (value < 3) {
+      comparison = ' (good)';
+    } else if (value >= 5) {
+      comparison = ' (could be faster)';
+    }
+
+    return (
+      <span className={styles.benchmark}>
+        📊 {label}: <strong>{value.toFixed(1)}</strong> {suffix}{comparison}
+      </span>
+    );
   };
 
   return (
@@ -85,37 +114,125 @@ export function SettingsCard({
           )}
         </div>
 
-        {/* Delay Detection Section */}
+        {/* Phase 1.4: Delay Detection Rules with Plain Language */}
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Delay Detection</h3>
+          <h3 className={styles.sectionTitle}>Delay Detection Rules</h3>
+          <p className={styles.sectionSubtitle}>
+            Configure when you want to be alerted about potential shipping delays
+          </p>
 
-          <div className={styles.setting}>
-            <label htmlFor="delay-threshold" className={styles.settingLabel}>
-              Alert threshold (days)
-              <span className={styles.helpText}>
-                Create alerts when orders haven&apos;t shipped within this many days after placement
-              </span>
-            </label>
-            <div className={styles.inputGroup}>
-              <input
-                id="delay-threshold"
-                type="number"
-                className={styles.input}
-                value={settings.delayThreshold}
-                onChange={(e) => handleDelayThresholdChange(parseInt(e.target.value) || 0)}
-                min="0"
-                max="30"
-                disabled={loading}
-              />
-              <span className={styles.inputSuffix}>days</span>
+          {/* Rule 1: Warehouse Delays (Pre-Shipment) */}
+          <div className={styles.ruleCard}>
+            <div className={styles.ruleHeader}>
+              <span className={styles.ruleIcon}>📦</span>
+              <h4 className={styles.ruleTitle}>Warehouse Delays</h4>
             </div>
+            <div className={styles.ruleSetting}>
+              <label htmlFor="delay-threshold" className={styles.ruleLabel}>
+                Alert me when orders sit unfulfilled for:
+              </label>
+              <div className={styles.inputGroup}>
+                <input
+                  id="delay-threshold"
+                  type="number"
+                  className={styles.input}
+                  value={settings.delayThreshold}
+                  onChange={(e) => handleDelayThresholdChange(parseInt(e.target.value) || 0)}
+                  min="0"
+                  max="30"
+                  disabled={loading}
+                />
+                <span className={styles.inputSuffix}>days</span>
+              </div>
+            </div>
+            <p className={styles.ruleHelpText}>
+              💡 Catches warehouse and fulfillment bottlenecks early
+            </p>
+            {benchmarks && (
+              <div className={styles.benchmarkContainer}>
+                {renderBenchmark(benchmarks.avgFulfillmentDays, 'Your avg fulfillment time')}
+              </div>
+            )}
           </div>
 
-          <div className={styles.infoBox}>
-            <span className={styles.infoIcon}>ℹ️</span>
-            <div className={styles.infoContent}>
-              <strong>How it works:</strong>
-              <p>DelayGuard monitors your orders continuously. When an order hasn&apos;t shipped within {settings.delayThreshold} days, an alert is automatically created and customers are notified based on your notification settings below.</p>
+          {/* Rule 2: Carrier Reported Delays (In-Transit Exceptions) */}
+          <div className={styles.ruleCard}>
+            <div className={styles.ruleHeader}>
+              <span className={styles.ruleIcon}>🚨</span>
+              <h4 className={styles.ruleTitle}>Carrier Reported Delays</h4>
+            </div>
+            <div className={styles.ruleSetting}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={true}
+                  disabled={true}
+                  aria-label="Auto-detect carrier exceptions"
+                />
+                <span>Auto-detect when carriers report exceptions</span>
+              </label>
+              <p className={styles.helpText} style={{ marginLeft: '2rem' }}>
+                (Always enabled to catch critical carrier issues)
+              </p>
+            </div>
+            <p className={styles.ruleHelpText}>
+              💡 Immediate alerts for weather, accidents, lost packages
+            </p>
+            {benchmarks && benchmarks.delaysThisMonth !== undefined && (
+              <div className={styles.benchmarkContainer}>
+                <span className={styles.benchmark}>
+                  📊 You&apos;ve had <strong>{benchmarks.delaysThisMonth}</strong> carrier delays this month
+                  {benchmarks.delaysTrend !== undefined && benchmarks.delaysTrend < 0 && (
+                    <span className={styles.trendPositive}> ↓ {Math.abs(benchmarks.delaysTrend)}%</span>
+                  )}
+                  {benchmarks.delaysTrend !== undefined && benchmarks.delaysTrend > 0 && (
+                    <span className={styles.trendNegative}> ↑ {benchmarks.delaysTrend}%</span>
+                  )}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Rule 3: Stuck in Transit (Extended Transit) */}
+          <div className={styles.ruleCard}>
+            <div className={styles.ruleHeader}>
+              <span className={styles.ruleIcon}>⏰</span>
+              <h4 className={styles.ruleTitle}>Stuck in Transit</h4>
+            </div>
+            <div className={styles.ruleSetting}>
+              <label htmlFor="extended-transit-days" className={styles.ruleLabel}>
+                Alert when packages are in transit for:
+              </label>
+              <div className={styles.inputGroup}>
+                <input
+                  id="extended-transit-days"
+                  type="number"
+                  className={styles.input}
+                  value={settings.delayThreshold + 5}
+                  disabled={true}
+                  min="0"
+                  max="30"
+                />
+                <span className={styles.inputSuffix}>days (auto-calculated)</span>
+              </div>
+            </div>
+            <p className={styles.ruleHelpText}>
+              💡 Identifies potentially lost packages. Set to delay threshold + 5 days
+            </p>
+            {benchmarks && (
+              <div className={styles.benchmarkContainer}>
+                {renderBenchmark(benchmarks.avgDeliveryDays, 'Your avg delivery time')}
+              </div>
+            )}
+          </div>
+
+          {/* Smart Tip */}
+          <div className={styles.smartTip}>
+            <span className={styles.tipIcon}>💡</span>
+            <div className={styles.tipContent}>
+              <strong>SMART TIP:</strong> Based on your store&apos;s performance, we recommend a delay threshold of{' '}
+              <strong>{Math.ceil((benchmarks?.avgFulfillmentDays || 2) + 1)}</strong> days to catch issues early
+              while avoiding false positives.
             </div>
           </div>
         </div>
