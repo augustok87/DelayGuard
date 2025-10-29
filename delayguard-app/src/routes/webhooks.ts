@@ -3,6 +3,7 @@ import { logger } from "../utils/logger";
 import { query } from "../database/connection";
 import { addDelayCheckJob } from "../queue/setup";
 import { saveOrderLineItems } from "../services/shopify-service"; // Phase 1.2
+import { handleSendGridWebhook } from "./sendgrid-webhook"; // Phase 1.3
 // import { OrderUpdateWebhook } from '../types'; // Available for future use
 import crypto from "crypto";
 
@@ -359,5 +360,11 @@ async function processFulfillment(
     throw error;
   }
 }
+
+// Phase 1.3: SendGrid webhook for email engagement tracking
+// Endpoint: POST /webhooks/sendgrid
+router.post("/sendgrid", async(ctx) => {
+  await handleSendGridWebhook(ctx);
+});
 
 export { router as webhookRoutes };

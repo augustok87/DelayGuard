@@ -120,6 +120,30 @@ async function runMigrations(): Promise<void> {
       )
     `);
 
+    // Phase 1.3: Add communication tracking fields to delay_alerts
+    // Check if columns exist before adding them (idempotent migration)
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='delay_alerts' AND column_name='sendgrid_message_id'
+        ) THEN
+          ALTER TABLE delay_alerts ADD COLUMN sendgrid_message_id VARCHAR(255);
+          ALTER TABLE delay_alerts ADD COLUMN email_opened BOOLEAN DEFAULT FALSE;
+          ALTER TABLE delay_alerts ADD COLUMN email_opened_at TIMESTAMP;
+          ALTER TABLE delay_alerts ADD COLUMN email_clicked BOOLEAN DEFAULT FALSE;
+          ALTER TABLE delay_alerts ADD COLUMN email_clicked_at TIMESTAMP;
+        END IF;
+      END $$;
+    `);
+
+    // Phase 1.3: Create index for fast SendGrid message ID lookups
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_delay_alerts_sendgrid_msg_id
+      ON delay_alerts(sendgrid_message_id);
+    `);
+
     // Create app_settings table
     await client.query(`
       CREATE TABLE IF NOT EXISTS app_settings (

@@ -12,6 +12,7 @@ export { Text } from './Text';
 export { Badge } from '../Badge';
 export { Spinner } from './Spinner';
 export { LoadingSpinner } from './LoadingSpinner';
+export { CommunicationStatusBadge } from './CommunicationStatusBadge'; // Phase 1.3
 
 // Complex Components
 export { Modal } from './Modal';
@@ -39,3 +40,6 @@ export type {
   DataTableRow,
   ToastProps,
 } from '../../types/ui';
+
+// Phase 1.3: Communication Status Badge types
+export type { CommunicationStatusBadgeProps } from './CommunicationStatusBadge';
