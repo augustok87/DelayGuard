@@ -11,6 +11,20 @@ This document serves as the **mandatory onboarding guide** for any AI agent (Cla
 
 ## CRITICAL DOCUMENTS TO READ (IN ORDER)
 
+### 0. PROJECT_OVERVIEW.md ⭐⭐ START HERE
+**Must read FIRST - Single consolidated view of current state and roadmap**
+
+This document provides:
+- Current Phase 1 completion status with all metrics
+- Readiness score (95/100) and what remains for Shopify submission
+- Complete Phase 2 roadmap (customer intelligence & priority scoring)
+- Phase 3-5 future roadmap overview
+- Links to all other documentation
+
+**Start here to understand:** Where we are, where we're going, and how everything fits together.
+
+---
+
 ### 1. DEEP_DIVE_UX_UI_RESEARCH.md ⭐ PRIORITY 1
 **Must read before any UX/UI work**
 
@@ -588,8 +602,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
 ## FREQUENTLY ASKED QUESTIONS
 
+### Q: What's the current state of the project?
+**A:** Read PROJECT_OVERVIEW.md first! It consolidates everything: Phase 1 complete (Oct 28, 2025), 95/100 ready for Shopify submission, 2-3 days from submission (assets remaining).
+
 ### Q: What phase should we focus on?
-**A:** Phase 1 and Phase 2 are the current priority. We need to complete these before submitting to Shopify App Store. Refer to IMPLEMENTATION_PLAN.md for detailed tasks.
+**A:** Phase 1 is COMPLETE ✅. Phase 2 is next priority (customer intelligence & priority scoring, 14-16 days). See PROJECT_OVERVIEW.md for detailed Phase 2 breakdown and IMPLEMENTATION_PLAN.md for code-level specs.
 
 ### Q: Should we implement [feature X]?
 **A:** Check DEEP_DIVE_UX_UI_RESEARCH.md to see which phase it belongs to. If it's Phase 3+, defer until after Shopify submission.
