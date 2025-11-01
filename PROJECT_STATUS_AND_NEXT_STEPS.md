@@ -15,7 +15,7 @@ DelayGuard is a proactive shipping delay detection app for Shopify. **Phase 1 is
 - Tests: 1,298/1,324 passing (98.0%) across backend, frontend, and infrastructure
 - TypeScript/Lint: 0 compilation errors; 129 lint errors (auto-fixable), 30 warnings
 - Quality Score: 92/100 (A-) - World-class engineering standards
-- Performance: ~35ms average API response; optimized 1.37 MiB bundle
+- Performance: ~35ms average API response; webpack bundle ~6 MiB (4.75 MiB main + chunks)
 - Security: A- rating; HMAC-SHA256 webhook verification, replay attack prevention, CSRF protection
 
 ## Current State (Concise)

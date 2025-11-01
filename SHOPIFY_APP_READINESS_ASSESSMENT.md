@@ -277,7 +277,7 @@ convert app-icon-1024x1024.png -resize 1200x1200 app-icon-1200x1200.png
 | Requirement | Status | Evidence |
 |------------|--------|----------|
 | <3s initial load | ⚠️ PENDING | Needs Lighthouse test |
-| Optimized bundle | ✅ PASS | 1.37 MiB optimized |
+| Optimized bundle | ⚠️ REVIEW | ~6 MiB webpack bundle (4.75 MiB main + chunks) - Consider code-splitting |
 | <10 point Lighthouse impact | ⚠️ PENDING | Must test before submission |
 
 **Action Required**: Run Lighthouse performance tests and document results.
