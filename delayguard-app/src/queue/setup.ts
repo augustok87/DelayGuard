@@ -1,3 +1,34 @@
+/**
+ * ⚠️ IMPORTANT: SERVERLESS DEPLOYMENT LIMITATION
+ *
+ * BullMQ Workers (lines 59-75) require long-running processes and DO NOT WORK in serverless
+ * environments like Vercel. These workers will start but immediately terminate after the
+ * function execution completes.
+ *
+ * CURRENT STATUS:
+ * - ✅ Queue producers (addDelayCheckJob, addNotificationJob) work in Vercel
+ * - ❌ Workers DO NOT RUN in Vercel (background jobs will NOT be processed)
+ * - ✅ This code works in traditional server deployments (src/server.ts)
+ *
+ * SOLUTIONS FOR SERVERLESS:
+ *
+ * Option A: Vercel Cron Jobs (Simplest)
+ * - Create api/cron/process-delays.ts
+ * - Add cron config to vercel.json
+ * - Runs every N minutes (not real-time)
+ *
+ * Option B: External Worker Service (Recommended for production)
+ * - Deploy this file to Railway/Render/Fly.io (~$5-10/mo)
+ * - Keep Redis queue in Upstash (shared between Vercel + workers)
+ * - Real-time processing
+ *
+ * Option C: Serverless-Native Queue
+ * - Migrate to Vercel Queue or Upstash QStash
+ * - HTTP-based, no workers needed
+ *
+ * See: docs/SERVERLESS_ARCHITECTURE.md for detailed migration guide
+ */
+
 import { Queue, Worker } from "bullmq";
 import { logger } from "../utils/logger";
 import IORedis from "ioredis";

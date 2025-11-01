@@ -6,15 +6,18 @@ let pool: Pool;
 
 export async function setupDatabase(): Promise<void> {
   try {
+    // Serverless-optimized connection pool settings
+    // In serverless environments (like Vercel), each function instance should use minimal connections
+    // to avoid exhausting the database connection limit across many concurrent instances
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl:
         process.env.NODE_ENV === "production"
           ? { rejectUnauthorized: false }
           : false,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      max: 1, // ✅ Changed from 20 to 1 for serverless (prevents connection exhaustion)
+      idleTimeoutMillis: 10000, // ✅ Reduced from 30000 to 10000 (faster cleanup)
+      connectionTimeoutMillis: 5000, // ✅ Increased from 2000 to 5000 (cold start tolerance)
     });
 
     // Test connection
@@ -22,8 +25,10 @@ export async function setupDatabase(): Promise<void> {
     logInfo("Database connected successfully", { component: "database" });
     client.release();
 
-    // Run migrations
-    await runMigrations();
+    // ⚠️ IMPORTANT: Migrations removed from automatic startup
+    // In serverless deployments (Vercel), migrations should be run separately using:
+    //   npm run migrate:vercel
+    // Running migrations here causes race conditions when multiple instances cold-start simultaneously
   } catch (error) {
     logError(
       error instanceof Error ? error.message : String(error),
@@ -54,7 +59,8 @@ export async function query<T = unknown>(
   }
 }
 
-async function runMigrations(): Promise<void> {
+// Export runMigrations so it can be called separately (e.g., via npm script or manual deployment step)
+export async function runMigrations(): Promise<void> {
   const client = await getDatabaseClient();
 
   try {

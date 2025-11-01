@@ -1,10 +1,16 @@
-import { setupDatabase } from "./connection";
+import { setupDatabase, runMigrations } from "./connection";
 import { logInfo, logError } from "../utils/logger";
 
 async function migrate() {
   try {
     logInfo("Running database migrations", { component: "database" });
+
+    // Set up database connection pool first
     await setupDatabase();
+
+    // Run migrations explicitly (no longer automatic in setupDatabase)
+    await runMigrations();
+
     logInfo("Database migrations completed successfully", {
       component: "database",
     });
