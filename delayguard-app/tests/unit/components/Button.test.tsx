@@ -1,7 +1,7 @@
 import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '../../setup/test-utils';
-import { Button } from '../../../src/components/ui/Button/Button.memo';
+import { Button } from '../../../src/components/ui/Button';
 
 describe('Button', () => {
   it('renders with default props', () => {
@@ -37,12 +37,21 @@ describe('Button', () => {
   });
 
   it('shows loading state', () => {
-    render(<Button loading onClick={jest.fn()}>Loading</Button>);
-    
-    const button = screen.getByRole('button', { name: /loading/i });
+    const { container } = render(<Button loading onClick={jest.fn()}>Loading</Button>);
+
+    const button = screen.getByRole('button');
+
+    // Verify button has loading class
     expect(button).toHaveClass('loading');
+
+    // Verify button is disabled (using HTML disabled attribute)
     expect(button).toBeDisabled();
-    expect(screen.getByRole('button', { name: /loading/i })).toHaveAttribute('aria-disabled', 'true');
+    expect(button).toHaveAttribute('disabled');
+
+    // Verify spinner is rendered
+    const spinner = container.querySelector('.spinner');
+    expect(spinner).toBeInTheDocument();
+    expect(spinner).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('is disabled when disabled prop is true', () => {

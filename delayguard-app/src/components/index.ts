@@ -9,7 +9,6 @@ export { App } from "./App";
 export { AppProvider } from "./AppProvider";
 export { default as MinimalApp } from "./MinimalApp";
 export { default as RefactoredApp } from "./RefactoredApp";
-export { default as EnhancedDashboard } from "./EnhancedDashboard";
 export { default as ThemeCustomizer } from "./ThemeCustomizer";
 
 // UI Components

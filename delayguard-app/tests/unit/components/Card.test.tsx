@@ -1,7 +1,7 @@
 import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen } from '../../setup/test-utils';
-import { Card } from '../../../src/components/ui/Card/Card.memo';
+import { Card } from '../../../src/components/ui/Card';
 
 describe('Card', () => {
   it('renders with children content', () => {
@@ -40,13 +40,21 @@ describe('Card', () => {
   });
 
   it('shows loading state', () => {
-    render(
+    const { container } = render(
       <Card loading>
         <p>This should not be visible</p>
       </Card>,
     );
-    
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
+    // Verify card has loading class
+    const card = container.querySelector('.card');
+    expect(card).toHaveClass('loading');
+
+    // Verify skeleton loading UI is rendered
+    const skeletonLines = container.querySelectorAll('.skeletonLine');
+    expect(skeletonLines).toHaveLength(3);
+
+    // Verify children are not rendered during loading
     expect(screen.queryByText('This should not be visible')).not.toBeInTheDocument();
   });
 
