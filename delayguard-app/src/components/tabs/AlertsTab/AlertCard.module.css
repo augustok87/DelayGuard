@@ -709,4 +709,14 @@
   .notificationDetails {
     gap: 0.375rem;
   }
+
+  /* Product Details Accordion responsive */
+  .productDetailsAccordion {
+    margin-top: 0.875rem;
+  }
+}
+
+/* Product Details Accordion Styling */
+.productDetailsAccordion {
+  margin-top: 1rem;
 }

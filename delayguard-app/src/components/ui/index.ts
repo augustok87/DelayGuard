@@ -19,6 +19,7 @@ export { Modal } from './Modal';
 export { Tabs } from './Tabs';
 export { DataTable } from './DataTable';
 export { Toast } from './Toast';
+export { Accordion } from './Accordion';
 
 // Common Components
 export { EmptyState } from '../common/EmptyState';
@@ -43,3 +44,6 @@ export type {
 
 // Phase 1.3: Communication Status Badge types
 export type { CommunicationStatusBadgeProps } from './CommunicationStatusBadge';
+
+// Accordion types
+export type { AccordionProps } from './Accordion';

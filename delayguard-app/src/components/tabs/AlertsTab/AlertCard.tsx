@@ -13,6 +13,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '../../ui/Button';
+import { Accordion } from '../../ui/Accordion';
 import { DelayAlert, TrackingEvent } from '../../../types';
 import styles from './AlertCard.module.css';
 
@@ -227,53 +228,58 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     const remainingCount = alert.lineItems.length - MAX_ITEMS_TO_SHOW;
 
     return (
-      <div className={styles.productDetails}>
-        <h5 className={styles.sectionTitle}>Order Contents ({alert.lineItems.length} items)</h5>
-        <div className={styles.lineItemsContainer}>
-          {displayItems.map((item) => (
-            <div key={item.id} className={styles.lineItem}>
-              {/* Product image or placeholder */}
-              {item.imageUrl ? (
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className={styles.productThumbnail}
-                />
-              ) : (
-                <div className={styles.productPlaceholder}>📦</div>
-              )}
+      <Accordion
+        title={`📦 View Order Contents (${alert.lineItems.length} item${alert.lineItems.length !== 1 ? 's' : ''})`}
+        className={styles.productDetailsAccordion}
+        defaultOpen={false}
+      >
+        <div className={styles.productDetails}>
+          <div className={styles.lineItemsContainer}>
+            {displayItems.map((item) => (
+              <div key={item.id} className={styles.lineItem}>
+                {/* Product image or placeholder */}
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className={styles.productThumbnail}
+                  />
+                ) : (
+                  <div className={styles.productPlaceholder}>📦</div>
+                )}
 
-              {/* Product information */}
-              <div className={styles.itemInfo}>
-                <p className={styles.productTitle}>{item.title}</p>
-                {item.variantTitle && (
-                  <p className={styles.variant}>{item.variantTitle}</p>
-                )}
-                <div className={styles.itemMeta}>
-                  <span className={styles.metaItem}>SKU: {item.sku || 'N/A'}</span>
-                  <span className={styles.metaSeparator}>•</span>
-                  <span className={styles.metaItem}>Qty: {item.quantity}</span>
-                  <span className={styles.metaSeparator}>•</span>
-                  <span className={styles.metaItem}>${item.price.toFixed(2)}</span>
+                {/* Product information */}
+                <div className={styles.itemInfo}>
+                  <p className={styles.productTitle}>{item.title}</p>
+                  {item.variantTitle && (
+                    <p className={styles.variant}>{item.variantTitle}</p>
+                  )}
+                  <div className={styles.itemMeta}>
+                    <span className={styles.metaItem}>SKU: {item.sku || 'N/A'}</span>
+                    <span className={styles.metaSeparator}>•</span>
+                    <span className={styles.metaItem}>Qty: {item.quantity}</span>
+                    <span className={styles.metaSeparator}>•</span>
+                    <span className={styles.metaItem}>${item.price.toFixed(2)}</span>
+                  </div>
+                  {/* Product type badge */}
+                  {item.productType && (
+                    <span className={styles.productTypeBadge}>{item.productType}</span>
+                  )}
+                  {/* Vendor name */}
+                  {item.vendor && (
+                    <span className={styles.vendorName}>by {item.vendor}</span>
+                  )}
                 </div>
-                {/* Product type badge */}
-                {item.productType && (
-                  <span className={styles.productTypeBadge}>{item.productType}</span>
-                )}
-                {/* Vendor name */}
-                {item.vendor && (
-                  <span className={styles.vendorName}>by {item.vendor}</span>
-                )}
               </div>
-            </div>
-          ))}
-          {remainingCount > 0 && (
-            <div className={styles.moreItems}>
-              +{remainingCount} more items
-            </div>
-          )}
+            ))}
+            {remainingCount > 0 && (
+              <div className={styles.moreItems}>
+                +{remainingCount} more items
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </Accordion>
     );
   };
 

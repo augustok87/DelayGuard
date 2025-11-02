@@ -382,6 +382,11 @@
   border: 1px dashed #cbd5e1;
 }
 
+/* Phase Accordion: Accordion styling for rule explanations */
+.ruleAccordion {
+  margin-top: 1rem;
+}
+
 @media (max-width: 640px) {
   .actions {
     flex-direction: column;

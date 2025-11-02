@@ -343,7 +343,16 @@ describe('SettingsCard (Phase 1.4)', () => {
     });
   });
 
-  describe('Delay Threshold Settings', () => {
+  describe('Delay Threshold Settings (Auto-save with Debouncing)', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.runOnlyPendingTimers();
+      jest.useRealTimers();
+    });
+
     it('should display current delay threshold value', () => {
       render(
         <SettingsCard
@@ -358,7 +367,24 @@ describe('SettingsCard (Phase 1.4)', () => {
       expect(input.value).toBe('3');
     });
 
-    it('should call onSettingsChange when delay threshold changes', () => {
+    it('should update UI immediately when delay threshold changes', () => {
+      render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      const input = screen.getByLabelText(/Alert me when orders sit unfulfilled for:/i) as HTMLInputElement;
+      fireEvent.change(input, { target: { value: '5' } });
+
+      // UI should update immediately (optimistic update)
+      expect(input.value).toBe('5');
+    });
+
+    it('should NOT call onSettingsChange immediately (debounced)', () => {
       render(
         <SettingsCard
           shop="test-shop.myshopify.com"
@@ -371,9 +397,63 @@ describe('SettingsCard (Phase 1.4)', () => {
       const input = screen.getByLabelText(/Alert me when orders sit unfulfilled for:/i);
       fireEvent.change(input, { target: { value: '5' } });
 
+      // Should not call immediately
+      expect(mockCallbacks.onSettingsChange).not.toHaveBeenCalled();
+    });
+
+    it('should call onSettingsChange after 1 second delay (debounced auto-save)', () => {
+      render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      const input = screen.getByLabelText(/Alert me when orders sit unfulfilled for:/i);
+      fireEvent.change(input, { target: { value: '5' } });
+
+      // Fast-forward time by 1 second
+      jest.advanceTimersByTime(1000);
+
+      // Should call with new value after debounce delay
       expect(mockCallbacks.onSettingsChange).toHaveBeenCalledWith({
         ...mockSettings,
         delayThreshold: 5,
+      });
+    });
+
+    it('should only save once if user types multiple values quickly (debounce)', () => {
+      render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      const input = screen.getByLabelText(/Alert me when orders sit unfulfilled for:/i);
+
+      // User types multiple values quickly
+      fireEvent.change(input, { target: { value: '4' } });
+      jest.advanceTimersByTime(500); // Wait 500ms
+      fireEvent.change(input, { target: { value: '5' } });
+      jest.advanceTimersByTime(500); // Wait 500ms
+      fireEvent.change(input, { target: { value: '6' } });
+
+      // No calls yet (debounce not complete)
+      expect(mockCallbacks.onSettingsChange).not.toHaveBeenCalled();
+
+      // Fast-forward by 1 second from last change
+      jest.advanceTimersByTime(1000);
+
+      // Should only call once with the final value
+      expect(mockCallbacks.onSettingsChange).toHaveBeenCalledTimes(1);
+      expect(mockCallbacks.onSettingsChange).toHaveBeenCalledWith({
+        ...mockSettings,
+        delayThreshold: 6,
       });
     });
 
@@ -573,8 +653,8 @@ describe('SettingsCard (Phase 1.4)', () => {
     });
   });
 
-  describe('Action Buttons', () => {
-    it('should display Save Settings button', () => {
+  describe('Action Buttons (Auto-save UX)', () => {
+    it('should NOT display Save Settings button (auto-save enabled)', () => {
       render(
         <SettingsCard
           shop="test-shop.myshopify.com"
@@ -584,7 +664,7 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      expect(screen.getByRole('button', { name: /Save Settings/i })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Save Settings/i })).not.toBeInTheDocument();
     });
 
     it('should display Send Test Alert button', () => {
@@ -598,22 +678,6 @@ describe('SettingsCard (Phase 1.4)', () => {
       );
 
       expect(screen.getByRole('button', { name: /Send Test Alert/i })).toBeInTheDocument();
-    });
-
-    it('should call onSave when Save Settings clicked', () => {
-      render(
-        <SettingsCard
-          shop="test-shop.myshopify.com"
-          settings={mockSettings}
-          loading={false}
-          {...mockCallbacks}
-        />,
-      );
-
-      const saveButton = screen.getByRole('button', { name: /Save Settings/i });
-      fireEvent.click(saveButton);
-
-      expect(mockCallbacks.onSave).toHaveBeenCalled();
     });
 
     it('should call onTest when Send Test Alert clicked', () => {
@@ -632,7 +696,7 @@ describe('SettingsCard (Phase 1.4)', () => {
       expect(mockCallbacks.onTest).toHaveBeenCalled();
     });
 
-    it('should disable buttons when loading', () => {
+    it('should disable Send Test Alert button when loading', () => {
       render(
         <SettingsCard
           shop="test-shop.myshopify.com"
@@ -642,10 +706,7 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      const saveButton = screen.getByRole('button', { name: /Saving.../i });
       const testButton = screen.getByRole('button', { name: /Send Test Alert/i });
-
-      expect(saveButton).toBeDisabled();
       expect(testButton).toBeDisabled();
     });
 
@@ -727,7 +788,7 @@ describe('SettingsCard (Phase 1.4)', () => {
       expect(screen.getByLabelText(/Auto-detect carrier exceptions/i)).toBeInTheDocument();
     });
 
-    it('should have proper button roles and labels', () => {
+    it('should have proper button roles and labels (auto-save UX)', () => {
       render(
         <SettingsCard
           shop="test-shop.myshopify.com"
@@ -737,8 +798,9 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      expect(screen.getByRole('button', { name: /Save Settings/i })).toBeInTheDocument();
+      // Only Send Test Alert button exists (no Save Settings button with auto-save)
       expect(screen.getByRole('button', { name: /Send Test Alert/i })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Save Settings/i })).not.toBeInTheDocument();
     });
   });
 

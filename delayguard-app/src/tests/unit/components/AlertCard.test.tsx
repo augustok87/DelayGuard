@@ -1087,5 +1087,97 @@ describe('AlertCard', () => {
       expect(titleElement).toHaveClass('productTitle');
       // CSS module will apply truncation styles (overflow: hidden, text-overflow: ellipsis, white-space: nowrap)
     });
+
+    describe('Product Details Accordion Behavior', () => {
+      it('should wrap product details in an accordion component', () => {
+        const alertWithProducts = {
+          ...baseAlert,
+          lineItems: mockLineItems,
+        };
+        const { container } = render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+        // Check for accordion wrapper by looking for button with aria-expanded attribute
+        const accordionButton = container.querySelector('button[aria-expanded]');
+        expect(accordionButton).toBeInTheDocument();
+      });
+
+      it('should default to closed state (collapsed) to reduce card height', () => {
+        const alertWithProducts = {
+          ...baseAlert,
+          lineItems: mockLineItems,
+        };
+        const { container } = render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+        // Accordion should start collapsed (aria-expanded="false")
+        const accordionButton = container.querySelector('button[aria-expanded="false"]');
+        expect(accordionButton).toBeInTheDocument();
+
+        // Product details content should be hidden (aria-hidden="true")
+        const contentWrapper = container.querySelector('[aria-hidden="true"]');
+        expect(contentWrapper).toBeInTheDocument();
+      });
+
+      it('should display appropriate accordion title for product details', () => {
+        const alertWithProducts = {
+          ...baseAlert,
+          lineItems: mockLineItems,
+        };
+        render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+        // Check for accordion title (should mention products/items)
+        expect(screen.getByText(/View Order Contents/i)).toBeInTheDocument();
+      });
+
+      it('should expand product details when accordion is clicked', () => {
+        const alertWithProducts = {
+          ...baseAlert,
+          lineItems: mockLineItems,
+        };
+        const { container } = render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+        // Find accordion button and click it
+        const accordionButton = container.querySelector('button[aria-expanded]');
+        expect(accordionButton).toBeInTheDocument();
+
+        fireEvent.click(accordionButton!);
+
+        // After click, accordion should be expanded (aria-expanded="true")
+        expect(accordionButton).toHaveAttribute('aria-expanded', 'true');
+
+        // Product details content should be visible (aria-hidden="false")
+        const contentWrapper = container.querySelector('[aria-hidden="false"]');
+        expect(contentWrapper).toBeInTheDocument();
+      });
+
+      it('should toggle product details visibility when accordion is clicked multiple times', () => {
+        const alertWithProducts = {
+          ...baseAlert,
+          lineItems: mockLineItems,
+        };
+        const { container } = render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+        const accordionButton = container.querySelector('button[aria-expanded]');
+        expect(accordionButton).toBeInTheDocument();
+
+        // Initially closed
+        expect(accordionButton).toHaveAttribute('aria-expanded', 'false');
+
+        // Click to open
+        fireEvent.click(accordionButton!);
+        expect(accordionButton).toHaveAttribute('aria-expanded', 'true');
+
+        // Click to close
+        fireEvent.click(accordionButton!);
+        expect(accordionButton).toHaveAttribute('aria-expanded', 'false');
+      });
+
+      it('should not render accordion when there are no line items', () => {
+        const { container } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+
+        // No accordion should be present
+        const accordionButton = container.querySelector('button[aria-expanded]');
+        expect(accordionButton).toBeNull();
+      });
+    });
   });
 });
