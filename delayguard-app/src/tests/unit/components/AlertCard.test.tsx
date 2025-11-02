@@ -235,8 +235,9 @@ describe('AlertCard', () => {
 
       render(<AlertCard alert={alertWithOpened} onAction={mockOnAction} variant="active" />);
 
+      // Phase 1 Compact Format: Shows "📧 Opened" badge (no dates in compact view)
       expect(screen.getByText(/Opened/)).toBeInTheDocument();
-      expect(screen.getAllByText(/Oct \d{1,2}, 2025/).length).toBeGreaterThan(0);
+      expect(screen.getByText(/📧/)).toBeInTheDocument();
     });
 
     it('should display "Clicked" badge when email link is clicked', () => {
@@ -257,7 +258,7 @@ describe('AlertCard', () => {
       expect(screen.getByText(/Clicked/)).toBeInTheDocument();
     });
 
-    it('should display "Not opened yet" when email sent but not opened', () => {
+    it('should display "Sent" badge when email sent but not opened', () => {
       const alertNotOpened = {
         ...baseAlert,
         notificationStatus: {
@@ -269,7 +270,9 @@ describe('AlertCard', () => {
 
       render(<AlertCard alert={alertNotOpened} onAction={mockOnAction} variant="active" />);
 
-      expect(screen.getByText(/Not opened yet/)).toBeInTheDocument();
+      // Phase 1 Compact Format: Shows "✉️ Sent" badge when not opened
+      expect(screen.getByText(/Sent/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Opened/i)).not.toBeInTheDocument();
     });
 
     it('should use different icon for opened emails', () => {
@@ -289,7 +292,7 @@ describe('AlertCard', () => {
       expect(screen.getByText(/📧/)).toBeInTheDocument();
     });
 
-    it('should show all engagement states together', () => {
+    it('should show highest engagement state when multiple states exist', () => {
       const alertFullEngagement = {
         ...baseAlert,
         notificationStatus: {
@@ -304,8 +307,11 @@ describe('AlertCard', () => {
 
       render(<AlertCard alert={alertFullEngagement} onAction={mockOnAction} variant="active" />);
 
-      expect(screen.getByText(/Opened/)).toBeInTheDocument();
+      // Phase 1 Compact Format: Shows only highest engagement (Clicked) for space efficiency
       expect(screen.getByText(/Clicked/)).toBeInTheDocument();
+      expect(screen.getByText(/🔗/)).toBeInTheDocument();
+      // "Opened" should NOT be shown when "Clicked" is shown (progressive disclosure)
+      expect(screen.queryByText(/Opened/)).not.toBeInTheDocument();
     });
 
     it('should display notification details in a separate container', () => {
@@ -320,8 +326,9 @@ describe('AlertCard', () => {
 
       const { container } = render(<AlertCard alert={alertWithEngagement} onAction={mockOnAction} variant="active" />);
 
-      const notificationDetails = container.querySelector('.notificationDetails');
-      expect(notificationDetails).toBeInTheDocument();
+      // Phase 1 Compact Format: Uses .notificationCompact container
+      const notificationCompact = container.querySelector('.notificationCompact');
+      expect(notificationCompact).toBeInTheDocument();
     });
   });
 
@@ -352,8 +359,9 @@ describe('AlertCard', () => {
       const { container } = render(<AlertCard alert={alertWithReason} onAction={mockOnAction} variant="active" />);
 
       expect(screen.getByText(/Carrier facility delay/i)).toBeInTheDocument();
-      const reasonSection = container.querySelector('.delayReason');
-      expect(reasonSection).toBeInTheDocument();
+      // Phase 1 Compact Format: Reason is in .delayInfoCompact container
+      const compactContainer = container.querySelector('.delayInfoCompact');
+      expect(compactContainer).toBeInTheDocument();
     });
   });
 
@@ -418,8 +426,10 @@ describe('AlertCard', () => {
 
       render(<AlertCard alert={alertWithNotification} onAction={mockOnAction} variant="active" />);
 
-      expect(screen.getByText(/Email sent/i)).toBeInTheDocument();
-      expect(screen.getByText(/Oct 21, 2025/i)).toBeInTheDocument();
+      // Phase 1 Compact Format: Shows "✉️ Sent" badge
+      expect(screen.getByText(/Sent/i)).toBeInTheDocument();
+      // Note: ✉️ appears in both contact info and notification badge
+      expect(screen.getAllByText(/✉️/).length).toBeGreaterThan(0);
     });
 
     it('should display SMS sent status', () => {
@@ -433,7 +443,9 @@ describe('AlertCard', () => {
 
       render(<AlertCard alert={alertWithNotification} onAction={mockOnAction} variant="active" />);
 
-      expect(screen.getByText(/SMS sent/i)).toBeInTheDocument();
+      // Phase 1 Compact Format: Shows "📱 SMS" badge
+      expect(screen.getByText(/SMS/i)).toBeInTheDocument();
+      expect(screen.getByText(/📱/)).toBeInTheDocument();
     });
 
     it('should display both email and SMS status when both sent', () => {
@@ -449,8 +461,9 @@ describe('AlertCard', () => {
 
       render(<AlertCard alert={alertWithNotification} onAction={mockOnAction} variant="active" />);
 
-      expect(screen.getByText(/Email sent/i)).toBeInTheDocument();
-      expect(screen.getByText(/SMS sent/i)).toBeInTheDocument();
+      // Phase 1 Compact Format: Shows both "✉️ Sent" and "📱 SMS" badges
+      expect(screen.getByText(/Sent/i)).toBeInTheDocument();
+      expect(screen.getByText(/SMS/i)).toBeInTheDocument();
     });
 
     it('should indicate when notifications have not been sent', () => {
@@ -464,14 +477,17 @@ describe('AlertCard', () => {
 
       render(<AlertCard alert={alertWithNotification} onAction={mockOnAction} variant="active" />);
 
-      expect(screen.getByText(/No notifications sent/i)).toBeInTheDocument();
+      // Phase 1 Compact Format: No badges shown when no notifications sent
+      expect(screen.queryByText(/Sent/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/SMS/i)).not.toBeInTheDocument();
     });
 
     it('should not display notification section when status not provided', () => {
       render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
 
-      expect(screen.queryByText(/Email sent/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/SMS sent/i)).not.toBeInTheDocument();
+      // Phase 1 Compact Format: No badges shown when status not provided
+      expect(screen.queryByText(/Sent/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/SMS/i)).not.toBeInTheDocument();
     });
   });
 
@@ -622,6 +638,11 @@ describe('AlertCard', () => {
 
       render(<AlertCard alert={alertWithManyEvents} onAction={mockOnAction} variant="active" />);
 
+      // Phase 1 Compact Format: Timeline is in accordion, need to open it first
+      const accordionHeader = screen.getByText(/Tracking Timeline \(10 events\)/i);
+      fireEvent.click(accordionHeader);
+
+      // Now the "Show all events" button should be visible
       expect(screen.getByRole('button', { name: /Show all events/i })).toBeInTheDocument();
     });
   });
@@ -700,17 +721,23 @@ describe('AlertCard', () => {
       // Phase 1.1 features
       expect(screen.getByText('$384.99')).toBeInTheDocument();
       expect(screen.getByText('+1-555-0123')).toBeInTheDocument();
-      expect(screen.getByText(/Opened/)).toBeInTheDocument();
+      // Phase 1 Compact Format: Only shows highest engagement (Clicked), not Opened
       expect(screen.getByText(/Clicked/)).toBeInTheDocument();
+      expect(screen.queryByText(/Opened/)).not.toBeInTheDocument(); // Not shown when Clicked is shown
 
       // Original features
       expect(screen.getByText(/Weather delay in Memphis/i)).toBeInTheDocument();
       expect(screen.getByText(/Original ETA:/i)).toBeInTheDocument();
       expect(screen.getByText(/Revised ETA:/i)).toBeInTheDocument();
-      expect(screen.getByText(/Email sent/i)).toBeInTheDocument();
-      expect(screen.getByText(/SMS sent/i)).toBeInTheDocument();
-      expect(screen.getByText(/Contact customer about delay/i)).toBeInTheDocument();
-      expect(screen.getByText(/Tracking Timeline/i)).toBeInTheDocument();
+
+      // Phase 1 Compact Format: Check for compact notification badges
+      expect(screen.getByText(/🔗/)).toBeInTheDocument(); // Clicked badge (highest priority)
+      // Note: 📱 appears in both contact info (phone number) and SMS notification badge
+      expect(screen.getAllByText(/📱/).length).toBeGreaterThan(0); // SMS badge
+
+      // Phase 1 Compact Format: Suggested Actions and Tracking Timeline in accordions
+      expect(screen.getByText(/Suggested Actions \(2\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/Tracking Timeline \(1 event\)/i)).toBeInTheDocument();
     });
   });
 
