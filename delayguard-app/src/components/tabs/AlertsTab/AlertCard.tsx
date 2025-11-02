@@ -107,6 +107,27 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     return days === 1 ? '1 day' : `${days} days`;
   };
 
+  // Phase 1: Compact delay info that merges delay days + reason
+  const renderCompactDelayInfo = () => {
+    return (
+      <div className={styles.delayInfoCompact}>
+        <span
+          className={styles.delayDaysInline}
+          style={{ color: getPriorityColor(alert.delayDays, alert.totalAmount) }}
+        >
+          {alert.delayReason && '⚠️ '}
+          {getDaysText(alert.delayDays)} delay
+        </span>
+        {alert.delayReason && (
+          <>
+            <span className={styles.delaySeparator}>—</span>
+            <span className={styles.reasonInline}>{alert.delayReason}</span>
+          </>
+        )}
+      </div>
+    );
+  };
+
   const renderDelayReason = () => {
     if (!alert.delayReason) return null;
 
@@ -141,6 +162,38 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
             </span>
           </div>
         )}
+      </div>
+    );
+  };
+
+  // Phase 1: Compact notification status with inline badges
+  const renderNotificationStatusCompact = () => {
+    if (!alert.notificationStatus) return null;
+
+    const { emailSent, emailOpened, emailClicked, smsSent } = alert.notificationStatus;
+    const badges = [];
+
+    if (emailClicked) {
+      badges.push({ icon: '🔗', label: 'Clicked', style: styles.badgeClicked });
+    } else if (emailOpened) {
+      badges.push({ icon: '📧', label: 'Opened', style: styles.badgeOpened });
+    } else if (emailSent) {
+      badges.push({ icon: '✉️', label: 'Sent', style: styles.badgeSent });
+    }
+
+    if (smsSent) {
+      badges.push({ icon: '📱', label: 'SMS', style: styles.badgeSms });
+    }
+
+    if (badges.length === 0) return null;
+
+    return (
+      <div className={styles.notificationCompact}>
+        {badges.map((badge, i) => (
+          <span key={i} className={`${styles.notificationBadgeCompact} ${badge.style}`}>
+            {badge.icon} {badge.label}
+          </span>
+        ))}
       </div>
     );
   };
@@ -287,17 +340,22 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     if (!alert.suggestedActions || alert.suggestedActions.length === 0) return null;
 
     return (
-      <div className={styles.actionsSection}>
-        <h5 className={styles.sectionTitle}>Suggested Actions</h5>
-        <ul className={styles.suggestedActions}>
-          {alert.suggestedActions.map((action) => (
-            <li key={action} className={styles.actionItem}>
-              <span className={styles.actionBullet}>•</span>
-              <span className={styles.actionText}>{action}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <Accordion
+        title={`💡 Suggested Actions (${alert.suggestedActions.length})`}
+        className={styles.suggestedActionsAccordion}
+        defaultOpen={false}
+      >
+        <div className={styles.actionsSection}>
+          <ul className={styles.suggestedActions}>
+            {alert.suggestedActions.map((action) => (
+              <li key={action} className={styles.actionItem}>
+                <span className={styles.actionBullet}>•</span>
+                <span className={styles.actionText}>{action}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Accordion>
     );
   };
 
@@ -313,45 +371,50 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     const hasMoreEvents = sortedEvents.length > 5;
 
     return (
-      <div className={styles.timelineSection}>
-        <h5 className={styles.sectionTitle}>Tracking Timeline</h5>
-        <div className={styles.timeline}>
-          {displayEvents.map((event: TrackingEvent, index: number) => (
-            <div key={event.id} className={styles.timelineEvent}>
-              <div className={styles.timelineDot}></div>
-              {index < displayEvents.length - 1 && <div className={styles.timelineLine}></div>}
-              <div className={styles.eventContent}>
-                <div className={styles.eventHeader}>
-                  <span className={styles.eventTime}>{formatDate(event.timestamp)}</span>
-                  {event.location && (
-                    <span className={styles.eventLocation}>📍 {event.location}</span>
+      <Accordion
+        title={`🚚 Tracking Timeline (${sortedEvents.length} event${sortedEvents.length !== 1 ? 's' : ''})`}
+        className={styles.trackingTimelineAccordion}
+        defaultOpen={false}
+      >
+        <div className={styles.timelineSection}>
+          <div className={styles.timeline}>
+            {displayEvents.map((event: TrackingEvent, index: number) => (
+              <div key={event.id} className={styles.timelineEvent}>
+                <div className={styles.timelineDot}></div>
+                {index < displayEvents.length - 1 && <div className={styles.timelineLine}></div>}
+                <div className={styles.eventContent}>
+                  <div className={styles.eventHeader}>
+                    <span className={styles.eventTime}>{formatDate(event.timestamp)}</span>
+                    {event.location && (
+                      <span className={styles.eventLocation}>📍 {event.location}</span>
+                    )}
+                  </div>
+                  <div className={styles.eventDescription}>{event.description}</div>
+                  {event.carrierStatus && (
+                    <div className={styles.eventStatus}>{event.carrierStatus}</div>
                   )}
                 </div>
-                <div className={styles.eventDescription}>{event.description}</div>
-                {event.carrierStatus && (
-                  <div className={styles.eventStatus}>{event.carrierStatus}</div>
-                )}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          {hasMoreEvents && !showAllEvents && (
+            <button
+              className={styles.showMoreButton}
+              onClick={() => setShowAllEvents(true)}
+            >
+              Show all events ({sortedEvents.length})
+            </button>
+          )}
+          {showAllEvents && (
+            <button
+              className={styles.showMoreButton}
+              onClick={() => setShowAllEvents(false)}
+            >
+              Show less
+            </button>
+          )}
         </div>
-        {hasMoreEvents && !showAllEvents && (
-          <button
-            className={styles.showMoreButton}
-            onClick={() => setShowAllEvents(true)}
-          >
-            Show all events ({sortedEvents.length})
-          </button>
-        )}
-        {showAllEvents && (
-          <button
-            className={styles.showMoreButton}
-            onClick={() => setShowAllEvents(false)}
-          >
-            Show less
-          </button>
-        )}
-      </div>
+      </Accordion>
     );
   };
 
@@ -405,23 +468,8 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
       </div>
 
       <div className={styles.content}>
-        {/* Delay Information */}
-        <div className={styles.delayInfo}>
-          <div className={styles.delayDays} style={{ color: getPriorityColor(alert.delayDays, alert.totalAmount) }}>
-            {getDaysText(alert.delayDays)} delay
-          </div>
-          <div className={styles.createdAt}>
-            Created: {formatDate(alert.createdAt)}
-          </div>
-          {alert.resolvedAt && (
-            <div className={styles.resolvedAt}>
-              Resolved: {formatDate(alert.resolvedAt)}
-            </div>
-          )}
-        </div>
-
-        {/* Priority 3: Delay Reason */}
-        {renderDelayReason()}
+        {/* Phase 1: Compact Delay Information (merged with reason) */}
+        {renderCompactDelayInfo()}
 
         {/* Tracking Info */}
         {alert.trackingNumber && (
@@ -437,8 +485,8 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
         {/* Priority 3: ETA Information */}
         {renderEtaInformation()}
 
-        {/* Priority 3: Notification Status */}
-        {renderNotificationStatus()}
+        {/* Phase 1: Compact Notification Status */}
+        {renderNotificationStatusCompact()}
 
         {/* Phase 1.2: Product Information */}
         {renderProductDetails()}
