@@ -14,6 +14,7 @@ export { Spinner } from './Spinner';
 export { LoadingSpinner } from './LoadingSpinner';
 export { CommunicationStatusBadge } from './CommunicationStatusBadge'; // Phase 1.3
 export { InfoTooltip } from './InfoTooltip'; // Phase A: UX Clarity
+export { SegmentedControl } from './SegmentedControl'; // Phase B: Alert Filtering
 
 // Complex Components
 export { Modal } from './Modal';
@@ -51,3 +52,6 @@ export type { AccordionProps } from './Accordion';
 
 // Phase A: InfoTooltip types
 export type { InfoTooltipProps } from './InfoTooltip';
+
+// Phase B: SegmentedControl types
+export type { SegmentedControlProps, SegmentedControlOption } from './SegmentedControl';
