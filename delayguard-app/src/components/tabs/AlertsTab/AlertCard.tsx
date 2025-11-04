@@ -14,6 +14,7 @@
 import React, { useState } from 'react';
 import { Button } from '../../ui/Button';
 import { Accordion } from '../../ui/Accordion';
+import { InfoTooltip } from '../../ui/InfoTooltip'; // Phase A: UX clarity
 import { DelayAlert, TrackingEvent } from '../../../types';
 import styles from './AlertCard.module.css';
 
@@ -128,19 +129,6 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     );
   };
 
-  const renderDelayReason = () => {
-    if (!alert.delayReason) return null;
-
-    return (
-      <div className={styles.delayReason}>
-        <span className={styles.reasonIcon}>⚠️</span>
-        <div className={styles.reasonContent}>
-          <span className={styles.reasonLabel}>Reason:</span>
-          <span className={styles.reasonText}>{alert.delayReason}</span>
-        </div>
-      </div>
-    );
-  };
 
   const renderEtaInformation = () => {
     if (!alert.originalEta && !alert.revisedEta) return null;
@@ -166,19 +154,20 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     );
   };
 
-  // Phase 1: Compact notification status with inline badges
+  // Phase 1 & Phase A: Compact notification status with inline badges (improved labels)
   const renderNotificationStatusCompact = () => {
     if (!alert.notificationStatus) return null;
 
     const { emailSent, emailOpened, emailClicked, smsSent } = alert.notificationStatus;
     const badges = [];
 
+    // Phase A: Updated badge labels for better merchant clarity
     if (emailClicked) {
-      badges.push({ icon: '🔗', label: 'Clicked', style: styles.badgeClicked });
+      badges.push({ icon: '🔗', label: 'Engaged', style: styles.badgeClicked });
     } else if (emailOpened) {
-      badges.push({ icon: '📧', label: 'Opened', style: styles.badgeOpened });
+      badges.push({ icon: '📧', label: 'Read', style: styles.badgeOpened });
     } else if (emailSent) {
-      badges.push({ icon: '✉️', label: 'Sent', style: styles.badgeSent });
+      badges.push({ icon: '✉️', label: 'Delivered', style: styles.badgeSent });
     }
 
     if (smsSent) {
@@ -189,8 +178,8 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
 
     return (
       <div className={styles.notificationCompact}>
-        {badges.map((badge, i) => (
-          <span key={i} className={`${styles.notificationBadgeCompact} ${badge.style}`}>
+        {badges.map((badge) => (
+          <span key={badge.label} className={`${styles.notificationBadgeCompact} ${badge.style}`}>
             {badge.icon} {badge.label}
           </span>
         ))}
@@ -198,79 +187,6 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     );
   };
 
-  // Phase 1.1 & 1.3: Enhanced notification status with engagement tracking
-  const renderNotificationStatus = () => {
-    if (!alert.notificationStatus) return null;
-
-    const {
-      emailSent,
-      emailSentAt,
-      emailOpened,
-      emailOpenedAt,
-      emailClicked,
-      emailClickedAt,
-      smsSent,
-      smsSentAt,
-    } = alert.notificationStatus;
-    const hasNotifications = emailSent || smsSent;
-
-    if (!hasNotifications && emailSent === false && smsSent === false) {
-      return (
-        <div className={styles.notificationSection}>
-          <h5 className={styles.sectionTitle}>Customer Notifications</h5>
-          <div className={styles.notificationNone}>
-            <span className={styles.notificationIcon}>❌</span>
-            <span className={styles.notificationText}>No notifications sent</span>
-          </div>
-        </div>
-      );
-    }
-
-    if (!hasNotifications) return null;
-
-    return (
-      <div className={styles.notificationSection}>
-        <h5 className={styles.sectionTitle}>Customer Notifications</h5>
-        <div className={styles.notificationList}>
-          {emailSent && (
-            <div className={styles.notificationItem}>
-              <span className={styles.notificationIcon}>
-                {emailOpened ? '📧' : '✉️'}
-              </span>
-              <div className={styles.notificationDetails}>
-                <span className={styles.notificationText}>
-                  Email sent {emailSentAt && `on ${formatDateShort(emailSentAt)}`}
-                </span>
-                {emailOpened && (
-                  <span className={`${styles.badge} ${styles.badgeSuccess}`} style={{ marginLeft: '0.5rem', fontSize: '0.7rem' }}>
-                    ✓ Opened {emailOpenedAt && `on ${formatDateShort(emailOpenedAt)}`}
-                  </span>
-                )}
-                {emailClicked && (
-                  <span className={`${styles.badge} ${styles.badgeInfo}`} style={{ marginLeft: '0.5rem', fontSize: '0.7rem' }}>
-                    🔗 Clicked {emailClickedAt && `on ${formatDateShort(emailClickedAt)}`}
-                  </span>
-                )}
-                {emailSent && !emailOpened && (
-                  <span className={styles.notificationHint} style={{ marginLeft: '0.5rem', fontSize: '0.7rem', color: '#6b7280' }}>
-                    Not opened yet
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-          {smsSent && (
-            <div className={styles.notificationItem}>
-              <span className={styles.notificationIcon}>📱</span>
-              <span className={styles.notificationText}>
-                SMS sent {smsSentAt && `on ${formatDateShort(smsSentAt)}`}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   // Phase 1.2: Product Information Display
   const renderProductDetails = () => {
@@ -418,6 +334,52 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     );
   };
 
+  // Phase A: Badge legend for merchant education
+  const renderBadgeLegend = () => {
+    // Only show legend if there's actual notification activity
+    if (!alert.notificationStatus) return null;
+    const hasNotificationActivity =
+      alert.notificationStatus.emailSent || alert.notificationStatus.smsSent;
+    if (!hasNotificationActivity) return null;
+
+    return (
+      <Accordion
+        title="📖 What do these badges mean?"
+        className={styles.badgeLegendAccordion}
+        defaultOpen={false}
+      >
+        <div className={styles.badgeLegend}>
+          <div className={styles.legendItem}>
+            <span className={`${styles.notificationBadgeCompact} ${styles.badgeClicked}`}>
+              🔗 Engaged
+            </span>
+            <span className={styles.legendText}>
+              Customer clicked a link in your email (highest engagement!)
+            </span>
+          </div>
+          <div className={styles.legendItem}>
+            <span className={`${styles.notificationBadgeCompact} ${styles.badgeOpened}`}>
+              📧 Read
+            </span>
+            <span className={styles.legendText}>Customer opened and read your email</span>
+          </div>
+          <div className={styles.legendItem}>
+            <span className={`${styles.notificationBadgeCompact} ${styles.badgeSent}`}>
+              ✉️ Delivered
+            </span>
+            <span className={styles.legendText}>Email notification sent to customer</span>
+          </div>
+          <div className={styles.legendItem}>
+            <span className={`${styles.notificationBadgeCompact} ${styles.badgeSms}`}>
+              📱 SMS
+            </span>
+            <span className={styles.legendText}>Text message sent to customer</span>
+          </div>
+        </div>
+      </Accordion>
+    );
+  };
+
   // Phase 1.1: Get priority info
   const priorityBadge = getPriorityBadge(alert.delayDays, alert.totalAmount);
 
@@ -485,8 +447,21 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
         {/* Priority 3: ETA Information */}
         {renderEtaInformation()}
 
-        {/* Phase 1: Compact Notification Status */}
-        {renderNotificationStatusCompact()}
+        {/* Phase A: Customer Engagement Section with Header + Tooltip */}
+        {alert.notificationStatus && (
+          <>
+            <div className={styles.engagementHeader}>
+              <h4 className={styles.engagementTitle}>
+                Customer Engagement
+                <InfoTooltip text="Track if customers opened and engaged with your delay notification emails. Higher engagement = better customer communication." />
+              </h4>
+            </div>
+            {/* Phase 1: Compact Notification Status */}
+            {renderNotificationStatusCompact()}
+            {/* Phase A: Badge Legend (collapsible) */}
+            {renderBadgeLegend()}
+          </>
+        )}
 
         {/* Phase 1.2: Product Information */}
         {renderProductDetails()}
@@ -500,13 +475,16 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
 
       {variant === 'active' && (
         <div className={styles.actions}>
-          <Button
-            variant="success"
-            size="sm"
-            onClick={() => onAction(alert.id, 'resolve')}
-          >
-            Mark Resolved
-          </Button>
+          <div className={styles.actionWithTooltip}>
+            <Button
+              variant="success"
+              size="sm"
+              onClick={() => onAction(alert.id, 'resolve')}
+            >
+              Mark Resolved
+            </Button>
+            <InfoTooltip text="Mark this alert as handled. Use this when you've taken action (contacted customer, issued refund, etc.) and the issue is no longer active." />
+          </div>
           <Button
             variant="secondary"
             size="sm"

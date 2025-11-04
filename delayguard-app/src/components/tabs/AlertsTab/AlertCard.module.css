@@ -801,3 +801,53 @@
 .trackingTimelineAccordion {
   margin-top: 0.5rem;
 }
+
+/* Phase A: Customer Engagement Header with Tooltip */
+.engagementHeader {
+  padding: 0.75rem 0 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 0.5rem;
+}
+
+.engagementTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+/* Phase A: Badge Legend Accordion */
+.badgeLegendAccordion {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.badgeLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.legendText {
+  flex: 1;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* Phase A: Action Button with Tooltip */
+.actionWithTooltip {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}

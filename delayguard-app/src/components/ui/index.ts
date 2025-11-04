@@ -13,6 +13,7 @@ export { Badge } from '../Badge';
 export { Spinner } from './Spinner';
 export { LoadingSpinner } from './LoadingSpinner';
 export { CommunicationStatusBadge } from './CommunicationStatusBadge'; // Phase 1.3
+export { InfoTooltip } from './InfoTooltip'; // Phase A: UX Clarity
 
 // Complex Components
 export { Modal } from './Modal';
@@ -47,3 +48,6 @@ export type { CommunicationStatusBadgeProps } from './CommunicationStatusBadge';
 
 // Accordion types
 export type { AccordionProps } from './Accordion';
+
+// Phase A: InfoTooltip types
+export type { InfoTooltipProps } from './InfoTooltip';
