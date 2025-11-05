@@ -776,6 +776,48 @@ Every feature MUST follow this cycle:
   - 📊 **Impact**: Demo data now available at http://localhost:3000 for all 3 tabs
   - 🚀 **Next**: Visual polish check (Dashboard, Alerts, Orders tabs) + screenshot capture
 
+- **v1.16** (2025-11-05): Real Dashboard Metrics Implementation (v1.16)
+  - ✅ **Replaced Mock Metrics with Real Database Queries** (14 tests, 100% pass rate)
+    - **Problem Discovered**: User noticed Dashboard metrics needed clear definitions and were hard-coded
+    - **Research Phase**: Deep dive into database schema, APIs, and industry standards for metrics
+    - **Decision**: Implement real metrics using existing schema (no new columns needed)
+    - **Metrics Definitions**:
+      - **Total Alerts**: Count of all delay alerts ever created
+      - **Active Alerts**: Alerts where order tracking_status is NOT &apos;DELIVERED&apos; or &apos;OUT_FOR_DELIVERY&apos;
+      - **Resolved Alerts**: Alerts where order tracking_status is &apos;DELIVERED&apos; or &apos;OUT_FOR_DELIVERY&apos;
+      - **Avg Resolution Time**: Average days from alert.created_at to order.updated_at for resolved orders
+  - 🎯 **TDD Execution** (Retroactive - Acknowledged Failure)
+    - ❌ **Initial Failure**: Implemented metrics without writing tests first
+    - ✅ **User Feedback**: "have you implemented TDD tests for that and documented pertinent .md docs?"
+    - ✅ **Corrective Action**: Retroactively wrote comprehensive tests and documentation
+    - ✅ **Lesson Learned**: Must follow TDD workflow rigorously - no exceptions
+  - ✅ **Implementation Details**:
+    - **server-simple.ts**: Replaced mock /api/stats endpoint with 4 real SQL queries
+      - Query 1: COUNT(*) from delay_alerts (total alerts)
+      - Query 2: COUNT(DISTINCT da.id) JOIN orders WHERE NOT delivered (active)
+      - Query 3: COUNT(DISTINCT da.id) JOIN orders WHERE delivered (resolved)
+      - Query 4: AVG time difference for resolved orders (avg resolution time)
+    - **Database Initialization**: Added setupDatabase() before server startup
+    - **Environment Variables**: Added dotenv loading to read DATABASE_URL from .env
+    - **Type Safety**: Created CountResult and AvgResolutionResult interfaces (eliminated 6 &apos;any&apos; warnings)
+    - **Error Handling**: Graceful fallback to zeros if database unavailable
+  - ✅ **Seed Script Enhancements**:
+    - Added tracking_status logic based on alertStatus (resolved orders show DELIVERED)
+    - Fixed David Park&apos;s alert (changed delayDays from 0 to 3)
+    - Schema fixes for order_line_items and delay_alerts columns
+  - ✅ **Tests Created** (14):
+    - src/tests/unit/routes/stats-endpoint.test.ts (414 lines)
+    - Tests cover: basic stats, zero stats, N/A handling, singular/plural days, rounding, database errors, edge cases
+    - All 14 tests passing with 100% success rate
+  - ✅ **Files Modified** (3):
+    - src/server-simple.ts (added real metrics queries, type interfaces, database init)
+    - src/scripts/seed-demo-data.ts (added tracking_status logic, fixed David Park alert)
+    - .env (changed PORT from 3000 to 3001 to avoid webpack conflict)
+  - 📊 **Linting**: Zero errors (eliminated all 6 @typescript-eslint/no-explicit-any warnings)
+  - 🚀 **Production Ready**: Real-time dashboard metrics operational
+  - 📝 **Note**: This release includes proposed improvements to CLAUDE.md to prevent future TDD violations
+  - 🚀 **Next**: Suggest CLAUDE.md improvements + Visual polish check
+
 - **v1.14** (2025-11-05): 🎉 **SHIPENGINE INTEGRATION COMPLETE!** Production-Ready Carrier Tracking
   - ✅ **Completed ShipEngine Integration** (42 tests, 100% pass rate)
     - **Phase 1: Database Schema** (30 integration tests)

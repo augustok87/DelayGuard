@@ -293,7 +293,7 @@ const demoOrders: DemoOrder[] = [
     ],
     originalEta: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     currentEta: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    delayDays: 0,
+    delayDays: 3, // Was delayed by 3 days, but now resolved (out for delivery)
     alertStatus: 'resolved',
     emailOpened: true,
     emailClicked: true,
@@ -444,6 +444,17 @@ async function seedDemoData() {
 
     for (const demoOrder of demoOrders) {
       // Create order
+      // Determine tracking status based on alert status
+      let trackingStatus = 'IN_TRANSIT';
+      if (demoOrder.alertStatus === 'resolved') {
+        // Resolved alerts should show package delivered or out for delivery
+        trackingStatus = demoOrder.trackingEvents[demoOrder.trackingEvents.length - 1]?.status === 'OUT_FOR_DELIVERY'
+          ? 'OUT_FOR_DELIVERY'
+          : 'DELIVERED';
+      } else if (demoOrder.alertStatus === 'dismissed') {
+        trackingStatus = 'IN_TRANSIT';
+      }
+
       const orderResult = await client.query(`
         INSERT INTO orders (
           shop_id,
@@ -471,7 +482,7 @@ async function seedDemoData() {
         demoOrder.status,
         demoOrder.originalEta,
         demoOrder.currentEta,
-        'IN_TRANSIT',
+        trackingStatus,
       ]);
       const orderId = orderResult.rows[0].id;
       orderCount++;

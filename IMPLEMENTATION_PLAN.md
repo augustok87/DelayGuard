@@ -1001,6 +1001,186 @@ router.post("/api/cron/tracking-refresh", async (ctx: Context) => {
 
 ---
 
+## DASHBOARD METRICS: REAL-TIME STATISTICS ✅ COMPLETED
+**Completion Date**: November 5, 2025
+**Goal**: Replace mock dashboard metrics with real database queries for accurate KPIs
+**Status**: COMPLETED (Backend Enhancement)
+**Tests**: 14 passing tests (stats endpoint)
+**Effort**: 1 day
+
+### Dashboard Metrics Overview
+**Implemented**: Real-time dashboard statistics calculated from database queries
+
+#### Problem
+- Dashboard metrics were hard-coded mock data
+- User asked for clear definitions of "Resolved Alerts" and "Avg Resolution Time"
+- No way to track actual performance metrics
+
+#### Metrics Definitions
+
+**Total Alerts**
+- Count of all delay alerts ever created
+- SQL: `SELECT COUNT(*) FROM delay_alerts`
+
+**Active Alerts**
+- Alerts where order tracking_status is NOT delivered/out-for-delivery
+- SQL: `SELECT COUNT(DISTINCT da.id) FROM delay_alerts da JOIN orders o WHERE o.tracking_status NOT IN ('DELIVERED', 'OUT_FOR_DELIVERY')`
+
+**Resolved Alerts**
+- Alerts where order tracking_status is delivered/out-for-delivery
+- SQL: `SELECT COUNT(DISTINCT da.id) FROM delay_alerts da JOIN orders o WHERE o.tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY')`
+
+**Avg Resolution Time**
+- Average days from alert.created_at to order.updated_at for resolved orders
+- SQL: `SELECT AVG(EXTRACT(EPOCH FROM (o.updated_at - da.created_at)) / 86400) as avg_days`
+- Format: "X days" or "X day" (singular) or "N/A" (no resolved alerts)
+- Rounded to 1 decimal place
+
+#### Implementation Details
+
+**Backend: /api/stats Endpoint**
+```typescript
+// File: src/server-simple.ts (lines 83-146)
+
+interface CountResult {
+  count: string;
+}
+
+interface AvgResolutionResult {
+  avg_days: string | null;
+  resolved_count: string;
+}
+
+router.get('/api/stats', async(ctx) => {
+  try {
+    // Query 1: Total alerts
+    const totalAlertsResult = await query(`
+      SELECT COUNT(*) as count FROM delay_alerts
+    `) as CountResult[];
+    const totalAlerts = parseInt(totalAlertsResult[0].count);
+
+    // Query 2: Active alerts
+    const activeAlertsResult = await query(`
+      SELECT COUNT(DISTINCT da.id) as count
+      FROM delay_alerts da
+      JOIN orders o ON da.order_id = o.id
+      WHERE o.tracking_status NOT IN ('DELIVERED', 'OUT_FOR_DELIVERY')
+    `) as CountResult[];
+    const activeAlerts = parseInt(activeAlertsResult[0].count);
+
+    // Query 3: Resolved alerts
+    const resolvedAlertsResult = await query(`
+      SELECT COUNT(DISTINCT da.id) as count
+      FROM delay_alerts da
+      JOIN orders o ON da.order_id = o.id
+      WHERE o.tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY')
+    `) as CountResult[];
+    const resolvedAlerts = parseInt(resolvedAlertsResult[0].count);
+
+    // Query 4: Avg resolution time
+    const avgResolutionResult = await query(`
+      SELECT
+        AVG(EXTRACT(EPOCH FROM (o.updated_at - da.created_at)) / 86400) as avg_days,
+        COUNT(*) as resolved_count
+      FROM delay_alerts da
+      JOIN orders o ON da.order_id = o.id
+      WHERE o.tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY')
+        AND o.updated_at > da.created_at
+    `) as AvgResolutionResult[];
+
+    const avgDays = avgResolutionResult[0].avg_days
+      ? Math.round(parseFloat(avgResolutionResult[0].avg_days) * 10) / 10
+      : 0;
+
+    ctx.body = {
+      totalAlerts,
+      activeAlerts,
+      resolvedAlerts,
+      avgResolutionTime: resolvedAlerts > 0
+        ? `${avgDays} ${avgDays === 1 ? 'day' : 'days'}`
+        : 'N/A'
+    };
+  } catch (error) {
+    logger.error('Error fetching stats:', error as Error);
+    // Fallback to zeros if database unavailable
+    ctx.body = {
+      totalAlerts: 0,
+      activeAlerts: 0,
+      resolvedAlerts: 0,
+      avgResolutionTime: 'N/A'
+    };
+  }
+});
+```
+
+**Frontend: StatsCard Component** (already existed, no changes needed)
+```typescript
+// File: src/components/tabs/DashboardTab/StatsCard.tsx
+// Fetches data from /api/stats and displays in 4 metric boxes
+```
+
+**Seed Script Enhancement**
+```typescript
+// File: src/scripts/seed-demo-data.ts
+// Added logic to set tracking_status based on alert status
+let trackingStatus = 'IN_TRANSIT';
+if (demoOrder.alertStatus === 'resolved') {
+  trackingStatus = 'DELIVERED';
+} else if (demoOrder.alertStatus === 'dismissed') {
+  trackingStatus = 'IN_TRANSIT';
+}
+```
+
+#### Features Delivered
+- ✅ Real-time database queries for all 4 dashboard metrics
+- ✅ Type-safe interfaces (CountResult, AvgResolutionResult) - eliminated 6 'any' warnings
+- ✅ Graceful error handling with fallback to zeros
+- ✅ Decimal rounding to 1 decimal place for avg resolution time
+- ✅ Singular/plural day formatting ("1 day" vs "3 days")
+- ✅ Database initialization on server startup
+- ✅ Environment variable loading (dotenv) for DATABASE_URL
+- ✅ Seed script generates realistic data with proper tracking statuses
+
+#### Files Created
+- `src/tests/unit/routes/stats-endpoint.test.ts` (414 lines, 14 tests)
+
+#### Files Modified
+- `src/server-simple.ts` (added type interfaces, real queries, database init)
+- `src/scripts/seed-demo-data.ts` (tracking_status logic, schema fixes)
+- `.env` (PORT changed from 3000 to 3001)
+
+#### Tests Implemented (14 tests, 100% pass rate)
+1. Basic stats calculation (totalAlerts, activeAlerts, resolvedAlerts, avgResolutionTime)
+2. Zero stats when no alerts exist
+3. "N/A" avg resolution time when no resolved alerts
+4. Singular "day" when avg is exactly 1
+5. Rounding to 1 decimal place (2.765 → 2.8)
+6. Database errors with fallback to zeros
+7. Partial query failure handling
+8. Invalid data handling (non-numeric counts)
+9. Real-world scenario (20 total, 12 active, 8 resolved, 4.2 day avg)
+10. Large alert counts (enterprise scale: 50,000 alerts)
+11. SQL query execution order verification
+12. Edge case: 0.5 day resolution time
+13. Edge case: 0 day resolution time (same-day delivery)
+14. Edge case: Negative avg_days (should not happen, but tested)
+
+#### TDD Workflow Notes
+⚠️ **Initial Failure**: Implemented feature before writing tests (violated TDD workflow)
+✅ **User Feedback**: "have you implemented TDD tests for that and documented pertinent .md docs?"
+✅ **Corrective Action**: Retroactively wrote comprehensive tests and documentation
+✅ **Lesson Learned**: Must follow TDD workflow rigorously - no exceptions
+
+#### Success Metrics
+- ✅ Dashboard metrics now show real-time data (previously hard-coded)
+- ✅ Merchant can see actual alert resolution performance
+- ✅ Definitions documented for reference
+- ✅ Zero linting errors (eliminated all @typescript-eslint/no-explicit-any warnings)
+- ✅ 100% test coverage for /api/stats endpoint
+- ✅ Production-ready with graceful error handling
+
+---
+
 ## PHASE 2: CUSTOMER INTELLIGENCE (3-4 weeks)
 **Goal**: Differentiate with smart prioritization and customer context
 **Status**: PRE-SUBMISSION REQUIREMENT

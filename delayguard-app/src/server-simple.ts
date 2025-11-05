@@ -4,12 +4,27 @@
  * For local development and testing
  */
 
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config();
+
 import Koa from 'koa';
 import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import serve from 'koa-static';
 import { join } from 'path';
 import { logger } from './utils/logger';
+import { query, setupDatabase } from './database/connection';
+
+// Type definitions for database query results
+interface CountResult {
+  count: string;
+}
+
+interface AvgResolutionResult {
+  avg_days: string | null;
+  resolved_count: string;
+}
 
 // Create Koa app
 const app = new Koa();
@@ -76,12 +91,68 @@ router.get('/api/orders', async(ctx) => {
 });
 
 router.get('/api/stats', async(ctx) => {
-  ctx.body = {
-    totalAlerts: 10,
-    activeAlerts: 3,
-    resolvedAlerts: 7,
-    avgResolutionTime: '2.5 days',
-  };
+  try {
+    // Calculate real metrics from database
+
+    // Total alerts (all delay alerts created)
+    const totalAlertsResult = await query(`
+      SELECT COUNT(*) as count
+      FROM delay_alerts
+    `) as CountResult[];
+    const totalAlerts = parseInt(totalAlertsResult[0].count);
+
+    // Active alerts (orders not yet delivered or out for delivery)
+    const activeAlertsResult = await query(`
+      SELECT COUNT(DISTINCT da.id) as count
+      FROM delay_alerts da
+      JOIN orders o ON da.order_id = o.id
+      WHERE o.tracking_status NOT IN ('DELIVERED', 'OUT_FOR_DELIVERY')
+    `) as CountResult[];
+    const activeAlerts = parseInt(activeAlertsResult[0].count);
+
+    // Resolved alerts (orders delivered or out for delivery)
+    const resolvedAlertsResult = await query(`
+      SELECT COUNT(DISTINCT da.id) as count
+      FROM delay_alerts da
+      JOIN orders o ON da.order_id = o.id
+      WHERE o.tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY')
+    `) as CountResult[];
+    const resolvedAlerts = parseInt(resolvedAlertsResult[0].count);
+
+    // Avg resolution time (time from alert created to delivery for resolved orders)
+    const avgResolutionResult = await query(`
+      SELECT
+        AVG(EXTRACT(EPOCH FROM (o.updated_at - da.created_at)) / 86400) as avg_days,
+        COUNT(*) as resolved_count
+      FROM delay_alerts da
+      JOIN orders o ON da.order_id = o.id
+      WHERE o.tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY')
+        AND o.updated_at > da.created_at
+    `) as AvgResolutionResult[];
+
+    const avgDays = avgResolutionResult[0].avg_days
+      ? Math.round(parseFloat(avgResolutionResult[0].avg_days) * 10) / 10
+      : 0;
+    const avgResolutionTime = resolvedAlerts > 0
+      ? `${avgDays} ${avgDays === 1 ? 'day' : 'days'}`
+      : 'N/A';
+
+    ctx.body = {
+      totalAlerts,
+      activeAlerts,
+      resolvedAlerts,
+      avgResolutionTime,
+    };
+  } catch (error) {
+    logger.error('Error fetching stats:', error as Error);
+    // Fallback to mock data if database unavailable
+    ctx.body = {
+      totalAlerts: 0,
+      activeAlerts: 0,
+      resolvedAlerts: 0,
+      avgResolutionTime: 'N/A',
+    };
+  }
 });
 
 // GDPR endpoints (mocked)
@@ -118,13 +189,29 @@ app.on('error', (err) => {
   logger.error('Server error', err);
 });
 
-// Start server
+// Start server with database initialization
 const PORT = process.env.PORT || 3001; // Use 3001 to avoid conflict with webpack
-const server = app.listen(PORT, () => {
-  logger.info(`🚀 Simple dev server running on http://localhost:${PORT}`);
-  logger.info('📝 No external dependencies required (Redis/PostgreSQL not needed)');
-  logger.info('✨ Frontend dev server will run on http://localhost:3000');
-});
 
-export { app, server };
+async function startServer() {
+  try {
+    // Initialize database connection
+    await setupDatabase();
+    logger.info('✅ Database initialized successfully');
+
+    const server = app.listen(PORT, () => {
+      logger.info(`🚀 Simple dev server running on http://localhost:${PORT}`);
+      logger.info('📊 Real-time metrics enabled (connected to PostgreSQL)');
+      logger.info('✨ Frontend dev server will run on http://localhost:3000');
+    });
+
+    return server;
+  } catch (error) {
+    logger.error('Failed to start server', error as Error);
+    process.exit(1);
+  }
+}
+
+const serverPromise = startServer();
+
+export { app, serverPromise };
 
