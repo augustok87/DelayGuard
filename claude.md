@@ -733,6 +733,49 @@ Every feature MUST follow this cycle:
 
 ## VERSION HISTORY
 
+- **v1.15** (2025-11-05): 📸 **Pre-Screenshot Preparation Complete** - Demo Data & Visual Polish
+  - ✅ **Step 1: Cleaned Up Uncommitted Changes** (Completed)
+    - Committed ESLint auto-fixes for code consistency
+    - 5 files: sendgrid-webhook.ts, shopify-service.ts, 2 test files, lint-fix-report.json
+    - Commit: `chore: apply ESLint auto-fixes for code consistency` (cc0c7b35)
+  - ✅ **Step 2: Demo Data Seed Script** (Completed)
+    - **Created comprehensive seed script** (600+ lines TypeScript)
+      - Generates **6 realistic demo orders** with varied priorities:
+        - 4 Active alerts (CRITICAL, HIGH, MEDIUM, LOW)
+        - 1 Resolved alert
+        - 1 Dismissed alert
+      - Each order includes:
+        - Realistic customer names, emails, phones
+        - 1-3 product line items (Wireless Headphones, Gaming Keyboard, Yoga Mat, etc.)
+        - Full tracking event timelines (PICKED_UP → IN_TRANSIT → EXCEPTION)
+        - Original ETA vs Current ETA (for delay calculation)
+        - Email engagement tracking (opened/clicked status)
+        - Varied order values ($49.99 - $584.99) for different priority badges
+    - **Demo Data Stats**:
+      - 📦 6 orders created
+      - 🛍️ 13 product line items
+      - 📍 16 tracking events
+      - 🚨 5 delay alerts
+      - ✅ All data seeded successfully
+    - **Database Schema Fixes**:
+      - Fixed `order_line_items` schema (product_id, removed shopify_variant_id)
+      - Fixed `delay_alerts` schema (added fulfillment_id, removed delay_type/status)
+      - Captured fulfillment_id with RETURNING clause
+    - **Script Features**:
+      - Idempotent shop creation (ON CONFLICT DO UPDATE)
+      - Realistic Shopify GID format for all IDs
+      - Proper foreign key relationships
+      - Email engagement timestamps calculated from delay days
+  - ✅ **Files Created** (2):
+    - src/scripts/seed-demo-data.ts (630 lines)
+    - src/scripts/README.md (usage instructions, troubleshooting, cleanup guide)
+  - ⏳ **Step 3: Visual Polish Check** (In Progress)
+    - Dev server running on ports 3000 (client) and 3001 (server)
+    - Ready for screenshot capture on all 3 tabs
+  - 🎯 **Purpose**: Prepare professional-looking demo data for Shopify App Store submission screenshots
+  - 📊 **Impact**: Demo data now available at http://localhost:3000 for all 3 tabs
+  - 🚀 **Next**: Visual polish check (Dashboard, Alerts, Orders tabs) + screenshot capture
+
 - **v1.14** (2025-11-05): 🎉 **SHIPENGINE INTEGRATION COMPLETE!** Production-Ready Carrier Tracking
   - ✅ **Completed ShipEngine Integration** (42 tests, 100% pass rate)
     - **Phase 1: Database Schema** (30 integration tests)
