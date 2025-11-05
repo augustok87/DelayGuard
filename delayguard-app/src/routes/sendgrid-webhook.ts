@@ -14,10 +14,10 @@
  * Implements IMPLEMENTATION_PLAN.md Phase 1.3 requirements
  */
 
-import type { Context } from 'koa';
-import crypto from 'crypto';
-import { logger } from '../utils/logger';
-import { query } from '../database/connection';
+import type { Context } from "koa";
+import crypto from "crypto";
+import { logger } from "../utils/logger";
+import { query } from "../database/connection";
 
 /**
  * SendGrid webhook event structure
@@ -47,7 +47,7 @@ function verifyWebhookSignature(
   const secret = process.env.SENDGRID_WEBHOOK_SECRET;
 
   if (!secret) {
-    logger.error('SENDGRID_WEBHOOK_SECRET not configured');
+    logger.error("SENDGRID_WEBHOOK_SECRET not configured");
     return false;
   }
 
@@ -57,7 +57,7 @@ function verifyWebhookSignature(
   const tenMinutesInMs = 10 * 60 * 1000;
 
   if (now - webhookTime > tenMinutesInMs) {
-    logger.warn('Webhook timestamp too old', {
+    logger.warn("Webhook timestamp too old", {
       timestamp: webhookTime,
       age: now - webhookTime,
     });
@@ -68,9 +68,9 @@ function verifyWebhookSignature(
   // SendGrid signs: timestamp + payload
   const signedPayload = timestamp + payload;
   const expectedSignature = crypto
-    .createHmac('sha256', secret)
+    .createHmac("sha256", secret)
     .update(signedPayload)
-    .digest('base64');
+    .digest("base64");
 
   return signature === expectedSignature;
 }
@@ -82,19 +82,19 @@ function verifyWebhookSignature(
  */
 async function processOpenEvent(event: SendGridEvent): Promise<void> {
   try {
-    logger.debug('Processing email open event', {
+    logger.debug("Processing email open event", {
       messageId: event.sg_message_id,
       email: event.email,
     });
 
     // Find delay alert by SendGrid message ID
     const alerts = await query<{ id: number; order_id: number }>(
-      'SELECT id, order_id FROM delay_alerts WHERE sendgrid_message_id = $1',
+      "SELECT id, order_id FROM delay_alerts WHERE sendgrid_message_id = $1",
       [event.sg_message_id],
     );
 
     if (alerts.length === 0) {
-      logger.debug('No delay alert found for message ID', {
+      logger.debug("No delay alert found for message ID", {
         messageId: event.sg_message_id,
       });
       return;
@@ -112,14 +112,14 @@ async function processOpenEvent(event: SendGridEvent): Promise<void> {
       [event.timestamp, alert.id],
     );
 
-    logger.info('Email opened event recorded', {
+    logger.info("Email opened event recorded", {
       alertId: alert.id,
       orderId: alert.order_id,
       messageId: event.sg_message_id,
       email: event.email,
     });
   } catch (error) {
-    logger.error('Error processing email open event', error as Error, {
+    logger.error("Error processing email open event", error as Error, {
       messageId: event.sg_message_id,
     });
     throw error;
@@ -133,7 +133,7 @@ async function processOpenEvent(event: SendGridEvent): Promise<void> {
  */
 async function processClickEvent(event: SendGridEvent): Promise<void> {
   try {
-    logger.debug('Processing email click event', {
+    logger.debug("Processing email click event", {
       messageId: event.sg_message_id,
       email: event.email,
       url: event.url,
@@ -141,12 +141,12 @@ async function processClickEvent(event: SendGridEvent): Promise<void> {
 
     // Find delay alert by SendGrid message ID
     const alerts = await query<{ id: number; order_id: number }>(
-      'SELECT id, order_id FROM delay_alerts WHERE sendgrid_message_id = $1',
+      "SELECT id, order_id FROM delay_alerts WHERE sendgrid_message_id = $1",
       [event.sg_message_id],
     );
 
     if (alerts.length === 0) {
-      logger.debug('No delay alert found for message ID', {
+      logger.debug("No delay alert found for message ID", {
         messageId: event.sg_message_id,
       });
       return;
@@ -164,7 +164,7 @@ async function processClickEvent(event: SendGridEvent): Promise<void> {
       [event.timestamp, alert.id],
     );
 
-    logger.info('Email clicked event recorded', {
+    logger.info("Email clicked event recorded", {
       alertId: alert.id,
       orderId: alert.order_id,
       messageId: event.sg_message_id,
@@ -172,7 +172,7 @@ async function processClickEvent(event: SendGridEvent): Promise<void> {
       url: event.url,
     });
   } catch (error) {
-    logger.error('Error processing email click event', error as Error, {
+    logger.error("Error processing email click event", error as Error, {
       messageId: event.sg_message_id,
     });
     throw error;
@@ -189,20 +189,20 @@ async function processClickEvent(event: SendGridEvent): Promise<void> {
 export async function handleSendGridWebhook(ctx: Context): Promise<void> {
   try {
     // Extract signature and timestamp from headers
-    const signature = ctx.get('x-twilio-email-event-webhook-signature');
-    const timestamp = ctx.get('x-twilio-email-event-webhook-timestamp');
+    const signature = ctx.get("x-twilio-email-event-webhook-signature");
+    const timestamp = ctx.get("x-twilio-email-event-webhook-timestamp");
 
     if (!signature) {
-      logger.warn('SendGrid webhook received without signature header');
+      logger.warn("SendGrid webhook received without signature header");
       ctx.status = 401;
-      ctx.body = { error: 'Missing webhook signature' };
+      ctx.body = { error: "Missing webhook signature" };
       return;
     }
 
     if (!timestamp) {
-      logger.warn('SendGrid webhook received without timestamp header');
+      logger.warn("SendGrid webhook received without timestamp header");
       ctx.status = 401;
-      ctx.body = { error: 'Missing webhook timestamp' };
+      ctx.body = { error: "Missing webhook timestamp" };
       return;
     }
 
@@ -212,9 +212,9 @@ export async function handleSendGridWebhook(ctx: Context): Promise<void> {
 
     // Verify webhook signature
     if (!verifyWebhookSignature(rawBody, signature, timestamp)) {
-      logger.warn('SendGrid webhook signature verification failed');
+      logger.warn("SendGrid webhook signature verification failed");
       ctx.status = 401;
-      ctx.body = { error: 'Invalid webhook signature' };
+      ctx.body = { error: "Invalid webhook signature" };
       return;
     }
 
@@ -225,7 +225,7 @@ export async function handleSendGridWebhook(ctx: Context): Promise<void> {
 
     if (now - webhookTime > tenMinutesInMs) {
       ctx.status = 401;
-      ctx.body = { error: 'Webhook timestamp too old' };
+      ctx.body = { error: "Webhook timestamp too old" };
       return;
     }
 
@@ -240,15 +240,15 @@ export async function handleSendGridWebhook(ctx: Context): Promise<void> {
 
     // Process each event
     for (const event of events) {
-      if (event.event === 'open') {
+      if (event.event === "open") {
         await processOpenEvent(event);
         processedCount++;
-      } else if (event.event === 'click') {
+      } else if (event.event === "click") {
         await processClickEvent(event);
         processedCount++;
       } else {
         // Ignore other event types (delivered, bounce, etc.)
-        logger.debug('Ignoring event type', {
+        logger.debug("Ignoring event type", {
           eventType: event.event,
           messageId: event.sg_message_id,
         });
@@ -258,8 +258,8 @@ export async function handleSendGridWebhook(ctx: Context): Promise<void> {
     ctx.status = 200;
     ctx.body = { success: true, processed: processedCount };
   } catch (error) {
-    logger.error('Error handling SendGrid webhook', error as Error);
+    logger.error("Error handling SendGrid webhook", error as Error);
     ctx.status = 500;
-    ctx.body = { error: 'Internal server error' };
+    ctx.body = { error: "Internal server error" };
   }
 }

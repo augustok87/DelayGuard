@@ -46,7 +46,7 @@ describe('InfoTooltip Component', () => {
   });
 
   describe('Tooltip Behavior', () => {
-    it('should show tooltip on mouse enter', async () => {
+    it('should show tooltip on mouse enter', async() => {
       const { container } = render(<InfoTooltip text="Help text content" />);
 
       const icon = container.querySelector('[data-testid="info-tooltip-icon"]');
@@ -59,7 +59,7 @@ describe('InfoTooltip Component', () => {
       });
     });
 
-    it('should hide tooltip on mouse leave', async () => {
+    it('should hide tooltip on mouse leave', async() => {
       const { container } = render(<InfoTooltip text="Help text content" />);
 
       const icon = container.querySelector('[data-testid="info-tooltip-icon"]');
@@ -78,7 +78,7 @@ describe('InfoTooltip Component', () => {
       });
     });
 
-    it('should show tooltip on focus (keyboard accessibility)', async () => {
+    it('should show tooltip on focus (keyboard accessibility)', async() => {
       const { container } = render(<InfoTooltip text="Help text content" />);
 
       const icon = container.querySelector('[data-testid="info-tooltip-icon"]');
@@ -91,7 +91,7 @@ describe('InfoTooltip Component', () => {
       });
     });
 
-    it('should hide tooltip on blur', async () => {
+    it('should hide tooltip on blur', async() => {
       const { container } = render(<InfoTooltip text="Help text content" />);
 
       const icon = container.querySelector('[data-testid="info-tooltip-icon"]');
@@ -112,7 +112,7 @@ describe('InfoTooltip Component', () => {
   });
 
   describe('Tooltip Content', () => {
-    it('should display tooltip text', async () => {
+    it('should display tooltip text', async() => {
       const { container } = render(
         <InfoTooltip text="This is helpful information for the user" />,
       );
@@ -125,7 +125,7 @@ describe('InfoTooltip Component', () => {
       });
     });
 
-    it('should handle long tooltip text', async () => {
+    it('should handle long tooltip text', async() => {
       const longText =
         'This is a very long tooltip message that provides extensive help information to the user about what this feature does and how to use it properly.';
       const { container } = render(<InfoTooltip text={longText} />);
@@ -138,7 +138,7 @@ describe('InfoTooltip Component', () => {
       });
     });
 
-    it('should handle multiline tooltip content', async () => {
+    it('should handle multiline tooltip content', async() => {
       const multilineText = 'Line 1\nLine 2\nLine 3';
       const { container } = render(<InfoTooltip text={multilineText} />);
 
@@ -150,7 +150,7 @@ describe('InfoTooltip Component', () => {
       });
     });
 
-    it('should handle special characters in tooltip', async () => {
+    it('should handle special characters in tooltip', async() => {
       const specialText = 'Use this when you\'ve taken action (e.g., contacted customer, issued refund)';
       const { container } = render(<InfoTooltip text={specialText} />);
 
@@ -179,7 +179,7 @@ describe('InfoTooltip Component', () => {
       expect(icon).toHaveAttribute('tabIndex', '0');
     });
 
-    it('should have aria-describedby when tooltip is shown', async () => {
+    it('should have aria-describedby when tooltip is shown', async() => {
       const { container } = render(<InfoTooltip text="Help text" />);
 
       const icon = container.querySelector('[data-testid="info-tooltip-icon"]');
@@ -190,7 +190,7 @@ describe('InfoTooltip Component', () => {
       });
     });
 
-    it('should associate tooltip with trigger element', async () => {
+    it('should associate tooltip with trigger element', async() => {
       const { container } = render(<InfoTooltip text="Help text" />);
 
       const icon = container.querySelector('[data-testid="info-tooltip-icon"]');
@@ -206,7 +206,7 @@ describe('InfoTooltip Component', () => {
       });
     });
 
-    it('should have proper role for tooltip content', async () => {
+    it('should have proper role for tooltip content', async() => {
       const { container } = render(<InfoTooltip text="Help text" />);
 
       const icon = container.querySelector('[data-testid="info-tooltip-icon"]');
@@ -227,7 +227,7 @@ describe('InfoTooltip Component', () => {
       expect(icon).toBeInTheDocument();
     });
 
-    it('should position tooltip to avoid viewport overflow', async () => {
+    it('should position tooltip to avoid viewport overflow', async() => {
       const { container } = render(<InfoTooltip text="Help text" />);
 
       const icon = container.querySelector('[data-testid="info-tooltip-icon"]');
@@ -239,7 +239,7 @@ describe('InfoTooltip Component', () => {
       });
     });
 
-    it('should handle rapid hover events', async () => {
+    it('should handle rapid hover events', async() => {
       const { container } = render(<InfoTooltip text="Help text" />);
 
       const icon = container.querySelector('[data-testid="info-tooltip-icon"]');
@@ -267,7 +267,7 @@ describe('InfoTooltip Component', () => {
       expect(icon).toHaveAttribute('class');
     });
 
-    it('should apply tooltip styles when visible', async () => {
+    it('should apply tooltip styles when visible', async() => {
       const { container } = render(<InfoTooltip text="Help text" />);
 
       const icon = container.querySelector('[data-testid="info-tooltip-icon"]');

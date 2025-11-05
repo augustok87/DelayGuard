@@ -25,7 +25,7 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
   let sendgridWebhook: any;
   let originalEnv: NodeJS.ProcessEnv;
 
-  beforeEach(async () => {
+  beforeEach(async() => {
     // Save original environment
     originalEnv = { ...process.env };
 
@@ -61,7 +61,7 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
   });
 
   describe('Webhook Signature Verification', () => {
-    it('should reject webhook with missing signature', async () => {
+    it('should reject webhook with missing signature', async() => {
       const ctx = createMockContext({
         body: [{ event: 'open', sg_message_id: 'test-123' }],
         headers: {}, // No signature
@@ -72,11 +72,11 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
       expect(ctx.status).toBe(401);
       expect(ctx.body).toEqual({ error: 'Missing webhook signature' });
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('SendGrid webhook received without signature')
+        expect.stringContaining('SendGrid webhook received without signature'),
       );
     });
 
-    it('should reject webhook with invalid signature', async () => {
+    it('should reject webhook with invalid signature', async() => {
       const ctx = createMockContext({
         body: [{ event: 'open', sg_message_id: 'test-123' }],
         headers: {
@@ -90,11 +90,11 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
       expect(ctx.status).toBe(401);
       expect(ctx.body).toEqual({ error: 'Invalid webhook signature' });
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('SendGrid webhook signature verification failed')
+        expect.stringContaining('SendGrid webhook signature verification failed'),
       );
     });
 
-    it('should accept webhook with valid signature', async () => {
+    it('should accept webhook with valid signature', async() => {
       const timestamp = Date.now().toString();
       const payload = JSON.stringify([{ event: 'open', sg_message_id: 'test-123' }]);
       const signature = generateValidSignature(payload, timestamp, 'test-webhook-secret-key');
@@ -114,11 +114,11 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
 
       expect(ctx.status).toBe(200);
       expect(mockLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('Invalid signature')
+        expect.stringContaining('Invalid signature'),
       );
     });
 
-    it('should reject webhook with timestamp older than 10 minutes', async () => {
+    it('should reject webhook with timestamp older than 10 minutes', async() => {
       const oldTimestamp = (Date.now() - 11 * 60 * 1000).toString(); // 11 minutes ago
       const payload = JSON.stringify([{ event: 'open', sg_message_id: 'test-123' }]);
       const signature = generateValidSignature(payload, oldTimestamp, 'test-webhook-secret-key');
@@ -142,7 +142,7 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
   });
 
   describe('Email Open Event Handling', () => {
-    it('should update delay_alert when email is opened', async () => {
+    it('should update delay_alert when email is opened', async() => {
       const timestamp = Date.now().toString();
       const messageId = 'sendgrid-msg-123';
       const payload = JSON.stringify([
@@ -184,20 +184,20 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
       // Verify database queries
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('SELECT id'),
-        [messageId]
+        [messageId],
       );
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE delay_alerts'),
-        expect.arrayContaining([expect.any(Number), 1])
+        expect.arrayContaining([expect.any(Number), 1]),
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Email opened event recorded'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
-    it('should handle email open event for non-existent message gracefully', async () => {
+    it('should handle email open event for non-existent message gracefully', async() => {
       const timestamp = Date.now().toString();
       const messageId = 'unknown-msg-123';
       const payload = JSON.stringify([
@@ -234,13 +234,13 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('No delay alert found'),
-        expect.objectContaining({ messageId })
+        expect.objectContaining({ messageId }),
       );
     });
   });
 
   describe('Email Click Event Handling', () => {
-    it('should update delay_alert when email link is clicked', async () => {
+    it('should update delay_alert when email link is clicked', async() => {
       const timestamp = Date.now().toString();
       const messageId = 'sendgrid-msg-456';
       const payload = JSON.stringify([
@@ -284,22 +284,22 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
       // Verify database queries
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('SELECT id'),
-        [messageId]
+        [messageId],
       );
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE delay_alerts'),
-        expect.arrayContaining([expect.any(Number), 2])
+        expect.arrayContaining([expect.any(Number), 2]),
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Email clicked event recorded'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
 
   describe('Multiple Events Handling', () => {
-    it('should process multiple events in a single webhook', async () => {
+    it('should process multiple events in a single webhook', async() => {
       const timestamp = Date.now().toString();
       const payload = JSON.stringify([
         { event: 'open', sg_message_id: 'msg-1', timestamp: 1635724800 },
@@ -340,7 +340,7 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle database errors gracefully', async () => {
+    it('should handle database errors gracefully', async() => {
       const timestamp = Date.now().toString();
       const payload = JSON.stringify([
         { event: 'open', sg_message_id: 'msg-1', timestamp: 1635724800 },
@@ -368,7 +368,7 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
-    it('should ignore unsupported event types', async () => {
+    it('should ignore unsupported event types', async() => {
       const timestamp = Date.now().toString();
       const payload = JSON.stringify([
         { event: 'delivered', sg_message_id: 'msg-1', timestamp: 1635724800 },
@@ -395,7 +395,7 @@ describe('SendGrid Webhook Handler (Phase 1.3)', () => {
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Ignoring event type'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -423,7 +423,7 @@ function createMockContext(options: {
 function generateValidSignature(
   payload: string,
   timestamp: string,
-  secret: string
+  secret: string,
 ): string {
   const signedPayload = timestamp + payload;
   const signature = crypto
