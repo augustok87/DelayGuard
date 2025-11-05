@@ -186,6 +186,37 @@ export async function runMigrations(): Promise<void> {
       )
     `);
 
+    // Phase ShipEngine Integration: Add ETA columns to orders table
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='orders' AND column_name='original_eta'
+        ) THEN
+          ALTER TABLE orders ADD COLUMN original_eta TIMESTAMP;
+          ALTER TABLE orders ADD COLUMN current_eta TIMESTAMP;
+          ALTER TABLE orders ADD COLUMN tracking_status VARCHAR(50);
+        END IF;
+      END $$;
+    `);
+
+    // Phase ShipEngine Integration: Create tracking_events table for carrier tracking data
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS tracking_events (
+        id SERIAL PRIMARY KEY,
+        order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+        timestamp TIMESTAMP NOT NULL,
+        status VARCHAR(50) NOT NULL,
+        description TEXT NOT NULL,
+        location VARCHAR(255),
+        carrier_status VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(order_id, timestamp)
+      )
+    `);
+
     // Create indexes for performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_orders_shop_id ON orders(shop_id);
@@ -195,6 +226,9 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_delay_alerts_created_at ON delay_alerts(created_at);
       CREATE INDEX IF NOT EXISTS idx_order_line_items_order_id ON order_line_items(order_id);
       CREATE INDEX IF NOT EXISTS idx_order_line_items_shopify_id ON order_line_items(shopify_line_item_id);
+      CREATE INDEX IF NOT EXISTS idx_tracking_events_order_id ON tracking_events(order_id);
+      CREATE INDEX IF NOT EXISTS idx_tracking_events_timestamp ON tracking_events(timestamp);
+      CREATE INDEX IF NOT EXISTS idx_orders_tracking_status ON orders(tracking_status);
     `);
 
     logInfo("Database migrations completed", { component: "database" });

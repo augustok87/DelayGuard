@@ -4,6 +4,7 @@ import { query } from "../database/connection";
 import { addDelayCheckJob } from "../queue/setup";
 import { saveOrderLineItems } from "../services/shopify-service"; // Phase 1.2
 import { handleSendGridWebhook } from "./sendgrid-webhook"; // Phase 1.3
+import { CarrierService } from "../services/carrier-service"; // Phase ShipEngine Integration
 // import { OrderUpdateWebhook } from '../types'; // Available for future use
 import crypto from "crypto";
 
@@ -332,11 +333,91 @@ async function processFulfillment(
       ],
     );
 
-    // If tracking info exists, add delay check job
+    // Phase ShipEngine Integration: Fetch tracking events and ETAs
     if (
       fulfillmentData.tracking_info?.number &&
       fulfillmentData.tracking_info?.company
     ) {
+      try {
+        const carrierService = new CarrierService();
+        const trackingInfo = await carrierService.getTrackingInfo(
+          fulfillmentData.tracking_info.number,
+          fulfillmentData.tracking_info.company,
+        );
+
+        // Store tracking events in database
+        if (trackingInfo.events && trackingInfo.events.length > 0) {
+          for (const event of trackingInfo.events) {
+            await query(
+              `
+              INSERT INTO tracking_events (
+                order_id,
+                timestamp,
+                status,
+                description,
+                location,
+                carrier_status
+              ) VALUES ($1, $2, $3, $4, $5, $6)
+              ON CONFLICT (order_id, timestamp)
+              DO UPDATE SET
+                status = EXCLUDED.status,
+                description = EXCLUDED.description,
+                location = EXCLUDED.location,
+                carrier_status = EXCLUDED.carrier_status,
+                updated_at = CURRENT_TIMESTAMP
+            `,
+              [
+                orderId,
+                event.timestamp,
+                event.status,
+                event.description,
+                event.location || null,
+                trackingInfo.carrierCode,
+              ],
+            );
+          }
+
+          logger.info(
+            `✅ Stored ${trackingInfo.events.length} tracking events for order ${orderId}`,
+          );
+        }
+
+        // Store ETAs and tracking status in orders table
+        await query(
+          `
+          UPDATE orders
+          SET
+            original_eta = $1,
+            current_eta = $2,
+            tracking_status = $3,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = $4
+        `,
+          [
+            trackingInfo.originalEstimatedDeliveryDate || null,
+            trackingInfo.estimatedDeliveryDate || null,
+            trackingInfo.status,
+            orderId,
+          ],
+        );
+
+        logger.info(
+          `✅ Tracking info stored for order ${orderId}: status=${trackingInfo.status}, events=${trackingInfo.events?.length || 0}`,
+        );
+      } catch (error) {
+        // Log error but don&apos;t fail webhook - tracking data is nice-to-have
+        logger.error(
+          "Failed to fetch/store tracking info from ShipEngine",
+          error as Error,
+          {
+            orderId,
+            trackingNumber: fulfillmentData.tracking_info.number,
+            carrierCode: fulfillmentData.tracking_info.company,
+          },
+        );
+      }
+
+      // If tracking info exists, add delay check job
       const shopResult = await query(
         "SELECT shop_domain FROM shops s JOIN orders o ON s.id = o.shop_id WHERE o.id = $1",
         [orderId],
