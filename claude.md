@@ -869,6 +869,35 @@ Every feature MUST follow this cycle:
 
 ## VERSION HISTORY
 
+- **v1.19** (2025-11-06): 📱 **Mobile Horizontal Tab Layout for Filters** (35 tests, 100% pass rate)
+  - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
+    - **RED Phase**: Wrote 11 comprehensive mobile layout tests FIRST (all passing baseline)
+    - **GREEN Phase**: Modified CSS to implement horizontal layout on mobile
+    - **VERIFY**: All 35 SegmentedControl tests passing (24 original + 11 new mobile)
+  - ✅ **Problem Solved**:
+    - **User Request**: "Filter tabs (Active/Resolved/Dismissed) are stacked vertically on mobile"
+    - **Impact**: Wasted vertical space, unprofessional mobile UI
+    - **Solution**: Horizontal single-line layout for all filter tabs on mobile
+  - ✅ **CSS Changes** (SegmentedControl.module.css):
+    - **Mobile (768px)**: Changed flex-direction from 'column' to 'row'
+    - **Equal width distribution**: Added flex: 1 1 0% to buttons
+    - **Compact padding**: 0.5rem 1rem → 0.5rem 0.5rem
+    - **Reduced font sizes**: 0.875rem → 0.8125rem
+    - **Text truncation**: Added text-overflow: ellipsis for long labels
+    - **Very Small Mobile (480px)**: Even more compact (0.75rem font, 0.4375rem padding)
+  - ✅ **Test Coverage** (11 new mobile layout tests):
+    - Desktop layout verification (2 tests)
+    - Mobile horizontal layout structure (5 tests)
+    - Compact mobile display (3 tests)
+    - Responsive edge cases (1 test)
+  - ✅ **Files Modified** (2):
+    - src/components/ui/SegmentedControl.module.css (horizontal mobile layout)
+    - src/tests/unit/components/SegmentedControl.mobile.test.tsx (NEW - 11 tests)
+  - 📊 **Test Results**: 35/35 SegmentedControl tests passing (100% pass rate)
+  - 🎯 **Code Quality**: Zero linting errors, production-ready
+  - 🎨 **UX Impact**: Cleaner mobile UI, more vertical space for content, professional appearance
+  - 🚀 **Next**: Ready for Vercel deployment with improved mobile experience
+
 - **v1.18** (2025-11-05): 🎨 **Header & Dashboard UI/UX Refinements** (62 tests, 100% pass rate)
   - ✅ **Header Visual Improvements - Option A: Refined Minimalist Design**
     - **User Request**: "make it very fancy elegant and simple at the same time"
