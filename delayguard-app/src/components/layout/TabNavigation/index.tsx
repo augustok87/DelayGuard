@@ -8,7 +8,7 @@ interface TabNavigationProps {
 }
 
 const tabs = [
-  { id: 0, label: 'Dashboard', icon: '📊' },
+  { id: 0, label: 'Settings', icon: '⚙️' },
   { id: 1, label: 'Delay Alerts', icon: '🚨' },
   { id: 2, label: 'Orders', icon: '📦' },
 ];

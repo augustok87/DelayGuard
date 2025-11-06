@@ -15,7 +15,7 @@ export const LazyStatsCard = lazy(() => import('./DashboardTab/StatsCard').then(
 
 // Wrapper components with Suspense
 export const DashboardTabWithSuspense: React.FC<DashboardTabProps> = (props) => (
-  <Suspense fallback={<LoadingSpinner message="Loading Dashboard..." />}>
+  <Suspense fallback={<LoadingSpinner message="Loading Settings..." />}>
     <LazyDashboardTab {...props} />
   </Suspense>
 );

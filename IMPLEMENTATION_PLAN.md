@@ -15,7 +15,7 @@
 - **Database**: PostgreSQL with Prisma ORM
 - **APIs**: Shopify Admin API, ShipEngine tracking API
 - **Current Permissions**: `read_orders`, `read_fulfillments`
-- **3-Tab Structure**: Dashboard, Delay Alerts, Orders
+- **3-Tab Structure**: Settings, Delay Alerts, Orders (formerly "Dashboard" renamed to "Settings" in v1.18)
 
 ---
 

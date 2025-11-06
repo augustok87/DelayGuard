@@ -2,13 +2,11 @@ import React from 'react';
 // import { Card } from '../../ui/Card'; // Available for future use
 // import { Button } from '../../ui/Button'; // Available for future use
 import { SettingsCard } from './SettingsCard';
-import { StatsCard } from './StatsCard';
-import { AppSettings, StatsData } from '../../../types';
+import { AppSettings } from '../../../types';
 
 interface DashboardTabProps {
   shop: string | null;
   settings: AppSettings;
-  stats: StatsData;
   loading: boolean;
   onSaveSettings: () => void;
   onTestDelayDetection: () => void;
@@ -19,7 +17,6 @@ interface DashboardTabProps {
 export function DashboardTab({
   shop,
   settings,
-  stats,
   loading,
   onSaveSettings,
   onTestDelayDetection,
@@ -27,7 +24,7 @@ export function DashboardTab({
   onSettingsChange,
 }: DashboardTabProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto' }}>
       <SettingsCard
         shop={shop}
         settings={settings}
@@ -37,7 +34,6 @@ export function DashboardTab({
         onConnect={onConnectShopify}
         onSettingsChange={onSettingsChange}
       />
-      <StatsCard stats={stats} />
     </div>
   );
 }

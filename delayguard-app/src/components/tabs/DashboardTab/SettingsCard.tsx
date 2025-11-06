@@ -102,20 +102,12 @@ export function SettingsCard({
       subtitle="Configure your delay detection and notification preferences"
     >
       <div className={styles.content}>
-        {/* System Status Section */}
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>System Status</h3>
+        {/* System Status Section - Only shown when not connected */}
+        {!shop && (
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>System Status</h3>
 
-          {/* Shopify Connection Status */}
-          {shop ? (
-            <div className={`${styles.alert} ${styles.alertSuccess}`}>
-              <span className={styles.alertIcon}>✓</span>
-              <div className={styles.alertContent}>
-                <strong>Connected to Shopify</strong>
-                <p className={styles.alertText}>Shop: {shop}</p>
-              </div>
-            </div>
-          ) : (
+            {/* Shopify Connection Status - Not Connected */}
             <div className={`${styles.alert} ${styles.alertWarning}`}>
               <span className={styles.alertIcon}>⚠</span>
               <div className={styles.alertContent}>
@@ -131,8 +123,8 @@ export function SettingsCard({
                 </Button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Phase 1.4: Delay Detection Rules with Plain Language */}
         <div className={styles.section}>

@@ -1,6 +1,6 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, waitFor, createMockSettings, createMockStats } from '../../setup/test-utils';
+import { render, screen, fireEvent, waitFor, createMockSettings } from '../../setup/test-utils';
 import { DashboardTab } from '../../../src/components/tabs/DashboardTab';
 
 // Mock the child components
@@ -27,20 +27,10 @@ jest.mock('../../../src/components/tabs/DashboardTab/SettingsCard', () => ({
   ),
 }));
 
-jest.mock('../../../src/components/tabs/DashboardTab/StatsCard', () => ({
-  StatsCard: ({ stats }: any) => (
-    <div data-testid="stats-card">
-      <div>Total Alerts: {stats.totalAlerts}</div>
-      <div>Active Alerts: {stats.activeAlerts}</div>
-    </div>
-  ),
-}));
-
 describe('DashboardTab', () => {
   const mockProps = {
     shop: 'test-shop.myshopify.com',
     settings: createMockSettings(),
-    stats: createMockStats(),
     loading: false,
     onSaveSettings: jest.fn(),
     onTestDelayDetection: jest.fn(),
@@ -54,38 +44,28 @@ describe('DashboardTab', () => {
 
   it('renders with all props', () => {
     render(<DashboardTab {...mockProps} />);
-    
+
     expect(screen.getByTestId('settings-card')).toBeInTheDocument();
-    expect(screen.getByTestId('stats-card')).toBeInTheDocument();
   });
 
   it('passes correct props to SettingsCard', () => {
     render(<DashboardTab {...mockProps} />);
-    
+
     const settingsCard = screen.getByTestId('settings-card');
     expect(settingsCard).toBeInTheDocument();
   });
 
-  it('passes correct props to StatsCard', () => {
-    render(<DashboardTab {...mockProps} />);
-    
-    expect(screen.getByText('Total Alerts: 12')).toBeInTheDocument();
-    expect(screen.getByText('Active Alerts: 3')).toBeInTheDocument();
-  });
-
   it('handles loading state', () => {
     render(<DashboardTab {...mockProps} loading={true} />);
-    
-    // Should still render components but with loading state
+
+    // Should still render SettingsCard with loading state
     expect(screen.getByTestId('settings-card')).toBeInTheDocument();
-    expect(screen.getByTestId('stats-card')).toBeInTheDocument();
   });
 
   it('handles null shop', () => {
     render(<DashboardTab {...mockProps} shop={null} />);
-    
+
     expect(screen.getByTestId('settings-card')).toBeInTheDocument();
-    expect(screen.getByTestId('stats-card')).toBeInTheDocument();
   });
 
   it('calls onSaveSettings when save button is clicked', async() => {
@@ -136,22 +116,21 @@ describe('DashboardTab', () => {
 
   it('memoizes correctly with same props', () => {
     const { rerender } = render(<DashboardTab {...mockProps} />);
-    
+
     // Re-render with same props
     rerender(<DashboardTab {...mockProps} />);
-    
+
     // Should still be in document (memoized)
     expect(screen.getByTestId('settings-card')).toBeInTheDocument();
-    expect(screen.getByTestId('stats-card')).toBeInTheDocument();
   });
 
   it('re-renders when props change', () => {
     const { rerender } = render(<DashboardTab {...mockProps} />);
-    
-    const newStats = { ...mockProps.stats, totalAlerts: 20 };
-    rerender(<DashboardTab {...mockProps} stats={newStats} />);
-    
-    expect(screen.getByText('Total Alerts: 20')).toBeInTheDocument();
+
+    const newSettings = { ...mockProps.settings, delayThreshold: 10 };
+    rerender(<DashboardTab {...mockProps} settings={newSettings} />);
+
+    expect(screen.getByTestId('settings-card')).toBeInTheDocument();
   });
 
   it('handles different settings configurations', () => {
@@ -160,22 +139,17 @@ describe('DashboardTab', () => {
       emailNotifications: false,
       smsNotifications: true,
     });
-    
+
     render(<DashboardTab {...mockProps} settings={customSettings} />);
-    
+
     expect(screen.getByTestId('settings-card')).toBeInTheDocument();
   });
 
-  it('handles different stats configurations', () => {
-    const customStats = createMockStats({
-      totalAlerts: 50,
-      activeAlerts: 10,
-      customerSatisfaction: '98%',
-    });
-    
-    render(<DashboardTab {...mockProps} stats={customStats} />);
-    
-    expect(screen.getByText('Total Alerts: 50')).toBeInTheDocument();
-    expect(screen.getByText('Active Alerts: 10')).toBeInTheDocument();
+  it('focuses on settings configuration without redundant stats display', () => {
+    render(<DashboardTab {...mockProps} />);
+
+    // Dashboard should only show SettingsCard (stats are in header)
+    expect(screen.getByTestId('settings-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('stats-card')).not.toBeInTheDocument();
   });
 });

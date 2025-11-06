@@ -219,7 +219,6 @@ export interface NavigationProps {
 export interface DashboardTabProps {
   shop: string | null;
   settings: AppSettings;
-  stats: StatsData;
   onSettingsChange: (settings: AppSettings) => void;
   onSaveSettings: () => void;
   onTestDelayDetection: () => void;

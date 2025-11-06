@@ -594,7 +594,7 @@ describe('SettingsCard (Phase 1.4)', () => {
   });
 
   describe('Shopify Connection Status', () => {
-    it('should display connected status when shop is provided', () => {
+    it('should NOT display connection status when shop is provided (moved to header)', () => {
       render(
         <SettingsCard
           shop="test-shop.myshopify.com"
@@ -604,8 +604,9 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      expect(screen.getByText('Connected to Shopify')).toBeInTheDocument();
-      expect(screen.getByText(/test-shop.myshopify.com/i)).toBeInTheDocument();
+      // Connection status is now in the header, not in SettingsCard
+      expect(screen.queryByText('Connected to Shopify')).not.toBeInTheDocument();
+      expect(screen.queryByText('System Status')).not.toBeInTheDocument();
     });
 
     it('should display not connected status when shop is null', () => {

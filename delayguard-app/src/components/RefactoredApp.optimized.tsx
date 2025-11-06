@@ -76,17 +76,17 @@ export function RefactoredAppOptimized() {
   }, []); // Empty deps array is intentional - only run on mount
 
   // Memoized handler functions
-  const handleSaveSettings = useCallback(async () => {
+  const handleSaveSettings = useCallback(async() => {
     if (settings) {
       await saveSettings(settings);
     }
   }, [settings, saveSettings]);
 
-  const handleTestDelayDetection = useCallback(async () => {
+  const handleTestDelayDetection = useCallback(async() => {
     await testDelayDetection();
   }, [testDelayDetection]);
 
-  const handleConnectShopify = useCallback(async () => {
+  const handleConnectShopify = useCallback(async() => {
     const result = await connectToShopify();
     if (result.success) {
       setShop("my-awesome-store.myshopify.com");
@@ -94,7 +94,7 @@ export function RefactoredAppOptimized() {
   }, [connectToShopify]);
 
   const handleAlertAction = useCallback(
-    async (alertId: string, action: string) => {
+    async(alertId: string, action: string) => {
       if (action === "resolve") {
         await resolveAlert(alertId);
       } else {
@@ -105,7 +105,7 @@ export function RefactoredAppOptimized() {
   );
 
   const handleOrderAction = useCallback(
-    async (orderId: string, action: string) => {
+    async(orderId: string, action: string) => {
       if (action === "track") {
         await trackOrder(orderId);
       } else {
@@ -116,7 +116,7 @@ export function RefactoredAppOptimized() {
   );
 
   const handleSettingsChange = useCallback(
-    async (newSettings: AppSettings) => {
+    async(newSettings: AppSettings) => {
       await saveSettings(newSettings);
     },
     [saveSettings],
@@ -131,11 +131,10 @@ export function RefactoredAppOptimized() {
     switch (selectedTab) {
       case 0:
         return (
-          <div data-testid="dashboard-tab">
+          <div data-testid="settings-tab">
             <DashboardTabWithSuspense
               shop={shop}
               settings={settings}
-              stats={stats}
               loading={Boolean(loading ?? false)}
               onSaveSettings={handleSaveSettings}
               onTestDelayDetection={handleTestDelayDetection}
@@ -171,7 +170,6 @@ export function RefactoredAppOptimized() {
     selectedTab,
     shop,
     settings,
-    stats,
     loading,
     alerts,
     orders,
@@ -193,7 +191,7 @@ export function RefactoredAppOptimized() {
 
   return (
     <div className={styles.app}>
-      <AppHeader stats={stats} loading={loading} />
+      <AppHeader stats={stats} loading={loading} shop={shop} />
 
       <div className={styles.content}>
         <ErrorAlert error={combinedError} onDismiss={handleErrorDismiss} />

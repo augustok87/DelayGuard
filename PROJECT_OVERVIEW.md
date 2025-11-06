@@ -218,6 +218,49 @@
 
 ---
 
+### UI/UX Visual Polish (v1.18) ✅
+**Completion**: November 5, 2025
+**Tests**: 97 passing (28 AppHeader + 12 DashboardTab + 22 RefactoredApp + 35 TabNavigation)
+
+**Improvements Delivered:**
+- ✅ **Header visual refinements**: Darker gradient (#0f172a → #1e293b), domain truncation, color-coded metrics
+  - Total Alerts: Amber accent
+  - Active: Blue accent
+  - Resolved: Green accent
+  - Varied spacing (2rem 2.75rem padding, 2.5rem gap)
+- ✅ **Dashboard metrics removal**: Eliminated redundancy (metrics only in header, not dashboard)
+  - Dashboard now focuses solely on Settings configuration
+  - Cleaner layout with centered single column (900px max-width)
+- ✅ **Tab rename**: "Dashboard" → "Settings" for accurate labeling
+  - Updated label, icon (📊 → ⚙️), loading message ("Loading Settings...")
+  - Reduced cognitive dissonance (tab contains only settings, no dashboard content)
+- ✅ **Color-coded metrics test coverage**: 6 new tests for CSS class application
+
+**Files Modified:**
+- `src/components/layout/AppHeader/index.tsx` (domain truncation, color classes)
+- `src/components/layout/AppHeader/AppHeader.module.css` (spacing, color accents)
+- `src/components/tabs/DashboardTab/index.tsx` (removed StatsCard, centered layout)
+- `src/types/ui.ts` (removed stats prop from DashboardTabProps)
+- `src/components/RefactoredApp.optimized.tsx` (removed stats prop, changed testid)
+- `src/components/layout/TabNavigation/index.tsx` (renamed "Dashboard" to "Settings")
+- `src/components/tabs/LazyTabs.tsx` (updated loading message)
+- `src/tests/unit/components/AppHeader.test.tsx` (+6 color-coded metrics tests)
+- `tests/unit/components/DashboardTab.test.tsx` (removed stats)
+- `tests/unit/components/RefactoredApp.test.tsx` (updated mocks)
+- `src/tests/unit/components/TabNavigation.test.tsx` (updated Dashboard → Settings)
+
+**Code Quality:**
+- ✅ 0 ESLint errors (fixed unused imports: createMockStats, waitFor)
+- ✅ 100% test pass rate (97/97 tests)
+- ✅ TypeScript compilation successful
+
+**UX Impact:**
+- More elegant, professional header design
+- Reduced redundancy (clearer information architecture)
+- More accurate tab labeling (Settings instead of Dashboard)
+
+---
+
 ## 🚀 Shopify App Store Submission Readiness
 
 ### ✅ **Ready for Submission** (97/100 - Grade A)
@@ -240,7 +283,7 @@
   - [ ] 5-10 screenshots at 1600x1200
     - ✅ **Demo data seeded** (6 orders with varied priorities, products, tracking events)
     - ✅ **Dev server running** at http://localhost:3000
-    - 🎬 **Ready for screenshot capture** on all 3 tabs (Dashboard, Alerts, Orders)
+    - 🎬 **Ready for screenshot capture** on all 3 tabs (Settings, Alerts, Orders)
   - [ ] Feature media (1600x900 image or 2-3 min video)
   - [ ] App icon resized to 1200x1200
 - ⚠️ Shopify Partner Dashboard Configuration (2-3 hours)

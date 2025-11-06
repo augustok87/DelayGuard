@@ -14,7 +14,7 @@ describe('TabNavigation Component', () => {
     it('should render all 3 tabs', () => {
       render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
 
-      expect(screen.getByRole('tab', { name: /dashboard/i })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /settings/i })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /delay alerts/i })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /orders/i })).toBeInTheDocument();
     });
@@ -35,12 +35,12 @@ describe('TabNavigation Component', () => {
   });
 
   describe('Tab Icons and Labels', () => {
-    it('should render Dashboard tab with icon and label', () => {
+    it('should render Settings tab with icon and label', () => {
       render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
 
-      const dashboardTab = screen.getByRole('tab', { name: /dashboard/i });
-      expect(dashboardTab).toHaveTextContent('📊');
-      expect(dashboardTab).toHaveTextContent('Dashboard');
+      const settingsTab = screen.getByRole('tab', { name: /settings/i });
+      expect(settingsTab).toHaveTextContent('⚙️');
+      expect(settingsTab).toHaveTextContent('Settings');
     });
 
     it('should render Delay Alerts tab with icon and label', () => {
@@ -66,8 +66,8 @@ describe('TabNavigation Component', () => {
       tabs.forEach(tab => {
         // Each tab should have both emoji icon and text content
         const textContent = tab.textContent || '';
-        // Check for emoji (icon) - will be the first character
-        expect(textContent).toMatch(/[\u{1F4CA}\u{1F6A8}\u{1F4E6}]/u);
+        // Check for emoji (icon) - Settings (⚙️), Delay Alerts (🚨), Orders (📦)
+        expect(textContent).toMatch(/[\u{2699}\u{1F6A8}\u{1F4E6}]/u);
         // Check for text label
         expect(textContent.length).toBeGreaterThan(1); // More than just the icon
       });
@@ -75,11 +75,11 @@ describe('TabNavigation Component', () => {
   });
 
   describe('Selected State', () => {
-    it('should mark Dashboard tab as selected when selectedTab is 0', () => {
+    it('should mark settings tab as selected when selectedTab is 0', () => {
       render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
 
-      const dashboardTab = screen.getByRole('tab', { name: /dashboard/i });
-      expect(dashboardTab).toHaveAttribute('aria-selected', 'true');
+      const settingsTab = screen.getByRole('tab', { name: /settings/i });
+      expect(settingsTab).toHaveAttribute('aria-selected', 'true');
     });
 
     it('should mark Delay Alerts tab as selected when selectedTab is 1', () => {
@@ -109,8 +109,8 @@ describe('TabNavigation Component', () => {
     it('should apply active CSS class to selected tab', () => {
       render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
 
-      const dashboardTab = screen.getByRole('tab', { name: /dashboard/i });
-      expect(dashboardTab.className).toContain('tabActive');
+      const settingsTab = screen.getByRole('tab', { name: /settings/i });
+      expect(settingsTab.className).toContain('tabActive');
     });
 
     it('should not apply active CSS class to unselected tabs', () => {
@@ -125,11 +125,11 @@ describe('TabNavigation Component', () => {
   });
 
   describe('Click Interaction', () => {
-    it('should call onTabChange with tab index 0 when Dashboard is clicked', () => {
+    it('should call onTabChange with tab index 0 when settings is clicked', () => {
       render(<TabNavigation selectedTab={1} onTabChange={mockOnTabChange} />);
 
-      const dashboardTab = screen.getByRole('tab', { name: /dashboard/i });
-      fireEvent.click(dashboardTab);
+      const settingsTab = screen.getByRole('tab', { name: /settings/i });
+      fireEvent.click(settingsTab);
 
       expect(mockOnTabChange).toHaveBeenCalledTimes(1);
       expect(mockOnTabChange).toHaveBeenCalledWith(0);
@@ -158,8 +158,8 @@ describe('TabNavigation Component', () => {
     it('should allow clicking the currently selected tab', () => {
       render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
 
-      const dashboardTab = screen.getByRole('tab', { name: /dashboard/i });
-      fireEvent.click(dashboardTab);
+      const settingsTab = screen.getByRole('tab', { name: /settings/i });
+      fireEvent.click(settingsTab);
 
       expect(mockOnTabChange).toHaveBeenCalledWith(0);
     });
@@ -294,8 +294,8 @@ describe('TabNavigation Component', () => {
     it('should render icon before label in DOM order', () => {
       render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
 
-      const dashboardTab = screen.getByRole('tab', { name: /dashboard/i });
-      const children = Array.from(dashboardTab.children);
+      const settingsTab = screen.getByRole('tab', { name: /settings/i });
+      const children = Array.from(settingsTab.children);
 
       expect(children[0].className).toContain('tabIcon');
       expect(children[1].className).toContain('tabLabel');
@@ -326,8 +326,8 @@ describe('TabNavigation Component', () => {
     it('should render correctly with selectedTab as 0 (first tab)', () => {
       render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
 
-      const dashboardTab = screen.getByRole('tab', { name: /dashboard/i });
-      expect(dashboardTab).toHaveAttribute('aria-selected', 'true');
+      const settingsTab = screen.getByRole('tab', { name: /settings/i });
+      expect(settingsTab).toHaveAttribute('aria-selected', 'true');
     });
 
     it('should render correctly with selectedTab as 2 (last tab)', () => {

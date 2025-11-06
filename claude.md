@@ -318,6 +318,46 @@ Shifting from "delay alerts" to "customer retention intelligence platform"
 
 **CRITICAL: This workflow is NON-NEGOTIABLE. Follow it for EVERY feature implementation.**
 
+---
+
+### ⚠️ BEFORE STARTING ANY FEATURE - READ THIS FIRST ⚠️
+
+**CRITICAL PRE-TASK CHECKLIST** - Complete BEFORE writing any code:
+
+- [ ] ✅ Have I read IMPLEMENTATION_PLAN.md for this feature?
+- [ ] ✅ Have I read DEEP_DIVE_UX_UI_RESEARCH.md for UX context?
+- [ ] ✅ Do I understand the acceptance criteria?
+- [ ] ✅ Am I about to write TESTS FIRST (not implementation)?
+- [ ] ✅ If I answered "no" to the above, STOP and write tests first!
+
+**If you're about to write implementation code before tests:**
+- ❌ **STOP IMMEDIATELY** - This violates TDD workflow
+- ✅ **START OVER** - Create test file first, write failing tests, THEN implement
+
+**Remember**: Tests come FIRST, always. No exceptions.
+
+---
+
+### 🚨 WARNING: TDD VIOLATIONS HAVE CONSEQUENCES 🚨
+
+**What is a TDD violation?**
+- Writing implementation code BEFORE writing tests
+- Implementing a feature and saying "I'll add tests later"
+- Skipping tests because "it's a small change"
+- Writing code first, then writing tests to match
+
+**Why this matters:**
+- **v1.16 dashboard metrics**: Implemented without tests, user caught the mistake
+- **Result**: Had to retroactively write tests and documentation
+- **Cost**: 2x the effort, embarrassment, loss of trust
+- **Lesson**: TDD is not optional - it saves time and prevents mistakes
+
+**Your commitment:**
+*I will write tests FIRST for every feature, no matter how small.*
+*If I catch myself writing implementation code first, I will STOP and delete it.*
+
+---
+
 ### The TDD-First Development Cycle
 
 Every feature MUST follow this exact sequence:
@@ -348,6 +388,19 @@ Every feature MUST follow this exact sequence:
    - Ensures comprehensive test coverage
    - Prevents "forgetting" to write tests later
    - Makes refactoring safer
+
+   **✅ SELF-CHECK: Did I actually write tests first?**
+
+   Ask yourself:
+   1. Did I create a `*.test.ts` or `*.test.tsx` file?
+   2. Did I write at least 3 failing tests that describe the desired behavior?
+   3. Did I run the tests and see them fail (RED phase)?
+   4. Have I NOT written any implementation code yet?
+
+   **If you answered "no" to ANY of these:**
+   - ❌ You are violating TDD workflow
+   - ❌ Delete any implementation code you wrote
+   - ✅ Go back to Step 2 and write tests FIRST
 
 #### 3. IMPLEMENT THE FEATURE
    - Write the minimal code to make tests pass
@@ -402,10 +455,18 @@ Every feature MUST follow this exact sequence:
 #### 7. UPDATE DOCUMENTATION
    **⚠️ CRITICAL: Update docs IMMEDIATELY after completing feature!**
 
-   **Update these files:**
-   - ✅ **IMPLEMENTATION_PLAN.md**: Mark phase as complete, add test count
-   - ✅ **CLAUDE.md**: Update "Recently Completed" section and version history
-   - ✅ Add completion date, test counts, and files modified
+   **THIS IS NOT OPTIONAL. Every feature requires documentation updates.**
+
+   **Why documentation matters:**
+   - Future you (or other AIs) won't remember what you built
+   - v1.16 metrics: Forgot to document, had to do it later (wasted time)
+   - Documentation IS part of "done" - not documenting = incomplete feature
+
+   **MANDATORY files to update:**
+   - ✅ **IMPLEMENTATION_PLAN.md**: Mark phase as complete, add test count, document approach
+   - ✅ **CLAUDE.md**: Add version history entry with completion date and key details
+   - ✅ **PROJECT_OVERVIEW.md** (if applicable): Update phase completion status
+   - ✅ **README files** (if applicable): Update usage instructions for new features
 
    ```markdown
    Example update in IMPLEMENTATION_PLAN.md:
@@ -417,16 +478,55 @@ Every feature MUST follow this exact sequence:
    **Code Quality**: ✅ All ESLint errors fixed, production-ready
    ```
 
+   **✅ SELF-CHECK: Did I document the feature?**
+   - [ ] Did I update IMPLEMENTATION_PLAN.md with completion status?
+   - [ ] Did I add a version history entry to CLAUDE.md?
+   - [ ] Did I include test counts, file counts, and key learnings?
+   - [ ] Did I document any TDD violations or corrective actions?
+
+   **If you skipped documentation:**
+   - ❌ Feature is NOT complete
+   - ❌ Go back and update ALL pertinent .md files NOW
+
 #### 8. FINAL CHECKLIST
    Before considering ANY feature "done", verify:
+
    - [ ] ✅ Tests written FIRST (TDD approach)
+     - ❌ **FAILURE**: Wrote server-simple.ts metrics code, then tests later
+     - ✅ **SUCCESS**: Created stats-endpoint.test.ts FIRST, then implemented
+
    - [ ] ✅ All tests passing (100% pass rate)
+     - ❌ **FAILURE**: "13/14 tests pass - good enough"
+     - ✅ **SUCCESS**: 14/14 tests pass
+
    - [ ] ✅ Zero linting errors in modified files
+     - ❌ **FAILURE**: "6 warnings - I'll fix later"
+     - ✅ **SUCCESS**: Zero errors, zero warnings (or acceptable `any` warnings documented)
+
    - [ ] ✅ Dev servers running successfully
+     - ❌ **FAILURE**: Server crashes on startup, ignored
+     - ✅ **SUCCESS**: Tested http://localhost:3001/api/stats and verified response
+
    - [ ] ✅ TypeScript compilation successful
+     - ❌ **FAILURE**: Type errors exist but "code works"
+     - ✅ **SUCCESS**: `npm run type-check` passes
+
    - [ ] ✅ IMPLEMENTATION_PLAN.md updated
+     - ❌ **FAILURE**: Forgot to document v1.16 dashboard metrics
+     - ✅ **SUCCESS**: Added complete section with code examples and metrics definitions
+
    - [ ] ✅ CLAUDE.md updated
+     - ❌ **FAILURE**: Skipped version history entry
+     - ✅ **SUCCESS**: Added v1.16 with TDD notes, test counts, and lessons learned
+
    - [ ] ✅ No console.log or debug code left behind
+     - ❌ **FAILURE**: `console.log('DEBUG:', data)` still in code
+     - ✅ **SUCCESS**: Clean code, only intentional logging
+
+   **If ANY checkbox is unchecked:**
+   - Feature is NOT complete
+   - Do NOT move to next task
+   - Do NOT commit to git
 
 ### Common Mistakes to AVOID
 
@@ -445,6 +545,42 @@ Every feature MUST follow this exact sequence:
 3. **TypeScript errors?** Check interface definitions in `types/index.ts`
 4. **Feature unclear?** Re-read IMPLEMENTATION_PLAN.md and DEEP_DIVE_UX_UI_RESEARCH.md
 5. **Don't understand existing code?** Search for similar patterns in the codebase
+
+---
+
+### 🎉 SUCCESS STORIES: When TDD Workflow Works Perfectly
+
+**v1.6 - Phase 1.3 Communication Status Backend (2025-10-28)**
+- ✅ Wrote 10 comprehensive tests FIRST (TDD Red phase - all failed as expected)
+- ✅ Implemented SendGrid webhook handler (TDD Green phase - all 10 tests passing)
+- ✅ Zero linting errors, production-ready security implementation
+- **Result**: Flawless implementation, zero bugs, complete confidence
+
+**v1.5 - Phase 1.2 Shopify Service Integration (2025-10-28)**
+- ✅ Wrote 25 comprehensive tests FIRST (TDD Red phase - all failed as expected)
+- ✅ Implemented Shopify GraphQL service (TDD Green phase - all 25 tests passing)
+- ✅ Fixed TypeScript type issues in tests with proper assertions
+- **Result**: Production-ready integration, zero rework needed
+
+**v1.4 - Phase 1.2 Backend Database Schema (2025-10-28)**
+- ✅ Wrote 24 integration tests FIRST (TDD Red phase - all failed as expected)
+- ✅ Implemented database schema (TDD Green phase)
+- **Result**: Zero schema bugs, perfect database constraints
+
+**What these successes have in common:**
+1. Tests written FIRST - no exceptions
+2. Zero rework needed after implementation
+3. Complete confidence in production deployment
+4. Documentation completed immediately
+5. Git commit with pride, not shame
+
+**When you follow TDD:**
+- You save time (no rework needed)
+- You build better architecture (tests force good design)
+- You sleep well at night (complete test coverage)
+- You earn user trust (no embarrassing mistakes)
+
+*The TDD-first workflow isn't a suggestion - it's the path to excellence.*
 
 ---
 
@@ -733,6 +869,96 @@ Every feature MUST follow this cycle:
 
 ## VERSION HISTORY
 
+- **v1.18** (2025-11-05): 🎨 **Header & Dashboard UI/UX Refinements** (62 tests, 100% pass rate)
+  - ✅ **Header Visual Improvements - Option A: Refined Minimalist Design**
+    - **User Request**: "make it very fancy elegant and simple at the same time"
+    - **Design Critique Process**: Analyzed header, proposed 3 options, user selected Option A
+    - **Implemented Changes**:
+      - **Darker gradient background**: Changed from #1e293b to #0f172a → #1e293b (more depth)
+      - **Domain truncation**: Removed .myshopify.com suffix (e.g., "Connected to my-awesome-store" instead of "Connected to my-awesome-store.myshopify.com")
+      - **Color-coded metrics**: Added visual categorization with subtle color accents
+        - Total Alerts: Amber (rgba(251, 191, 36, 0.04) background with 2px border)
+        - Active: Blue (rgba(59, 130, 246, 0.04) background with 2px border)
+        - Resolved: Green (rgba(34, 197, 94, 0.04) background with 2px border)
+        - Ticket Reduction: No color (neutral)
+      - **Varied spacing**: Changed header padding (2rem 2.75rem) and gap (2.5rem) for better rhythm
+  - ✅ **Dashboard Metrics Removal** (Eliminated Redundancy)
+    - **User Insight**: "Do you think it's really necessary to have the Performance Metrics within our Dashboard? Since the numbers are present in the Header"
+    - **Removed StatsCard** from DashboardTab (redundant with persistent header metrics)
+    - **Layout Cleanup**: Changed from 2-column grid to centered single column (900px max-width)
+    - **UX Impact**: Dashboard now focuses solely on configuration (Settings), reducing cognitive load
+  - ✅ **Tab Rename: Dashboard → Settings**
+    - **User Question**: "should our first tab be called just Settings instead of Dashboard?"
+    - **Rationale**: Tab contains only SettingsCard, no dashboard-style overview
+    - **Changes**: Updated label, icon (📊 → ⚙️), loading message, test IDs
+    - **Benefits**: More accurate labeling, reduces cognitive dissonance, follows industry standards
+  - ✅ **Color-Coded Metrics Test Coverage** (6 new tests)
+    - Added comprehensive tests for CSS class application:
+      - Verify amber class on Total Alerts metric
+      - Verify blue class on Active metric
+      - Verify green class on Resolved metric
+      - Verify NO color class on Ticket Reduction metric
+      - Verify correct order of all 4 metrics
+      - Verify color classes persist in loading state
+    - **AppHeader now has 100% code coverage** (28 tests total)
+  - 🎯 **Test-After Approach** (NOT True TDD - Acknowledged)
+    - ⚠️ **Workflow Issue**: Modified code FIRST, then updated tests (backwards from TDD)
+    - ✅ **Corrective Action**: Added missing test coverage for color-coded metrics feature
+    - ✅ **Lesson Applied**: User requested verification, added 6 comprehensive tests
+    - ✅ **All 62 tests passing**: AppHeader (28), DashboardTab (12), RefactoredApp (22)
+  - ✅ **Files Modified** (9):
+    - src/components/layout/AppHeader/index.tsx (domain truncation, color classes)
+    - src/components/layout/AppHeader/AppHeader.module.css (spacing, color accents)
+    - src/components/tabs/DashboardTab/index.tsx (removed StatsCard, centered layout)
+    - src/types/ui.ts (removed stats prop from DashboardTabProps)
+    - src/components/RefactoredApp.optimized.tsx (removed stats prop passing, changed testid)
+    - src/components/layout/TabNavigation/index.tsx (renamed "Dashboard" to "Settings")
+    - src/components/tabs/LazyTabs.tsx (updated loading message)
+    - src/tests/unit/components/AppHeader.test.tsx (+6 color-coded metrics tests)
+    - tests/unit/components/DashboardTab.test.tsx (removed stats, updated assertions)
+    - tests/unit/components/RefactoredApp.test.tsx (removed stats, updated mocks)
+  - 📊 **Test Results**: 62/62 tests passing (AppHeader 28, DashboardTab 12, RefactoredApp 22)
+  - 🎯 **Code Quality**: 0 ESLint errors (fixed unused imports: createMockStats, waitFor)
+  - 🎨 **UX Impact**:
+    - Cleaner, more elegant header with professional color accents
+    - Reduced redundancy (metrics only in header, not dashboard)
+    - More accurate tab labeling (Settings instead of Dashboard)
+  - 🚀 **Next**: Consider additional visual polish opportunities
+
+- **v1.17** (2025-11-05): 🎨 **Header UI Polish - Shopify Connection Status** (22 tests, 100% pass rate)
+  - ✅ **Moved Shopify Connection Status to Header** (Perfect TDD Execution)
+    - **User Request**: Move "Connected to Shopify" from Dashboard Settings into main header
+    - **Design Goal**: Elegant, prominent connection status between branding and metrics
+    - **Text Format**: Changed from "Connected to Shopify / Shop: {domain}" to "Connected to {domain}"
+  - 🎯 **Perfect TDD Workflow** (Following CLAUDE.md Enhanced Guidelines)
+    - **RED Phase**: Wrote 22 comprehensive tests FIRST (all failed as expected)
+    - **GREEN Phase**: Implemented feature to make all tests pass
+    - **Test Coverage**: Component rendering, connection status visibility, accessibility, edge cases, responsive design
+  - ✅ **Implementation Details**:
+    - **AppHeader Component**: Added optional `shop` prop to interface
+    - **Connection Status Display**: Only shown when shop prop exists (conditional rendering)
+    - **Visual Design**: Elegant green glass-morphism badge with checkmark icon
+      - Semi-transparent emerald background with backdrop blur
+      - Hover effect with subtle lift animation
+      - Responsive padding and font sizes for mobile (768px, 480px breakpoints)
+    - **Accessibility**: Added `aria-label="Shopify connection status"` for screen readers
+  - ✅ **SettingsCard Cleanup**:
+    - Removed redundant "Connected to Shopify" success message (now in header)
+    - Kept "Not Connected" warning with action button (for merchant action)
+    - Updated SettingsCard tests to reflect new behavior
+  - ✅ **Files Modified** (5):
+    - src/components/layout/AppHeader/index.tsx (added shop prop, connection status section)
+    - src/components/layout/AppHeader/AppHeader.module.css (elegant styling with responsive breakpoints)
+    - src/components/RefactoredApp.optimized.tsx (passing shop prop to AppHeader)
+    - src/components/tabs/DashboardTab/SettingsCard.tsx (cleaned up redundant connection status)
+    - src/tests/unit/components/SettingsCard.test.tsx (updated tests for new behavior)
+  - ✅ **Files Created** (1):
+    - src/tests/unit/components/AppHeader.test.tsx (22 comprehensive tests)
+  - 📊 **Test Results**: 71/71 tests passing for AppHeader + SettingsCard (100% pass rate)
+  - 🎯 **Code Quality**: 0 ESLint errors (6 auto-fixed), production-ready code
+  - 🎨 **UX Impact**: Cleaner dashboard, more prominent connection status, better visual hierarchy
+  - 🚀 **Next**: Continue visual polish for Alerts and Orders tabs
+
 - **v1.15** (2025-11-05): 📸 **Pre-Screenshot Preparation Complete** - Demo Data & Visual Polish
   - ✅ **Step 1: Cleaned Up Uncommitted Changes** (Completed)
     - Committed ESLint auto-fixes for code consistency
@@ -971,156 +1197,9 @@ Every feature MUST follow this cycle:
   - 📚 **Documentation**: Updated IMPLEMENTATION_PLAN.md with Phase A details
   - 🚀 Next: Phase B (Alert Filtering)
 
-- **v1.9** (2025-11-01): 🎨 **AlertCard Product Details Accordion - Card Height Reduction**
-  - ✅ **Applied Accordion to Product Details Section** (Progressive disclosure for order contents)
-    - **Wrapped section**: "Order Contents" product details in collapsible accordion
-    - **Default closed state**: Reduces alert card height by 30-40% for better scanning
-    - **Smart title**: "📦 View Order Contents (X items)" with proper pluralization
-    - **Progressive disclosure**: Product details expandable on-demand when merchant needs detail
-  - ✅ **TDD Approach - Perfect Red-Green Cycle**
-    - **Red phase**: Wrote 6 tests FIRST, all failed as expected
-    - **Green phase**: Implemented accordion wrapper, all 6 tests passing
-    - **All existing tests pass**: 76 product display tests continue to pass (backward compatible)
-  - ✅ **Files Modified**:
-    - src/components/tabs/AlertsTab/AlertCard.tsx (wrapped renderProductDetails in Accordion)
-    - src/components/tabs/AlertsTab/AlertCard.module.css (added .productDetailsAccordion styling)
-    - src/tests/unit/components/AlertCard.test.tsx (added 6 accordion behavior tests)
-  - 📊 **Test Results**: 1,313/1,313 passing (100%), 25 skipped (+6 AlertCard accordion tests)
-  - 🎯 **Code Quality**: 0 TypeScript errors, 0 lint errors in AlertCard files
-  - 🎨 **UX Impact**: Merchants can scan more alerts on screen, faster triage, cleaner card layout
-  - 🚀 **Next**: Consider additional accordion opportunities (notification status, suggested actions, tracking timeline)
+**For older versions (v1.0 - v1.9), see [CHANGELOG.md](CHANGELOG.md)**
 
-- **v1.8** (2025-11-01): 🎨 **Accordion Refactor - Progressive Disclosure UX Enhancement**
-  - ✅ **Created Reusable Accordion Component** (Fully accessible, keyboard-navigable)
-    - **Component features**: ARIA attributes, keyboard navigation (Enter/Space), semantic HTML
-    - **Styling**: Smooth animations, responsive design, reduced motion support
-    - **Testing**: 20 comprehensive tests (100% pass rate), TDD approach (tests written FIRST)
-    - **Accessibility**: Screen reader compatible, focus management, proper ARIA labels
-  - ✅ **Applied to Dashboard Settings** (3 rule explanation sections)
-    - **Wrapped sections**: Warehouse Delays, Carrier Reported Delays, Stuck in Transit
-    - **Progressive disclosure**: Educational content hidden by default, expandable on demand
-    - **User benefit**: Page length reduced by 60-70% (from ~800 lines to ~300 lines visible)
-    - **Impact**: Faster settings configuration, less scrolling, cleaner UI, better information hierarchy
-  - ✅ **Files Created**:
-    - src/components/ui/Accordion.tsx (83 lines)
-    - src/components/ui/Accordion.module.css (110 lines)
-    - src/tests/unit/components/Accordion.test.tsx (320 lines)
-  - ✅ **Files Modified**:
-    - src/components/tabs/DashboardTab/SettingsCard.tsx (wrapped 3 sections in Accordion)
-    - src/components/tabs/DashboardTab/SettingsCard.module.css (added .ruleAccordion class)
-    - src/components/ui/index.ts (exported Accordion and AccordionProps)
-  - 📊 **Test Results**: 1,307/1,307 passing (100%), 25 skipped (+20 Accordion tests)
-  - 🎯 **Code Quality**: 0 TypeScript errors, 0 lint errors in Accordion files
-  - 🚀 **Next**: Consider applying accordion pattern to AlertCard product details (Phase 2 UX)
-
-- **v1.6** (2025-10-28): 🎉 **PHASE 1 COMPLETE!** Phase 1.3 + Phase 1.5.2 Completion
-  - ✅ **Completed Phase 1.5.2: Settings Save Confirmation Toast**
-    - Toast system was already fully implemented with useSettingsActions hook
-    - ToastProvider wraps entire app with Redux integration
-    - Auto-hides after duration with cleanup
-    - showSaveSuccessToast() and showSaveErrorToast() working perfectly
-    - Zero additional work needed - feature already production-ready!
-  - ✅ **Completed Phase 1.3: Communication Status Backend** (10 tests, 100% pass rate)
-    - **Database Schema**: Added 5 new fields to delay_alerts table
-      - sendgrid_message_id, email_opened, email_opened_at, email_clicked, email_clicked_at
-      - Index created for fast SendGrid message ID lookups
-    - **SendGrid Webhook Handler**: Full integration with email tracking
-      - HMAC-SHA256 signature verification for security
-      - Timestamp validation to prevent replay attacks (10-minute window)
-      - Email 'open' event processing with database updates
-      - Email 'click' event processing with database updates
-      - Error handling for database failures and unknown event types
-    - **Webhook Route**: Registered at POST /webhooks/sendgrid
-    - **Communication Status Badge Component**: React component with 3 states
-      - Sent (gray ✉️), Opened (blue 📧), Clicked (green 🔗)
-      - Hover tooltips with formatted timestamps
-      - Mobile-responsive styling with accessibility (ARIA labels)
-  - 🎯 **Perfect TDD Execution**
-    - Wrote 10 comprehensive tests FIRST (TDD Red phase - all failed as expected)
-    - Implemented webhook handler (TDD Green phase - all 10 tests passing)
-    - Zero linting errors, production-ready security implementation
-  - ✅ **Files Created**:
-    - src/routes/sendgrid-webhook.ts (282 lines)
-    - src/tests/unit/routes/sendgrid-webhook.test.ts (416 lines)
-    - src/components/ui/CommunicationStatusBadge.tsx (118 lines)
-    - src/components/ui/CommunicationStatusBadge.module.css (79 lines)
-  - ✅ **Files Modified**:
-    - src/database/connection.ts (database schema updates)
-    - src/routes/webhooks.ts (webhook route registration)
-    - src/components/ui/index.ts (badge export)
-  - 📊 **Total Test Suite**: 1,298 passing tests, 0 failures across entire codebase
-  - 🎉 **PHASE 1 IS NOW COMPLETE!** All 4 tasks done:
-    - Phase 1.1: Enhanced Alert Cards ✅
-    - Phase 1.2: Basic Product Information ✅
-    - Phase 1.3: Communication Status Backend ✅
-    - Phase 1.4: Settings UI Refinement ✅
-  - 🚀 Next: Phase 2 (Customer Intelligence & Priority Scoring)
-
-- **v1.5** (2025-10-28): Phase 1.2 COMPLETE - Shopify Service Integration
-  - ✅ **Completed Phase 1.2: Shopify Service Integration** (25 tests, 100% pass rate)
-    - Created shopify-service.ts with GraphQL client for Shopify Admin API
-    - Fetch order line items from Shopify using GraphQL 2024-01
-    - Transform Shopify data format to internal database format
-    - Save line items with UPSERT (ON CONFLICT) handling
-    - Comprehensive error handling (401, 429 rate limits, GraphQL errors, network failures)
-    - Integrated into order webhooks (orders/updated, orders/paid)
-    - Added `read_products` permission to Shopify scopes in app-config.ts
-  - 🎯 **Exemplary TDD Execution**
-    - Wrote 25 comprehensive tests FIRST (TDD Red phase - all failed as expected)
-    - Implemented Shopify service (TDD Green phase - all 25 tests passing)
-    - Fixed TypeScript type issues in tests with proper assertions
-    - Zero linting errors (0 errors, 5 acceptable warnings for `any` types in GraphQL)
-  - ✅ **Files Created**: shopify-service.ts (324 lines), shopify-service.test.ts (701 lines)
-  - ✅ **Files Modified**: webhooks.ts, app-config.ts
-  - 📊 **Total Phase 1.2 Test Count**: 67 passing tests (18 Frontend + 24 Database + 25 Shopify Service)
-  - 🎉 **PHASE 1.2 IS NOW COMPLETE** - All 4 tasks done (Frontend UI ✅, Database Schema ✅, Shopify Service ✅)
-  - Next: Phase 1.3 Communication Status Backend
-
-- **v1.4** (2025-10-28): Phase 1.2 Backend Database Schema Completion
-  - ✅ **Completed Phase 1.2: Backend Database Schema** (24 integration tests)
-    - Created `order_line_items` table with all required columns
-    - Foreign key constraints with CASCADE delete
-    - Unique constraints on (order_id, shopify_line_item_id)
-    - Performance indexes on order_id and shopify_line_item_id
-    - 24 comprehensive integration tests covering table structure, constraints, and CRUD
-  - 🎯 **Perfect TDD Execution Again**
-    - Wrote 24 integration tests FIRST (TDD Red phase - all failed as expected)
-    - Implemented database schema (TDD Green phase)
-    - Zero linting errors, production-ready schema
-  - ✅ **Files Modified**: 2 files (connection.ts, order-line-items-schema.test.ts)
-  - Next: Shopify GraphQL service to fetch line items + Phase 1.3
-
-- **v1.3** (2025-10-28): Phase 1.2 Frontend Completion
-  - ✅ **Completed Phase 1.2: Basic Product Information (Frontend UI)** (18 tests)
-    - Product display with thumbnails, variants, SKU, quantity, price
-    - Product type badges and vendor names
-    - Display limit with overflow indicator
-    - All 75 tests passing (57 Phase 1.1 + 18 Phase 1.2)
-  - 🎯 **Perfect TDD Execution**
-    - Wrote 18 tests FIRST before implementation (TDD Red phase)
-    - Implemented feature to make tests pass (TDD Green phase)
-    - All tests passing, zero linting errors
-  - ✅ **Files Modified**: 5 files (types, AlertCard tsx/css, alertsSlice, tests)
-  - Next: Phase 1.2 Backend Integration + Phase 1.3
-
-- **v1.2** (2025-10-28): Critical Documentation Enhancement
-  - 🎯 **Added "MANDATORY DEVELOPMENT WORKFLOW" section**
-    - TDD-first approach now explicitly documented
-    - Step-by-step development cycle (8 phases)
-    - Common mistakes and how to avoid them
-    - Linting requirements clearly stated
-    - Documentation update requirements emphasized
-  - ✅ Enhanced "IMPORTANT REMINDERS" with workflow summary
-  - This update addresses feedback from Phase 1.1/1.4 development cycle
-
-- **v1.1** (2025-10-28): Phase 1.1 & 1.4 Completion
-  - ✅ Completed Phase 1.1: Enhanced Alert Cards (57 tests)
-  - ✅ Completed Phase 1.4: Settings UI Refinement (47 tests)
-  - ✅ Fixed all ESLint errors and code quality issues
-  - ✅ 104 passing tests, dev servers operational
-  - Next: Phase 1.2 (Basic Product Information) and Phase 1.3 (Communication Status Backend)
-
-- **v1.0** (2025-10-28): Initial creation
+---
   - Added DEEP_DIVE_UX_UI_RESEARCH.md
   - Added IMPLEMENTATION_PLAN.md
   - Defined Phase 1 & 2 priorities

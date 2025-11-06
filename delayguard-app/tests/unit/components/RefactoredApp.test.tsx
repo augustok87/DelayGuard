@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import RefactoredApp from '../../../src/components/RefactoredApp';
 import * as hooks from '../../../src/hooks';
 
@@ -58,11 +58,10 @@ jest.mock('../../../src/components/ui/LoadingSpinner', () => ({
 
 // Mock the tab components
 jest.mock('../../../src/components/tabs/DashboardTab', () => ({
-  DashboardTab: ({ shop, stats, settings: _settings, onSaveSettings, onTestDelayDetection }: any) => (
-    <div data-testid="dashboard-tab">
-      <span>Dashboard Tab</span>
+  DashboardTab: ({ shop, settings: _settings, onSaveSettings, onTestDelayDetection }: any) => (
+    <div data-testid="settings-tab">
+      <span>Settings Tab</span>
       {shop && <span>Shop: {shop}</span>}
-      <span>Total Alerts: {stats.totalAlerts}</span>
       <button onClick={onSaveSettings}>Save Settings</button>
       <button onClick={onTestDelayDetection}>Test Delay Detection</button>
     </div>
@@ -93,11 +92,10 @@ jest.mock('../../../src/components/tabs/OrdersTab', () => ({
 
 // Mock LazyTabs to avoid Suspense/lazy loading issues in tests
 jest.mock('../../../src/components/tabs/LazyTabs', () => ({
-  DashboardTabWithSuspense: ({ shop, stats, settings: _settings, onSaveSettings, onTestDelayDetection }: any) => (
-    <div data-testid="dashboard-tab">
-      <span>Dashboard Tab</span>
+  DashboardTabWithSuspense: ({ shop, settings: _settings, onSaveSettings, onTestDelayDetection }: any) => (
+    <div data-testid="settings-tab">
+      <span>Settings Tab</span>
       {shop && <span>Shop: {shop}</span>}
-      <span>Total Alerts: {stats.totalAlerts}</span>
       <button onClick={onSaveSettings}>Save Settings</button>
       <button onClick={onTestDelayDetection}>Test Delay Detection</button>
     </div>
@@ -122,7 +120,7 @@ jest.mock('../../../src/components/tabs/LazyTabs', () => ({
 
 // Mock the custom hooks
 const mockUseTabs = {
-  selectedTab: 0, // Dashboard tab
+  selectedTab: 0, // Settings tab
   changeTab: jest.fn(),
 };
 
@@ -202,8 +200,8 @@ describe('RefactoredApp', () => {
     expect(screen.getByTestId('app-header')).toBeInTheDocument();
     expect(screen.getByTestId('tab-navigation')).toBeInTheDocument();
 
-    // Verify dashboard tab content is present (avoid duplicate testid issue)
-    expect(screen.getByText('Dashboard Tab')).toBeInTheDocument();
+    // Verify settings tab content is present (avoid duplicate testid issue)
+    expect(screen.getByText('Settings Tab')).toBeInTheDocument();
   });
 
   it('should display loading state when data is loading', () => {
@@ -241,15 +239,14 @@ describe('RefactoredApp', () => {
     expect(mockUseTabs.changeTab).toHaveBeenCalledWith('alerts');
   });
 
-  it('should display dashboard tab by default', () => {
+  it('should display settings tab by default', () => {
     render(<RefactoredApp />);
 
-    // Check for dashboard tab content instead of relying on potentially duplicate testid
-    // The mock DashboardTab component renders "Dashboard Tab" text
-    expect(screen.getByText('Dashboard Tab')).toBeInTheDocument();
+    // Check for settings tab content instead of relying on potentially duplicate testid
+    // The mock DashboardTab component renders "Settings Tab" text
+    expect(screen.getByText('Settings Tab')).toBeInTheDocument();
 
-    // Verify dashboard-specific content is present
-    expect(screen.getByText(/Total Alerts:/i)).toBeInTheDocument();
+    // Verify settings-specific content is present
     expect(screen.getByText('Save Settings')).toBeInTheDocument();
   });
 
