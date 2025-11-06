@@ -869,6 +869,40 @@ Every feature MUST follow this cycle:
 
 ## VERSION HISTORY
 
+- **v1.20.3** (2025-11-06): 🎯 **Send Test Alert Button Moved to Notification Preferences** (92 tests, 100% pass rate)
+  - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
+    - **RED Phase**: Wrote 6 comprehensive tests FIRST for button in NotificationPreferences, updated SettingsCard tests to NOT expect button
+    - **GREEN Phase**: Implemented button move, updated prop passing through DashboardTab
+    - **VERIFY**: All 92 tests passing (22 NotificationPreferences + 39 SettingsCard + 31 DashboardTab)
+  - ✅ **Problem Solved**:
+    - **User Question**: "should we also move this portion [Send Test Alert button] to Notification Preferences?"
+    - **Analysis**: Button tests notification system (email/SMS), so it belongs with notification settings
+    - **Issue**: Button in wrong tab - users had to switch tabs to enable notifications, then switch back to test
+    - **Solution**: Moved button from "Delay Detection Rules" to "Notification Preferences" tab
+  - ✅ **Implementation Details**:
+    - **NotificationPreferences**: Added `onTest` prop to interface, added Button import, rendered button with help text
+    - **DashboardTab**: Passed `onTestDelayDetection` to NotificationPreferences component
+    - **SettingsCard**: Removed Actions section with button, marked `onTest` prop as deprecated (kept for backward compatibility)
+    - **Button Logic**: Disabled when `loading` OR when both email AND SMS notifications are disabled
+    - **Workflow Improvement**: Users can now enable email/SMS → click "Send Test Alert" → verify notifications work (all in one tab!)
+  - ✅ **Test Coverage** (6 new tests for Send Test Alert button):
+    - Should render Send Test Alert button
+    - Should display help text
+    - Should call onTest when clicked
+    - Should disable when loading
+    - Should disable when both notifications are disabled
+    - Should enable when at least one notification is enabled
+  - ✅ **Files Modified** (5):
+    - src/components/tabs/DashboardTab/NotificationPreferences.tsx (added onTest prop and button)
+    - src/components/tabs/DashboardTab/SettingsCard.tsx (removed button, marked onTest as deprecated)
+    - src/components/tabs/DashboardTab/index.tsx (passed onTestDelayDetection to NotificationPreferences)
+    - src/tests/unit/components/SettingsCard.test.tsx (removed 4 button tests)
+    - tests/unit/components/NotificationPreferences.test.tsx (added 6 button tests)
+  - 📊 **Test Results**: 92/92 tests passing (22 NotificationPreferences + 39 SettingsCard + 31 DashboardTab)
+  - 🎯 **Code Quality**: Zero linting errors introduced (1 pre-existing warning from debounced callback)
+  - 🎨 **UX Impact**: Better logical grouping - notification configuration and testing in same place
+  - 🚀 **Lesson**: Button placement should follow user mental model - test notifications where you configure them!
+
 - **v1.20.2** (2025-11-06): 🎯 **Settings Card Title Refinement** (90 tests, 100% pass rate)
   - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
     - **RED Phase**: Updated tests to expect new title "Delay Detection Rules" instead of "App Settings"
