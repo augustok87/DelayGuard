@@ -252,4 +252,96 @@ describe('NotificationPreferences Component', () => {
       expect(screen.getByText(/Send text message alerts to customers \(requires phone numbers\)/i)).toBeInTheDocument();
     });
   });
+
+  describe('Test Alert Button', () => {
+    it('should render Send Test Alert button', () => {
+      const mockOnTest = jest.fn();
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          onSettingsChange={mockOnSettingsChange}
+          onTest={mockOnTest}
+        />,
+      );
+
+      expect(screen.getByRole('button', { name: /Send Test Alert/i })).toBeInTheDocument();
+    });
+
+    it('should display help text for Send Test Alert button', () => {
+      const mockOnTest = jest.fn();
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          onSettingsChange={mockOnSettingsChange}
+          onTest={mockOnTest}
+        />,
+      );
+
+      expect(screen.getByText(/Test your notification system by sending a sample delay alert/i)).toBeInTheDocument();
+    });
+
+    it('should call onTest when Send Test Alert button is clicked', () => {
+      const mockOnTest = jest.fn();
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          onSettingsChange={mockOnSettingsChange}
+          onTest={mockOnTest}
+        />,
+      );
+
+      const button = screen.getByRole('button', { name: /Send Test Alert/i });
+      fireEvent.click(button);
+
+      expect(mockOnTest).toHaveBeenCalledTimes(1);
+    });
+
+    it('should disable Send Test Alert button when loading', () => {
+      const mockOnTest = jest.fn();
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          loading={true}
+          onSettingsChange={mockOnSettingsChange}
+          onTest={mockOnTest}
+        />,
+      );
+
+      const button = screen.getByRole('button', { name: /Send Test Alert/i });
+      expect(button).toBeDisabled();
+    });
+
+    it('should disable Send Test Alert button when both notifications are disabled', () => {
+      const mockOnTest = jest.fn();
+      const noNotificationsSettings = createMockSettings({
+        emailNotifications: false,
+        smsNotifications: false,
+      });
+
+      render(
+        <NotificationPreferences
+          settings={noNotificationsSettings}
+          onSettingsChange={mockOnSettingsChange}
+          onTest={mockOnTest}
+        />,
+      );
+
+      const button = screen.getByRole('button', { name: /Send Test Alert/i });
+      expect(button).toBeDisabled();
+    });
+
+    it('should enable Send Test Alert button when at least one notification is enabled', () => {
+      const mockOnTest = jest.fn();
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          onSettingsChange={mockOnSettingsChange}
+          onTest={mockOnTest}
+        />,
+      );
+
+      const button = screen.getByRole('button', { name: /Send Test Alert/i });
+      expect(button).not.toBeDisabled();
+    });
+  });
 });

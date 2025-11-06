@@ -65,6 +65,7 @@ export function DashboardTab({
             loading={loading}
             onSettingsChange={onSettingsChange}
             onSave={onSaveSettings}
+            onTest={onTestDelayDetection}
           />
         );
       default:

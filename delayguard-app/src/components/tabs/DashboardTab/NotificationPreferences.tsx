@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card } from '../../ui/Card';
+import { Button } from '../../ui/Button';
 import { AppSettings } from '../../../types';
 import styles from './SettingsCard.module.css'; // Reuse same styles
 
@@ -8,6 +9,7 @@ interface NotificationPreferencesProps {
   loading?: boolean;
   onSettingsChange: (settings: AppSettings) => void;
   onSave?: () => void;
+  onTest?: () => void;
 }
 
 /**
@@ -21,6 +23,7 @@ export function NotificationPreferences({
   loading = false,
   onSettingsChange,
   onSave: _onSave,
+  onTest,
 }: NotificationPreferencesProps) {
   // Handle notification changes
   const handleEmailToggle = () => {
@@ -79,6 +82,22 @@ export function NotificationPreferences({
               <strong>No notifications enabled</strong>
               <p className={styles.alertText}>Customers won&apos;t be notified about delays. Enable at least one notification method.</p>
             </div>
+          </div>
+        )}
+
+        {/* Test Alert Button */}
+        {onTest && (
+          <div className={styles.actions}>
+            <Button
+              variant="primary"
+              onClick={onTest}
+              disabled={loading || (!settings.emailNotifications && !settings.smsNotifications)}
+            >
+              Send Test Alert
+            </Button>
+            <p className={styles.helpText} style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+              Test your notification system by sending a sample delay alert to your email/SMS. This helps you verify that notifications are working correctly before going live.
+            </p>
           </div>
         )}
       </div>

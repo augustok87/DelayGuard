@@ -24,7 +24,7 @@ interface SettingsCardProps {
   settings: AppSettings;
   loading: boolean;
   onSave: () => void; // Deprecated: No longer used with auto-save UX, kept for backward compatibility
-  onTest: () => void;
+  onTest: () => void; // Deprecated: Moved to NotificationPreferences in v1.20.3, kept for backward compatibility
   onConnect: () => void;
   onSettingsChange: (settings: AppSettings) => void;
   // Phase 1.4: Merchant benchmarks
@@ -41,7 +41,7 @@ export function SettingsCard({
   settings,
   loading,
   onSave: _onSave, // Prefixed with _ to indicate intentionally unused (auto-save UX)
-  onTest,
+  onTest: _onTest, // Prefixed with _ to indicate intentionally unused (moved to NotificationPreferences)
   onConnect,
   onSettingsChange,
   benchmarks,
@@ -316,20 +316,7 @@ export function SettingsCard({
             </div>
           </div>
         </div>
-
-        {/* Actions */}
-        <div className={styles.actions}>
-          <Button
-            variant="primary"
-            onClick={onTest}
-            disabled={loading || !shop}
-          >
-            Send Test Alert
-          </Button>
-          <p className={styles.helpText} style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
-            Test your notification system by sending a sample delay alert to your email/SMS. This helps you verify that notifications are working correctly before going live.
-          </p>
-        </div>
+        {/* Send Test Alert button moved to NotificationPreferences component in v1.20.3 */}
       </div>
     </Card>
   );

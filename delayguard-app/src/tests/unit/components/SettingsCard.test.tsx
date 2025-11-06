@@ -568,62 +568,7 @@ describe('SettingsCard (Phase 1.4)', () => {
       expect(screen.queryByRole('button', { name: /Save Settings/i })).not.toBeInTheDocument();
     });
 
-    it('should display Send Test Alert button', () => {
-      render(
-        <SettingsCard
-          shop="test-shop.myshopify.com"
-          settings={mockSettings}
-          loading={false}
-          {...mockCallbacks}
-        />,
-      );
-
-      expect(screen.getByRole('button', { name: /Send Test Alert/i })).toBeInTheDocument();
-    });
-
-    it('should call onTest when Send Test Alert clicked', () => {
-      render(
-        <SettingsCard
-          shop="test-shop.myshopify.com"
-          settings={mockSettings}
-          loading={false}
-          {...mockCallbacks}
-        />,
-      );
-
-      const testButton = screen.getByRole('button', { name: /Send Test Alert/i });
-      fireEvent.click(testButton);
-
-      expect(mockCallbacks.onTest).toHaveBeenCalled();
-    });
-
-    it('should disable Send Test Alert button when loading', () => {
-      render(
-        <SettingsCard
-          shop="test-shop.myshopify.com"
-          settings={mockSettings}
-          loading={true}
-          {...mockCallbacks}
-        />,
-      );
-
-      const testButton = screen.getByRole('button', { name: /Send Test Alert/i });
-      expect(testButton).toBeDisabled();
-    });
-
-    it('should disable Send Test Alert when not connected', () => {
-      render(
-        <SettingsCard
-          shop={null}
-          settings={mockSettings}
-          loading={false}
-          {...mockCallbacks}
-        />,
-      );
-
-      const testButton = screen.getByRole('button', { name: /Send Test Alert/i });
-      expect(testButton).toBeDisabled();
-    });
+    // Send Test Alert button moved to NotificationPreferences component in v1.20.3
   });
 
   describe('Visual Hierarchy and Layout', () => {
@@ -698,8 +643,7 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      // Only Send Test Alert button exists (no Save Settings button with auto-save)
-      expect(screen.getByRole('button', { name: /Send Test Alert/i })).toBeInTheDocument();
+      // No Save Settings button with auto-save (Send Test Alert button moved to NotificationPreferences)
       expect(screen.queryByRole('button', { name: /Save Settings/i })).not.toBeInTheDocument();
     });
   });
