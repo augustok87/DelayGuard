@@ -1,0 +1,47 @@
+/**
+ * DashboardTab (Settings Tab) Styles
+ *
+ * Sticky filter bar for two-tab layout:
+ * - Delay Detection Rules
+ * - Notification Preferences
+ */
+
+.filterBar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  padding: 1rem 0 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.filterSummary {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .filterBar {
+    padding: 0.75rem 0 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .filterSummary {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .filterBar {
+    padding: 0.625rem 0 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .filterSummary {
+    font-size: 0.75rem;
+  }
+}
