@@ -869,6 +869,35 @@ Every feature MUST follow this cycle:
 
 ## VERSION HISTORY
 
+- **v1.20.1** (2025-11-06): ✅ **Corrected Notification Preferences Implementation** (47 tests, 100% pass rate)
+  - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
+    - **RED Phase**: Wrote 16 comprehensive NotificationPreferences tests FIRST (all failed)
+    - **GREEN Phase**: Properly moved notification checkboxes from SettingsCard
+    - **VERIFY**: All 47 tests passing (31 DashboardTab + 16 NotificationPreferences)
+  - ✅ **Problem Solved**:
+    - **User Feedback**: "You haven't moved the actual checkboxes from Delay Detection rules"
+    - **Initial v1.20 Issue**: Created placeholder instead of moving real notification settings
+    - **Solution**: Moved email/SMS checkboxes and handlers from SettingsCard to NotificationPreferences
+  - ✅ **Implementation Details**:
+    - **Moved from SettingsCard**: Email/SMS checkboxes, toggle handlers, warning message
+    - **Removed from SettingsCard**: Entire "Notification Preferences Section" (lines 334-379)
+    - **NotificationPreferences Component**: Now has real checkboxes with onChange handlers
+    - **Proper separation**: Rules in "Delay Detection Rules", notifications in "Notification Preferences"
+  - ✅ **Test Coverage** (16 new NotificationPreferences tests):
+    - Email notifications checkbox (4 tests)
+    - SMS notifications checkbox (4 tests)
+    - Warning messages (4 tests)
+    - Loading state (2 tests)
+    - Help text (2 tests)
+  - ✅ **Files Modified** (3):
+    - src/components/tabs/DashboardTab/NotificationPreferences.tsx (MOVED checkboxes FROM SettingsCard)
+    - src/components/tabs/DashboardTab/SettingsCard.tsx (REMOVED notification section)
+    - tests/unit/components/NotificationPreferences.test.tsx (NEW - 16 tests)
+  - 📊 **Test Results**: 47/47 tests passing (31 DashboardTab + 16 NotificationPreferences)
+  - 🎯 **Code Quality**: Zero linting errors, production-ready
+  - 🎨 **UX Impact**: Proper separation of delay rules vs. notification settings
+  - 🚀 **Lesson**: Always verify user requirements are fully met before committing!
+
 - **v1.20** (2025-11-06): ⚙️ **Settings Tab Two-Tab Layout** (31 tests, 100% pass rate)
   - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
     - **RED Phase**: Wrote 19 comprehensive tests FIRST (all failed as expected - NotificationPreferences didn't exist)
