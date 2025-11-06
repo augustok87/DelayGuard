@@ -69,15 +69,6 @@ export function SettingsCard({
     debouncedSave({ ...settings, delayThreshold: value }); // Save after 1s
   };
 
-  // Handle notification changes
-  const handleEmailToggle = () => {
-    onSettingsChange({ ...settings, emailNotifications: !settings.emailNotifications });
-  };
-
-  const handleSmsToggle = () => {
-    onSettingsChange({ ...settings, smsNotifications: !settings.smsNotifications });
-  };
-
   // Phase 1.4: Render benchmark with comparison text
   const renderBenchmark = (value: number, label: string, suffix: string = 'days') => {
     let comparison = '';
@@ -329,53 +320,6 @@ export function SettingsCard({
               while avoiding false positives.
             </div>
           </div>
-        </div>
-
-        {/* Notification Preferences Section */}
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Notification Preferences</h3>
-
-          <div className={styles.setting}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={settings.emailNotifications}
-                onChange={handleEmailToggle}
-                disabled={loading}
-                aria-label="Enable email notifications"
-              />
-              <span>
-                <strong>Email Notifications</strong>
-                <span className={styles.helpText}>Send email alerts to customers when delays are detected</span>
-              </span>
-            </label>
-          </div>
-
-          <div className={styles.setting}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={settings.smsNotifications}
-                onChange={handleSmsToggle}
-                disabled={loading}
-                aria-label="Enable SMS notifications"
-              />
-              <span>
-                <strong>SMS Notifications</strong>
-                <span className={styles.helpText}>Send text message alerts to customers (requires phone numbers)</span>
-              </span>
-            </label>
-          </div>
-
-          {!settings.emailNotifications && !settings.smsNotifications && (
-            <div className={`${styles.alert} ${styles.alertWarning}`}>
-              <span className={styles.alertIcon}>⚠</span>
-              <div className={styles.alertContent}>
-                <strong>No notifications enabled</strong>
-                <p className={styles.alertText}>Customers won&apos;t be notified about delays. Enable at least one notification method.</p>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Actions */}
