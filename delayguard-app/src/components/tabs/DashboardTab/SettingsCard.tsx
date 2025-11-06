@@ -89,8 +89,8 @@ export function SettingsCard({
 
   return (
     <Card
-      title="App Settings"
-      subtitle="Configure your delay detection and notification preferences"
+      title="Delay Detection Rules"
+      subtitle="Set thresholds for when to alert customers about shipping delays"
     >
       <div className={styles.content}>
         {/* System Status Section - Only shown when not connected */}
@@ -119,11 +119,6 @@ export function SettingsCard({
 
         {/* Phase 1.4: Delay Detection Rules with Plain Language */}
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Delay Detection Rules</h3>
-          <p className={styles.sectionSubtitle}>
-            Configure when you want to be alerted about potential shipping delays
-          </p>
-
           {/* Rule 1: Warehouse Delays (Pre-Shipment) */}
           <div className={styles.ruleCard}>
             <div className={styles.ruleHeader}>

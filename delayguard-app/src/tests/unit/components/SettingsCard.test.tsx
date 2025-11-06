@@ -54,7 +54,7 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      expect(screen.getByText('App Settings')).toBeInTheDocument();
+      expect(screen.getByText('Delay Detection Rules')).toBeInTheDocument();
     });
 
     it('should have correct display name', () => {
@@ -492,106 +492,6 @@ describe('SettingsCard (Phase 1.4)', () => {
     });
   });
 
-  describe('Notification Preferences', () => {
-    it('should display email notifications toggle', () => {
-      render(
-        <SettingsCard
-          shop="test-shop.myshopify.com"
-          settings={mockSettings}
-          loading={false}
-          {...mockCallbacks}
-        />,
-      );
-
-      expect(screen.getByText('Email Notifications')).toBeInTheDocument();
-      expect(screen.getByLabelText(/Enable email notifications/i)).toBeChecked();
-    });
-
-    it('should display SMS notifications toggle', () => {
-      render(
-        <SettingsCard
-          shop="test-shop.myshopify.com"
-          settings={mockSettings}
-          loading={false}
-          {...mockCallbacks}
-        />,
-      );
-
-      expect(screen.getByText('SMS Notifications')).toBeInTheDocument();
-      expect(screen.getByLabelText(/Enable SMS notifications/i)).not.toBeChecked();
-    });
-
-    it('should call onSettingsChange when email toggle changes', () => {
-      render(
-        <SettingsCard
-          shop="test-shop.myshopify.com"
-          settings={mockSettings}
-          loading={false}
-          {...mockCallbacks}
-        />,
-      );
-
-      const emailToggle = screen.getByLabelText(/Enable email notifications/i);
-      fireEvent.click(emailToggle);
-
-      expect(mockCallbacks.onSettingsChange).toHaveBeenCalledWith({
-        ...mockSettings,
-        emailNotifications: false,
-      });
-    });
-
-    it('should call onSettingsChange when SMS toggle changes', () => {
-      render(
-        <SettingsCard
-          shop="test-shop.myshopify.com"
-          settings={mockSettings}
-          loading={false}
-          {...mockCallbacks}
-        />,
-      );
-
-      const smsToggle = screen.getByLabelText(/Enable SMS notifications/i);
-      fireEvent.click(smsToggle);
-
-      expect(mockCallbacks.onSettingsChange).toHaveBeenCalledWith({
-        ...mockSettings,
-        smsNotifications: true,
-      });
-    });
-
-    it('should display warning when no notifications enabled', () => {
-      const noNotificationsSettings = {
-        ...mockSettings,
-        emailNotifications: false,
-        smsNotifications: false,
-      };
-
-      render(
-        <SettingsCard
-          shop="test-shop.myshopify.com"
-          settings={noNotificationsSettings}
-          loading={false}
-          {...mockCallbacks}
-        />,
-      );
-
-      expect(screen.getByText('No notifications enabled')).toBeInTheDocument();
-      expect(screen.getByText(/Customers won't be notified about delays/i)).toBeInTheDocument();
-    });
-
-    it('should not display warning when at least one notification method enabled', () => {
-      render(
-        <SettingsCard
-          shop="test-shop.myshopify.com"
-          settings={mockSettings}
-          loading={false}
-          {...mockCallbacks}
-        />,
-      );
-
-      expect(screen.queryByText('No notifications enabled')).not.toBeInTheDocument();
-    });
-  });
 
   describe('Shopify Connection Status', () => {
     it('should NOT display connection status when shop is provided (moved to header)', () => {
@@ -784,9 +684,8 @@ describe('SettingsCard (Phase 1.4)', () => {
       );
 
       expect(screen.getByLabelText(/Alert me when orders sit unfulfilled for:/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Enable email notifications/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Enable SMS notifications/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Auto-detect carrier exceptions/i)).toBeInTheDocument();
+      // Email and SMS notification labels are now in NotificationPreferences component
     });
 
     it('should have proper button roles and labels (auto-save UX)', () => {
