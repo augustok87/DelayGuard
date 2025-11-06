@@ -869,6 +869,40 @@ Every feature MUST follow this cycle:
 
 ## VERSION HISTORY
 
+- **v1.20** (2025-11-06): ⚙️ **Settings Tab Two-Tab Layout** (31 tests, 100% pass rate)
+  - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
+    - **RED Phase**: Wrote 19 comprehensive tests FIRST (all failed as expected - NotificationPreferences didn't exist)
+    - **GREEN Phase**: Implemented two-tab layout to make all tests pass
+    - **VERIFY**: All 31 DashboardTab tests passing (12 original + 19 new)
+  - ✅ **Problem Solved**:
+    - **User Request**: "Within Settings tab I'd like to have two tabs: 'Delay detection rules' and 'Notification Preferences'"
+    - **Impact**: Better organization, consistent pattern with Alerts/Orders tabs
+    - **Solution**: Integrated SegmentedControl with two tabs, conditional rendering
+  - ✅ **Implementation Details**:
+    - **DashboardTab Component**: Added useState for selectedFilter, integrated SegmentedControl, conditional rendering
+    - **NotificationPreferences Component (NEW)**: Placeholder with "Coming Soon" messaging, lists future features
+    - **DashboardTab.module.css (NEW)**: Sticky filter bar, responsive padding, filter summary styling
+    - **Default Tab**: "Delay Detection Rules" (existing SettingsCard content)
+  - ✅ **Test Coverage** (19 new two-tab layout tests):
+    - Tab navigation rendering (4 tests)
+    - Tab content display (3 tests)
+    - Tab state management (2 tests)
+    - Props passing (2 tests)
+    - Responsive behavior (1 test)
+    - Empty states (1 test)
+    - Integration with existing functionality (2 tests)
+    - Accessibility (2 tests)
+    - Edge cases (2 tests)
+  - ✅ **Files Modified/Created** (4):
+    - src/components/tabs/DashboardTab/index.tsx (MODIFIED - two-tab layout)
+    - src/components/tabs/DashboardTab/NotificationPreferences.tsx (NEW - placeholder component)
+    - src/components/tabs/DashboardTab/DashboardTab.module.css (NEW - sticky filter bar)
+    - tests/unit/components/DashboardTab.tabs.test.tsx (NEW - 19 tests)
+  - 📊 **Test Results**: 31/31 DashboardTab tests passing (100% pass rate)
+  - 🎯 **Code Quality**: Zero linting errors, backward compatible, production-ready
+  - 🎨 **UX Impact**: Clear separation of concerns, consistent pattern across all tabs, sticky filter bar
+  - 🚀 **Next**: Implement full Notification Preferences UI in future phase
+
 - **v1.19** (2025-11-06): 📱 **Mobile Horizontal Tab Layout for Filters** (35 tests, 100% pass rate)
   - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
     - **RED Phase**: Wrote 11 comprehensive mobile layout tests FIRST (all passing baseline)
