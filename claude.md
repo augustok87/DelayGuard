@@ -869,6 +869,28 @@ Every feature MUST follow this cycle:
 
 ## VERSION HISTORY
 
+- **v1.20.2** (2025-11-06): 🎯 **Settings Card Title Refinement** (90 tests, 100% pass rate)
+  - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
+    - **RED Phase**: Updated tests to expect new title "Delay Detection Rules" instead of "App Settings"
+    - **GREEN Phase**: Updated SettingsCard title/subtitle and removed redundant section header
+    - **VERIFY**: All 90 tests passing (43 SettingsCard + 47 DashboardTab + NotificationPreferences)
+  - ✅ **Problem Solved**:
+    - **User Feedback**: "I think we can now get rid of this portion [App Settings header]"
+    - **Issue**: Generic "App Settings" title was redundant with tab context
+    - **Solution**: Changed to specific "Delay Detection Rules" title, removed duplicate section header
+  - ✅ **Implementation Details**:
+    - **SettingsCard Title**: Changed from "App Settings" → "Delay Detection Rules"
+    - **SettingsCard Subtitle**: Changed from "Configure your delay detection and notification preferences" → "Set thresholds for when to alert customers about shipping delays"
+    - **Removed Redundancy**: Deleted duplicate <h3> section title inside Card (was causing "multiple elements" test error)
+    - **Test Cleanup**: Removed 106 lines of obsolete notification preferences tests (moved to NotificationPreferences.test.tsx in v1.20.1)
+  - ✅ **Files Modified** (2):
+    - src/components/tabs/DashboardTab/SettingsCard.tsx (updated title/subtitle, removed duplicate section header)
+    - src/tests/unit/components/SettingsCard.test.tsx (updated test expectations, removed obsolete notification tests)
+  - 📊 **Test Results**: 90/90 tests passing (43 SettingsCard + 31 DashboardTab + 16 NotificationPreferences)
+  - 🎯 **Code Quality**: Zero linting errors introduced (1 pre-existing warning from debounced callback)
+  - 🎨 **UX Impact**: Cleaner, more specific labeling; reduced visual redundancy
+  - 🚀 **Lesson**: Card titles should be specific and contextual, not generic!
+
 - **v1.20.1** (2025-11-06): ✅ **Corrected Notification Preferences Implementation** (47 tests, 100% pass rate)
   - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
     - **RED Phase**: Wrote 16 comprehensive NotificationPreferences tests FIRST (all failed)
