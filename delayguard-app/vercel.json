@@ -19,7 +19,7 @@
   "crons": [
     {
       "path": "/api/cron/tracking-refresh",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ],
   "env": {
