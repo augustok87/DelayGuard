@@ -34,7 +34,9 @@ export interface DelayDetectionResult {
     | "EXCEPTION_STATUS"
     | "DATE_DELAY"
     | "ETA_EXCEEDED"
-    | "EVENT_DELAY";
+    | "EVENT_DELAY"
+    | "WAREHOUSE_DELAY"
+    | "STUCK_IN_TRANSIT";
   estimatedDelivery?: string;
   originalDelivery?: string;
   error?: string;
@@ -50,7 +52,11 @@ export interface DelayDetails {
 
 // Enhanced UI Types - Keep existing for backward compatibility
 export interface AppSettings {
-  delayThreshold: number;
+  delayThreshold: number; // Deprecated - use specific thresholds below
+  // Phase 3-Rule Delay Detection: Separate thresholds for each rule
+  warehouseDelayDays?: number; // Rule 1: Warehouse Delays (default: 2)
+  carrierDelayDays?: number; // Rule 2: Carrier Reported Delays (default: 1)
+  transitDelayDays?: number; // Rule 3: Stuck in Transit (default: 7)
   notificationTemplate: string;
   emailNotifications: boolean;
   smsNotifications: boolean;

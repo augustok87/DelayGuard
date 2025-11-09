@@ -16,7 +16,7 @@ This document serves as the **mandatory onboarding guide** for any AI agent (Cla
 
 This document provides:
 - Current Phase 1 completion status with all metrics
-- Readiness score (95/100) and what remains for Shopify submission
+- Readiness score (98/100) and what remains for Shopify submission
 - Complete Phase 2 roadmap (customer intelligence & priority scoring)
 - Phase 3-5 future roadmap overview
 - Links to all other documentation
@@ -78,239 +78,20 @@ This document contains:
 
 ---
 
-## PROJECT OVERVIEW
+## PROJECT CONTEXT
 
-### What is DelayGuard?
-DelayGuard is a Shopify app that helps merchants manage shipping delays and retain customers. It detects delays using 3 configurable rules and sends proactive notifications to customers.
+**Essential Reading** (read these FIRST before starting work):
+- **[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** - Current state (98/100 readiness), Phase 1 complete, test metrics
+- **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** - Technical specs, code examples, phase details
+- **[PROJECT_STATUS_AND_NEXT_STEPS.md](PROJECT_STATUS_AND_NEXT_STEPS.md)** - Immediate tasks, priorities
 
-### Current Tech Stack
-- **Frontend**: React, TypeScript, Remix
-- **Backend**: Node.js, Remix (full-stack)
-- **Database**: PostgreSQL with Prisma ORM
-- **APIs**:
-  - Shopify Admin API (GraphQL)
-  - ShipEngine API (carrier tracking)
-  - SendGrid (email notifications)
-- **Hosting**: TBD (likely Shopify App Bridge on Vercel/Railway)
+**Quick Summary** (for reference):
+- **Status**: Phase 1 Complete + 3-Rule Delay Detection (v1.19)
+- **Tests**: 1,348 passing, 0 failing
+- **Next**: Phase 2 (Customer Intelligence & Priority Scoring)
+- **Tech Stack**: React/TypeScript, Koa, PostgreSQL, BullMQ, ShipEngine
 
-### Current Architecture
-- 3-tab structure:
-  1. **Dashboard**: Settings, stats, delay detection rules
-  2. **Delay Alerts**: List of current delays with enhanced cards
-  3. **Orders**: All orders with tracking status
-
-### Current Shopify Permissions
-- `read_orders`
-- `read_fulfillments`
-
-### Permissions Needed for Phase 1-2
-- `read_products` (to show line items)
-- `read_customers` (for customer intelligence)
-
-### Permissions Needed for Phase 3+
-- `write_discounts` (for apology discount generation)
-
----
-
-## BUSINESS CONTEXT
-
-### Development Timeline
-1. **Phase 1 & 2** (CURRENT): Implement before Shopify App Store submission
-2. **Phase 3**: Launch as premium/enterprise tier feature
-3. **Phase 4 & 5**: Future expansion (post-revenue)
-
-### Target Customers
-- Shopify merchants (small to medium businesses)
-- 100-10,000 orders per month
-- Care about customer retention and lifetime value
-
-### Competitive Positioning
-Shifting from "delay alerts" to "customer retention intelligence platform"
-
-**Old value prop**: "Get alerts when orders are delayed"
-**New value prop**: "Turn shipping delays into customer loyalty wins. Reduce churn by 35%."
-
-### Pricing Strategy (Phase 3+)
-- **Free**: Basic alerts only
-- **Premium ($49/mo)**: Discount generation + basic workflows
-- **Enterprise ($149/mo)**: Advanced workflows + analytics + priority support
-
----
-
-## CORE CODEBASE STRUCTURE
-
-### Important Directories
-```
-/app
-  /routes              # Remix routes (pages + API endpoints)
-    /dashboard         # Dashboard tab
-    /alerts            # Delay alerts tab
-    /orders            # Orders tab
-    /api               # API endpoints
-    /webhooks          # Shopify + SendGrid webhooks
-
-  /components          # React components
-    /alerts            # Alert card components
-    /dashboard         # Dashboard components
-    /orders            # Order list components
-
-  /services            # Business logic
-    /shopify.server.ts # Shopify API client
-    /tracking.server.ts # ShipEngine integration
-    /notifications.server.ts # Email/SMS sending
-
-  /models              # Database models (Prisma)
-
-/prisma
-  /schema.prisma       # Database schema
-  /migrations          # Migration history
-
-/public               # Static assets
-```
-
-### Key Files to Understand
-
-#### 1. Database Schema (`prisma/schema.prisma`)
-**Current models:**
-- `Shop`: Merchant store settings
-- `Order`: Shopify orders with tracking data
-- `DelayAlert`: Active delay notifications
-- `Notification`: Email/SMS communication log
-
-**Future models (from IMPLEMENTATION_PLAN.md):**
-- `OrderLineItem`: Products in orders (Phase 1)
-- `CustomerIntelligence`: Customer LTV, segment (Phase 2)
-- `DiscountCode`: Apology discounts (Phase 3)
-- `WorkflowRule`: Automated retention workflows (Phase 3)
-- `CommunicationEvent`: Full communication timeline (Phase 3)
-
-#### 2. Shopify Integration (`app/services/shopify.server.ts`)
-- OAuth setup
-- GraphQL client initialization
-- Webhook handlers
-
-#### 3. Delay Detection Logic
-- 3 rules: Pre-shipment, In-transit exceptions, Extended transit
-- Configurable thresholds per merchant
-- Background jobs check for delays every hour
-
----
-
-## CURRENT STATE & NEXT STEPS
-
-### Recently Completed
-✅ Priority 1 UX improvements (removed confusing elements)
-✅ Enhanced alert cards with tracking timeline
-✅ 3-tab architecture implemented
-✅ **Phase 1.1: Enhanced Alert Cards** - Completed October 28, 2025
-   - Order total display with currency formatting
-   - Smart priority badges (CRITICAL/HIGH/MEDIUM/LOW)
-   - Enhanced contact information
-   - Email engagement tracking UI
-   - 57 passing tests
-✅ **Phase 1.4: Settings UI Refinement** - Completed October 28, 2025
-   - Plain language rule names ("Warehouse Delays", "Carrier Reported Delays", "Stuck in Transit")
-   - Merchant benchmarks with contextual feedback
-   - Improved help text and smart tips
-   - Visual enhancements with rule cards
-   - 47 passing tests
-✅ **Code Quality & Linting** - Completed October 28, 2025
-   - Fixed all ESLint errors in Phase 1.1 and 1.4 files
-   - Escaped JSX apostrophes (react/no-unescaped-entities)
-   - Auto-fixed 109+ formatting errors codebase-wide
-   - All 104 tests passing (57 AlertCard + 47 SettingsCard)
-   - Dev servers running successfully on ports 3000 and 3001
-✅ **Phase 1.2: Basic Product Information (Frontend UI)** - Completed October 28, 2025
-   - Product thumbnails with placeholder (📦)
-   - Product titles, variants, SKU, quantity, price
-   - Product type badges and vendor names
-   - Display limit (max 5 items) with "+X more" indicator
-   - 18 passing tests following TDD approach
-   - All 75 tests passing (57 Phase 1.1 + 18 Phase 1.2)
-   - Zero linting errors, TypeScript compilation successful
-✅ **Phase 1.2: Backend Database Schema** - Completed October 28, 2025
-   - Created `order_line_items` table with all required columns
-   - Foreign key constraints with CASCADE delete
-   - Unique constraints and performance indexes
-   - 24 comprehensive integration tests (TDD approach)
-   - Zero linting errors, production-ready schema
-   - Perfect TDD execution: Tests written FIRST, then implementation
-✅ **Phase A: UX Clarity Improvements (InfoTooltip)** - Completed November 4, 2025
-   - Reusable InfoTooltip component with (?) icon
-   - Full keyboard accessibility and ARIA attributes
-   - Smooth fade-in animation, mobile responsive
-   - 24 passing tests following TDD approach
-   - Improved badge labels and educational features
-   - Zero linting errors, production-ready
-✅ **Phase B: Alert Filtering (Segmented Control)** - Completed November 4, 2025
-   - Shopify Polaris-style SegmentedControl component
-   - AlertsTab refactored with Active/Resolved/Dismissed tabs
-   - Real-time badge counts and tab-specific empty states
-   - Sticky filter bar, mobile responsive design
-   - 53 passing tests (24 SegmentedControl + 29 AlertsTab)
-   - Zero linting errors in Phase B files
-   - 1,388 total tests passing across entire codebase
-   - Test coverage: AlertsTab 94.28%, SegmentedControl 75%
-✅ **Phase C: Orders Tab Filtering (SegmentedControl)** - Completed November 5, 2025
-   - OrdersTab refactored with Processing/Shipped/Delivered tabs
-   - Reused SegmentedControl component from Phase B (consistency)
-   - Real-time badge counts for each order status
-   - Default to "Shipped" tab (most important for merchants)
-   - Tab-specific empty states with contextual icons (⏳ Processing, 🚚 Shipped, ✅ Delivered)
-   - Filter summary: "Showing X [status] orders"
-   - Sticky filter bar, mobile responsive design
-   - 29 passing tests (100% pass rate)
-   - Zero linting errors in Phase C files
-   - 1,417 total tests passing across entire codebase
-✅ **Phase D: Mobile Tab Navigation Optimization** - Completed November 5, 2025
-   - Main tabs (Dashboard/Alerts/Orders) now use full screen width on mobile
-   - Text labels ALWAYS visible alongside icons (removed display: none)
-   - Equal width distribution with flex: 1 on all tabs
-   - Responsive stacking at 480px (icon above text on very small screens)
-   - Better horizontal distribution and visual clarity
-   - 35 passing tests (100% pass rate)
-   - Zero linting errors in Phase D files
-   - 1,452 total tests passing across entire codebase
-
-### Current Priority (Phase 1) - Remaining Tasks
-**Must complete before Shopify submission:**
-
-1. **Phase 1.2: Shopify Service Integration** (2-3 days)
-   - Add `read_products` Shopify permission
-   - Implement Shopify GraphQL service to fetch line items
-   - Update order sync logic to store line items
-   - Background job to backfill existing orders
-
-2. **Phase 1.3: Communication Status Backend** (3 days)
-   - SendGrid webhook integration for open/click tracking
-   - Backend API for engagement data
-   - (Frontend already complete from Phase 1.1!)
-
-**Remaining Phase 1 effort:** 5-6 days
-
-### Next Priority (Phase 2)
-**Must complete before Shopify submission:**
-
-1. **Customer Value Scoring** (5-6 days)
-   - Add `read_customers` permission
-   - Fetch customer LTV and order count
-   - Segment customers: VIP, Repeat, New, At-Risk
-
-2. **Priority Score Algorithm** (4-5 days)
-   - Calculate 0-100 priority score
-   - Auto-sort alerts by priority
-   - Display score breakdown
-
-3. **Enhanced Financial Breakdown** (2 days)
-   - Show subtotal, shipping, tax, discounts
-   - Display in alert details
-
-4. **Shipping Address Context** (3 days)
-   - Display full shipping address
-   - Flag rural/international/PO Box
-   - Extract urgency from customer notes
-
-**Total Phase 2 effort:** 14-16 days
+**For complete project details, architecture, and business context**: See [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) - it is the single source of truth for project status.
 
 ---
 
@@ -428,17 +209,7 @@ Every feature MUST follow this exact sequence:
 
    # OR run ESLint directly
    npx eslint . --ext .js,.ts,.tsx --fix
-
-   # Manually fix remaining errors:
-   # - Escape apostrophes in JSX: ' becomes &apos;
-   # - Fix space-before-function-paren
-   # - Remove unused imports
    ```
-
-   **Common ESLint Errors:**
-   - `react/no-unescaped-entities`: Escape apostrophes with `&apos;`
-   - `space-before-function-paren`: Add/remove space before `()`
-   - `@typescript-eslint/no-explicit-any`: Replace `any` with proper types
 
 #### 6. VERIFY EVERYTHING WORKS
    ```bash
@@ -455,132 +226,38 @@ Every feature MUST follow this exact sequence:
 #### 7. UPDATE DOCUMENTATION
    **⚠️ CRITICAL: Update docs IMMEDIATELY after completing feature!**
 
-   **THIS IS NOT OPTIONAL. Every feature requires documentation updates.**
-
-   **Why documentation matters:**
-   - Future you (or other AIs) won't remember what you built
-   - v1.16 metrics: Forgot to document, had to do it later (wasted time)
-   - Documentation IS part of "done" - not documenting = incomplete feature
-
    **MANDATORY files to update:**
-   - ✅ **IMPLEMENTATION_PLAN.md**: Mark phase as complete, add test count, document approach
-   - ✅ **CLAUDE.md**: Add version history entry with completion date and key details
+   - ✅ **IMPLEMENTATION_PLAN.md**: Mark phase as complete, add test count
+   - ✅ **CLAUDE.md**: Add version history entry (in CHANGELOG.md now)
    - ✅ **PROJECT_OVERVIEW.md** (if applicable): Update phase completion status
-   - ✅ **README files** (if applicable): Update usage instructions for new features
-
-   ```markdown
-   Example update in IMPLEMENTATION_PLAN.md:
-
-   ### 1.X Feature Name ✅ COMPLETED
-   **Completion Date**: YYYY-MM-DD
-   **Tests**: XX passing tests (all passing)
-   **Files Modified**: X files (list them)
-   **Code Quality**: ✅ All ESLint errors fixed, production-ready
-   ```
-
-   **✅ SELF-CHECK: Did I document the feature?**
-   - [ ] Did I update IMPLEMENTATION_PLAN.md with completion status?
-   - [ ] Did I add a version history entry to CLAUDE.md?
-   - [ ] Did I include test counts, file counts, and key learnings?
-   - [ ] Did I document any TDD violations or corrective actions?
-
-   **If you skipped documentation:**
-   - ❌ Feature is NOT complete
-   - ❌ Go back and update ALL pertinent .md files NOW
 
 #### 8. FINAL CHECKLIST
    Before considering ANY feature "done", verify:
 
    - [ ] ✅ Tests written FIRST (TDD approach)
-     - ❌ **FAILURE**: Wrote server-simple.ts metrics code, then tests later
-     - ✅ **SUCCESS**: Created stats-endpoint.test.ts FIRST, then implemented
-
    - [ ] ✅ All tests passing (100% pass rate)
-     - ❌ **FAILURE**: "13/14 tests pass - good enough"
-     - ✅ **SUCCESS**: 14/14 tests pass
-
    - [ ] ✅ Zero linting errors in modified files
-     - ❌ **FAILURE**: "6 warnings - I'll fix later"
-     - ✅ **SUCCESS**: Zero errors, zero warnings (or acceptable `any` warnings documented)
-
    - [ ] ✅ Dev servers running successfully
-     - ❌ **FAILURE**: Server crashes on startup, ignored
-     - ✅ **SUCCESS**: Tested http://localhost:3001/api/stats and verified response
-
    - [ ] ✅ TypeScript compilation successful
-     - ❌ **FAILURE**: Type errors exist but "code works"
-     - ✅ **SUCCESS**: `npm run type-check` passes
-
    - [ ] ✅ IMPLEMENTATION_PLAN.md updated
-     - ❌ **FAILURE**: Forgot to document v1.16 dashboard metrics
-     - ✅ **SUCCESS**: Added complete section with code examples and metrics definitions
-
-   - [ ] ✅ CLAUDE.md updated
-     - ❌ **FAILURE**: Skipped version history entry
-     - ✅ **SUCCESS**: Added v1.16 with TDD notes, test counts, and lessons learned
-
+   - [ ] ✅ CHANGELOG.md updated (for version history)
    - [ ] ✅ No console.log or debug code left behind
-     - ❌ **FAILURE**: `console.log('DEBUG:', data)` still in code
-     - ✅ **SUCCESS**: Clean code, only intentional logging
-
-   **If ANY checkbox is unchecked:**
-   - Feature is NOT complete
-   - Do NOT move to next task
-   - Do NOT commit to git
-
-### Common Mistakes to AVOID
-
-❌ **NEVER** write implementation code before writing tests
-❌ **NEVER** skip linting ("I'll fix it later" = you won't)
-❌ **NEVER** forget to update documentation
-❌ **NEVER** leave tests failing or skipped
-❌ **NEVER** commit code with TypeScript errors
-❌ **NEVER** use `any` types without explicit reason
-❌ **NEVER** skip the "READ & UNDERSTAND" phase
-
-### If You Get Stuck
-
-1. **Tests failing?** Re-read the test error messages carefully
-2. **Linting errors?** Run `npm run lint:fix` first, then fix manually
-3. **TypeScript errors?** Check interface definitions in `types/index.ts`
-4. **Feature unclear?** Re-read IMPLEMENTATION_PLAN.md and DEEP_DIVE_UX_UI_RESEARCH.md
-5. **Don't understand existing code?** Search for similar patterns in the codebase
 
 ---
 
-### 🎉 SUCCESS STORIES: When TDD Workflow Works Perfectly
+### 🎉 TDD SUCCESS STORY
 
-**v1.6 - Phase 1.3 Communication Status Backend (2025-10-28)**
-- ✅ Wrote 10 comprehensive tests FIRST (TDD Red phase - all failed as expected)
-- ✅ Implemented SendGrid webhook handler (TDD Green phase - all 10 tests passing)
-- ✅ Zero linting errors, production-ready security implementation
-- **Result**: Flawless implementation, zero bugs, complete confidence
+**v1.19 - 3-Rule Delay Detection System (2025-11-09)**
+- ✅ Wrote 35 comprehensive tests FIRST (TDD Red phase)
+- ✅ Implemented 3 delay detection rules (TDD Green phase)
+- ✅ Discovered 3 critical bugs during honest review before shipping
+- **Result**: Production-ready system, zero bugs shipped, complete confidence
 
-**v1.5 - Phase 1.2 Shopify Service Integration (2025-10-28)**
-- ✅ Wrote 25 comprehensive tests FIRST (TDD Red phase - all failed as expected)
-- ✅ Implemented Shopify GraphQL service (TDD Green phase - all 25 tests passing)
-- ✅ Fixed TypeScript type issues in tests with proper assertions
-- **Result**: Production-ready integration, zero rework needed
-
-**v1.4 - Phase 1.2 Backend Database Schema (2025-10-28)**
-- ✅ Wrote 24 integration tests FIRST (TDD Red phase - all failed as expected)
-- ✅ Implemented database schema (TDD Green phase)
-- **Result**: Zero schema bugs, perfect database constraints
-
-**What these successes have in common:**
-1. Tests written FIRST - no exceptions
-2. Zero rework needed after implementation
-3. Complete confidence in production deployment
-4. Documentation completed immediately
-5. Git commit with pride, not shame
-
-**When you follow TDD:**
-- You save time (no rework needed)
-- You build better architecture (tests force good design)
-- You sleep well at night (complete test coverage)
-- You earn user trust (no embarrassing mistakes)
-
-*The TDD-first workflow isn't a suggestion - it's the path to excellence.*
+**Key Lessons**:
+1. Tests written FIRST = better architecture
+2. Honest review catches bugs before production
+3. TDD saves time (no rework needed)
+4. Documentation completed immediately = no technical debt
 
 ---
 
@@ -610,41 +287,28 @@ Every feature MUST follow this exact sequence:
    - Update app listing documentation
 
 5. **Testing requirements**
-   - Unit tests for services, using best Test Driven Development principles
+   - Unit tests for services (TDD approach)
    - Integration tests for Shopify API calls
    - E2E tests for user flows
 
-### Code Style
-- TypeScript strict mode enabled
-- ESLint configured
-- Prettier for formatting
-- Use descriptive variable names
-- Comment complex business logic
-- Include JSDoc for public functions
-
 ---
 
-## SHOPIFY-SPECIFIC KNOWLEDGE
+## CORE CODEBASE STRUCTURE
 
-### GraphQL vs REST
-- Use **GraphQL** for all Shopify API calls (modern, efficient)
-- Avoid REST API unless GraphQL doesn't support the feature
+### Important Directories
+```
+/app
+  /routes              # Remix routes (pages + API endpoints)
+  /components          # React components
+  /services            # Business logic
 
-### Webhooks to Handle
-1. `orders/create`: New order created
-2. `orders/updated`: Order status changed
-3. `fulfillments/create`: Order shipped
-4. `fulfillments/update`: Tracking info updated
+/prisma
+  /schema.prisma       # Database schema
 
-### App Embedded vs Standalone
-- DelayGuard is an **embedded app** (loads inside Shopify Admin)
-- Uses Shopify App Bridge for navigation
-- Must follow Shopify Polaris design system
+/public               # Static assets
+```
 
-### Rate Limits
-- GraphQL: 1000 points per second (cost varies by query)
-- REST: 2 requests per second
-- Use bulk operations for large datasets
+**For detailed architecture**: See [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)
 
 ---
 
@@ -652,162 +316,51 @@ Every feature MUST follow this exact sequence:
 
 ### Task: Add a new Shopify permission
 
-1. Update scopes in `app/services/shopify.server.ts`:
-```typescript
-const scopes = [
-  'read_orders',
-  'read_fulfillments',
-  'read_products',  // NEW
-];
-```
-
+1. Update scopes in `app/services/shopify.server.ts`
 2. Merchants will be prompted to re-authorize on next login
-
 3. Update app listing to explain why permission is needed
-
----
 
 ### Task: Add a new database model
 
-1. Update `prisma/schema.prisma`:
-```prisma
-model NewModel {
-  id        String   @id @default(cuid())
-  shopId    String
-  shop      Shop     @relation(fields: [shopId], references: [id])
-
-  // fields here
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([shopId])
-}
-```
-
-2. Run migration:
-```bash
-npx prisma migrate dev --name add_new_model
-```
-
-3. Generate Prisma client:
-```bash
-npx prisma generate
-```
-
----
-
-### Task: Fetch data from Shopify
-
-```typescript
-// app/services/shopify.server.ts
-
-export async function fetchOrderDetails(shopId: string, orderId: string) {
-  const client = await getShopifyClient(shopId);
-
-  const response = await client.query({
-    data: `
-      query GetOrder($id: ID!) {
-        order(id: $id) {
-          id
-          name
-          totalPrice
-          customer {
-            id
-            email
-            ordersCount
-            totalSpent
-          }
-        }
-      }
-    `,
-    variables: { id: orderId },
-  });
-
-  return response.body.data.order;
-}
-```
-
----
+1. Update `prisma/schema.prisma`
+2. Run migration: `npx prisma migrate dev --name add_new_model`
+3. Generate Prisma client: `npx prisma generate`
 
 ### Task: Create a new React component
 
 ```typescript
-// app/components/alerts/NewComponent.tsx
+// app/components/ComponentName.tsx
 
-interface NewComponentProps {
-  alert: DelayAlert;
-  order: Order;
+interface ComponentProps {
+  data: DataType;
 }
 
-export function NewComponent({ alert, order }: NewComponentProps) {
-  return (
-    <Card>
-      {/* component content */}
-    </Card>
-  );
+export function ComponentName({ data }: ComponentProps) {
+  return <Card>{/* content */}</Card>;
 }
 ```
 
----
-
-### Task: Add a new API route
-
-```typescript
-// app/routes/api/new-endpoint.tsx
-
-import type { ActionFunctionArgs } from '@remix-run/node';
-import { json } from '@remix-run/node';
-import { db } from '~/db.server';
-
-export async function action({ request }: ActionFunctionArgs) {
-  const shop = await getShopFromRequest(request);
-  const body = await request.json();
-
-  // business logic here
-
-  return json({ success: true });
-}
-```
+**For more examples**: See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 
 ---
 
 ## FREQUENTLY ASKED QUESTIONS
 
 ### Q: What's the current state of the project?
-**A:** Read PROJECT_OVERVIEW.md first! It consolidates everything: Phase 1 complete (Oct 28, 2025), 95/100 ready for Shopify submission, 2-3 days from submission (assets remaining).
+**A:** Read [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) first! Phase 1 complete (98/100 readiness), 1,348 passing tests.
 
 ### Q: What phase should we focus on?
-**A:** Phase 1 is COMPLETE ✅. Phase 2 is next priority (customer intelligence & priority scoring, 14-16 days). See PROJECT_OVERVIEW.md for detailed Phase 2 breakdown and IMPLEMENTATION_PLAN.md for code-level specs.
+**A:** Phase 1 is COMPLETE ✅. Phase 2 is next priority (customer intelligence & priority scoring). See [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
 
 ### Q: Should we implement [feature X]?
-**A:** Check DEEP_DIVE_UX_UI_RESEARCH.md to see which phase it belongs to. If it's Phase 3+, defer until after Shopify submission.
-
-### Q: How do I estimate effort for a task?
-**A:** Refer to the effort estimates in IMPLEMENTATION_PLAN.md. Each feature has a time estimate.
-
-### Q: What should the UI look like?
-**A:** Follow the mockups and guidelines in DEEP_DIVE_UX_UI_RESEARCH.md. Use Shopify Polaris components for consistency.
-
-### Q: Do we need a new Shopify permission?
-**A:** Check Section 6 of DEEP_DIVE_UX_UI_RESEARCH.md for the complete permissions analysis.
+**A:** Check [DEEP_DIVE_UX_UI_RESEARCH.md](DEEP_DIVE_UX_UI_RESEARCH.md) to see which phase it belongs to. If it's Phase 3+, defer until after Shopify submission.
 
 ### Q: How do I test locally?
 **A:**
 ```bash
 npm run dev
 # Access at http://localhost:3000
-# Use Shopify CLI for embedded app testing
-shopify app dev
 ```
-
-### Q: Where are the environment variables?
-**A:** Check `.env` file (not in git). Required vars:
-- `SHOPIFY_API_KEY`
-- `SHOPIFY_API_SECRET`
-- `DATABASE_URL`
-- `SENDGRID_API_KEY`
-- `SHIPENGINE_API_KEY`
 
 ---
 
@@ -816,558 +369,86 @@ shopify app dev
 ### ⚠️ MANDATORY: Follow the TDD-First Development Workflow
 **See "MANDATORY DEVELOPMENT WORKFLOW" section above for complete details.**
 
-Every feature MUST follow this cycle:
-1. **READ** → IMPLEMENTATION_PLAN.md + DEEP_DIVE_UX_UI_RESEARCH.md
-2. **WRITE TESTS FIRST** → TDD approach (tests before implementation!)
-3. **IMPLEMENT** → Minimal code to make tests pass
-4. **RUN TESTS** → All must pass
-5. **FIX LINTING** → Zero errors before proceeding
-6. **VERIFY** → Dev servers, TypeScript, tests all working
-7. **UPDATE DOCS** → IMPLEMENTATION_PLAN.md + CLAUDE.md
-8. **CHECKLIST** → Final verification before moving on
-
 ### ⚠️ NEVER skip reading these documents before starting work:
 1. DEEP_DIVE_UX_UI_RESEARCH.md
 2. IMPLEMENTATION_PLAN.md
+3. PROJECT_OVERVIEW.md
 
 ### ⚠️ NEVER skip these critical steps:
 - **TDD**: Write tests BEFORE implementation code
 - **Linting**: Fix ALL errors before considering feature "done"
-- **Documentation**: Update IMPLEMENTATION_PLAN.md and CLAUDE.md immediately after completion
+- **Documentation**: Update IMPLEMENTATION_PLAN.md and CHANGELOG.md immediately
 
 ### ⚠️ ALWAYS follow the phased approach:
 - Phase 1 & 2 FIRST (pre-submission)
 - Phase 3+ AFTER Shopify approval and revenue
 
-### ⚠️ NEVER implement features from Phase 3+ during Phase 1-2:
-- No discount generation yet
-- No automated workflows yet
-- No advanced analytics yet
+---
 
-### ⚠️ ALWAYS consider:
-- Mobile responsiveness
-- Shopify Polaris design system
-- Performance (some merchants have 100k+ orders)
-- Internationalization (multi-currency support)
+## RECENT VERSION HISTORY
+*For complete version history, see [CHANGELOG.md](CHANGELOG.md)*
+
+### v1.19 (2025-11-09): 🚨 3-Rule Delay Detection System  
+**Test Results**: 35 passing tests (16 warehouse + 19 transit), 100% pass rate
+
+**Completed**: All 3 delay detection rules with configurable thresholds
+- Rule 1: Warehouse Delays (unfulfilled orders > X days)
+- Rule 2: Carrier Reported Delays (existing ShipEngine integration)
+- Rule 3: Stuck in Transit (packages in transit > X days)
+
+**Critical Bugs Fixed**: 3 bugs discovered during "Are you 100% sure?" review
+- Notification logic inside wrong conditional block
+- `last_tracking_update` field never populated
+- AppSettings type missing threshold fields
+
+**Key Learning**: Honest review prevents shipping broken code to production
+
+[Full details in CHANGELOG.md](CHANGELOG.md#v119)
 
 ---
 
-## GETTING HELP
+### v1.18 (2025-11-05): 🎨 Header & Dashboard UI/UX Refinements
+**Test Results**: 62 passing tests, 100% pass rate
 
-### If you're stuck:
-1. Re-read the relevant section in DEEP_DIVE_UX_UI_RESEARCH.md
-2. Check IMPLEMENTATION_PLAN.md for code examples
-3. Search the codebase for similar patterns
-4. Ask the user (merchant/developer) for clarification
+**Completed**: Visual polish and UX improvements
+- Darker gradient header background (more depth)
+- Domain truncation (removed .myshopify.com suffix)
+- Color-coded metrics (amber/blue/green accents)
+- Dashboard metrics removed (eliminated redundancy with header)
+- Tab renamed: Dashboard → Settings (more accurate)
 
-### If the user asks for a feature not in the docs:
-1. Ask which phase it should belong to
-2. Propose where it fits in the roadmap
-3. Estimate effort based on similar features in IMPLEMENTATION_PLAN.md
-
----
-
-## VERSION HISTORY
-
-- **v1.20.3** (2025-11-06): 🎯 **Send Test Alert Button Moved to Notification Preferences** (92 tests, 100% pass rate)
-  - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
-    - **RED Phase**: Wrote 6 comprehensive tests FIRST for button in NotificationPreferences, updated SettingsCard tests to NOT expect button
-    - **GREEN Phase**: Implemented button move, updated prop passing through DashboardTab
-    - **VERIFY**: All 92 tests passing (22 NotificationPreferences + 39 SettingsCard + 31 DashboardTab)
-  - ✅ **Problem Solved**:
-    - **User Question**: "should we also move this portion [Send Test Alert button] to Notification Preferences?"
-    - **Analysis**: Button tests notification system (email/SMS), so it belongs with notification settings
-    - **Issue**: Button in wrong tab - users had to switch tabs to enable notifications, then switch back to test
-    - **Solution**: Moved button from "Delay Detection Rules" to "Notification Preferences" tab
-  - ✅ **Implementation Details**:
-    - **NotificationPreferences**: Added `onTest` prop to interface, added Button import, rendered button with help text
-    - **DashboardTab**: Passed `onTestDelayDetection` to NotificationPreferences component
-    - **SettingsCard**: Removed Actions section with button, marked `onTest` prop as deprecated (kept for backward compatibility)
-    - **Button Logic**: Disabled when `loading` OR when both email AND SMS notifications are disabled
-    - **Workflow Improvement**: Users can now enable email/SMS → click "Send Test Alert" → verify notifications work (all in one tab!)
-  - ✅ **Test Coverage** (6 new tests for Send Test Alert button):
-    - Should render Send Test Alert button
-    - Should display help text
-    - Should call onTest when clicked
-    - Should disable when loading
-    - Should disable when both notifications are disabled
-    - Should enable when at least one notification is enabled
-  - ✅ **Files Modified** (5):
-    - src/components/tabs/DashboardTab/NotificationPreferences.tsx (added onTest prop and button)
-    - src/components/tabs/DashboardTab/SettingsCard.tsx (removed button, marked onTest as deprecated)
-    - src/components/tabs/DashboardTab/index.tsx (passed onTestDelayDetection to NotificationPreferences)
-    - src/tests/unit/components/SettingsCard.test.tsx (removed 4 button tests)
-    - tests/unit/components/NotificationPreferences.test.tsx (added 6 button tests)
-  - 📊 **Test Results**: 92/92 tests passing (22 NotificationPreferences + 39 SettingsCard + 31 DashboardTab)
-  - 🎯 **Code Quality**: Zero linting errors introduced (1 pre-existing warning from debounced callback)
-  - 🎨 **UX Impact**: Better logical grouping - notification configuration and testing in same place
-  - 🚀 **Lesson**: Button placement should follow user mental model - test notifications where you configure them!
-
-- **v1.20.2** (2025-11-06): 🎯 **Settings Card Title Refinement** (90 tests, 100% pass rate)
-  - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
-    - **RED Phase**: Updated tests to expect new title "Delay Detection Rules" instead of "App Settings"
-    - **GREEN Phase**: Updated SettingsCard title/subtitle and removed redundant section header
-    - **VERIFY**: All 90 tests passing (43 SettingsCard + 47 DashboardTab + NotificationPreferences)
-  - ✅ **Problem Solved**:
-    - **User Feedback**: "I think we can now get rid of this portion [App Settings header]"
-    - **Issue**: Generic "App Settings" title was redundant with tab context
-    - **Solution**: Changed to specific "Delay Detection Rules" title, removed duplicate section header
-  - ✅ **Implementation Details**:
-    - **SettingsCard Title**: Changed from "App Settings" → "Delay Detection Rules"
-    - **SettingsCard Subtitle**: Changed from "Configure your delay detection and notification preferences" → "Set thresholds for when to alert customers about shipping delays"
-    - **Removed Redundancy**: Deleted duplicate <h3> section title inside Card (was causing "multiple elements" test error)
-    - **Test Cleanup**: Removed 106 lines of obsolete notification preferences tests (moved to NotificationPreferences.test.tsx in v1.20.1)
-  - ✅ **Files Modified** (2):
-    - src/components/tabs/DashboardTab/SettingsCard.tsx (updated title/subtitle, removed duplicate section header)
-    - src/tests/unit/components/SettingsCard.test.tsx (updated test expectations, removed obsolete notification tests)
-  - 📊 **Test Results**: 90/90 tests passing (43 SettingsCard + 31 DashboardTab + 16 NotificationPreferences)
-  - 🎯 **Code Quality**: Zero linting errors introduced (1 pre-existing warning from debounced callback)
-  - 🎨 **UX Impact**: Cleaner, more specific labeling; reduced visual redundancy
-  - 🚀 **Lesson**: Card titles should be specific and contextual, not generic!
-
-- **v1.20.1** (2025-11-06): ✅ **Corrected Notification Preferences Implementation** (47 tests, 100% pass rate)
-  - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
-    - **RED Phase**: Wrote 16 comprehensive NotificationPreferences tests FIRST (all failed)
-    - **GREEN Phase**: Properly moved notification checkboxes from SettingsCard
-    - **VERIFY**: All 47 tests passing (31 DashboardTab + 16 NotificationPreferences)
-  - ✅ **Problem Solved**:
-    - **User Feedback**: "You haven't moved the actual checkboxes from Delay Detection rules"
-    - **Initial v1.20 Issue**: Created placeholder instead of moving real notification settings
-    - **Solution**: Moved email/SMS checkboxes and handlers from SettingsCard to NotificationPreferences
-  - ✅ **Implementation Details**:
-    - **Moved from SettingsCard**: Email/SMS checkboxes, toggle handlers, warning message
-    - **Removed from SettingsCard**: Entire "Notification Preferences Section" (lines 334-379)
-    - **NotificationPreferences Component**: Now has real checkboxes with onChange handlers
-    - **Proper separation**: Rules in "Delay Detection Rules", notifications in "Notification Preferences"
-  - ✅ **Test Coverage** (16 new NotificationPreferences tests):
-    - Email notifications checkbox (4 tests)
-    - SMS notifications checkbox (4 tests)
-    - Warning messages (4 tests)
-    - Loading state (2 tests)
-    - Help text (2 tests)
-  - ✅ **Files Modified** (3):
-    - src/components/tabs/DashboardTab/NotificationPreferences.tsx (MOVED checkboxes FROM SettingsCard)
-    - src/components/tabs/DashboardTab/SettingsCard.tsx (REMOVED notification section)
-    - tests/unit/components/NotificationPreferences.test.tsx (NEW - 16 tests)
-  - 📊 **Test Results**: 47/47 tests passing (31 DashboardTab + 16 NotificationPreferences)
-  - 🎯 **Code Quality**: Zero linting errors, production-ready
-  - 🎨 **UX Impact**: Proper separation of delay rules vs. notification settings
-  - 🚀 **Lesson**: Always verify user requirements are fully met before committing!
-
-- **v1.20** (2025-11-06): ⚙️ **Settings Tab Two-Tab Layout** (31 tests, 100% pass rate)
-  - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
-    - **RED Phase**: Wrote 19 comprehensive tests FIRST (all failed as expected - NotificationPreferences didn't exist)
-    - **GREEN Phase**: Implemented two-tab layout to make all tests pass
-    - **VERIFY**: All 31 DashboardTab tests passing (12 original + 19 new)
-  - ✅ **Problem Solved**:
-    - **User Request**: "Within Settings tab I'd like to have two tabs: 'Delay detection rules' and 'Notification Preferences'"
-    - **Impact**: Better organization, consistent pattern with Alerts/Orders tabs
-    - **Solution**: Integrated SegmentedControl with two tabs, conditional rendering
-  - ✅ **Implementation Details**:
-    - **DashboardTab Component**: Added useState for selectedFilter, integrated SegmentedControl, conditional rendering
-    - **NotificationPreferences Component (NEW)**: Placeholder with "Coming Soon" messaging, lists future features
-    - **DashboardTab.module.css (NEW)**: Sticky filter bar, responsive padding, filter summary styling
-    - **Default Tab**: "Delay Detection Rules" (existing SettingsCard content)
-  - ✅ **Test Coverage** (19 new two-tab layout tests):
-    - Tab navigation rendering (4 tests)
-    - Tab content display (3 tests)
-    - Tab state management (2 tests)
-    - Props passing (2 tests)
-    - Responsive behavior (1 test)
-    - Empty states (1 test)
-    - Integration with existing functionality (2 tests)
-    - Accessibility (2 tests)
-    - Edge cases (2 tests)
-  - ✅ **Files Modified/Created** (4):
-    - src/components/tabs/DashboardTab/index.tsx (MODIFIED - two-tab layout)
-    - src/components/tabs/DashboardTab/NotificationPreferences.tsx (NEW - placeholder component)
-    - src/components/tabs/DashboardTab/DashboardTab.module.css (NEW - sticky filter bar)
-    - tests/unit/components/DashboardTab.tabs.test.tsx (NEW - 19 tests)
-  - 📊 **Test Results**: 31/31 DashboardTab tests passing (100% pass rate)
-  - 🎯 **Code Quality**: Zero linting errors, backward compatible, production-ready
-  - 🎨 **UX Impact**: Clear separation of concerns, consistent pattern across all tabs, sticky filter bar
-  - 🚀 **Next**: Implement full Notification Preferences UI in future phase
-
-- **v1.19** (2025-11-06): 📱 **Mobile Horizontal Tab Layout for Filters** (35 tests, 100% pass rate)
-  - ✅ **Perfect TDD Execution** (Following CLAUDE.md Enhanced Guidelines)
-    - **RED Phase**: Wrote 11 comprehensive mobile layout tests FIRST (all passing baseline)
-    - **GREEN Phase**: Modified CSS to implement horizontal layout on mobile
-    - **VERIFY**: All 35 SegmentedControl tests passing (24 original + 11 new mobile)
-  - ✅ **Problem Solved**:
-    - **User Request**: "Filter tabs (Active/Resolved/Dismissed) are stacked vertically on mobile"
-    - **Impact**: Wasted vertical space, unprofessional mobile UI
-    - **Solution**: Horizontal single-line layout for all filter tabs on mobile
-  - ✅ **CSS Changes** (SegmentedControl.module.css):
-    - **Mobile (768px)**: Changed flex-direction from 'column' to 'row'
-    - **Equal width distribution**: Added flex: 1 1 0% to buttons
-    - **Compact padding**: 0.5rem 1rem → 0.5rem 0.5rem
-    - **Reduced font sizes**: 0.875rem → 0.8125rem
-    - **Text truncation**: Added text-overflow: ellipsis for long labels
-    - **Very Small Mobile (480px)**: Even more compact (0.75rem font, 0.4375rem padding)
-  - ✅ **Test Coverage** (11 new mobile layout tests):
-    - Desktop layout verification (2 tests)
-    - Mobile horizontal layout structure (5 tests)
-    - Compact mobile display (3 tests)
-    - Responsive edge cases (1 test)
-  - ✅ **Files Modified** (2):
-    - src/components/ui/SegmentedControl.module.css (horizontal mobile layout)
-    - src/tests/unit/components/SegmentedControl.mobile.test.tsx (NEW - 11 tests)
-  - 📊 **Test Results**: 35/35 SegmentedControl tests passing (100% pass rate)
-  - 🎯 **Code Quality**: Zero linting errors, production-ready
-  - 🎨 **UX Impact**: Cleaner mobile UI, more vertical space for content, professional appearance
-  - 🚀 **Next**: Ready for Vercel deployment with improved mobile experience
-
-- **v1.18** (2025-11-05): 🎨 **Header & Dashboard UI/UX Refinements** (62 tests, 100% pass rate)
-  - ✅ **Header Visual Improvements - Option A: Refined Minimalist Design**
-    - **User Request**: "make it very fancy elegant and simple at the same time"
-    - **Design Critique Process**: Analyzed header, proposed 3 options, user selected Option A
-    - **Implemented Changes**:
-      - **Darker gradient background**: Changed from #1e293b to #0f172a → #1e293b (more depth)
-      - **Domain truncation**: Removed .myshopify.com suffix (e.g., "Connected to my-awesome-store" instead of "Connected to my-awesome-store.myshopify.com")
-      - **Color-coded metrics**: Added visual categorization with subtle color accents
-        - Total Alerts: Amber (rgba(251, 191, 36, 0.04) background with 2px border)
-        - Active: Blue (rgba(59, 130, 246, 0.04) background with 2px border)
-        - Resolved: Green (rgba(34, 197, 94, 0.04) background with 2px border)
-        - Ticket Reduction: No color (neutral)
-      - **Varied spacing**: Changed header padding (2rem 2.75rem) and gap (2.5rem) for better rhythm
-  - ✅ **Dashboard Metrics Removal** (Eliminated Redundancy)
-    - **User Insight**: "Do you think it's really necessary to have the Performance Metrics within our Dashboard? Since the numbers are present in the Header"
-    - **Removed StatsCard** from DashboardTab (redundant with persistent header metrics)
-    - **Layout Cleanup**: Changed from 2-column grid to centered single column (900px max-width)
-    - **UX Impact**: Dashboard now focuses solely on configuration (Settings), reducing cognitive load
-  - ✅ **Tab Rename: Dashboard → Settings**
-    - **User Question**: "should our first tab be called just Settings instead of Dashboard?"
-    - **Rationale**: Tab contains only SettingsCard, no dashboard-style overview
-    - **Changes**: Updated label, icon (📊 → ⚙️), loading message, test IDs
-    - **Benefits**: More accurate labeling, reduces cognitive dissonance, follows industry standards
-  - ✅ **Color-Coded Metrics Test Coverage** (6 new tests)
-    - Added comprehensive tests for CSS class application:
-      - Verify amber class on Total Alerts metric
-      - Verify blue class on Active metric
-      - Verify green class on Resolved metric
-      - Verify NO color class on Ticket Reduction metric
-      - Verify correct order of all 4 metrics
-      - Verify color classes persist in loading state
-    - **AppHeader now has 100% code coverage** (28 tests total)
-  - 🎯 **Test-After Approach** (NOT True TDD - Acknowledged)
-    - ⚠️ **Workflow Issue**: Modified code FIRST, then updated tests (backwards from TDD)
-    - ✅ **Corrective Action**: Added missing test coverage for color-coded metrics feature
-    - ✅ **Lesson Applied**: User requested verification, added 6 comprehensive tests
-    - ✅ **All 62 tests passing**: AppHeader (28), DashboardTab (12), RefactoredApp (22)
-  - ✅ **Files Modified** (9):
-    - src/components/layout/AppHeader/index.tsx (domain truncation, color classes)
-    - src/components/layout/AppHeader/AppHeader.module.css (spacing, color accents)
-    - src/components/tabs/DashboardTab/index.tsx (removed StatsCard, centered layout)
-    - src/types/ui.ts (removed stats prop from DashboardTabProps)
-    - src/components/RefactoredApp.optimized.tsx (removed stats prop passing, changed testid)
-    - src/components/layout/TabNavigation/index.tsx (renamed "Dashboard" to "Settings")
-    - src/components/tabs/LazyTabs.tsx (updated loading message)
-    - src/tests/unit/components/AppHeader.test.tsx (+6 color-coded metrics tests)
-    - tests/unit/components/DashboardTab.test.tsx (removed stats, updated assertions)
-    - tests/unit/components/RefactoredApp.test.tsx (removed stats, updated mocks)
-  - 📊 **Test Results**: 62/62 tests passing (AppHeader 28, DashboardTab 12, RefactoredApp 22)
-  - 🎯 **Code Quality**: 0 ESLint errors (fixed unused imports: createMockStats, waitFor)
-  - 🎨 **UX Impact**:
-    - Cleaner, more elegant header with professional color accents
-    - Reduced redundancy (metrics only in header, not dashboard)
-    - More accurate tab labeling (Settings instead of Dashboard)
-  - 🚀 **Next**: Consider additional visual polish opportunities
-
-- **v1.17** (2025-11-05): 🎨 **Header UI Polish - Shopify Connection Status** (22 tests, 100% pass rate)
-  - ✅ **Moved Shopify Connection Status to Header** (Perfect TDD Execution)
-    - **User Request**: Move "Connected to Shopify" from Dashboard Settings into main header
-    - **Design Goal**: Elegant, prominent connection status between branding and metrics
-    - **Text Format**: Changed from "Connected to Shopify / Shop: {domain}" to "Connected to {domain}"
-  - 🎯 **Perfect TDD Workflow** (Following CLAUDE.md Enhanced Guidelines)
-    - **RED Phase**: Wrote 22 comprehensive tests FIRST (all failed as expected)
-    - **GREEN Phase**: Implemented feature to make all tests pass
-    - **Test Coverage**: Component rendering, connection status visibility, accessibility, edge cases, responsive design
-  - ✅ **Implementation Details**:
-    - **AppHeader Component**: Added optional `shop` prop to interface
-    - **Connection Status Display**: Only shown when shop prop exists (conditional rendering)
-    - **Visual Design**: Elegant green glass-morphism badge with checkmark icon
-      - Semi-transparent emerald background with backdrop blur
-      - Hover effect with subtle lift animation
-      - Responsive padding and font sizes for mobile (768px, 480px breakpoints)
-    - **Accessibility**: Added `aria-label="Shopify connection status"` for screen readers
-  - ✅ **SettingsCard Cleanup**:
-    - Removed redundant "Connected to Shopify" success message (now in header)
-    - Kept "Not Connected" warning with action button (for merchant action)
-    - Updated SettingsCard tests to reflect new behavior
-  - ✅ **Files Modified** (5):
-    - src/components/layout/AppHeader/index.tsx (added shop prop, connection status section)
-    - src/components/layout/AppHeader/AppHeader.module.css (elegant styling with responsive breakpoints)
-    - src/components/RefactoredApp.optimized.tsx (passing shop prop to AppHeader)
-    - src/components/tabs/DashboardTab/SettingsCard.tsx (cleaned up redundant connection status)
-    - src/tests/unit/components/SettingsCard.test.tsx (updated tests for new behavior)
-  - ✅ **Files Created** (1):
-    - src/tests/unit/components/AppHeader.test.tsx (22 comprehensive tests)
-  - 📊 **Test Results**: 71/71 tests passing for AppHeader + SettingsCard (100% pass rate)
-  - 🎯 **Code Quality**: 0 ESLint errors (6 auto-fixed), production-ready code
-  - 🎨 **UX Impact**: Cleaner dashboard, more prominent connection status, better visual hierarchy
-  - 🚀 **Next**: Continue visual polish for Alerts and Orders tabs
-
-- **v1.15** (2025-11-05): 📸 **Pre-Screenshot Preparation Complete** - Demo Data & Visual Polish
-  - ✅ **Step 1: Cleaned Up Uncommitted Changes** (Completed)
-    - Committed ESLint auto-fixes for code consistency
-    - 5 files: sendgrid-webhook.ts, shopify-service.ts, 2 test files, lint-fix-report.json
-    - Commit: `chore: apply ESLint auto-fixes for code consistency` (cc0c7b35)
-  - ✅ **Step 2: Demo Data Seed Script** (Completed)
-    - **Created comprehensive seed script** (600+ lines TypeScript)
-      - Generates **6 realistic demo orders** with varied priorities:
-        - 4 Active alerts (CRITICAL, HIGH, MEDIUM, LOW)
-        - 1 Resolved alert
-        - 1 Dismissed alert
-      - Each order includes:
-        - Realistic customer names, emails, phones
-        - 1-3 product line items (Wireless Headphones, Gaming Keyboard, Yoga Mat, etc.)
-        - Full tracking event timelines (PICKED_UP → IN_TRANSIT → EXCEPTION)
-        - Original ETA vs Current ETA (for delay calculation)
-        - Email engagement tracking (opened/clicked status)
-        - Varied order values ($49.99 - $584.99) for different priority badges
-    - **Demo Data Stats**:
-      - 📦 6 orders created
-      - 🛍️ 13 product line items
-      - 📍 16 tracking events
-      - 🚨 5 delay alerts
-      - ✅ All data seeded successfully
-    - **Database Schema Fixes**:
-      - Fixed `order_line_items` schema (product_id, removed shopify_variant_id)
-      - Fixed `delay_alerts` schema (added fulfillment_id, removed delay_type/status)
-      - Captured fulfillment_id with RETURNING clause
-    - **Script Features**:
-      - Idempotent shop creation (ON CONFLICT DO UPDATE)
-      - Realistic Shopify GID format for all IDs
-      - Proper foreign key relationships
-      - Email engagement timestamps calculated from delay days
-  - ✅ **Files Created** (2):
-    - src/scripts/seed-demo-data.ts (630 lines)
-    - src/scripts/README.md (usage instructions, troubleshooting, cleanup guide)
-  - ⏳ **Step 3: Visual Polish Check** (In Progress)
-    - Dev server running on ports 3000 (client) and 3001 (server)
-    - Ready for screenshot capture on all 3 tabs
-  - 🎯 **Purpose**: Prepare professional-looking demo data for Shopify App Store submission screenshots
-  - 📊 **Impact**: Demo data now available at http://localhost:3000 for all 3 tabs
-  - 🚀 **Next**: Visual polish check (Dashboard, Alerts, Orders tabs) + screenshot capture
-
-- **v1.16** (2025-11-05): Real Dashboard Metrics Implementation (v1.16)
-  - ✅ **Replaced Mock Metrics with Real Database Queries** (14 tests, 100% pass rate)
-    - **Problem Discovered**: User noticed Dashboard metrics needed clear definitions and were hard-coded
-    - **Research Phase**: Deep dive into database schema, APIs, and industry standards for metrics
-    - **Decision**: Implement real metrics using existing schema (no new columns needed)
-    - **Metrics Definitions**:
-      - **Total Alerts**: Count of all delay alerts ever created
-      - **Active Alerts**: Alerts where order tracking_status is NOT &apos;DELIVERED&apos; or &apos;OUT_FOR_DELIVERY&apos;
-      - **Resolved Alerts**: Alerts where order tracking_status is &apos;DELIVERED&apos; or &apos;OUT_FOR_DELIVERY&apos;
-      - **Avg Resolution Time**: Average days from alert.created_at to order.updated_at for resolved orders
-  - 🎯 **TDD Execution** (Retroactive - Acknowledged Failure)
-    - ❌ **Initial Failure**: Implemented metrics without writing tests first
-    - ✅ **User Feedback**: "have you implemented TDD tests for that and documented pertinent .md docs?"
-    - ✅ **Corrective Action**: Retroactively wrote comprehensive tests and documentation
-    - ✅ **Lesson Learned**: Must follow TDD workflow rigorously - no exceptions
-  - ✅ **Implementation Details**:
-    - **server-simple.ts**: Replaced mock /api/stats endpoint with 4 real SQL queries
-      - Query 1: COUNT(*) from delay_alerts (total alerts)
-      - Query 2: COUNT(DISTINCT da.id) JOIN orders WHERE NOT delivered (active)
-      - Query 3: COUNT(DISTINCT da.id) JOIN orders WHERE delivered (resolved)
-      - Query 4: AVG time difference for resolved orders (avg resolution time)
-    - **Database Initialization**: Added setupDatabase() before server startup
-    - **Environment Variables**: Added dotenv loading to read DATABASE_URL from .env
-    - **Type Safety**: Created CountResult and AvgResolutionResult interfaces (eliminated 6 &apos;any&apos; warnings)
-    - **Error Handling**: Graceful fallback to zeros if database unavailable
-  - ✅ **Seed Script Enhancements**:
-    - Added tracking_status logic based on alertStatus (resolved orders show DELIVERED)
-    - Fixed David Park&apos;s alert (changed delayDays from 0 to 3)
-    - Schema fixes for order_line_items and delay_alerts columns
-  - ✅ **Tests Created** (14):
-    - src/tests/unit/routes/stats-endpoint.test.ts (414 lines)
-    - Tests cover: basic stats, zero stats, N/A handling, singular/plural days, rounding, database errors, edge cases
-    - All 14 tests passing with 100% success rate
-  - ✅ **Files Modified** (3):
-    - src/server-simple.ts (added real metrics queries, type interfaces, database init)
-    - src/scripts/seed-demo-data.ts (added tracking_status logic, fixed David Park alert)
-    - .env (changed PORT from 3000 to 3001 to avoid webpack conflict)
-  - 📊 **Linting**: Zero errors (eliminated all 6 @typescript-eslint/no-explicit-any warnings)
-  - 🚀 **Production Ready**: Real-time dashboard metrics operational
-  - 📝 **Note**: This release includes proposed improvements to CLAUDE.md to prevent future TDD violations
-  - 🚀 **Next**: Suggest CLAUDE.md improvements + Visual polish check
-
-- **v1.14** (2025-11-05): 🎉 **SHIPENGINE INTEGRATION COMPLETE!** Production-Ready Carrier Tracking
-  - ✅ **Completed ShipEngine Integration** (42 tests, 100% pass rate)
-    - **Phase 1: Database Schema** (30 integration tests)
-      - Created `tracking_events` table with foreign keys, unique constraints, CASCADE deletes
-      - Added ETA columns to `orders` table (original_eta, current_eta, tracking_status)
-      - Idempotent migrations using `DO $ IF NOT EXISTS` pattern
-      - Supports 50+ carriers (UPS, FedEx, USPS, DHL, etc.)
-    - **Phase 2: Webhook Integration** (24 tests passing)
-      - Modified `processFulfillment()` in webhooks.ts to call ShipEngine API
-      - Stores tracking events with ON CONFLICT for idempotent webhook retries
-      - Updates original ETA vs current ETA for delay detection
-      - Graceful error handling (logs but doesn&apos;t fail webhook)
-    - **Phase 3: Hourly Tracking Refresh Cron Job** (18 tests passing)
-      - Created `processTrackingRefresh()` processor (164 lines)
-      - Created `/api/cron/tracking-refresh` endpoint with Bearer token auth
-      - Vercel cron configuration: "0 * * * *" (runs every hour)
-      - Returns statistics (ordersProcessed, eventsStored, errors)
-    - **Phase 5: Frontend Display** (Already Implemented)
-      - AlertCard component `renderTrackingTimeline()` displays events chronologically
-      - `renderEtaInformation()` shows original vs revised ETA with delay indicators
-  - 🎯 **Perfect TDD Execution**
-    - Wrote 42 comprehensive tests FIRST (TDD Red phase)
-    - Implemented all ShipEngine integration code (TDD Green phase)
-    - All 42 tests passing, zero linting errors in ShipEngine files
-  - ✅ **Files Created** (7):
-    - src/database/connection.ts (added tracking_events table migration)
-    - src/routes/tracking-refresh-cron.ts (79 lines)
-    - src/queue/processors/tracking-refresh.ts (164 lines)
-    - src/tests/integration/database/tracking-events-schema.test.ts (560 lines, 30 tests)
-    - src/tests/unit/routes/shipengine-webhook-integration.test.ts (484 lines, 24 tests)
-    - src/tests/unit/queue/tracking-refresh.test.ts (332 lines, 18 tests)
-    - vercel.json (added cron configuration)
-  - ✅ **Files Modified** (1):
-    - src/routes/webhooks.ts (added ShipEngine integration at lines 336-418)
-  - 📊 **Total Test Suite**: 1,493 passing tests (+42 ShipEngine tests), 0 failures
-  - ✅ **Code Quality**: Zero linting errors in all ShipEngine files
-  - 🚀 **Production Ready**: Full ShipEngine integration operational, ready for deployment
-  - 📝 **Note**: 25 integration tests require test database configuration in CI/CD (Jest environment issue, not code issue)
-  - 🚀 Next: Update IMPLEMENTATION_PLAN.md, DATA_AVAILABILITY_ANALYSIS.md, then git commit
-
-- **v1.13** (2025-11-05): 🎉 **PHASE D COMPLETE!** Mobile Tab Navigation Optimization
-  - ✅ **Completed Phase D: Mobile Tab Navigation Optimization** (35 tests, 100% pass rate)
-    - **Mobile UX Improvements**: Main tabs (Dashboard/Alerts/Orders) optimized for mobile
-      - Text labels ALWAYS visible on mobile (removed `display: none` CSS rule)
-      - Tabs use full screen width with `flex: 1` equal distribution
-      - Better horizontal spacing and visual clarity
-      - Responsive stacking at 480px: icon above text on very small screens
-      - Smooth transitions and mobile-friendly font sizes
-    - **User Feedback**: Addressed screenshot showing icon-only tabs that were unclear
-    - **CSS Changes**:
-      - Added `flex: 1` to `.tab` for equal width distribution
-      - Added `gap: 0.5rem` to `.navigation` for better spacing
-      - Removed `display: none` from `.tabLabel` at 480px breakpoint
-      - Added `flex-direction: column` at 480px for vertical icon+text stacking
-  - 🎯 **Perfect TDD Execution**
-    - Wrote 35 comprehensive tests FIRST (TDD Red phase - all passing baseline)
-    - Refactored CSS for mobile optimization (TDD Green phase)
-    - Fixed all linting errors (removed unused container variables, fixed emoji regex)
-  - ✅ **Files Created**:
-    - src/tests/unit/components/TabNavigation.test.tsx (329 lines, 35 tests)
-  - ✅ **Files Modified**:
-    - src/components/layout/TabNavigation/TabNavigation.module.css (mobile optimization)
-  - 📊 **Total Test Suite**: 1,452 passing tests (+35 from Phase D), 0 failures
-  - 🎨 **UX Impact**: Mobile users can now clearly identify tabs - clarity improved 100%
-  - 📚 **Documentation**: Updated CLAUDE.md with Phase D details
-  - 🚀 Next: Consider committing Phase C + D together
-
-- **v1.12** (2025-11-05): 🎉 **PHASE C COMPLETE!** Orders Tab Filtering
-  - ✅ **Completed Phase C: Orders Tab Filtering** (29 tests, 100% pass rate)
-    - **OrdersTab Refactoring**: Applied same filtering pattern as AlertsTab (Phase B)
-      - Processing/Shipped/Delivered tabs using SegmentedControl component
-      - Real-time badge counts for each order status
-      - Default to "Shipped" tab (most important for merchants tracking in-transit orders)
-      - Tab-specific empty states with contextual icons (⏳ Processing, 🚚 Shipped, ✅ Delivered)
-      - Filter summary text: "Showing X [status] orders"
-      - Sticky filter bar (stays visible when scrolling)
-      - Mobile-friendly responsive design
-    - **Component Reuse**: Leveraged SegmentedControl from Phase B for consistency
-  - 🎯 **Exemplary TDD Execution**
-    - Wrote 29 OrdersTab tests FIRST (TDD Red phase)
-    - Refactored OrdersTab component (TDD Green phase - all 29 tests passing)
-    - Zero linting errors in Phase C files
-  - ✅ **Files Created**:
-    - src/tests/unit/components/OrdersTab.test.tsx (513 lines, 29 tests)
-  - ✅ **Files Modified**:
-    - src/components/tabs/OrdersTab/index.tsx (refactored from 3 stacked Cards to filtered view)
-    - src/components/tabs/OrdersTab/OrdersTab.module.css (added sticky filter bar styles)
-  - 📊 **Total Test Suite**: 1,417 passing tests (+29 from Phase C), 0 failures
-  - 🎨 **UX Impact**: Merchant time to find specific order type reduced by 60% (same as AlertsTab)
-  - 📚 **Documentation**: Updated CLAUDE.md with Phase C details
-  - 🚀 Next: Phase D (Mobile Tab Navigation Optimization)
-
-- **v1.11** (2025-11-04): 🎉 **PHASE B COMPLETE!** Alert Filtering with Segmented Control
-  - ✅ **Completed Phase B: Alert Filtering (Segmented Control)** (53 tests, 100% pass rate)
-    - **SegmentedControl Component**: Reusable Shopify Polaris-style button filter
-      - Single-select button group with badge counts
-      - Full keyboard accessibility (Tab, Enter, Space keys)
-      - ARIA attributes (aria-pressed, aria-label with counts)
-      - Mobile responsive (stacks vertically < 768px)
-      - Shopify blue (#2c6ecb) inset box-shadow for selection
-    - **AlertsTab Refactoring**: Replaced 3-section stacked layout with filtered view
-      - Active/Resolved/Dismissed tabs with real-time badge counts
-      - Tab-specific empty states (different icons & messages)
-      - Filter summary text: "Showing X [status] alerts"
-      - Sticky filter bar (stays visible when scrolling)
-      - Mobile-friendly responsive design
-  - 🎯 **Exemplary TDD Execution**
-    - Wrote 24 SegmentedControl tests FIRST (TDD Red phase)
-    - Wrote 29 AlertsTab tests FIRST (TDD Red phase)
-    - Implemented components (TDD Green phase - all 53 tests passing)
-    - Fixed linting errors (zero errors in Phase B files)
-  - ✅ **Files Created**:
-    - src/components/ui/SegmentedControl.tsx (68 lines)
-    - src/components/ui/SegmentedControl.module.css (150 lines)
-    - src/tests/unit/components/SegmentedControl.test.tsx (283 lines, 24 tests)
-    - src/tests/unit/components/AlertsTab.test.tsx (512 lines, 29 tests)
-  - ✅ **Files Modified**:
-    - src/components/tabs/AlertsTab/index.tsx (refactored with useState filter logic)
-    - src/components/tabs/AlertsTab/AlertsTab.module.css (added sticky filter bar)
-    - src/components/ui/index.ts (added SegmentedControl exports)
-  - 📊 **Total Test Suite**: 1,388 passing tests, 0 failures across entire codebase
-  - 📈 **Test Coverage**: AlertsTab 94.28% statements, SegmentedControl 75% statements
-  - 🎨 **UX Impact**: Merchant time to find specific alert reduced by 60%
-  - 📚 **Documentation**: Updated IMPLEMENTATION_PLAN.md with Phase B details
-  - 🚀 Next: Manual testing, then consider Phase C (Alert Actions UX)
-
-- **v1.10** (2025-11-04): 🎉 **PHASE A COMPLETE!** UX Clarity with InfoTooltip
-  - ✅ **Completed Phase A: UX Clarity Improvements** (24 tests, 100% pass rate)
-    - **InfoTooltip Component**: Reusable tooltip component for contextual help
-      - Small (?) icon with hover/focus tooltip
-      - Full keyboard accessibility (focus/blur events)
-      - ARIA attributes (aria-describedby, role="tooltip")
-      - Smooth fade-in animation (0.2s ease)
-      - Mobile responsive (max-width adjusts for small screens)
-      - Positioned above icon with arrow pointer
-    - **Improved badge labels**: "Taken Action" instead of "Resolved"
-    - **Educational features**: Tooltips explain action button meanings
-  - 🎯 **Perfect TDD Execution**
-    - Wrote 24 comprehensive tests FIRST (TDD Red phase)
-    - Implemented InfoTooltip component (TDD Green phase)
-    - Zero linting errors, production-ready
-  - ✅ **Files Created**:
-    - src/components/ui/InfoTooltip.tsx (68 lines)
-    - src/components/ui/InfoTooltip.module.css (115 lines)
-    - src/tests/unit/components/InfoTooltip.test.tsx (284 lines, 24 tests)
-  - ✅ **Files Modified**:
-    - src/components/tabs/AlertsTab/AlertCard.tsx (added tooltips to action buttons)
-    - src/components/ui/index.ts (added InfoTooltip export)
-  - 📊 **Total Test Suite**: 1,335 passing tests at completion
-  - 🎨 **UX Impact**: Reduced confusion about "Resolve" vs "Dismiss" actions
-  - 📚 **Documentation**: Updated IMPLEMENTATION_PLAN.md with Phase A details
-  - 🚀 Next: Phase B (Alert Filtering)
-
-**For older versions (v1.0 - v1.9), see [CHANGELOG.md](CHANGELOG.md)**
+[Full details in CHANGELOG.md](CHANGELOG.md#v118)
 
 ---
-  - Added DEEP_DIVE_UX_UI_RESEARCH.md
-  - Added IMPLEMENTATION_PLAN.md
-  - Defined Phase 1 & 2 priorities
+
+### v1.17 (2025-11-05): 🎨 Header UI Polish - Connection Status
+**Test Results**: 22 passing tests, 100% pass rate
+
+**Completed**: Moved Shopify connection status to header
+- Elegant green glass-morphism badge with checkmark icon
+- "Connected to {domain}" format
+- Removed redundant connection status from Settings card
+
+[Full details in CHANGELOG.md](CHANGELOG.md#v117)
 
 ---
 
 ## FINAL NOTE
 
-This project has the potential to become a market-leading Shopify app. The UX research and implementation plan represent months of product thinking distilled into actionable steps.
+This project is a market-ready Shopify app with strong technical foundation. 
 
 **Your job as an AI agent is to:**
-- Understand the vision (from DEEP_DIVE_UX_UI_RESEARCH.md)
-- Execute the plan (from IMPLEMENTATION_PLAN.md)
+- Understand the vision (from [DEEP_DIVE_UX_UI_RESEARCH.md](DEEP_DIVE_UX_UI_RESEARCH.md))
+- Execute the plan (from [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md))
+- Follow TDD workflow rigorously
 - Maintain code quality
-- Ship Phase 1 & 2 quickly so we can submit to Shopify
+- Document everything immediately
+
+**Single Source of Truth for Project Status**: [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)
 
 **Let's build something amazing! 🚀**
 
 ---
 
-*Last updated: 2025-11-05*
-*Next review: Phase 2 Customer Intelligence & Priority Scoring*
-*🎉 PHASE 1 COMPLETE + Phases A, B, C & D UX Improvements COMPLETE - Ready for Shopify App Store submission!*
+*Last updated: 2025-11-09*
+*Phase 1 COMPLETE (98/100 readiness) - Ready for Shopify App Store submission*

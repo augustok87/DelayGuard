@@ -382,7 +382,17 @@ async function processFulfillment(
           );
         }
 
-        // Store ETAs and tracking status in orders table
+        // Calculate most recent tracking event timestamp for last_tracking_update
+        let lastTrackingUpdate = null;
+        if (trackingInfo.events && trackingInfo.events.length > 0) {
+          // Sort events by timestamp descending to get most recent
+          const sortedEvents = [...trackingInfo.events].sort(
+            (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+          );
+          lastTrackingUpdate = sortedEvents[0].timestamp;
+        }
+
+        // Store ETAs, tracking status, and last tracking update in orders table
         await query(
           `
           UPDATE orders
@@ -390,13 +400,15 @@ async function processFulfillment(
             original_eta = $1,
             current_eta = $2,
             tracking_status = $3,
+            last_tracking_update = $4,
             updated_at = CURRENT_TIMESTAMP
-          WHERE id = $4
+          WHERE id = $5
         `,
           [
             trackingInfo.originalEstimatedDeliveryDate || null,
             trackingInfo.estimatedDeliveryDate || null,
             trackingInfo.status,
+            lastTrackingUpdate,
             orderId,
           ],
         );

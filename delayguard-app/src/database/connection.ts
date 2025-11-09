@@ -217,6 +217,34 @@ export async function runMigrations(): Promise<void> {
       )
     `);
 
+    // Phase 3-Rule Delay Detection: Add last_tracking_update column to orders table
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='orders' AND column_name='last_tracking_update'
+        ) THEN
+          ALTER TABLE orders ADD COLUMN last_tracking_update TIMESTAMP;
+        END IF;
+      END $$;
+    `);
+
+    // Phase 3-Rule Delay Detection: Add 3 separate threshold fields to app_settings
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='app_settings' AND column_name='warehouse_delay_days'
+        ) THEN
+          ALTER TABLE app_settings ADD COLUMN warehouse_delay_days INTEGER DEFAULT 2;
+          ALTER TABLE app_settings ADD COLUMN carrier_delay_days INTEGER DEFAULT 1;
+          ALTER TABLE app_settings ADD COLUMN transit_delay_days INTEGER DEFAULT 7;
+        END IF;
+      END $$;
+    `);
+
     // Create indexes for performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_orders_shop_id ON orders(shop_id);

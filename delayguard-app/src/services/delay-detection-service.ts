@@ -234,3 +234,132 @@ export class DelayDetectionService implements IDelayDetectionService {
     return this.delayThreshold;
   }
 }
+
+/**
+ * Check for Warehouse Delays (Rule 1)
+ *
+ * Detects orders sitting unfulfilled (not shipped) for too long.
+ * This catches orders stuck in YOUR warehouse or fulfillment center
+ * before they even leave your facility.
+ *
+ * @param order - Order object with status and created_at fields
+ * @param thresholdDays - Number of days before alert (default: 2)
+ * @returns DelayDetectionResult with delay status and days
+ *
+ * @example
+ * const result = await checkWarehouseDelay(order, 2);
+ * if (result.isDelayed) {
+ *   console.log(`Order stuck in warehouse for ${result.delayDays} days`);
+ * }
+ */
+export async function checkWarehouseDelay(
+  order: {
+    id: number;
+    status: string | null;
+    created_at: Date;
+  },
+  thresholdDays: number = 2,
+): Promise<DelayDetectionResult> {
+  // Don't alert on fulfilled, partial, archived, or cancelled orders
+  const nonAlertableStatuses = ['fulfilled', 'partial', 'archived', 'cancelled'];
+  if (order.status && nonAlertableStatuses.includes(order.status.toLowerCase())) {
+    return {
+      isDelayed: false,
+      delayDays: 0,
+    };
+  }
+
+  // Calculate days since order was created
+  const now = new Date();
+  const createdAt = new Date(order.created_at);
+  const daysSinceCreation = Math.floor(
+    (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  // For unfulfilled orders (or null status treated as unfulfilled),
+  // check if delay exceeds threshold
+  if (daysSinceCreation >= thresholdDays) {
+    return {
+      isDelayed: true,
+      delayDays: daysSinceCreation,
+      delayReason: 'WAREHOUSE_DELAY',
+    };
+  }
+
+  return {
+    isDelayed: false,
+    delayDays: daysSinceCreation,
+  };
+}
+
+/**
+ * Check for Stuck-in-Transit Delays (Rule 3)
+ *
+ * Detects orders that have been "in transit" for too long without delivery.
+ * This catches packages stuck in carrier networks or lost in transit.
+ *
+ * @param order - Order object with tracking_status and last_tracking_update fields
+ * @param thresholdDays - Number of days in transit before alert (default: 7)
+ * @returns DelayDetectionResult with delay status and days
+ *
+ * @example
+ * const result = await checkTransitDelay(order, 7);
+ * if (result.isDelayed) {
+ *   console.log(`Order stuck in transit for ${result.delayDays} days`);
+ * }
+ */
+export async function checkTransitDelay(
+  order: {
+    id: number;
+    tracking_status: string | null;
+    last_tracking_update: Date | null;
+  },
+  thresholdDays: number = 7,
+): Promise<DelayDetectionResult> {
+  // Can't determine delay without tracking status or last update
+  if (!order.tracking_status || !order.last_tracking_update) {
+    return {
+      isDelayed: false,
+      delayDays: 0,
+    };
+  }
+
+  // Don't alert on delivered or out-for-delivery orders
+  const nonAlertableStatuses = ['DELIVERED', 'OUT_FOR_DELIVERY'];
+  if (nonAlertableStatuses.includes(order.tracking_status.toUpperCase())) {
+    return {
+      isDelayed: false,
+      delayDays: 0,
+    };
+  }
+
+  // Don't alert on pre-transit (not yet shipped)
+  if (order.tracking_status.toUpperCase() === 'PRE_TRANSIT') {
+    return {
+      isDelayed: false,
+      delayDays: 0,
+    };
+  }
+
+  // Calculate days since last tracking update
+  const now = new Date();
+  const lastUpdate = new Date(order.last_tracking_update);
+  const daysSinceUpdate = Math.floor(
+    (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  // For in-transit orders (including PICKED_UP, IN_TRANSIT, ARRIVED_AT_FACILITY,
+  // EXCEPTION, DELAYED), check if stuck for too long
+  if (daysSinceUpdate >= thresholdDays) {
+    return {
+      isDelayed: true,
+      delayDays: daysSinceUpdate,
+      delayReason: 'STUCK_IN_TRANSIT',
+    };
+  }
+
+  return {
+    isDelayed: false,
+    delayDays: daysSinceUpdate,
+  };
+}
