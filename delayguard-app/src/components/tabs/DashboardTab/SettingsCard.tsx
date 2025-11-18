@@ -71,15 +71,7 @@ export function SettingsCard({
   });
 
   // Toggle accordion section
-  const toggleAccordion = (section: 'warehouse' | 'carrier' | 'transit', event?: React.MouseEvent) => {
-    // Don't toggle if clicking on checkbox or label
-    if (event) {
-      const target = event.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'LABEL' || target.closest('label')) {
-        return;
-      }
-    }
-
+  const toggleAccordion = (section: 'warehouse' | 'carrier' | 'transit') => {
     setAccordionState(prev => ({
       ...prev,
       [section]: !prev[section],
@@ -156,17 +148,31 @@ export function SettingsCard({
         <div className={styles.section}>
           {/* Accordion 1: Warehouse Delays (expanded by default) */}
           <div className={styles.accordionSection}>
-            {/* Accordion Header */}
+            {/* Accordion Header - ONLY for expand/collapse */}
             <div
               className={styles.accordionHeader}
               role="button"
               tabIndex={0}
               aria-expanded={accordionState.warehouse}
               aria-label="Warehouse Delays accordion"
-              onClick={(e) => toggleAccordion('warehouse', e)}
+              onClick={() => toggleAccordion('warehouse')}
               onKeyDown={(e) => handleAccordionKeyDown(e, 'warehouse')}
             >
-              {/* Toggle checkbox in header */}
+              <div className={styles.accordionHeaderContent}>
+                <span className={styles.accordionIcon}>
+                  {accordionState.warehouse ? '▼' : '▶'}
+                </span>
+                <span className={styles.accordionTitle}>
+                  <strong>Warehouse Delays</strong>
+                  <span className={styles.accordionSummary}>
+                    {localDelayThreshold} days threshold
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Toggle Checkbox - SEPARATE from accordion header, always visible */}
+            <div className={styles.toggleSection}>
               <label className={styles.toggleLabel}>
                 <input
                   type="checkbox"
@@ -178,16 +184,9 @@ export function SettingsCard({
                   aria-label="Enable warehouse delay notifications"
                 />
                 <span className={styles.toggleText}>
-                  <strong>Warehouse Delays</strong>
-                  <span className={styles.toggleDescription}>
-                    {localDelayThreshold} days threshold
-                  </span>
+                  Enable warehouse delay notifications
                 </span>
               </label>
-              {/* Expand/collapse indicator */}
-              <span className={styles.accordionIcon}>
-                {accordionState.warehouse ? '▼' : '▶'}
-              </span>
             </div>
 
             {/* Accordion Content (conditionally rendered) */}
@@ -256,17 +255,31 @@ export function SettingsCard({
 
           {/* Accordion 2: Carrier Reported Delays (collapsed by default) */}
           <div className={styles.accordionSection}>
-            {/* Accordion Header */}
+            {/* Accordion Header - ONLY for expand/collapse */}
             <div
               className={styles.accordionHeader}
               role="button"
               tabIndex={0}
               aria-expanded={accordionState.carrier}
               aria-label="Carrier Reported Delays accordion"
-              onClick={(e) => toggleAccordion('carrier', e)}
+              onClick={() => toggleAccordion('carrier')}
               onKeyDown={(e) => handleAccordionKeyDown(e, 'carrier')}
             >
-              {/* Toggle checkbox in header */}
+              <div className={styles.accordionHeaderContent}>
+                <span className={styles.accordionIcon}>
+                  {accordionState.carrier ? '▼' : '▶'}
+                </span>
+                <span className={styles.accordionTitle}>
+                  <strong>Carrier Reported Delays</strong>
+                  <span className={styles.accordionSummary}>
+                    Auto-detect
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Toggle Checkbox - SEPARATE from accordion header, always visible */}
+            <div className={styles.toggleSection}>
               <label className={styles.toggleLabel}>
                 <input
                   type="checkbox"
@@ -278,16 +291,9 @@ export function SettingsCard({
                   aria-label="Enable carrier delay notifications"
                 />
                 <span className={styles.toggleText}>
-                  <strong>Carrier Reported Delays</strong>
-                  <span className={styles.toggleDescription}>
-                    Auto-detect
-                  </span>
+                  Enable carrier delay notifications
                 </span>
               </label>
-              {/* Expand/collapse indicator */}
-              <span className={styles.accordionIcon}>
-                {accordionState.carrier ? '▼' : '▶'}
-              </span>
             </div>
 
             {/* Accordion Content (conditionally rendered) */}
@@ -364,17 +370,31 @@ export function SettingsCard({
 
           {/* Accordion 3: Stuck in Transit (collapsed by default) */}
           <div className={styles.accordionSection}>
-            {/* Accordion Header */}
+            {/* Accordion Header - ONLY for expand/collapse */}
             <div
               className={styles.accordionHeader}
               role="button"
               tabIndex={0}
               aria-expanded={accordionState.transit}
               aria-label="Stuck in Transit accordion"
-              onClick={(e) => toggleAccordion('transit', e)}
+              onClick={() => toggleAccordion('transit')}
               onKeyDown={(e) => handleAccordionKeyDown(e, 'transit')}
             >
-              {/* Toggle checkbox in header */}
+              <div className={styles.accordionHeaderContent}>
+                <span className={styles.accordionIcon}>
+                  {accordionState.transit ? '▼' : '▶'}
+                </span>
+                <span className={styles.accordionTitle}>
+                  <strong>Stuck in Transit</strong>
+                  <span className={styles.accordionSummary}>
+                    {localDelayThreshold + 5} days threshold
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Toggle Checkbox - SEPARATE from accordion header, always visible */}
+            <div className={styles.toggleSection}>
               <label className={styles.toggleLabel}>
                 <input
                   type="checkbox"
@@ -386,16 +406,9 @@ export function SettingsCard({
                   aria-label="Enable transit delay notifications"
                 />
                 <span className={styles.toggleText}>
-                  <strong>Stuck in Transit</strong>
-                  <span className={styles.toggleDescription}>
-                    {localDelayThreshold + 5} days threshold
-                  </span>
+                  Enable transit delay notifications
                 </span>
               </label>
-              {/* Expand/collapse indicator */}
-              <span className={styles.accordionIcon}>
-                {accordionState.transit ? '▼' : '▶'}
-              </span>
             </div>
 
             {/* Accordion Content (conditionally rendered) */}

@@ -579,41 +579,62 @@
   }
 }
 
-/* Accordion-specific toggle label styling */
-.accordionHeader .toggleLabel {
-  cursor: pointer;
+/* Accordion header content (icon + title + summary) */
+.accordionHeaderContent {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
-  font-size: 0.875rem;
   flex: 1;
-  margin: 0;
 }
 
-.accordionHeader .toggleLabel input[type="checkbox"] {
-  margin-top: 0.25rem;
-  width: 1.25rem;
-  height: 1.25rem;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.accordionHeader .toggleText {
+.accordionTitle {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   flex: 1;
 }
 
-.accordionHeader .toggleText strong {
+.accordionTitle strong {
   color: #111827;
   font-size: 0.9375rem;
+  font-weight: 600;
 }
 
-.accordionHeader .toggleDescription {
+.accordionSummary {
   color: #6b7280;
   font-size: 0.8125rem;
   font-weight: 400;
+  line-height: 1.5;
+}
+
+/* Toggle checkbox section - SEPARATE from accordion header */
+.toggleSection {
+  padding: 0.875rem 1.25rem;
+  background: #fefce8;
+  border-top: 1px solid #fef3c7;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+.toggleLabel input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: #2563eb;
+}
+
+.toggleText {
+  font-size: 0.875rem;
+  color: #92400e;
+  font-weight: 500;
   line-height: 1.5;
 }
 

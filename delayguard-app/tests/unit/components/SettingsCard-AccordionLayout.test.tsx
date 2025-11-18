@@ -183,10 +183,45 @@ describe('SettingsCard - Accordion Layout (Phase 2.7 Refactor)', () => {
       fireEvent.click(accordionHeader);
       expect(accordionHeader).toHaveAttribute('aria-expanded', 'true');
     });
+
+    it('should ONLY toggle accordion expansion when header is clicked (not affect checkbox state)', () => {
+      const onSettingsChange = jest.fn();
+
+      render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockDefaultSettings}
+          loading={false}
+          onSave={jest.fn()}
+          onTest={jest.fn()}
+          onConnect={jest.fn()}
+          onSettingsChange={onSettingsChange}
+        />,
+      );
+
+      const accordionHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      const toggle = screen.getByRole('checkbox', { name: /enable carrier delay notifications/i });
+
+      // Initially: collapsed, toggle ON
+      expect(accordionHeader).toHaveAttribute('aria-expanded', 'false');
+      expect(toggle).toBeChecked();
+
+      // Click accordion header
+      fireEvent.click(accordionHeader);
+
+      // Accordion should expand
+      expect(accordionHeader).toHaveAttribute('aria-expanded', 'true');
+
+      // But toggle state should NOT change (still ON)
+      expect(toggle).toBeChecked();
+
+      // onSettingsChange should NOT be called (accordion click doesn't change settings)
+      expect(onSettingsChange).not.toHaveBeenCalled();
+    });
   });
 
   describe('Accordion Header Content', () => {
-    it('should display toggle checkbox in Warehouse Delays accordion header', () => {
+    it('should display toggle checkbox SEPARATE from accordion header', () => {
       render(
         <SettingsCard
           shop="test-shop.myshopify.com"
@@ -202,9 +237,12 @@ describe('SettingsCard - Accordion Layout (Phase 2.7 Refactor)', () => {
       const accordionHeader = screen.getByRole('button', { name: 'Warehouse Delays accordion' });
       const toggle = screen.getByRole('checkbox', { name: /enable warehouse delay notifications/i });
 
-      // Toggle should be inside or near accordion header
+      // Both should exist
       expect(toggle).toBeInTheDocument();
       expect(accordionHeader).toBeInTheDocument();
+
+      // Toggle should NOT be a child of accordion header
+      expect(accordionHeader).not.toContainElement(toggle);
     });
 
     it('should display threshold summary in accordion header when collapsed', () => {
@@ -225,6 +263,52 @@ describe('SettingsCard - Accordion Layout (Phase 2.7 Refactor)', () => {
       expect(accordionHeader).toBeInTheDocument();
       // Summary text like "Auto-detect" should be in header
       expect(accordionHeader.textContent).toMatch(/auto-detect/i);
+    });
+
+    it('should display checkbox even when accordion is collapsed', () => {
+      render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockDefaultSettings}
+          loading={false}
+          onSave={jest.fn()}
+          onTest={jest.fn()}
+          onConnect={jest.fn()}
+          onSettingsChange={jest.fn()}
+        />,
+      );
+
+      // Carrier accordion is collapsed by default
+      const accordionHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      expect(accordionHeader).toHaveAttribute('aria-expanded', 'false');
+
+      // But checkbox should still be visible
+      const toggle = screen.getByRole('checkbox', { name: /enable carrier delay notifications/i });
+      expect(toggle).toBeVisible();
+    });
+
+    it('should display checkbox below accordion header (not inside it)', () => {
+      render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockDefaultSettings}
+          loading={false}
+          onSave={jest.fn()}
+          onTest={jest.fn()}
+          onConnect={jest.fn()}
+          onSettingsChange={jest.fn()}
+        />,
+      );
+
+      const accordionHeader = screen.getByRole('button', { name: 'Stuck in Transit accordion' });
+      const toggle = screen.getByRole('checkbox', { name: /enable transit delay notifications/i });
+
+      // Checkbox should NOT be nested inside accordion header
+      expect(accordionHeader).not.toContainElement(toggle);
+
+      // Both should be in the document
+      expect(accordionHeader).toBeInTheDocument();
+      expect(toggle).toBeInTheDocument();
     });
   });
 
