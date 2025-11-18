@@ -73,7 +73,9 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      expect(screen.getByText('Warehouse Delays')).toBeInTheDocument();
+      // With accordion: text appears in accordion header (always visible)
+      const accordionHeader = screen.getByRole('button', { name: 'Warehouse Delays accordion' });
+      expect(accordionHeader).toBeInTheDocument();
       expect(screen.queryByText(/Pre-Shipment/i)).not.toBeInTheDocument();
     });
 
@@ -87,7 +89,12 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      expect(screen.getByText('Carrier Reported Delays')).toBeInTheDocument();
+      // Accordion header shows "Carrier Reported Delays"
+      const accordionHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      expect(accordionHeader).toBeInTheDocument();
+
+      // Full text is inside collapsed accordion - expand first
+      fireEvent.click(accordionHeader);
       expect(screen.getByText(/Auto-detect when carriers report exceptions/i)).toBeInTheDocument();
     });
 
@@ -101,7 +108,9 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      expect(screen.getByText('Stuck in Transit')).toBeInTheDocument();
+      // Accordion header shows "Stuck in Transit"
+      const accordionHeader = screen.getByRole('button', { name: 'Stuck in Transit accordion' });
+      expect(accordionHeader).toBeInTheDocument();
       expect(screen.queryByText(/Extended Transit/i)).not.toBeInTheDocument();
     });
 
@@ -116,8 +125,17 @@ describe('SettingsCard (Phase 1.4)', () => {
       );
 
       // Check for rule icons (emojis)
+      // Warehouse accordion is expanded by default, so icon visible
       expect(screen.getByText('📦')).toBeInTheDocument(); // Warehouse
+
+      // Expand Carrier accordion to see icon
+      const carrierHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      fireEvent.click(carrierHeader);
       expect(screen.getByText('🚨')).toBeInTheDocument(); // Carrier
+
+      // Expand Transit accordion to see icon
+      const transitHeader = screen.getByRole('button', { name: 'Stuck in Transit accordion' });
+      fireEvent.click(transitHeader);
       expect(screen.getByText('⏰')).toBeInTheDocument(); // Stuck in Transit
     });
   });
@@ -133,8 +151,8 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
+      // Warehouse accordion is expanded by default, so content visible
       // Check for the new thorough explanations (Phase 1.4 enhancement)
-      // Multiple rules have these sections, so check they exist
       const whatDetects = screen.getAllByText(/📌 What this detects:/i);
       expect(whatDetects.length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText(/Orders that haven't been fulfilled/i)).toBeInTheDocument();
@@ -150,8 +168,11 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
+      // Carrier accordion is collapsed by default - expand first
+      const carrierHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      fireEvent.click(carrierHeader);
+
       // Check for the new thorough explanations (Phase 1.4 enhancement)
-      // Multiple rules have these sections, so check they exist
       const howWorks = screen.getAllByText(/🔍 How it works:/i);
       expect(howWorks.length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText(/UPS, FedEx, USPS/i)).toBeInTheDocument();
@@ -166,6 +187,10 @@ describe('SettingsCard (Phase 1.4)', () => {
           {...mockCallbacks}
         />,
       );
+
+      // Transit accordion is collapsed by default - expand first
+      const transitHeader = screen.getByRole('button', { name: 'Stuck in Transit accordion' });
+      fireEvent.click(transitHeader);
 
       // Check for the new thorough explanations (Phase 1.4 enhancement)
       // There are multiple "Real-world example" sections, so use getAllByText
@@ -203,6 +228,7 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
+      // Benchmark is inside Warehouse Delays accordion (expanded by default)
       expect(screen.getByText(/Your avg fulfillment time:/i)).toBeInTheDocument();
       expect(screen.getByText(/2.1/)).toBeInTheDocument();
     });
@@ -218,6 +244,10 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
+      // Delivery time benchmark is in Stuck in Transit accordion - expand first
+      const transitHeader = screen.getByRole('button', { name: 'Stuck in Transit accordion' });
+      fireEvent.click(transitHeader);
+
       expect(screen.getByText(/Your avg delivery time:/i)).toBeInTheDocument();
       expect(screen.getByText(/4.5/)).toBeInTheDocument();
     });
@@ -232,6 +262,10 @@ describe('SettingsCard (Phase 1.4)', () => {
           {...mockCallbacks}
         />,
       );
+
+      // Delays this month is in Carrier Reported Delays accordion - expand first
+      const carrierHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      fireEvent.click(carrierHeader);
 
       expect(screen.getByText(/You've had/i)).toBeInTheDocument();
       expect(screen.getByText(/carrier delays this month/i)).toBeInTheDocument();
@@ -249,6 +283,10 @@ describe('SettingsCard (Phase 1.4)', () => {
           {...mockCallbacks}
         />,
       );
+
+      // Trend is in Carrier Reported Delays accordion - expand first
+      const carrierHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      fireEvent.click(carrierHeader);
 
       expect(screen.getByText(/↓ 25%/)).toBeInTheDocument();
     });
@@ -268,6 +306,10 @@ describe('SettingsCard (Phase 1.4)', () => {
           {...mockCallbacks}
         />,
       );
+
+      // Trend is in Carrier Reported Delays accordion - expand first
+      const carrierHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      fireEvent.click(carrierHeader);
 
       expect(screen.getByText(/↑ 15%/)).toBeInTheDocument();
     });
@@ -467,6 +509,10 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
+      // Auto-calculated text is in Stuck in Transit accordion - expand first
+      const transitHeader = screen.getByRole('button', { name: 'Stuck in Transit accordion' });
+      fireEvent.click(transitHeader);
+
       // Extended transit should be delayThreshold (3) + extendedTransitDays (5) = 8
       // Check that auto-calculated text is displayed (may appear multiple times)
       const autoCalcTexts = screen.getAllByText(/auto-calculated/i);
@@ -582,7 +628,15 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      const ruleCards = container.querySelectorAll('.ruleCard');
+      // Only Warehouse accordion is expanded by default, so only 1 rule card visible
+      // Expand all accordions to see all 3 rule cards
+      const carrierHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      fireEvent.click(carrierHeader);
+
+      const transitHeader = screen.getByRole('button', { name: 'Stuck in Transit accordion' });
+      fireEvent.click(transitHeader);
+
+      const ruleCards = container.querySelectorAll('[class*="ruleCard"]');
       expect(ruleCards.length).toBe(3); // Three rule cards
     });
 
@@ -628,8 +682,14 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
+      // Warehouse label is visible (accordion expanded by default)
       expect(screen.getByLabelText(/Alert me when orders sit unfulfilled for:/i)).toBeInTheDocument();
+
+      // Carrier label is in collapsed accordion - expand first
+      const carrierHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      fireEvent.click(carrierHeader);
       expect(screen.getByLabelText(/Auto-detect carrier exceptions/i)).toBeInTheDocument();
+
       // Email and SMS notification labels are now in NotificationPreferences component
     });
 
@@ -705,7 +765,9 @@ describe('SettingsCard (Phase 1.4)', () => {
       );
 
       // Should still render without crashing
-      expect(screen.getByText('Warehouse Delays')).toBeInTheDocument();
+      // Accordion header shows "Warehouse Delays"
+      const accordionHeader = screen.getByRole('button', { name: 'Warehouse Delays accordion' });
+      expect(accordionHeader).toBeInTheDocument();
     });
   });
 });

@@ -14,6 +14,13 @@ const config: Config = {
     '**/?(*.)+(spec|test).ts',
     '**/?(*.)+(spec|test).tsx'
   ],
+
+  // Exclude database schema integration tests from default test run
+  // These require a real PostgreSQL database and should be run separately with npm run test:db
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '.*-schema\\.test\\.ts$'
+  ],
   
   // Specify module file extensions for importing
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json'],

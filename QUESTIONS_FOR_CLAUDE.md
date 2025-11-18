@@ -64,4 +64,13 @@ Also, I would assume that for the Carrier and Stuck in Transit delays, we would 
 
 
 
- 
+ 4- 
+
+ Make sure our APP doesn't cause CSS/JS Leakeage causing problems to our Merchant's site.
+
+
+
+5-
+
+I want you to build me 20 questions and answers pretending that you're being interviewed by other tech leaders that are curious to know about your application. You can start with simple question and answers that would give knowledge about our APP, the reasons behind why we did it as we did, and then progressively move towards questions that answers specific technical decisions and implementations.
+

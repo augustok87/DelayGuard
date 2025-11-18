@@ -22,6 +22,7 @@
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",
     "test:integration": "jest --testPathPattern=integration",
+    "test:db:schema": "jest --testPathPattern=schema\\.test\\.ts$ --testPathIgnorePatterns=[] --no-coverage",
     "test:performance": "jest --testPathPattern=performance",
     "lint": "eslint . --ext .js,.ts,.tsx",
     "lint:fix": "node scripts/lint-fix.js",

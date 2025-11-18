@@ -245,6 +245,51 @@ export async function runMigrations(): Promise<void> {
       END $$;
     `);
 
+    // Phase 2.1 - Notification Routing: Add merchant contact fields to shops table
+    await client.query(`
+      DO $$
+      BEGIN
+        -- Add merchant_email column
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='shops' AND column_name='merchant_email'
+        ) THEN
+          ALTER TABLE shops ADD COLUMN merchant_email VARCHAR(255);
+        END IF;
+
+        -- Add merchant_phone column
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='shops' AND column_name='merchant_phone'
+        ) THEN
+          ALTER TABLE shops ADD COLUMN merchant_phone VARCHAR(255);
+        END IF;
+
+        -- Add merchant_name column
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='shops' AND column_name='merchant_name'
+        ) THEN
+          ALTER TABLE shops ADD COLUMN merchant_name VARCHAR(255);
+        END IF;
+      END $$;
+    `);
+
+    // Phase 2.1 - Notification Routing: Add enable/disable flags for each delay type
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='app_settings' AND column_name='warehouse_delays_enabled'
+        ) THEN
+          ALTER TABLE app_settings ADD COLUMN warehouse_delays_enabled BOOLEAN DEFAULT TRUE;
+          ALTER TABLE app_settings ADD COLUMN carrier_delays_enabled BOOLEAN DEFAULT TRUE;
+          ALTER TABLE app_settings ADD COLUMN transit_delays_enabled BOOLEAN DEFAULT TRUE;
+        END IF;
+      END $$;
+    `);
+
     // Create indexes for performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_orders_shop_id ON orders(shop_id);

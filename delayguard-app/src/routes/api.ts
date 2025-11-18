@@ -12,7 +12,7 @@ const router = new Router({ prefix: "/api" });
  *
  * @returns Array of delay alerts with order information
  */
-router.get("/alerts", requireAuth, async (ctx: Context) => {
+router.get("/alerts", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
 
@@ -69,7 +69,7 @@ router.get("/alerts", requireAuth, async (ctx: Context) => {
  * @query limit - Number of orders to return (default: 50, max: 200)
  * @returns Array of orders with alert counts
  */
-router.get("/orders", requireAuth, async (ctx: Context) => {
+router.get("/orders", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
     const limit = Math.min(parseInt(ctx.query.limit as string) || 50, 200);
@@ -132,7 +132,7 @@ router.get("/orders", requireAuth, async (ctx: Context) => {
  *
  * @returns Shop's app settings
  */
-router.get("/settings", requireAuth, async (ctx: Context) => {
+router.get("/settings", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
 
@@ -223,7 +223,7 @@ router.get("/settings", requireAuth, async (ctx: Context) => {
  * @body notification_template - Template name for notifications
  * @body custom_message - Custom message for notifications
  */
-router.put("/settings", requireAuth, async (ctx: Context) => {
+router.put("/settings", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
     const {
@@ -297,7 +297,7 @@ router.put("/settings", requireAuth, async (ctx: Context) => {
  *
  * @returns Analytics data including alert stats and order stats
  */
-router.get("/analytics", requireAuth, async (ctx: Context) => {
+router.get("/analytics", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
 
@@ -361,7 +361,7 @@ router.get("/analytics", requireAuth, async (ctx: Context) => {
  *
  * @returns Shop details
  */
-router.get("/shop", requireAuth, async (ctx: Context) => {
+router.get("/shop", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
 
@@ -407,10 +407,214 @@ router.get("/shop", requireAuth, async (ctx: Context) => {
 });
 
 /**
+ * GET /api/merchant-settings
+ * Get merchant contact information and delay type toggles (Phase 2.6)
+ *
+ * @returns Merchant contact fields and enable/disable toggles
+ */
+router.get("/merchant-settings", requireAuth, async(ctx: Context) => {
+  try {
+    const shopDomain = getShopDomain(ctx);
+
+    logger.debug("Fetching merchant settings for shop", { shop: shopDomain });
+
+    // Fetch merchant contact fields from shops table
+    const shopResult = await query(
+      `
+      SELECT
+        merchant_email,
+        merchant_phone,
+        merchant_name
+      FROM shops
+      WHERE shop_domain = $1
+      `,
+      [shopDomain],
+    );
+
+    if (shopResult.length === 0) {
+      logger.warn("Shop not found in database", { shop: shopDomain });
+      ctx.status = 404;
+      ctx.body = { error: "Shop not found" };
+      return;
+    }
+
+    const shop = shopResult[0] as {
+      merchant_email: string | null;
+      merchant_phone: string | null;
+      merchant_name: string | null;
+    };
+
+    // Fetch delay type toggles from app_settings table
+    const settingsResult = await query(
+      `
+      SELECT
+        warehouse_delays_enabled,
+        carrier_delays_enabled,
+        transit_delays_enabled
+      FROM app_settings
+      WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $1)
+      `,
+      [shopDomain],
+    );
+
+    // Default to TRUE if app_settings not initialized (matches schema DEFAULT values)
+    const settings = settingsResult.length > 0 ? (settingsResult[0] as {
+      warehouse_delays_enabled: boolean;
+      carrier_delays_enabled: boolean;
+      transit_delays_enabled: boolean;
+    }) : {
+      warehouse_delays_enabled: true,
+      carrier_delays_enabled: true,
+      transit_delays_enabled: true,
+    };
+
+    logger.debug("Fetched merchant settings", { shop: shopDomain });
+
+    ctx.status = 200;
+    ctx.body = {
+      success: true,
+      data: {
+        merchantEmail: shop.merchant_email,
+        merchantPhone: shop.merchant_phone,
+        merchantName: shop.merchant_name,
+        warehouseDelaysEnabled: settings.warehouse_delays_enabled,
+        carrierDelaysEnabled: settings.carrier_delays_enabled,
+        transitDelaysEnabled: settings.transit_delays_enabled,
+      },
+    };
+  } catch (error) {
+    logger.error("Error fetching merchant settings", error as Error, {
+      shop: ctx.state.shop,
+    });
+    ctx.status = 500;
+    ctx.body = { error: "Failed to fetch merchant settings" };
+  }
+});
+
+/**
+ * PUT /api/merchant-settings
+ * Update merchant contact information and/or delay type toggles (Phase 2.6)
+ *
+ * @body merchantEmail - Merchant email address (optional)
+ * @body merchantPhone - Merchant phone number (optional)
+ * @body merchantName - Merchant name (optional)
+ * @body warehouseDelaysEnabled - Enable/disable warehouse delay notifications (optional)
+ * @body carrierDelaysEnabled - Enable/disable carrier delay notifications (optional)
+ * @body transitDelaysEnabled - Enable/disable transit delay notifications (optional)
+ */
+router.put("/merchant-settings", requireAuth, async(ctx: Context) => {
+  try {
+    const shopDomain = getShopDomain(ctx);
+    const {
+      merchantEmail,
+      merchantPhone,
+      merchantName,
+      warehouseDelaysEnabled,
+      carrierDelaysEnabled,
+      transitDelaysEnabled,
+    } = ctx.request.body as Record<string, unknown>;
+
+    logger.debug("Updating merchant settings for shop", {
+      shop: shopDomain,
+      settings: ctx.request.body,
+    });
+
+    // Verify shop exists
+    const shopResult = await query(
+      `SELECT id FROM shops WHERE shop_domain = $1`,
+      [shopDomain],
+    );
+
+    if (shopResult.length === 0) {
+      logger.warn("Shop not found in database", { shop: shopDomain });
+      ctx.status = 404;
+      ctx.body = { error: "Shop not found" };
+      return;
+    }
+
+    // Validate email format if provided
+    if (merchantEmail !== undefined && merchantEmail !== null && typeof merchantEmail === 'string') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(merchantEmail)) {
+        ctx.status = 400;
+        ctx.body = {
+          error: "Invalid email format",
+          code: "INVALID_EMAIL",
+        };
+        return;
+      }
+    }
+
+    // Validate phone format if provided (basic validation - at least 10 digits)
+    if (merchantPhone !== undefined && merchantPhone !== null && typeof merchantPhone === 'string') {
+      const phoneDigits = merchantPhone.replace(/\D/g, '');
+      if (phoneDigits.length < 10) {
+        ctx.status = 400;
+        ctx.body = {
+          error: "Invalid phone format - must contain at least 10 digits",
+          code: "INVALID_PHONE",
+        };
+        return;
+      }
+    }
+
+    // Update merchant contact fields in shops table (if any provided)
+    const hasMerchantContactUpdates = merchantEmail !== undefined || merchantPhone !== undefined || merchantName !== undefined;
+
+    if (hasMerchantContactUpdates) {
+      await query(
+        `
+        UPDATE shops
+        SET
+          merchant_email = COALESCE($1, merchant_email),
+          merchant_phone = COALESCE($2, merchant_phone),
+          merchant_name = COALESCE($3, merchant_name),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE shop_domain = $4
+        `,
+        [merchantEmail, merchantPhone, merchantName, shopDomain],
+      );
+    }
+
+    // Update delay type toggles in app_settings table (if any provided)
+    const hasToggleUpdates = warehouseDelaysEnabled !== undefined || carrierDelaysEnabled !== undefined || transitDelaysEnabled !== undefined;
+
+    if (hasToggleUpdates) {
+      await query(
+        `
+        UPDATE app_settings
+        SET
+          warehouse_delays_enabled = COALESCE($1, warehouse_delays_enabled),
+          carrier_delays_enabled = COALESCE($2, carrier_delays_enabled),
+          transit_delays_enabled = COALESCE($3, transit_delays_enabled),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $4)
+        `,
+        [warehouseDelaysEnabled, carrierDelaysEnabled, transitDelaysEnabled, shopDomain],
+      );
+    }
+
+    logger.info("Merchant settings updated successfully", { shop: shopDomain });
+
+    ctx.status = 200;
+    ctx.body = {
+      success: true,
+      message: "Merchant settings updated successfully",
+    };
+  } catch (error) {
+    logger.error("Error updating merchant settings", error as Error, {
+      shop: ctx.state.shop,
+    });
+    ctx.status = 500;
+    ctx.body = { error: "Failed to update merchant settings" };
+  }
+});
+
+/**
  * Health check endpoint for API routes
  * Does not require authentication
  */
-router.get("/health", async (ctx: Context) => {
+router.get("/health", async(ctx: Context) => {
   ctx.status = 200;
   ctx.body = {
     status: "ok",

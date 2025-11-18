@@ -387,6 +387,236 @@
   margin-top: 1rem;
 }
 
+/* Phase 2.7: Merchant Contact Information Form */
+.sectionSubtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Phase 2.7: Toggle Switches */
+.togglesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.toggleRow {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.toggleRow:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.toggleLabel input[type="checkbox"] {
+  margin-top: 0.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggleText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.toggleText strong {
+  color: #111827;
+  font-size: 0.9375rem;
+}
+
+.toggleDescription {
+  color: #6b7280;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.toggleLabel input[type="checkbox"]:disabled ~ .toggleText {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Phase 2.7 Refactored: Toggle container styling (appears BEFORE rule cards) */
+.toggleContainer {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.toggleContainer:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+/* Phase 2.7 Refactored: Disabled rule card styling */
+.ruleCardDisabled {
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+  position: relative;
+}
+
+.ruleCardDisabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(156, 163, 175, 0.1);
+  border-radius: 0.75rem;
+  pointer-events: none;
+}
+
+/* Phase 2.7 Refactor: Accordion wrapper for delay rules */
+.accordionSection {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #ffffff;
+  transition: all 0.2s ease-in-out;
+}
+
+.accordionSection:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.accordionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: none;
+  outline: none;
+}
+
+.accordionHeader:hover {
+  background: #f3f4f6;
+}
+
+.accordionHeader:focus {
+  background: #f3f4f6;
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+.accordionHeader[aria-expanded="true"] {
+  background: #eff6ff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.accordionIcon {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-left: 0.5rem;
+  transition: transform 0.2s ease-in-out;
+  flex-shrink: 0;
+}
+
+.accordionContent {
+  padding: 1.25rem;
+  background: #ffffff;
+  animation: slideDown 0.2s ease-in-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Accordion-specific toggle label styling */
+.accordionHeader .toggleLabel {
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  flex: 1;
+  margin: 0;
+}
+
+.accordionHeader .toggleLabel input[type="checkbox"] {
+  margin-top: 0.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.accordionHeader .toggleText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.accordionHeader .toggleText strong {
+  color: #111827;
+  font-size: 0.9375rem;
+}
+
+.accordionHeader .toggleDescription {
+  color: #6b7280;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
 @media (max-width: 640px) {
   .actions {
     flex-direction: column;
@@ -416,5 +646,10 @@
 
   .input {
     width: 100%;
+  }
+
+  /* Phase 2.7: Responsive form grid */
+  .formGrid {
+    grid-template-columns: 1fr;
   }
 }

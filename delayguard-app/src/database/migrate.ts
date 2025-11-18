@@ -1,5 +1,9 @@
+import * as dotenv from "dotenv";
 import { setupDatabase, runMigrations } from "./connection";
 import { logInfo, logError } from "../utils/logger";
+
+// Load environment variables from .env file
+dotenv.config();
 
 async function migrate() {
   try {

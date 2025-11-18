@@ -160,7 +160,7 @@ npm run dev:client  # Frontend on :3001
 ### 5. Testing
 
 ```bash
-# Run all tests
+# Run all unit and integration tests (default)
 npm test
 
 # Run with coverage
@@ -168,7 +168,64 @@ npm run test:coverage
 
 # Watch mode
 npm run test:watch
+
+# Run database schema tests (requires PostgreSQL)
+npm run test:db:schema
 ```
+
+#### Database Schema Tests
+
+**Important**: Database schema tests are excluded from the default `npm test` command because they require a real PostgreSQL database connection. These tests verify:
+
+- Table structure and columns
+- Foreign key constraints
+- Unique constraints and indexes
+- CASCADE delete behavior
+- Data types and nullability
+
+**When to run schema tests:**
+- After modifying database schema (connection.ts)
+- Before deploying migrations to production
+- When debugging database-related issues
+- In CI/CD pipeline with PostgreSQL service
+
+**Running schema tests locally:**
+
+1. **Set up test database** (one-time setup):
+```bash
+# Using PostgreSQL CLI
+createdb delayguard_test
+
+# Or using Docker
+docker run --name postgres-test -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=delayguard_test -p 5432:5432 -d postgres:15
+```
+
+2. **Run migrations** to create tables:
+```bash
+# Set DATABASE_URL environment variable
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/delayguard_test"
+
+# Run migrations
+npm run db:migrate
+```
+
+3. **Run schema tests**:
+```bash
+npm run test:db:schema
+```
+
+**Expected Results:**
+- ✅ 51 schema tests should pass
+- ✅ All table structures verified
+- ✅ All constraints and indexes validated
+
+**CI/CD Integration:**
+Schema tests run automatically in GitHub Actions with a PostgreSQL service container. See [.github/workflows/test.yml](../.github/workflows/test.yml) for configuration details.
+
+**Test Files:**
+- `src/tests/integration/database/tracking-events-schema.test.ts` - ShipEngine tracking tables
+- `src/tests/integration/database/delay-type-toggles-schema.test.ts` - Settings toggles
+- `src/tests/integration/database/order-line-items-schema.test.ts` - Product line items
 
 ## Project Structure
 

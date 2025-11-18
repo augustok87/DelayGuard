@@ -64,6 +64,14 @@ export interface AppSettings {
   enableAnalytics?: boolean;
   theme?: "light" | "dark";
   language?: string;
+  // Phase 2.1: Merchant contact information for smart notification routing
+  merchantEmail?: string | null;
+  merchantPhone?: string | null;
+  merchantName?: string | null;
+  // Phase 2.1: Enable/disable toggles for each delay type
+  warehouseDelaysEnabled?: boolean; // Default: true
+  carrierDelaysEnabled?: boolean; // Default: true
+  transitDelaysEnabled?: boolean; // Default: true
 }
 
 // Export new settings types with different names to avoid conflicts

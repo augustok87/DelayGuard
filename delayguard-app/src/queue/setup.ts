@@ -164,6 +164,13 @@ export async function addNotificationJob(data: {
   orderId: number;
   delayDetails: unknown;
   shopDomain: string;
+  // Phase 2.1: Notification routing fields
+  delayType?: 'WAREHOUSE_DELAY' | 'CARRIER_DELAY' | 'TRANSIT_DELAY';
+  merchantEmail?: string | null;
+  merchantPhone?: string | null;
+  merchantName?: string | null;
+  customerEmail?: string;
+  customerPhone?: string;
 }): Promise<void> {
   if (!notificationQueue) {
     throw new Error("Notification queue not initialized");
