@@ -85,6 +85,70 @@ export function NotificationPreferences({
           </div>
         )}
 
+        {/* Merchant Contact Information */}
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>Merchant Contact Information</h3>
+          <p className={styles.sectionSubtitle}>
+            Receive warehouse delay notifications at these contact details
+          </p>
+
+          <div className={styles.formGrid}>
+            <div className={styles.formField}>
+              <label htmlFor="merchant-email" className={styles.formLabel}>
+                Merchant Email
+              </label>
+              <input
+                id="merchant-email"
+                type="email"
+                className={styles.input}
+                value={settings.merchantEmail || ''}
+                onChange={(e) => onSettingsChange({ ...settings, merchantEmail: e.target.value })}
+                placeholder="merchant@yourstore.com"
+                disabled={loading}
+              />
+              <p className={styles.helpText}>
+                Warehouse delay notifications will be sent here instead of to customers
+              </p>
+            </div>
+
+            <div className={styles.formField}>
+              <label htmlFor="merchant-phone" className={styles.formLabel}>
+                Merchant Phone
+              </label>
+              <input
+                id="merchant-phone"
+                type="tel"
+                className={styles.input}
+                value={settings.merchantPhone || ''}
+                onChange={(e) => onSettingsChange({ ...settings, merchantPhone: e.target.value })}
+                placeholder="+1-555-1234"
+                disabled={loading}
+              />
+              <p className={styles.helpText}>
+                Optional: Receive SMS notifications for warehouse delays
+              </p>
+            </div>
+
+            <div className={styles.formField}>
+              <label htmlFor="merchant-name" className={styles.formLabel}>
+                Merchant Name
+              </label>
+              <input
+                id="merchant-name"
+                type="text"
+                className={styles.input}
+                value={settings.merchantName || ''}
+                onChange={(e) => onSettingsChange({ ...settings, merchantName: e.target.value })}
+                placeholder="Shop Owner"
+                disabled={loading}
+              />
+              <p className={styles.helpText}>
+                Your name for personalized notifications
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Test Alert Button */}
         {onTest && (
           <div className={styles.actions}>

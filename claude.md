@@ -667,6 +667,52 @@ npm run dev
 
 ---
 
+### v1.25 (2025-11-18): 📖 Educational Modals for Delay Detection Rules
+**Test Results**: 99 passing tests (14 HelpModal + 85 SettingsCard), 100% pass rate
+
+**Completed**: Replaced inner accordions with modal popups for educational content
+- ✅ **HelpModal Component** (TDD approach - tests first)
+  - Reusable modal with elegant fade-in/slide-up animations
+  - Full accessibility (role="dialog", aria-modal, aria-labelledby, focus trapping)
+  - Keyboard support (Escape key to close, focus management)
+  - Mobile-responsive (full-screen on mobile with swipe pattern)
+  - Overlay click to close with `e.target === e.currentTarget` pattern
+- ✅ **SettingsCard Integration**
+  - Replaced 3 inner "Learn More" accordions with modal triggers
+  - Added modal state management (warehouse/carrier/transit)
+  - "Learn More" buttons with ℹ️ icon open dedicated help modals
+  - Cleaner settings page (no content jumping from accordion expansion)
+- ✅ **UX Improvements**
+  - Dedicated reading space for educational content (no layout shifts)
+  - Better mobile reading experience (full-screen modal)
+  - Separation of concerns (configuration vs. help content)
+  - Professional help system pattern (like Discord, VS Code, Gmail)
+
+**Files Created** (3):
+- tests/unit/components/HelpModal.test.tsx (14 tests)
+- src/components/ui/HelpModal.tsx (110 lines)
+- src/components/ui/HelpModal.module.css (200+ lines)
+
+**Files Modified** (5):
+- src/components/ui/index.ts (added HelpModal export)
+- src/components/tabs/DashboardTab/SettingsCard.tsx (modal state + triggers)
+- src/components/tabs/DashboardTab/SettingsCard.module.css (button styling)
+- src/tests/unit/components/SettingsCard.test.tsx (updated 3 tests for modal UX)
+- tests/unit/components/SettingsCard-MerchantSettings.test.tsx (updated 3 tests for v1.24 layout)
+
+**TDD Execution**: Perfect ✅
+- RED: Wrote 14 comprehensive HelpModal tests FIRST (all failed)
+- GREEN: Implemented HelpModal component (all 14 tests passing)
+- REFACTOR: Fixed linting errors, updated SettingsCard tests
+
+**Linting**: Zero errors (fixed jsx-a11y issues with role="presentation")
+
+**User Feedback**: "It suddenly came to mind that instead of the accordion panel... maybe it's more elegant and better for UI/UX, if we just make it as a Pop up modal... What do you think?" → Implemented after analysis and approval
+
+[Full details in CHANGELOG.md](CHANGELOG.md#v125)
+
+---
+
 ### v1.18 (2025-11-05): 🎨 Header & Dashboard UI/UX Refinements
 **Test Results**: 62 passing tests, 100% pass rate
 
@@ -678,6 +724,39 @@ npm run dev
 - Tab renamed: Dashboard → Settings (more accurate)
 
 [Full details in CHANGELOG.md](CHANGELOG.md#v118)
+
+---
+
+### v1.19 (2025-11-23): 🎨 Settings Tab Layout & Organization Refactoring
+**Test Results**: 1,669 passing tests (91 suites), 100% pass rate
+
+**Completed**: Full-width layout and improved settings organization
+- **Full-Width Layout**: Settings tab now uses full width (matches Alerts and Orders tabs)
+  - Removed 900px max-width constraint
+  - Added `.container` class for consistent flexbox layout
+  - Updated DashboardTab.module.css with proper container styles
+- **Merchant Contact Information Moved**: Relocated from Delay Detection Rules → Notification Preferences
+  - Better separation of concerns (WHAT triggers alerts vs HOW to receive them)
+  - Merchant contact fields (email, phone, name) now in Notification Preferences tab
+  - Removed from SettingsCard, added to NotificationPreferences component
+- **Test Updates**:
+  - NotificationPreferences: 35 passing tests (+13 new merchant contact tests)
+  - SettingsCard: 21 passing tests (removed merchant contact tests)
+  - DashboardTab: 31 passing tests (updated layout verification)
+- **Zero Linting Errors**: All modified files clean (1 pre-existing warning unrelated to changes)
+
+**Files Modified** (7):
+- `src/components/tabs/DashboardTab/index.tsx` (full-width container)
+- `src/components/tabs/DashboardTab/DashboardTab.module.css` (added `.container`)
+- `src/components/tabs/DashboardTab/NotificationPreferences.tsx` (added merchant contact section)
+- `src/components/tabs/DashboardTab/SettingsCard.tsx` (removed merchant contact section)
+- `tests/unit/components/DashboardTab.tabs.test.tsx` (updated layout test)
+- `tests/unit/components/NotificationPreferences.test.tsx` (+13 merchant contact tests)
+- `tests/unit/components/SettingsCard-MerchantSettings.test.tsx` (removed merchant contact tests)
+
+**TDD Approach**: Tests written first for merchant contact fields, then component refactoring
+
+**UX Impact**: Consistent full-width layout across all tabs + better conceptual organization of settings
 
 ---
 
@@ -710,5 +789,5 @@ This project is a market-ready Shopify app with strong technical foundation.
 
 ---
 
-*Last updated: 2025-11-09*
+*Last updated: 2025-11-23*
 *Phase 1 COMPLETE (98/100 readiness) - Ready for Shopify App Store submission*

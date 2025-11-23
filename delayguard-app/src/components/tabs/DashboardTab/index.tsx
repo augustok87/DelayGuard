@@ -74,7 +74,7 @@ export function DashboardTab({
   };
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+    <div className={styles.container}>
       <div className={styles.filterBar}>
         <SegmentedControl
           options={filterOptions}

@@ -2,12 +2,77 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: November 11, 2025
+**Last Updated**: November 23, 2025
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.19 (2025-11-23): 🎨 Settings Tab Layout & Organization Refactoring
+**Test Results**: 1,669 passing tests (91 suites), 100% pass rate
+
+**User Request**: "Settings tab should be full-width like Alerts and Orders tabs. Move Merchant Contact Information from Delay Detection Rules to Notification Preferences."
+
+**What Changed**:
+1. **Full-Width Layout** - Settings tab now matches Alerts and Orders layout consistency
+   - Removed inline `maxWidth: '900px'` constraint from DashboardTab
+   - Added CSS `.container` class for consistent flexbox layout
+   - Updated DashboardTab.module.css with proper container styles
+
+2. **Merchant Contact Information Relocated** - Improved conceptual organization
+   - **Moved FROM**: Delay Detection Rules tab (SettingsCard component)
+   - **Moved TO**: Notification Preferences tab (NotificationPreferences component)
+   - **Rationale**: Better separation of concerns
+     - Delay Detection Rules = WHAT triggers alerts (warehouse/carrier/transit thresholds)
+     - Notification Preferences = HOW to receive alerts (email/SMS toggles + merchant contact info)
+   - Fields moved: merchantEmail, merchantPhone, merchantName (3 input fields)
+
+**Perfect TDD Execution**:
+1. ✅ **RED Phase**: Wrote 13 new tests for NotificationPreferences merchant contact fields (all failed as expected)
+2. ✅ **GREEN Phase**: Moved merchant contact section from SettingsCard to NotificationPreferences
+3. ✅ **REFACTOR**: Updated SettingsCard tests (removed merchant contact tests), fixed 1 linting error
+4. ✅ **VERIFY**: All 1,669 tests passing, zero linting errors
+
+**Test Updates**:
+- **NotificationPreferences.test.tsx**: 35 tests passing (+13 new tests for merchant contact fields)
+  - Render merchant email/phone/name input fields
+  - Display existing merchant contact values
+  - Call onSettingsChange when inputs updated
+  - Disable inputs when loading
+  - Display help text for each field
+  - Render section title and subtitle
+- **SettingsCard-MerchantSettings.test.tsx**: 21 tests passing (removed 7 merchant contact tests)
+  - Removed: merchant email/phone/name rendering tests
+  - Removed: merchant contact loading state tests
+  - Removed: merchant contact ARIA labels tests
+  - Updated: loading state test now only checks toggle switches
+  - Updated: accessibility test now only checks toggle switches
+- **DashboardTab.tabs.test.tsx**: 31 tests passing (updated 1 layout test)
+  - Updated: "should use full-width container layout" test
+  - Changed from checking `maxWidth: '900px'` to verifying `.container` class
+
+**Files Modified** (7):
+1. `src/components/tabs/DashboardTab/index.tsx` - Removed inline style, added `className={styles.container}`
+2. `src/components/tabs/DashboardTab/DashboardTab.module.css` - Added `.container` CSS class (lines 9-13)
+3. `src/components/tabs/DashboardTab/NotificationPreferences.tsx` - Added merchant contact section (lines 88-150)
+4. `src/components/tabs/DashboardTab/SettingsCard.tsx` - Removed merchant contact section (lines 456-518 deleted)
+5. `tests/unit/components/DashboardTab.tabs.test.tsx` - Updated layout test (lines 218-225)
+6. `tests/unit/components/NotificationPreferences.test.tsx` - Added 13 merchant contact tests (lines 348-528)
+7. `tests/unit/components/SettingsCard-MerchantSettings.test.tsx` - Removed 7 merchant contact tests, updated header comment
+
+**Code Quality**:
+- ✅ Zero linting errors (1 pre-existing `@typescript-eslint/no-explicit-any` warning in SettingsCard.tsx:60 unrelated to changes)
+- ✅ All tests passing (100% pass rate)
+- ✅ CSS already shared via `styles` import (no CSS migration needed)
+- ✅ Production-ready code
+
+**UX Impact**:
+- **Visual Consistency**: Settings tab now uses full width like Alerts and Orders tabs (no more narrow centered layout)
+- **Conceptual Clarity**: Delay Detection Rules focuses on WHAT triggers alerts, Notification Preferences handles HOW notifications are delivered
+- **Better Organization**: Merchant contact info logically grouped with notification settings (email/SMS toggles)
+
+---
 
 ### v1.20 (2025-11-11): 🎯 Phase 2.2 - Notification Routing Logic Complete
 **Test Results**: 14 passing tests (12 real + 2 placeholder stubs, 100% pass rate), 0 linting errors

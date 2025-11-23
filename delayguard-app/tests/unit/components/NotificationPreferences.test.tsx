@@ -344,4 +344,186 @@ describe('NotificationPreferences Component', () => {
       expect(button).not.toBeDisabled();
     });
   });
+
+  describe('Merchant Contact Information', () => {
+    const settingsWithContact = createMockSettings({
+      merchantEmail: 'merchant@store.com',
+      merchantPhone: '+1-555-1234',
+      merchantName: 'Store Owner',
+    });
+
+    it('should render merchant email input field', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      expect(screen.getByLabelText('Merchant Email')).toBeInTheDocument();
+    });
+
+    it('should render merchant phone input field', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      expect(screen.getByLabelText('Merchant Phone')).toBeInTheDocument();
+    });
+
+    it('should render merchant name input field', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      expect(screen.getByLabelText('Merchant Name')).toBeInTheDocument();
+    });
+
+    it('should display existing merchant contact values', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      const emailInput = screen.getByLabelText('Merchant Email') as HTMLInputElement;
+      const phoneInput = screen.getByLabelText('Merchant Phone') as HTMLInputElement;
+      const nameInput = screen.getByLabelText('Merchant Name') as HTMLInputElement;
+
+      expect(emailInput.value).toBe('merchant@store.com');
+      expect(phoneInput.value).toBe('+1-555-1234');
+      expect(nameInput.value).toBe('Store Owner');
+    });
+
+    it('should call onSettingsChange when merchant email is updated', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      const emailInput = screen.getByLabelText('Merchant Email');
+      fireEvent.change(emailInput, { target: { value: 'newemail@store.com' } });
+
+      expect(mockOnSettingsChange).toHaveBeenCalledWith({
+        ...settingsWithContact,
+        merchantEmail: 'newemail@store.com',
+      });
+    });
+
+    it('should call onSettingsChange when merchant phone is updated', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      const phoneInput = screen.getByLabelText('Merchant Phone');
+      fireEvent.change(phoneInput, { target: { value: '+1-555-9999' } });
+
+      expect(mockOnSettingsChange).toHaveBeenCalledWith({
+        ...settingsWithContact,
+        merchantPhone: '+1-555-9999',
+      });
+    });
+
+    it('should call onSettingsChange when merchant name is updated', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      const nameInput = screen.getByLabelText('Merchant Name');
+      fireEvent.change(nameInput, { target: { value: 'New Owner' } });
+
+      expect(mockOnSettingsChange).toHaveBeenCalledWith({
+        ...settingsWithContact,
+        merchantName: 'New Owner',
+      });
+    });
+
+    it('should disable merchant contact inputs when loading', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          loading={true}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      const emailInput = screen.getByLabelText('Merchant Email');
+      const phoneInput = screen.getByLabelText('Merchant Phone');
+      const nameInput = screen.getByLabelText('Merchant Name');
+
+      expect(emailInput).toBeDisabled();
+      expect(phoneInput).toBeDisabled();
+      expect(nameInput).toBeDisabled();
+    });
+
+    it('should display help text for merchant email', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      expect(screen.getByText(/Warehouse delay notifications will be sent here instead of to customers/i)).toBeInTheDocument();
+    });
+
+    it('should display help text for merchant phone', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      expect(screen.getByText(/Optional: Receive SMS notifications for warehouse delays/i)).toBeInTheDocument();
+    });
+
+    it('should display help text for merchant name', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      expect(screen.getByText(/Your name for personalized notifications/i)).toBeInTheDocument();
+    });
+
+    it('should render Merchant Contact Information section title', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      expect(screen.getByText('Merchant Contact Information')).toBeInTheDocument();
+    });
+
+    it('should render section subtitle explaining purpose', () => {
+      render(
+        <NotificationPreferences
+          settings={settingsWithContact}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      expect(screen.getByText(/Receive warehouse delay notifications at these contact details/i)).toBeInTheDocument();
+    });
+  });
 });

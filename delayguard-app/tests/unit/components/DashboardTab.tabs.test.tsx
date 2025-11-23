@@ -215,11 +215,13 @@ describe('DashboardTab - Two-Tab Layout', () => {
       expect(screen.getByTestId('settings-card')).toBeInTheDocument();
     });
 
-    it('should maintain centered layout (900px max-width)', () => {
+    it('should use full-width container layout (matches AlertsTab and OrdersTab)', () => {
       const { container } = render(<DashboardTab {...mockProps} />);
 
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper).toHaveStyle({ maxWidth: '900px', margin: '0 auto' });
+      expect(wrapper).toHaveClass('container');
+      // No max-width constraint - full width like other tabs
+      expect(wrapper).not.toHaveStyle({ maxWidth: '900px' });
     });
   });
 
