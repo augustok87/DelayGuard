@@ -550,104 +550,14 @@
   pointer-events: none;
 }
 
-/* Phase 2.7 Refactor: Accordion wrapper for delay rules */
-.accordionSection {
+/* v1.26: Rule section wrapper (always-visible rules, no accordions) */
+.ruleSection {
   display: flex;
   flex-direction: column;
-  margin-bottom: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  background: #ffffff;
-  transition: all 0.2s ease-in-out;
+  margin-bottom: 1.5rem;
 }
 
-.accordionSection:hover {
-  border-color: #d1d5db;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.accordionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  background: #f9fafb;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  border: none;
-  outline: none;
-}
-
-.accordionHeader:hover {
-  background: #f3f4f6;
-}
-
-.accordionHeader:focus {
-  background: #f3f4f6;
-  outline: 2px solid #2563eb;
-  outline-offset: -2px;
-}
-
-.accordionHeader[aria-expanded="true"] {
-  background: #eff6ff;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.accordionIcon {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-left: 0.5rem;
-  transition: transform 0.2s ease-in-out;
-  flex-shrink: 0;
-}
-
-.accordionContent {
-  padding: 1.25rem;
-  background: #ffffff;
-  animation: slideDown 0.2s ease-in-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Accordion header content (icon + title + summary) */
-.accordionHeaderContent {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-}
-
-.accordionTitle {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-}
-
-.accordionTitle strong {
-  color: #111827;
-  font-size: 0.9375rem;
-  font-weight: 600;
-}
-
-.accordionSummary {
-  color: #6b7280;
-  font-size: 0.8125rem;
-  font-weight: 400;
-  line-height: 1.5;
-}
-
-/* Toggle checkbox section - SEPARATE from accordion header */
+/* Toggle checkbox section */
 .toggleSection {
   padding: 0.875rem 1.25rem;
   background: #fefce8;

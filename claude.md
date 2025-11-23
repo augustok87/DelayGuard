@@ -388,6 +388,66 @@ npm run dev
 ## RECENT VERSION HISTORY
 *For complete version history, see [CHANGELOG.md](CHANGELOG.md)*
 
+### v1.26 (2025-11-23): 🚀 **Always-Visible Rules - Accordion Removal** (Perfect TDD Execution)
+**Test Results**: 39 SettingsCard tests passing (100% pass rate), zero linting errors
+**Status**: All 3 delay rules always visible for better UX
+
+**Completed**: Removed accordion complexity, all rules visible by default
+- User-requested UX improvement: "Leave all 3 type of delays within the same screen... always show all the 3 delay rules settings"
+- Eliminated cognitive load of expand/collapse interactions
+- Simpler mental model: All settings visible at once
+- Perfect TDD execution: RED → GREEN → REFACTOR
+- Zero linting errors, production-ready
+
+**UX Impact**:
+- **Eliminated interaction complexity**: No accordion clicks needed
+- **Faster configuration**: All 3 rules visible simultaneously
+- **Easier comparison**: Side-by-side view of all thresholds
+- **Better for initial setup**: New users see everything they need
+- **Reduced cognitive load**: No "what's hidden?" confusion
+
+**Implementation Details**:
+
+**1. Component Refactoring** (SettingsCard.tsx):
+- Removed `accordionState` useState (lines 66-71) - no longer needed
+- Removed `toggleAccordion()` and `handleAccordionKeyDown()` functions
+- Removed accordion header divs (interactive clickable headers)
+- Removed conditional rendering `{accordionState.xxx && (...)}`
+- Wrapped each rule in simple `.ruleSection` div
+- Kept toggle checkboxes, rule cards, "Learn More" buttons (modal-based help)
+
+**2. CSS Simplification** (SettingsCard.module.css):
+- Removed 96 lines of accordion-specific CSS
+- Deleted: `.accordionSection`, `.accordionHeader`, `.accordionIcon`, `.accordionContent`
+- Deleted: `.accordionHeaderContent`, `.accordionTitle`, `.accordionSummary`
+- Deleted: `@keyframes slideDown` animation
+- Added simple `.ruleSection` class (4 lines): `display: flex; flex-direction: column; margin-bottom: 1.5rem;`
+
+**3. Test Updates** (SettingsCard.test.tsx):
+- **TDD RED Phase**: Updated 39 tests to expect always-visible content
+- Removed all accordion expansion clicks (`fireEvent.click(accordionHeader)`)
+- Updated assertions to expect content immediately visible
+- Added v1.26 comments explaining always-visible behavior
+- **TDD GREEN Phase**: All 39 tests passing after implementation
+- Test coverage: Icons, help text, benchmarks, labels all immediately accessible
+
+**Files Modified** (3):
+- delayguard-app/src/components/tabs/DashboardTab/SettingsCard.tsx (removed accordion state/functions/JSX)
+- delayguard-app/src/components/tabs/DashboardTab/SettingsCard.module.css (removed 96 lines accordion CSS)
+- delayguard-app/src/tests/unit/components/SettingsCard.test.tsx (updated 39 tests for always-visible content)
+
+**User Quote** (Explicit Request):
+> "Right now we have 3 type of delays within the same container. I'm wondering if it'd be better if we just leave this portion for each one of the 3 type of delays, within the same screen as we have it now. Meaning, we would get rid of the clickable panel to show the content. Meaning we always show all the 3 delay rules settings."
+
+**Lessons Learned**:
+- ✅ **Perfect TDD execution**: Tests updated FIRST (RED), then implementation (GREEN), then CSS cleanup
+- ✅ **User feedback validated**: UX decision directly addresses unnecessary complexity
+- ✅ **Simpler is better**: Removing accordion improved UX (less clicks, more clarity)
+- ✅ **Documentation completed immediately**: Following CLAUDE.md workflow
+- ✅ **CSS cleanup**: Removed 96 lines of now-unused code
+
+---
+
 ### v1.24 (2025-11-18): 🎯 **UX Refinement - Accordion Header Separation** (Perfect TDD Execution)
 **Test Results**: 17 accordion tests passing (100% pass rate), 1669 total tests passing
 **Status**: Accordion UX improved following product management best practices

@@ -55,20 +55,13 @@ export function SettingsCard({
   }, [settings.delayThreshold]);
 
   // Debounced callback for auto-saving (1 second delay)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const debouncedSave = useDebouncedCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (...args: any[]) => {
       onSettingsChange(args[0] as AppSettings);
     },
     1000,
   ) as (newSettings: AppSettings) => void;
-
-  // Phase 2.7 Refactor: Accordion expand/collapse state
-  const [accordionState, setAccordionState] = useState({
-    warehouse: true,  // Expanded by default (most important)
-    carrier: false,   // Collapsed by default
-    transit: false,   // Collapsed by default
-  });
 
   // v1.25: Help modal state management
   const [helpModalState, setHelpModalState] = useState({
@@ -76,14 +69,6 @@ export function SettingsCard({
     carrier: false,
     transit: false,
   });
-
-  // Toggle accordion section
-  const toggleAccordion = (section: 'warehouse' | 'carrier' | 'transit') => {
-    setAccordionState(prev => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
 
   // Open help modal
   const openHelpModal = (section: 'warehouse' | 'carrier' | 'transit') => {
@@ -99,17 +84,6 @@ export function SettingsCard({
       ...prev,
       [section]: false,
     }));
-  };
-
-  // Handle keyboard navigation for accordion
-  const handleAccordionKeyDown = (
-    e: React.KeyboardEvent,
-    section: 'warehouse' | 'carrier' | 'transit',
-  ) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      toggleAccordion(section);
-    }
   };
 
   // Phase 1.4: Handle delay threshold change with debouncing
@@ -167,34 +141,11 @@ export function SettingsCard({
         )}
 
         {/* Phase 1.4: Delay Detection Rules with Plain Language */}
-        {/* Phase 2.7 Refactor: Accordion wrapper for delay rules */}
+        {/* v1.26: Always-visible rules (no accordions) */}
         <div className={styles.section}>
-          {/* Accordion 1: Warehouse Delays (expanded by default) */}
-          <div className={styles.accordionSection}>
-            {/* Accordion Header - ONLY for expand/collapse */}
-            <div
-              className={styles.accordionHeader}
-              role="button"
-              tabIndex={0}
-              aria-expanded={accordionState.warehouse}
-              aria-label="Warehouse Delays accordion"
-              onClick={() => toggleAccordion('warehouse')}
-              onKeyDown={(e) => handleAccordionKeyDown(e, 'warehouse')}
-            >
-              <div className={styles.accordionHeaderContent}>
-                <span className={styles.accordionIcon}>
-                  {accordionState.warehouse ? '▼' : '▶'}
-                </span>
-                <span className={styles.accordionTitle}>
-                  <strong>Warehouse Delays</strong>
-                  <span className={styles.accordionSummary}>
-                    {localDelayThreshold} days threshold
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            {/* Toggle Checkbox - SEPARATE from accordion header, always visible */}
+          {/* Warehouse Delays */}
+          <div className={styles.ruleSection}>
+            {/* Toggle Checkbox */}
             <div className={styles.toggleSection}>
               <label className={styles.toggleLabel}>
                 <input
@@ -212,79 +163,52 @@ export function SettingsCard({
               </label>
             </div>
 
-            {/* Accordion Content (conditionally rendered) */}
-            {accordionState.warehouse && (
-              <div className={styles.accordionContent}>
-                <div className={`${styles.ruleCard} ${settings.warehouseDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
-                  <div className={styles.ruleHeader}>
-                    <span className={styles.ruleIcon}>📦</span>
-                    <h4 className={styles.ruleTitle}>Warehouse Delays</h4>
-                  </div>
-                  <div className={styles.ruleSetting}>
-                    <label htmlFor="delay-threshold" className={styles.ruleLabel}>
-                      Alert me when orders sit unfulfilled for:
-                    </label>
-                    <div className={styles.inputGroup}>
-                      <input
-                        id="delay-threshold"
-                        type="number"
-                        className={styles.input}
-                        value={localDelayThreshold}
-                        onChange={(e) => handleDelayThresholdChange(parseInt(e.target.value) || 0)}
-                        min="0"
-                        max="30"
-                        disabled={loading}
-                      />
-                      <span className={styles.inputSuffix}>days</span>
-                    </div>
-                  </div>
-
-                  {/* Learn More Button - Opens modal instead of accordion */}
-                  <button
-                    className={styles.learnMoreButton}
-                    onClick={() => openHelpModal('warehouse')}
-                    type="button"
-                  >
-                    <span className={styles.learnMoreIcon}>ℹ️</span>
-                    Learn More About Warehouse Delays
-                  </button>
-
-                  {benchmarks && (
-                    <div className={styles.benchmarkContainer}>
-                      {renderBenchmark(benchmarks.avgFulfillmentDays, 'Your avg fulfillment time')}
-                    </div>
-                  )}
+            {/* Rule Card (always visible) */}
+            <div className={`${styles.ruleCard} ${settings.warehouseDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
+              <div className={styles.ruleHeader}>
+                <span className={styles.ruleIcon}>📦</span>
+                <h4 className={styles.ruleTitle}>Warehouse Delays</h4>
+              </div>
+              <div className={styles.ruleSetting}>
+                <label htmlFor="delay-threshold" className={styles.ruleLabel}>
+                  Alert me when orders sit unfulfilled for:
+                </label>
+                <div className={styles.inputGroup}>
+                  <input
+                    id="delay-threshold"
+                    type="number"
+                    className={styles.input}
+                    value={localDelayThreshold}
+                    onChange={(e) => handleDelayThresholdChange(parseInt(e.target.value) || 0)}
+                    min="0"
+                    max="30"
+                    disabled={loading}
+                  />
+                  <span className={styles.inputSuffix}>days</span>
                 </div>
               </div>
-            )}
+
+              {/* Learn More Button - Opens modal */}
+              <button
+                className={styles.learnMoreButton}
+                onClick={() => openHelpModal('warehouse')}
+                type="button"
+              >
+                <span className={styles.learnMoreIcon}>ℹ️</span>
+                Learn More About Warehouse Delays
+              </button>
+
+              {benchmarks && (
+                <div className={styles.benchmarkContainer}>
+                  {renderBenchmark(benchmarks.avgFulfillmentDays, 'Your avg fulfillment time')}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Accordion 2: Carrier Reported Delays (collapsed by default) */}
-          <div className={styles.accordionSection}>
-            {/* Accordion Header - ONLY for expand/collapse */}
-            <div
-              className={styles.accordionHeader}
-              role="button"
-              tabIndex={0}
-              aria-expanded={accordionState.carrier}
-              aria-label="Carrier Reported Delays accordion"
-              onClick={() => toggleAccordion('carrier')}
-              onKeyDown={(e) => handleAccordionKeyDown(e, 'carrier')}
-            >
-              <div className={styles.accordionHeaderContent}>
-                <span className={styles.accordionIcon}>
-                  {accordionState.carrier ? '▼' : '▶'}
-                </span>
-                <span className={styles.accordionTitle}>
-                  <strong>Carrier Reported Delays</strong>
-                  <span className={styles.accordionSummary}>
-                    Auto-detect
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            {/* Toggle Checkbox - SEPARATE from accordion header, always visible */}
+          {/* Carrier Reported Delays */}
+          <div className={styles.ruleSection}>
+            {/* Toggle Checkbox */}
             <div className={styles.toggleSection}>
               <label className={styles.toggleLabel}>
                 <input
@@ -302,83 +226,56 @@ export function SettingsCard({
               </label>
             </div>
 
-            {/* Accordion Content (conditionally rendered) */}
-            {accordionState.carrier && (
-              <div className={styles.accordionContent}>
-                <div className={`${styles.ruleCard} ${settings.carrierDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
-                  <div className={styles.ruleHeader}>
-                    <span className={styles.ruleIcon}>🚨</span>
-                    <h4 className={styles.ruleTitle}>Carrier Reported Delays</h4>
-                  </div>
-                  <div className={styles.ruleSetting}>
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={true}
-                        disabled={true}
-                        aria-label="Auto-detect carrier exceptions"
-                      />
-                      <span>Auto-detect when carriers report exceptions</span>
-                    </label>
-                    <p className={styles.helpText} style={{ marginLeft: '2rem' }}>
-                      (Always enabled to catch critical carrier issues)
-                    </p>
-                  </div>
-
-                  {/* Learn More Button - Opens modal instead of accordion */}
-                  <button
-                    className={styles.learnMoreButton}
-                    onClick={() => openHelpModal('carrier')}
-                    type="button"
-                  >
-                    <span className={styles.learnMoreIcon}>ℹ️</span>
-                    Learn More About Carrier Reported Delays
-                  </button>
-
-                  {benchmarks && benchmarks.delaysThisMonth !== undefined && (
-                    <div className={styles.benchmarkContainer}>
-                      <span className={styles.benchmark}>
-                        📊 You&apos;ve had <strong>{benchmarks.delaysThisMonth}</strong> carrier delays this month
-                        {benchmarks.delaysTrend !== undefined && benchmarks.delaysTrend < 0 && (
-                          <span className={styles.trendPositive}> ↓ {Math.abs(benchmarks.delaysTrend)}%</span>
-                        )}
-                        {benchmarks.delaysTrend !== undefined && benchmarks.delaysTrend > 0 && (
-                          <span className={styles.trendNegative}> ↑ {benchmarks.delaysTrend}%</span>
-                        )}
-                      </span>
-                    </div>
-                  )}
-                </div>
+            {/* Rule Card (always visible) */}
+            <div className={`${styles.ruleCard} ${settings.carrierDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
+              <div className={styles.ruleHeader}>
+                <span className={styles.ruleIcon}>🚨</span>
+                <h4 className={styles.ruleTitle}>Carrier Reported Delays</h4>
               </div>
-            )}
+              <div className={styles.ruleSetting}>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={true}
+                    disabled={true}
+                    aria-label="Auto-detect carrier exceptions"
+                  />
+                  <span>Auto-detect when carriers report exceptions</span>
+                </label>
+                <p className={styles.helpText} style={{ marginLeft: '2rem' }}>
+                  (Always enabled to catch critical carrier issues)
+                </p>
+              </div>
+
+              {/* Learn More Button - Opens modal */}
+              <button
+                className={styles.learnMoreButton}
+                onClick={() => openHelpModal('carrier')}
+                type="button"
+              >
+                <span className={styles.learnMoreIcon}>ℹ️</span>
+                Learn More About Carrier Reported Delays
+              </button>
+
+              {benchmarks && benchmarks.delaysThisMonth !== undefined && (
+                <div className={styles.benchmarkContainer}>
+                  <span className={styles.benchmark}>
+                    📊 You&apos;ve had <strong>{benchmarks.delaysThisMonth}</strong> carrier delays this month
+                    {benchmarks.delaysTrend !== undefined && benchmarks.delaysTrend < 0 && (
+                      <span className={styles.trendPositive}> ↓ {Math.abs(benchmarks.delaysTrend)}%</span>
+                    )}
+                    {benchmarks.delaysTrend !== undefined && benchmarks.delaysTrend > 0 && (
+                      <span className={styles.trendNegative}> ↑ {benchmarks.delaysTrend}%</span>
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Accordion 3: Stuck in Transit (collapsed by default) */}
-          <div className={styles.accordionSection}>
-            {/* Accordion Header - ONLY for expand/collapse */}
-            <div
-              className={styles.accordionHeader}
-              role="button"
-              tabIndex={0}
-              aria-expanded={accordionState.transit}
-              aria-label="Stuck in Transit accordion"
-              onClick={() => toggleAccordion('transit')}
-              onKeyDown={(e) => handleAccordionKeyDown(e, 'transit')}
-            >
-              <div className={styles.accordionHeaderContent}>
-                <span className={styles.accordionIcon}>
-                  {accordionState.transit ? '▼' : '▶'}
-                </span>
-                <span className={styles.accordionTitle}>
-                  <strong>Stuck in Transit</strong>
-                  <span className={styles.accordionSummary}>
-                    {localDelayThreshold + 5} days threshold
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            {/* Toggle Checkbox - SEPARATE from accordion header, always visible */}
+          {/* Stuck in Transit */}
+          <div className={styles.ruleSection}>
+            {/* Toggle Checkbox */}
             <div className={styles.toggleSection}>
               <label className={styles.toggleLabel}>
                 <input
@@ -396,50 +293,46 @@ export function SettingsCard({
               </label>
             </div>
 
-            {/* Accordion Content (conditionally rendered) */}
-            {accordionState.transit && (
-              <div className={styles.accordionContent}>
-                <div className={`${styles.ruleCard} ${settings.transitDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
-                  <div className={styles.ruleHeader}>
-                    <span className={styles.ruleIcon}>⏰</span>
-                    <h4 className={styles.ruleTitle}>Stuck in Transit</h4>
-                  </div>
-                  <div className={styles.ruleSetting}>
-                    <label htmlFor="extended-transit-days" className={styles.ruleLabel}>
-                      Alert when packages are in transit for:
-                    </label>
-                    <div className={styles.inputGroup}>
-                      <input
-                        id="extended-transit-days"
-                        type="number"
-                        className={styles.input}
-                        value={localDelayThreshold + 5}
-                        disabled={true}
-                        min="0"
-                        max="30"
-                      />
-                      <span className={styles.inputSuffix}>days (auto-calculated)</span>
-                    </div>
-                  </div>
-
-                  {/* Learn More Button - Opens modal instead of accordion */}
-                  <button
-                    className={styles.learnMoreButton}
-                    onClick={() => openHelpModal('transit')}
-                    type="button"
-                  >
-                    <span className={styles.learnMoreIcon}>ℹ️</span>
-                    Learn More About Stuck in Transit Detection
-                  </button>
-
-                  {benchmarks && (
-                    <div className={styles.benchmarkContainer}>
-                      {renderBenchmark(benchmarks.avgDeliveryDays, 'Your avg delivery time')}
-                    </div>
-                  )}
+            {/* Rule Card (always visible) */}
+            <div className={`${styles.ruleCard} ${settings.transitDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
+              <div className={styles.ruleHeader}>
+                <span className={styles.ruleIcon}>⏰</span>
+                <h4 className={styles.ruleTitle}>Stuck in Transit</h4>
+              </div>
+              <div className={styles.ruleSetting}>
+                <label htmlFor="extended-transit-days" className={styles.ruleLabel}>
+                  Alert when packages are in transit for:
+                </label>
+                <div className={styles.inputGroup}>
+                  <input
+                    id="extended-transit-days"
+                    type="number"
+                    className={styles.input}
+                    value={localDelayThreshold + 5}
+                    disabled={true}
+                    min="0"
+                    max="30"
+                  />
+                  <span className={styles.inputSuffix}>days (auto-calculated)</span>
                 </div>
               </div>
-            )}
+
+              {/* Learn More Button - Opens modal */}
+              <button
+                className={styles.learnMoreButton}
+                onClick={() => openHelpModal('transit')}
+                type="button"
+              >
+                <span className={styles.learnMoreIcon}>ℹ️</span>
+                Learn More About Stuck in Transit Detection
+              </button>
+
+              {benchmarks && (
+                <div className={styles.benchmarkContainer}>
+                  {renderBenchmark(benchmarks.avgDeliveryDays, 'Your avg delivery time')}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Smart Tip */}
