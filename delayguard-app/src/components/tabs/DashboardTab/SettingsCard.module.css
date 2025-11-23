@@ -382,9 +382,49 @@
   border: 1px dashed #cbd5e1;
 }
 
-/* Phase Accordion: Accordion styling for rule explanations */
+/* Phase Accordion: Accordion styling for rule explanations (deprecated in v1.25) */
 .ruleAccordion {
   margin-top: 1rem;
+}
+
+/* v1.25: Learn More Button - Opens help modal */
+.learnMoreButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2px solid #3b82f6;
+  border-radius: 0.5rem;
+  color: #1e40af;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  justify-content: center;
+}
+
+.learnMoreButton:hover {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.learnMoreButton:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.learnMoreButton:active {
+  transform: translateY(0);
+}
+
+.learnMoreIcon {
+  font-size: 1rem;
+  display: inline-block;
 }
 
 /* Phase 2.7: Merchant Contact Information Form */

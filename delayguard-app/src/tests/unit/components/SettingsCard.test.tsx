@@ -151,7 +151,11 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      // Warehouse accordion is expanded by default, so content visible
+      // v1.25: Help text now in modal (not accordion)
+      // Click "Learn More" button to open modal
+      const learnMoreButton = screen.getByRole('button', { name: /Learn More About Warehouse Delays/i });
+      fireEvent.click(learnMoreButton);
+
       // Check for the new thorough explanations (Phase 1.4 enhancement)
       const whatDetects = screen.getAllByText(/📌 What this detects:/i);
       expect(whatDetects.length).toBeGreaterThanOrEqual(1);
@@ -168,9 +172,14 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      // Carrier accordion is collapsed by default - expand first
-      const carrierHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
-      fireEvent.click(carrierHeader);
+      // v1.25: Carrier accordion is collapsed by default - expand it first
+      const accordionHeader = screen.getByRole('button', { name: 'Carrier Reported Delays accordion' });
+      fireEvent.click(accordionHeader);
+
+      // v1.25: Help text now in modal (not accordion)
+      // Click "Learn More" button to open modal
+      const learnMoreButton = screen.getByRole('button', { name: /Learn More About Carrier Reported Delays/i });
+      fireEvent.click(learnMoreButton);
 
       // Check for the new thorough explanations (Phase 1.4 enhancement)
       const howWorks = screen.getAllByText(/🔍 How it works:/i);
@@ -188,9 +197,14 @@ describe('SettingsCard (Phase 1.4)', () => {
         />,
       );
 
-      // Transit accordion is collapsed by default - expand first
-      const transitHeader = screen.getByRole('button', { name: 'Stuck in Transit accordion' });
-      fireEvent.click(transitHeader);
+      // v1.25: Transit accordion is collapsed by default - expand it first
+      const accordionHeader = screen.getByRole('button', { name: 'Stuck in Transit accordion' });
+      fireEvent.click(accordionHeader);
+
+      // v1.25: Help text now in modal (not accordion)
+      // Click "Learn More" button to open modal
+      const learnMoreButton = screen.getByRole('button', { name: /Learn More About Stuck in Transit Detection/i });
+      fireEvent.click(learnMoreButton);
 
       // Check for the new thorough explanations (Phase 1.4 enhancement)
       // There are multiple "Real-world example" sections, so use getAllByText

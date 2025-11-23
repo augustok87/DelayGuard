@@ -15,6 +15,7 @@ export { LoadingSpinner } from './LoadingSpinner';
 export { CommunicationStatusBadge } from './CommunicationStatusBadge'; // Phase 1.3
 export { InfoTooltip } from './InfoTooltip'; // Phase A: UX Clarity
 export { SegmentedControl } from './SegmentedControl'; // Phase B: Alert Filtering
+export { HelpModal } from './HelpModal'; // v1.25: Educational modals
 
 // Complex Components
 export { Modal } from './Modal';
