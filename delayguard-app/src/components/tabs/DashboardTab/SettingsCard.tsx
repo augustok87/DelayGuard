@@ -143,8 +143,10 @@ export function SettingsCard({
         {/* Phase 1.4: Delay Detection Rules with Plain Language */}
         {/* v1.26: Always-visible rules (no accordions) */}
         <div className={styles.section}>
-          {/* Warehouse Delays */}
-          <div className={styles.ruleSection}>
+          {/* v1.27: Grid wrapper for 3-column desktop layout */}
+          <div className={styles.rulesGrid}>
+            {/* Warehouse Delays */}
+            <div className={styles.ruleSection}>
             {/* Toggle Checkbox */}
             <div className={styles.toggleSection}>
               <label className={styles.toggleLabel}>
@@ -333,6 +335,7 @@ export function SettingsCard({
                 </div>
               )}
             </div>
+          </div>
           </div>
 
           {/* Smart Tip */}

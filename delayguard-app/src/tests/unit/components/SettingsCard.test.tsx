@@ -735,4 +735,109 @@ describe('SettingsCard (Phase 1.4)', () => {
       expect(screen.getByText('Warehouse Delays')).toBeInTheDocument();
     });
   });
+
+  describe('Responsive Grid Layout (v1.27)', () => {
+    it('should render rules grid wrapper container', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.27: Rules should be wrapped in a grid container
+      const rulesGrid = container.querySelector('[class*="rulesGrid"]');
+      expect(rulesGrid).toBeInTheDocument();
+    });
+
+    it('should render all 3 delay rules inside the grid container', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      const rulesGrid = container.querySelector('[class*="rulesGrid"]');
+      const ruleSections = rulesGrid?.querySelectorAll('[class*="ruleSection"]');
+
+      // v1.27: All 3 rule sections should be inside the grid
+      expect(ruleSections?.length).toBe(3);
+    });
+
+    it('should maintain proper class names for grid styling', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.27: Grid container should have rulesGrid class for CSS targeting
+      const rulesGrid = container.querySelector('[class*="rulesGrid"]');
+      expect(rulesGrid?.className).toContain('rulesGrid');
+    });
+
+    it('should render Smart Tip outside the grid container', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.27: Smart Tip should remain full-width (not in grid)
+      const rulesGrid = container.querySelector('[class*="rulesGrid"]');
+      const smartTip = container.querySelector('[class*="smartTip"]');
+
+      expect(smartTip).toBeInTheDocument();
+      // Smart Tip should be a sibling of rulesGrid, not a child
+      expect(rulesGrid?.contains(smartTip as Node)).toBe(false);
+    });
+
+    it('should preserve existing rule section structure', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.27: Each rule section should still have toggle + card structure
+      const ruleSections = container.querySelectorAll('[class*="ruleSection"]');
+      ruleSections.forEach((section) => {
+        const toggleSection = section.querySelector('[class*="toggleSection"]');
+        const ruleCard = section.querySelector('[class*="ruleCard"]');
+
+        expect(toggleSection).toBeInTheDocument();
+        expect(ruleCard).toBeInTheDocument();
+      });
+    });
+
+    it('should maintain accessibility with grid layout', () => {
+      render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.27: All rule toggles should still be accessible
+      expect(screen.getByLabelText(/Enable warehouse delay notifications/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Enable carrier delay notifications/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Enable transit delay notifications/i)).toBeInTheDocument();
+    });
+  });
 });

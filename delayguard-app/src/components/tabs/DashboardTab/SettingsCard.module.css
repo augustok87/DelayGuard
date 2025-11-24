@@ -550,6 +550,27 @@
   pointer-events: none;
 }
 
+/* v1.27: Rules grid wrapper for responsive 3-column desktop layout */
+.rulesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Desktop: 3-column grid layout */
+@media (min-width: 1200px) {
+  .rulesGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  /* Remove bottom margin on rule sections in grid */
+  .rulesGrid .ruleSection {
+    margin-bottom: 0;
+  }
+}
+
 /* v1.26: Rule section wrapper (always-visible rules, no accordions) */
 .ruleSection {
   display: flex;
