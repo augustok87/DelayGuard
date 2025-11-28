@@ -109,7 +109,7 @@ describe('SettingsCard (Phase 1.4)', () => {
     });
 
     it('should display all three rules with icons', () => {
-      render(
+      const { container } = render(
         <SettingsCard
           shop="test-shop.myshopify.com"
           settings={mockSettings}
@@ -119,9 +119,9 @@ describe('SettingsCard (Phase 1.4)', () => {
       );
 
       // v1.26: All icons always visible (no accordion expansion needed)
-      expect(screen.getByText('📦')).toBeInTheDocument(); // Warehouse
-      expect(screen.getByText('🚨')).toBeInTheDocument(); // Carrier
-      expect(screen.getByText('⏰')).toBeInTheDocument(); // Stuck in Transit
+      // v1.31: Updated to check for SVG icons instead of emoji
+      const ruleIcons = container.querySelectorAll('[class*="ruleIcon"] svg');
+      expect(ruleIcons.length).toBe(3); // Warehouse, Carrier, Stuck in Transit
     });
   });
 
@@ -940,6 +940,207 @@ describe('SettingsCard (Phase 1.4)', () => {
       const transitCard = container.querySelector('[class*="ruleCardTransit"]');
       expect(transitCard).toBeInTheDocument();
       expect(transitCard?.className).toContain('ruleCardTransit');
+    });
+  });
+
+  describe('v1.31: Lucide Icon Integration', () => {
+    describe('Rule Icon Rendering', () => {
+      it('should render SVG icons for all 3 delay rules', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        // All 3 rule headers should have SVG icons (Lucide)
+        const ruleIcons = container.querySelectorAll('[class*="ruleIcon"] svg');
+        expect(ruleIcons.length).toBe(3);
+      });
+
+      it('should render Warehouse Delays icon (Lucide Package component)', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const warehouseCard = container.querySelector('[class*="ruleCardWarehouse"]');
+        const iconSpan = warehouseCard?.querySelector('[class*="ruleIcon"]');
+        const svgIcon = iconSpan?.querySelector('svg');
+
+        // Verify SVG exists
+        expect(svgIcon).toBeInTheDocument();
+        expect(svgIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+
+      it('should render Carrier Reported Delays icon (Lucide AlertTriangle component)', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const carrierCard = container.querySelector('[class*="ruleCardCarrier"]');
+        const iconSpan = carrierCard?.querySelector('[class*="ruleIcon"]');
+        const svgIcon = iconSpan?.querySelector('svg');
+
+        // Verify SVG exists
+        expect(svgIcon).toBeInTheDocument();
+        expect(svgIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+
+      it('should render Stuck in Transit icon (Lucide Clock component)', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const transitCard = container.querySelector('[class*="ruleCardTransit"]');
+        const iconSpan = transitCard?.querySelector('[class*="ruleIcon"]');
+        const svgIcon = iconSpan?.querySelector('svg');
+
+        // Verify SVG exists
+        expect(svgIcon).toBeInTheDocument();
+        expect(svgIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+    });
+
+    describe('Icon Accessibility', () => {
+      it('should have aria-hidden="true" on rule SVG icons', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const ruleIcons = container.querySelectorAll('[class*="ruleIcon"] svg');
+        ruleIcons.forEach(svg => {
+          expect(svg).toHaveAttribute('aria-hidden', 'true');
+        });
+      });
+
+      it('should maintain accessible rule titles with Lucide icons', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        // Rule titles should still be accessible
+        const warehouseTitle = container.querySelector('[class*="ruleCardWarehouse"] [class*="ruleTitle"]');
+        const carrierTitle = container.querySelector('[class*="ruleCardCarrier"] [class*="ruleTitle"]');
+        const transitTitle = container.querySelector('[class*="ruleCardTransit"] [class*="ruleTitle"]');
+
+        expect(warehouseTitle?.textContent).toBe('Warehouse Delays');
+        expect(carrierTitle?.textContent).toBe('Carrier Reported Delays');
+        expect(transitTitle?.textContent).toBe('Stuck in Transit');
+      });
+    });
+
+    describe('Icon Styling', () => {
+      it('should apply consistent icon size to all rule icons', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const ruleIcons = container.querySelectorAll('[class*="ruleIcon"] svg');
+        ruleIcons.forEach(svg => {
+          // Lucide icons should have width/height attributes
+          expect(svg).toHaveAttribute('width');
+          expect(svg).toHaveAttribute('height');
+          // Consistent size for rule icons (24px)
+          expect(svg.getAttribute('width')).toBe('24');
+          expect(svg.getAttribute('height')).toBe('24');
+        });
+      });
+
+      it('should apply currentColor to SVG icons for theming', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const ruleIcons = container.querySelectorAll('[class*="ruleIcon"] svg');
+        ruleIcons.forEach(svg => {
+          // Lucide icons use currentColor for stroke
+          expect(svg).toHaveAttribute('stroke', 'currentColor');
+        });
+      });
+    });
+
+    describe('No Emoji Fallback', () => {
+      it('should not contain emoji in Warehouse Delays rule header', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const warehouseHeader = container.querySelector('[class*="ruleCardWarehouse"] [class*="ruleHeader"]');
+        // Should NOT contain package emoji 📦
+        expect(warehouseHeader?.textContent).not.toContain('📦');
+      });
+
+      it('should not contain emoji in Carrier Reported Delays rule header', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const carrierHeader = container.querySelector('[class*="ruleCardCarrier"] [class*="ruleHeader"]');
+        // Should NOT contain siren emoji 🚨
+        expect(carrierHeader?.textContent).not.toContain('🚨');
+      });
+
+      it('should not contain emoji in Stuck in Transit rule header', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const transitHeader = container.querySelector('[class*="ruleCardTransit"] [class*="ruleHeader"]');
+        // Should NOT contain clock emoji ⏰
+        expect(transitHeader?.textContent).not.toContain('⏰');
+      });
     });
   });
 });

@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Package, AlertTriangle, Clock } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { HelpModal } from '../../ui/HelpModal';
@@ -169,7 +170,9 @@ export function SettingsCard({
             {/* v1.28: Added ruleCardWarehouse variant for colored left border */}
             <div className={`${styles.ruleCard} ${styles.ruleCardWarehouse} ${settings.warehouseDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
               <div className={styles.ruleHeader}>
-                <span className={styles.ruleIcon}>📦</span>
+                <span className={styles.ruleIcon}>
+                  <Package size={24} aria-hidden={true} strokeWidth={2} />
+                </span>
                 <h4 className={styles.ruleTitle}>Warehouse Delays</h4>
               </div>
               <div className={styles.ruleSetting}>
@@ -233,7 +236,9 @@ export function SettingsCard({
             {/* v1.28: Added ruleCardCarrier variant for colored left border */}
             <div className={`${styles.ruleCard} ${styles.ruleCardCarrier} ${settings.carrierDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
               <div className={styles.ruleHeader}>
-                <span className={styles.ruleIcon}>🚨</span>
+                <span className={styles.ruleIcon}>
+                  <AlertTriangle size={24} aria-hidden={true} strokeWidth={2} />
+                </span>
                 <h4 className={styles.ruleTitle}>Carrier Reported Delays</h4>
               </div>
               <div className={styles.ruleSetting}>
@@ -301,7 +306,9 @@ export function SettingsCard({
             {/* v1.28: Added ruleCardTransit variant for colored left border */}
             <div className={`${styles.ruleCard} ${styles.ruleCardTransit} ${settings.transitDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
               <div className={styles.ruleHeader}>
-                <span className={styles.ruleIcon}>⏰</span>
+                <span className={styles.ruleIcon}>
+                  <Clock size={24} aria-hidden={true} strokeWidth={2} />
+                </span>
                 <h4 className={styles.ruleTitle}>Stuck in Transit</h4>
               </div>
               <div className={styles.ruleSetting}>

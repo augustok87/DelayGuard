@@ -39,24 +39,36 @@ describe('TabNavigation Component', () => {
       render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
 
       const settingsTab = screen.getByRole('tab', { name: /settings/i });
-      expect(settingsTab).toHaveTextContent('⚙️');
       expect(settingsTab).toHaveTextContent('Settings');
+
+      // Should have SVG icon, not emoji
+      const iconSpan = settingsTab.querySelector('.tabIcon');
+      const svg = iconSpan?.querySelector('svg');
+      expect(svg).toBeInTheDocument();
     });
 
     it('should render Delay Alerts tab with icon and label', () => {
       render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
 
       const alertsTab = screen.getByRole('tab', { name: /delay alerts/i });
-      expect(alertsTab).toHaveTextContent('🚨');
       expect(alertsTab).toHaveTextContent('Delay Alerts');
+
+      // Should have SVG icon, not emoji
+      const iconSpan = alertsTab.querySelector('.tabIcon');
+      const svg = iconSpan?.querySelector('svg');
+      expect(svg).toBeInTheDocument();
     });
 
     it('should render Orders tab with icon and label', () => {
       render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
 
       const ordersTab = screen.getByRole('tab', { name: /orders/i });
-      expect(ordersTab).toHaveTextContent('📦');
       expect(ordersTab).toHaveTextContent('Orders');
+
+      // Should have SVG icon, not emoji
+      const iconSpan = ordersTab.querySelector('.tabIcon');
+      const svg = iconSpan?.querySelector('svg');
+      expect(svg).toBeInTheDocument();
     });
 
     it('should always show both icon and label for all tabs (mobile requirement)', () => {
@@ -64,12 +76,14 @@ describe('TabNavigation Component', () => {
 
       const tabs = screen.getAllByRole('tab');
       tabs.forEach(tab => {
-        // Each tab should have both emoji icon and text content
-        const textContent = tab.textContent || '';
-        // Check for emoji (icon) - Settings (⚙️), Delay Alerts (🚨), Orders (📦)
-        expect(textContent).toMatch(/[\u{2699}\u{1F6A8}\u{1F4E6}]/u);
-        // Check for text label
-        expect(textContent.length).toBeGreaterThan(1); // More than just the icon
+        // Each tab should have both SVG icon and text label
+        const iconSpan = tab.querySelector('.tabIcon');
+        const labelSpan = tab.querySelector('.tabLabel');
+        const svg = iconSpan?.querySelector('svg');
+
+        expect(svg).toBeInTheDocument();
+        expect(labelSpan).toBeInTheDocument();
+        expect(labelSpan?.textContent).toBeTruthy();
       });
     });
   });
@@ -335,6 +349,159 @@ describe('TabNavigation Component', () => {
 
       const ordersTab = screen.getByRole('tab', { name: /orders/i });
       expect(ordersTab).toHaveAttribute('aria-selected', 'true');
+    });
+  });
+
+  describe('v1.31: Lucide Icon Integration', () => {
+    describe('SVG Icon Rendering', () => {
+      it('should render SVG icons instead of emoji for all tabs', () => {
+        const { container } = render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        // All tabs should have SVG elements (Lucide icons)
+        const svgIcons = container.querySelectorAll('.tabIcon svg');
+        expect(svgIcons.length).toBe(3);
+      });
+
+      it('should render Settings icon (Lucide Settings component)', () => {
+        render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const settingsTab = screen.getByRole('tab', { name: /settings/i });
+        const iconSpan = settingsTab.querySelector('.tabIcon');
+        const svgIcon = iconSpan?.querySelector('svg');
+
+        // Verify SVG exists
+        expect(svgIcon).toBeInTheDocument();
+        // Lucide icons have specific attributes
+        expect(svgIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+
+      it('should render Delay Alerts icon (Lucide AlertTriangle component)', () => {
+        render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const alertsTab = screen.getByRole('tab', { name: /delay alerts/i });
+        const iconSpan = alertsTab.querySelector('.tabIcon');
+        const svgIcon = iconSpan?.querySelector('svg');
+
+        // Verify SVG exists
+        expect(svgIcon).toBeInTheDocument();
+        expect(svgIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+
+      it('should render Orders icon (Lucide Package component)', () => {
+        render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const ordersTab = screen.getByRole('tab', { name: /orders/i });
+        const iconSpan = ordersTab.querySelector('.tabIcon');
+        const svgIcon = iconSpan?.querySelector('svg');
+
+        // Verify SVG exists
+        expect(svgIcon).toBeInTheDocument();
+        expect(svgIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+    });
+
+    describe('Icon Accessibility', () => {
+      it('should have aria-hidden="true" on SVG icons (label is provided by text)', () => {
+        const { container } = render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const svgIcons = container.querySelectorAll('.tabIcon svg');
+        svgIcons.forEach(svg => {
+          expect(svg).toHaveAttribute('aria-hidden', 'true');
+        });
+      });
+
+      it('should maintain accessible labels for all tabs with Lucide icons', () => {
+        render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        // Labels should still be accessible via screen reader
+        expect(screen.getByRole('tab', { name: /settings/i })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /delay alerts/i })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /orders/i })).toBeInTheDocument();
+      });
+    });
+
+    describe('Icon Styling', () => {
+      it('should apply consistent icon size to all Lucide icons', () => {
+        const { container } = render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const svgIcons = container.querySelectorAll('.tabIcon svg');
+        svgIcons.forEach(svg => {
+          // Lucide icons should have width/height attributes
+          expect(svg).toHaveAttribute('width');
+          expect(svg).toHaveAttribute('height');
+          // Default Lucide size is 24x24
+          expect(svg.getAttribute('width')).toBe('20');
+          expect(svg.getAttribute('height')).toBe('20');
+        });
+      });
+
+      it('should apply currentColor to SVG icons for theming', () => {
+        const { container } = render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const svgIcons = container.querySelectorAll('.tabIcon svg');
+        svgIcons.forEach(svg => {
+          // Lucide icons use currentColor for stroke
+          expect(svg).toHaveAttribute('stroke', 'currentColor');
+        });
+      });
+    });
+
+    describe('Icon Display Consistency', () => {
+      it('should show icons alongside labels on all screen sizes', () => {
+        render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const tabs = screen.getAllByRole('tab');
+        tabs.forEach(tab => {
+          // Each tab should have both icon span and label span
+          const iconSpan = tab.querySelector('.tabIcon');
+          const labelSpan = tab.querySelector('.tabLabel');
+
+          expect(iconSpan).toBeInTheDocument();
+          expect(labelSpan).toBeInTheDocument();
+
+          // Icon span should contain SVG
+          const svg = iconSpan?.querySelector('svg');
+          expect(svg).toBeInTheDocument();
+        });
+      });
+
+      it('should maintain icon-label order with Lucide icons', () => {
+        render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const settingsTab = screen.getByRole('tab', { name: /settings/i });
+        const children = Array.from(settingsTab.children);
+
+        // Icon (span with SVG) should come before label
+        expect(children[0].className).toContain('tabIcon');
+        expect(children[0].querySelector('svg')).toBeInTheDocument();
+        expect(children[1].className).toContain('tabLabel');
+      });
+    });
+
+    describe('No Emoji Fallback', () => {
+      it('should not contain emoji characters in Settings tab', () => {
+        render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const settingsTab = screen.getByRole('tab', { name: /settings/i });
+        // Should NOT contain gear emoji ⚙️
+        expect(settingsTab.textContent).not.toContain('⚙️');
+      });
+
+      it('should not contain emoji characters in Delay Alerts tab', () => {
+        render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const alertsTab = screen.getByRole('tab', { name: /delay alerts/i });
+        // Should NOT contain siren emoji 🚨
+        expect(alertsTab.textContent).not.toContain('🚨');
+      });
+
+      it('should not contain emoji characters in Orders tab', () => {
+        render(<TabNavigation selectedTab={0} onTabChange={mockOnTabChange} />);
+
+        const ordersTab = screen.getByRole('tab', { name: /orders/i });
+        // Should NOT contain package emoji 📦
+        expect(ordersTab.textContent).not.toContain('📦');
+      });
     });
   });
 });
