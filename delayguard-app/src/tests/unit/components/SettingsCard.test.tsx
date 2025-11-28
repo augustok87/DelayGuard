@@ -839,5 +839,41 @@ describe('SettingsCard (Phase 1.4)', () => {
       expect(screen.getByLabelText(/Enable carrier delay notifications/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Enable transit delay notifications/i)).toBeInTheDocument();
     });
+
+    it('should render rule sections with ruleSection class for flex layout', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.27.2: Rule sections should have ruleSection class (which applies display: flex)
+      const ruleSections = container.querySelectorAll('[class*="ruleSection"]');
+      expect(ruleSections.length).toBe(3);
+      ruleSections.forEach((section) => {
+        expect(section.className).toContain('ruleSection');
+      });
+    });
+
+    it('should render rule cards with ruleCard class for flex: 1', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.27.2: Rule cards should have ruleCard class (which applies flex: 1)
+      const ruleCards = container.querySelectorAll('[class*="ruleCard"]');
+      expect(ruleCards.length).toBe(3);
+      ruleCards.forEach((card) => {
+        expect(card.className).toContain('ruleCard');
+      });
+    });
   });
 });

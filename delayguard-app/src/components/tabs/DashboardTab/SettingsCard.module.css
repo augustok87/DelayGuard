@@ -215,6 +215,7 @@
 }
 
 /* Phase 1.4: Rule Cards */
+/* v1.27.2: Equal-height cards in grid using flexbox */
 .ruleCard {
   display: flex;
   flex-direction: column;
@@ -224,6 +225,7 @@
   border: 1.5px solid #e5e7eb;
   border-radius: 0.75rem;
   transition: all 0.2s ease-in-out;
+  flex: 1; /* Grow to fill available space for equal heights */
 }
 
 .ruleCard:hover {
