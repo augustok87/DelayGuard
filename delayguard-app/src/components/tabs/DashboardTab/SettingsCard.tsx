@@ -166,7 +166,8 @@ export function SettingsCard({
             </div>
 
             {/* Rule Card (always visible) */}
-            <div className={`${styles.ruleCard} ${settings.warehouseDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
+            {/* v1.28: Added ruleCardWarehouse variant for colored left border */}
+            <div className={`${styles.ruleCard} ${styles.ruleCardWarehouse} ${settings.warehouseDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
               <div className={styles.ruleHeader}>
                 <span className={styles.ruleIcon}>📦</span>
                 <h4 className={styles.ruleTitle}>Warehouse Delays</h4>
@@ -229,7 +230,8 @@ export function SettingsCard({
             </div>
 
             {/* Rule Card (always visible) */}
-            <div className={`${styles.ruleCard} ${settings.carrierDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
+            {/* v1.28: Added ruleCardCarrier variant for colored left border */}
+            <div className={`${styles.ruleCard} ${styles.ruleCardCarrier} ${settings.carrierDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
               <div className={styles.ruleHeader}>
                 <span className={styles.ruleIcon}>🚨</span>
                 <h4 className={styles.ruleTitle}>Carrier Reported Delays</h4>
@@ -296,7 +298,8 @@ export function SettingsCard({
             </div>
 
             {/* Rule Card (always visible) */}
-            <div className={`${styles.ruleCard} ${settings.transitDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
+            {/* v1.28: Added ruleCardTransit variant for colored left border */}
+            <div className={`${styles.ruleCard} ${styles.ruleCardTransit} ${settings.transitDelaysEnabled === false ? styles.ruleCardDisabled : ''}`}>
               <div className={styles.ruleHeader}>
                 <span className={styles.ruleIcon}>⏰</span>
                 <h4 className={styles.ruleTitle}>Stuck in Transit</h4>

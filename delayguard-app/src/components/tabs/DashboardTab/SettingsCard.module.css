@@ -98,7 +98,7 @@
 
 .inputSuffix {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #52525b; /* v1.28: Darker gray for better contrast */
   font-weight: 500;
 }
 
@@ -126,7 +126,7 @@
 
 .helpText {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #52525b; /* v1.28: Darker gray (Zinc 600) for better contrast/accessibility */
   margin: 0;
   display: block;
 }
@@ -216,13 +216,15 @@
 
 /* Phase 1.4: Rule Cards */
 /* v1.27.2: Equal-height cards in grid using flexbox */
+/* v1.28: Refined professional color scheme - solid backgrounds, colored left borders */
 .ruleCard {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   padding: 1.25rem;
-  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
-  border: 1.5px solid #e5e7eb;
+  background: #ffffff; /* v1.28: Solid white instead of gradient */
+  border: 1px solid #e5e7eb;
+  border-left-width: 3px; /* v1.28: Thicker left border for accent color */
   border-radius: 0.75rem;
   transition: all 0.2s ease-in-out;
   flex: 1; /* Grow to fill available space for equal heights */
@@ -230,7 +232,23 @@
 
 .ruleCard:hover {
   border-color: #2563eb;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+  border-left-color: inherit; /* v1.28: Preserve accent color on hover */
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08); /* v1.28: Subtle shadow */
+}
+
+/* v1.28: Warehouse Delays - Slate accent for professional neutrality */
+.ruleCardWarehouse {
+  border-left-color: #64748b; /* Slate 500 */
+}
+
+/* v1.28: Carrier Reported Delays - Red accent for urgency */
+.ruleCardCarrier {
+  border-left-color: #dc2626; /* Red 600 */
+}
+
+/* v1.28: Stuck in Transit - Blue accent for time-awareness */
+.ruleCardTransit {
+  border-left-color: #3b82f6; /* Blue 500 */
 }
 
 .ruleHeader {
@@ -391,13 +409,14 @@
 
 /* v1.25: Learn More Button - Opens help modal */
 /* v1.27.3: margin-top: auto pushes button to bottom of flex container for vertical alignment */
+/* v1.28: Solid background instead of gradient for cleaner, more modern appearance */
 .learnMoreButton {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-top: auto;
   padding: 0.75rem 1.25rem;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  background: #eff6ff; /* v1.28: Solid blue 50 background */
   border: 2px solid #3b82f6;
   border-radius: 0.5rem;
   color: #1e40af;
@@ -410,10 +429,10 @@
 }
 
 .learnMoreButton:hover {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: #dbeafe; /* v1.28: Solid blue 100 on hover */
   border-color: #2563eb;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); /* v1.28: Slightly softer shadow */
 }
 
 .learnMoreButton:focus {

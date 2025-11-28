@@ -893,5 +893,53 @@ describe('SettingsCard (Phase 1.4)', () => {
         expect(button.className).toContain('learnMoreButton');
       });
     });
+
+    it('should render warehouse delay card with warehouse variant class', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.28: Warehouse card should have ruleCardWarehouse class for slate left border
+      const warehouseCard = container.querySelector('[class*="ruleCardWarehouse"]');
+      expect(warehouseCard).toBeInTheDocument();
+      expect(warehouseCard?.className).toContain('ruleCardWarehouse');
+    });
+
+    it('should render carrier delay card with carrier variant class', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.28: Carrier card should have ruleCardCarrier class for red left border
+      const carrierCard = container.querySelector('[class*="ruleCardCarrier"]');
+      expect(carrierCard).toBeInTheDocument();
+      expect(carrierCard?.className).toContain('ruleCardCarrier');
+    });
+
+    it('should render transit delay card with transit variant class', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.28: Transit card should have ruleCardTransit class for blue left border
+      const transitCard = container.querySelector('[class*="ruleCardTransit"]');
+      expect(transitCard).toBeInTheDocument();
+      expect(transitCard?.className).toContain('ruleCardTransit');
+    });
   });
 });
