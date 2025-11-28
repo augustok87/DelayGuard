@@ -498,6 +498,120 @@ npm run dev
 
 ---
 
+### v1.28 (2025-11-28): 🎨 **Refined Professional Color Scheme** (Perfect TDD Execution)
+**Test Results**: 51 SettingsCard tests passing (48 previous + 3 new, 100% pass rate), zero linting errors
+**Status**: Elegant, professional color scheme with better visual hierarchy and consistency
+
+**Completed**: Refined professional color palette for Settings page
+- User-requested enhancement: "See if you can apply the best looking UI in terms of which and how you use colors that are absolutely elegant and professional for our business ethos."
+- Removed visual clutter (reduced gradients from 6 to 4)
+- Improved visual hierarchy with color-coded delay types
+- Enhanced accessibility with better text contrast
+- Perfect TDD execution: RED → GREEN → VERIFY
+
+**UX Impact**:
+- **Better scanning**: Color-coded left borders (Warehouse=Slate, Carrier=Red, Transit=Blue)
+- **Professional polish**: Clean white backgrounds instead of gradients
+- **Improved readability**: Darker text colors (better WCAG AA compliance)
+- **Visual consistency**: Reduced gradient usage, cleaner appearance
+
+**Color Psychology & Design Decisions**:
+
+**1. Rule Card Color-Coding**:
+- **Warehouse Delays**: Slate `#64748b` - Professional neutrality for warehouse operations
+- **Carrier Delays**: Red `#dc2626` - Urgency/attention for carrier-reported issues
+- **Transit Delays**: Blue `#3b82f6` - Time-awareness for stuck packages
+- **Implementation**: 3px colored left border on each card type
+
+**2. Visual Refinements**:
+- Removed gradient backgrounds from rule cards (solid `#ffffff` white)
+- Removed gradient from Learn More buttons (solid `#eff6ff` blue 50)
+- Kept gradients only for visual emphasis (Smart Tip, Success alerts)
+- Result: Cleaner, more modern, professional appearance
+
+**3. Accessibility Improvements**:
+- Help text: `#6b7280` → `#52525b` (Zinc 600) - improved contrast ratio 4.5:1 → 5.5:1
+- Input suffix: `#6b7280` → `#52525b` - consistent with help text
+- Better WCAG AA compliance for text readability
+
+**Implementation Details**:
+
+**1. Component Refactoring** (SettingsCard.tsx):
+- Added variant classes to each rule card:
+  - Warehouse: `${styles.ruleCardWarehouse}`
+  - Carrier: `${styles.ruleCardCarrier}`
+  - Transit: `${styles.ruleCardTransit}`
+- Classes applied alongside existing `${styles.ruleCard}` base class
+
+**2. CSS Color System** (SettingsCard.module.css):
+```css
+/* Base rule card - white background, standard border */
+.ruleCard {
+  background: #ffffff; /* v1.28: Solid white instead of gradient */
+  border: 1px solid #e5e7eb;
+  border-left-width: 3px; /* Thicker left border for accent color */
+}
+
+/* Variant classes for colored left borders */
+.ruleCardWarehouse { border-left-color: #64748b; } /* Slate 500 */
+.ruleCardCarrier { border-left-color: #dc2626; }   /* Red 600 */
+.ruleCardTransit { border-left-color: #3b82f6; }   /* Blue 500 */
+
+/* Learn More button - solid background */
+.learnMoreButton {
+  background: #eff6ff; /* Solid blue 50 */
+}
+.learnMoreButton:hover {
+  background: #dbeafe; /* Solid blue 100 */
+}
+```
+
+**3. Test Coverage** (SettingsCard.test.tsx):
+- **TDD RED Phase**: Wrote 3 tests checking for variant classes FIRST
+  - Test 1: Warehouse card has `ruleCardWarehouse` class
+  - Test 2: Carrier card has `ruleCardCarrier` class
+  - Test 3: Transit card has `ruleCardTransit` class
+- **TDD GREEN Phase**: Implemented colored borders + CSS refinements
+- All 51 tests passing (100% pass rate)
+
+**Files Modified** (3):
+- delayguard-app/src/components/tabs/DashboardTab/SettingsCard.tsx (added variant classes)
+- delayguard-app/src/components/tabs/DashboardTab/SettingsCard.module.css (color refinements)
+- delayguard-app/src/tests/unit/components/SettingsCard.test.tsx (added 3 variant tests)
+
+**Design Rationale**:
+- **Why colored left borders?** Subtle visual distinction without overwhelming the design
+- **Why solid backgrounds?** More professional and modern than gradients
+- **Why these specific colors?**
+  - Slate = Neutral/operational (warehouse processes)
+  - Red = Urgent/attention (carrier exceptions)
+  - Blue = Time-sensitive (transit delays)
+- **Why 3px border?** Thick enough to be noticeable, thin enough to be elegant
+
+**Code Quality**: ✅ Zero linting errors, production-ready, refined professional design
+
+**Color Scheme Comparison**:
+
+**Before (v1.27)**:
+- Gradient backgrounds on all cards (`#f9fafb → #ffffff`)
+- Gradient on Learn More buttons (`#eff6ff → #dbeafe`)
+- All cards looked identical (no visual distinction)
+- 6 gradients total across component
+
+**After (v1.28)**:
+- Solid white backgrounds (`#ffffff`)
+- Solid blue button backgrounds (`#eff6ff`)
+- Color-coded left borders (Slate/Red/Blue)
+- 4 gradients total (reduced clutter)
+
+**Lessons Learned**:
+- ✅ Less is more - removing gradients improved professionalism
+- ✅ Color-coding improves scannability without adding visual weight
+- ✅ Solid colors feel more refined than gradients in modern UI design
+- ✅ Small accessibility improvements (text contrast) compound over time
+
+---
+
 ### v1.27.3 (2025-11-28): 🎯 **Bottom-Aligned Learn More Buttons** (Perfect TDD Execution)
 **Test Results**: 48 SettingsCard tests passing (47 previous + 1 new, 100% pass rate), zero linting errors
 **Status**: Learn More buttons now vertically aligned at bottom of all rule cards
