@@ -36,7 +36,7 @@ export function RefactoredAppOptimized() {
   } = useSettings();
 
   // Action hooks
-  const { resolveAlert, dismissAlert } = useAlertActions();
+  const { resolveAlert, dismissAlert, reopenAlert } = useAlertActions();
   const { trackOrder, viewOrderDetails } = useOrderActions();
   const { saveSettings, testDelayDetection, connectToShopify } =
     useSettingsActions();
@@ -97,11 +97,13 @@ export function RefactoredAppOptimized() {
     async(alertId: string, action: string) => {
       if (action === "resolve") {
         await resolveAlert(alertId);
-      } else {
+      } else if (action === "dismiss") {
         await dismissAlert(alertId);
+      } else if (action === "reopen") {
+        await reopenAlert(alertId);
       }
     },
-    [resolveAlert, dismissAlert],
+    [resolveAlert, dismissAlert, reopenAlert],
   );
 
   const handleOrderAction = useCallback(

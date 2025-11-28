@@ -12,7 +12,7 @@ export const useAlertActions = () => {
   } = useToasts();
 
   const resolveAlert = useCallback(
-    async (alertId: string) => {
+    async(alertId: string) => {
       try {
         const result = await updateExistingAlert(alertId, {
           status: "resolved",
@@ -35,7 +35,7 @@ export const useAlertActions = () => {
   );
 
   const dismissAlert = useCallback(
-    async (alertId: string) => {
+    async(alertId: string) => {
       try {
         const result = await updateExistingAlert(alertId, {
           status: "dismissed",
@@ -56,8 +56,31 @@ export const useAlertActions = () => {
     [updateExistingAlert, showSuccessToast, showErrorToast],
   );
 
+  const reopenAlert = useCallback(
+    async(alertId: string) => {
+      try {
+        const result = await updateExistingAlert(alertId, {
+          status: "active",
+          resolvedAt: undefined, // Clear resolved timestamp
+        });
+
+        if (result.success) {
+          showSuccessToast("Alert reopened successfully!");
+        } else {
+          showErrorToast(result.error || "Failed to reopen alert");
+        }
+
+        return result;
+      } catch (error) {
+        showErrorToast("An unexpected error occurred");
+        return { success: false, error: "An unexpected error occurred" };
+      }
+    },
+    [updateExistingAlert, showSuccessToast, showErrorToast],
+  );
+
   const deleteAlertPermanently = useCallback(
-    async (alertId: string) => {
+    async(alertId: string) => {
       try {
         const result = await deleteExistingAlert(alertId);
 
@@ -77,9 +100,9 @@ export const useAlertActions = () => {
   );
 
   const bulkResolveAlerts = useCallback(
-    async (alertIds: string[]) => {
+    async(alertIds: string[]) => {
       const results = await Promise.allSettled(
-        alertIds.map(async (id) => {
+        alertIds.map(async(id) => {
           try {
             const result = await updateExistingAlert(id, {
               status: "resolved",
@@ -121,9 +144,9 @@ export const useAlertActions = () => {
   );
 
   const bulkDismissAlerts = useCallback(
-    async (alertIds: string[]) => {
+    async(alertIds: string[]) => {
       const results = await Promise.allSettled(
-        alertIds.map(async (id) => {
+        alertIds.map(async(id) => {
           try {
             const result = await updateExistingAlert(id, {
               status: "dismissed",
@@ -162,9 +185,9 @@ export const useAlertActions = () => {
   );
 
   const bulkDeleteAlerts = useCallback(
-    async (alertIds: string[]) => {
+    async(alertIds: string[]) => {
       const results = await Promise.allSettled(
-        alertIds.map(async (id) => {
+        alertIds.map(async(id) => {
           try {
             const result = await deleteExistingAlert(id);
             return result;
@@ -203,6 +226,7 @@ export const useAlertActions = () => {
   return {
     resolveAlert,
     dismissAlert,
+    reopenAlert,
     deleteAlert: deleteAlertPermanently,
     bulkResolveAlerts,
     bulkDismissAlerts,

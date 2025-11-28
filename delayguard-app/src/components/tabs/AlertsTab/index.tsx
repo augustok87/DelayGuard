@@ -8,7 +8,7 @@ import styles from './AlertsTab.module.css';
 interface AlertsTabProps {
   alerts: DelayAlert[];
   loading: boolean;
-  onAlertAction: (alertId: string, action: 'resolve' | 'dismiss') => void;
+  onAlertAction: (alertId: string, action: 'resolve' | 'dismiss' | 'reopen') => void;
 }
 
 type AlertStatus = 'active' | 'resolved' | 'dismissed';
