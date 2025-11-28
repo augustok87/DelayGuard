@@ -20,7 +20,7 @@ import styles from './AlertCard.module.css';
 
 interface AlertCardProps {
   alert: DelayAlert;
-  onAction: (alertId: string, action: 'resolve' | 'dismiss') => void;
+  onAction: (alertId: string, action: 'resolve' | 'dismiss' | 'reopen') => void;
   variant: 'active' | 'resolved' | 'dismissed';
 }
 
@@ -489,6 +489,7 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
         {renderTrackingTimeline()}
       </div>
 
+      {/* v1.30: Alert State Transition Actions - Option 1 (Full Flexibility) */}
       {variant === 'active' && (
         <div className={styles.actions}>
           <div className={styles.actionWithTooltip}>
@@ -501,13 +502,66 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
             </Button>
             <InfoTooltip text="Mark this alert as handled. Use this when you've taken action (contacted customer, issued refund, etc.) and the issue is no longer active." />
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onAction(alert.id, 'dismiss')}
-          >
-            Dismiss
-          </Button>
+          <div className={styles.actionWithTooltip}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onAction(alert.id, 'dismiss')}
+            >
+              Dismiss
+            </Button>
+            <InfoTooltip text="Dismiss this alert if it's a false positive or doesn't require action. Dismissed alerts can be reopened later if needed." />
+          </div>
+        </div>
+      )}
+
+      {variant === 'resolved' && (
+        <div className={styles.actions}>
+          <div className={styles.actionWithTooltip}>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onAction(alert.id, 'reopen')}
+            >
+              Reopen
+            </Button>
+            <InfoTooltip text="Reopen this alert to move it back to Active status. Use this if the issue has resurfaced or requires additional follow-up." />
+          </div>
+          <div className={styles.actionWithTooltip}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onAction(alert.id, 'dismiss')}
+            >
+              Dismiss
+            </Button>
+            <InfoTooltip text="Move this resolved alert to Dismissed status. Use this to archive alerts that no longer need to appear in the resolved list." />
+          </div>
+        </div>
+      )}
+
+      {variant === 'dismissed' && (
+        <div className={styles.actions}>
+          <div className={styles.actionWithTooltip}>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onAction(alert.id, 'reopen')}
+            >
+              Reopen
+            </Button>
+            <InfoTooltip text="Reopen this alert to move it back to Active status. Use this if you dismissed it by mistake or the issue needs attention." />
+          </div>
+          <div className={styles.actionWithTooltip}>
+            <Button
+              variant="success"
+              size="sm"
+              onClick={() => onAction(alert.id, 'resolve')}
+            >
+              Mark Resolved
+            </Button>
+            <InfoTooltip text="Mark this alert as resolved instead of dismissed. Use this if you've now taken action and want to track it as handled rather than archived." />
+          </div>
         </div>
       )}
     </div>

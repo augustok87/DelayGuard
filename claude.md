@@ -388,6 +388,114 @@ npm run dev
 ## RECENT VERSION HISTORY
 *For complete version history, see [CHANGELOG.md](CHANGELOG.md)*
 
+### v1.30 (2025-11-28): 🔄 **Alert State Transitions - Full Flexibility** (Perfect TDD Execution)
+**Test Results**: 106 AlertCard tests passing (85 previous + 21 new, 100% pass rate), zero linting errors
+**Status**: Full bidirectional alert state transitions (Option 1 implementation)
+
+**Completed**: Implemented full alert state transition flexibility (Option 1)
+- User request: "Right now we can move an alert from active to resolved or dismissed. But we don't have that option from resolved and dismissed alerts. Could it be useful to allow that?"
+- User decision: "go with Option 1. Apply the best UI UX principles"
+- Resolved alerts can now: Reopen (→Active) or Dismiss (→Dismissed)
+- Dismissed alerts can now: Reopen (→Active) or Mark Resolved (→Resolved)
+- All action buttons have InfoTooltips explaining transitions
+- Follows patterns from Gmail, Jira, GitHub Issues (industry best practices)
+- Perfect TDD execution: RED → GREEN → VERIFY
+
+**UX Impact**:
+- **Correct mistakes**: Merchants can reopen accidentally dismissed/resolved alerts
+- **Better flexibility**: Full control over alert lifecycle (any state → any state)
+- **Prevent data loss**: No alerts stuck in wrong states permanently
+- **Accurate reporting**: True alert state reflects actual merchant actions
+- **Reduced frustration**: No need to create new alert if dismissed by mistake
+
+**Implementation Details**:
+
+**1. Component Refactoring** (AlertCard.tsx):
+- Updated `AlertCardProps` interface: Added `'reopen'` to action type union
+  ```typescript
+  onAction: (alertId: string, action: 'resolve' | 'dismiss' | 'reopen') => void;
+  ```
+- **Active alerts** (existing behavior): "Mark Resolved" + "Dismiss" buttons
+- **Resolved alerts** (NEW): "Reopen" + "Dismiss" buttons with InfoTooltips
+- **Dismissed alerts** (NEW): "Reopen" + "Mark Resolved" buttons with InfoTooltips
+- All buttons wrapped in `.actionWithTooltip` for consistent UX
+- 75 lines of state transition UI logic (3 conditional blocks)
+
+**2. Button Variants & UX Design**:
+- **Reopen button** (Resolved/Dismissed → Active):
+  - Variant: `primary` (blue) - emphasizes restoration to active state
+  - Tooltip: Context-specific messaging for each source state
+  - Position: Left (primary action)
+- **Dismiss button** (Active/Resolved → Dismissed):
+  - Variant: `secondary` (gray) - less emphasis, destructive-ish action
+  - Tooltip: Explains archiving/dismissal purpose
+  - Position: Right (secondary action)
+- **Mark Resolved button**:
+  - Active: `success` (green) - positive completion action
+  - Dismissed: `success` (green) - positive state change
+  - Tooltip: Context-specific messaging
+
+**3. InfoTooltip Messages**:
+- **Active → Dismiss**: "Dismiss this alert if it&apos;s a false positive or doesn&apos;t require action. Dismissed alerts can be reopened later if needed."
+- **Resolved → Reopen**: "Reopen this alert to move it back to Active status. Use this if the issue has resurfaced or requires additional follow-up."
+- **Resolved → Dismiss**: "Move this resolved alert to Dismissed status. Use this to archive alerts that no longer need to appear in the resolved list."
+- **Dismissed → Reopen**: "Reopen this alert to move it back to Active status. Use this if you dismissed it by mistake or the issue needs attention."
+- **Dismissed → Resolve**: "Mark this alert as resolved instead of dismissed. Use this if you&apos;ve now taken action and want to track it as handled rather than archived."
+
+**4. Test Coverage** (AlertCard.test.tsx):
+- **TDD RED Phase**: Wrote 21 comprehensive tests FIRST (all failed as expected)
+  - Resolved variant: Buttons render, click handlers, InfoTooltips (4 tests)
+  - Dismissed variant: Buttons render, click handlers, InfoTooltips (4 tests)
+  - Active variant: Existing functionality preserved (3 tests)
+  - Full state transitions: All 6 transitions verified (6 tests)
+  - Button styling: Correct variants and accessibility (4 tests)
+- **TDD GREEN Phase**: Implemented feature, all 106 tests passing (85 + 21)
+- **Test fixes applied**:
+  - Updated old test expecting NO buttons for resolved alerts (now shows buttons)
+  - Fixed button tagName tests to use `getByRole()` instead of `getByText()`
+
+**5. Full State Transition Matrix**:
+```
+Active → Resolved     ✅ (Mark Resolved button)
+Active → Dismissed    ✅ (Dismiss button)
+Resolved → Active     ✅ (Reopen button) [NEW]
+Resolved → Dismissed  ✅ (Dismiss button) [NEW]
+Dismissed → Active    ✅ (Reopen button) [NEW]
+Dismissed → Resolved  ✅ (Mark Resolved button) [NEW]
+```
+
+**Files Modified** (2):
+- delayguard-app/src/components/tabs/AlertsTab/AlertCard.tsx (added state transitions UI + type update)
+- delayguard-app/src/tests/unit/components/AlertCard.test.tsx (added 21 tests + fixed 1 old test)
+
+**Design Rationale**:
+- **Why Option 1 over Option 2?** Full flexibility matches user mental model (like email, issues)
+- **Why InfoTooltips?** Clear explanations prevent misuse, educate merchants on state meanings
+- **Why these button variants?** Primary=restoration, Success=completion, Secondary=archival
+- **Why left/right positioning?** Primary action left (Western reading direction), secondary right
+- **Why allow Resolved→Dismissed?** Merchants may want to archive old resolved alerts
+
+**UX Patterns Followed**:
+- **Gmail**: Trash ↔ Inbox, Archive ↔ Inbox (full bidirectional)
+- **Jira**: Open → In Progress → Done → Reopened (any state transitions)
+- **GitHub Issues**: Open ↔ Closed (bidirectional)
+- **Zendesk**: New → Open → Pending → Solved → Closed (multi-state flexibility)
+
+**Code Quality**: ✅ Zero linting errors, production-ready, accessible (ARIA labels on buttons)
+
+**Before/After Comparison**:
+- **Before**: Active alerts had buttons, Resolved/Dismissed were stuck (no actions)
+- **After**: All 3 states have actions, full bidirectional transitions possible
+
+**Real-World Use Cases**:
+1. **Merchant dismisses alert by mistake** → Can reopen to Active
+2. **Customer contacts merchant after resolution** → Reopen from Resolved to Active
+3. **False positive resolved alert** → Dismiss to clean up Resolved list
+4. **Dismissed alert actually needs action** → Reopen to Active, then Mark Resolved when done
+5. **Accidentally dismissed instead of resolving** → Mark Resolved from Dismissed state
+
+---
+
 ### v1.29 (2025-11-28): 🎨 **Delay Alerts Color Refinement** (Perfect TDD Execution)
 **Test Results**: 85 AlertCard tests passing (81 previous + 4 new, 100% pass rate), zero linting errors
 **Status**: Refined professional color scheme applied to Delay Alerts tab

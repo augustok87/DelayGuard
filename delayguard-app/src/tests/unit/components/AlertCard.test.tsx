@@ -679,11 +679,15 @@ describe('AlertCard', () => {
       expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'dismiss');
     });
 
-    it('should not display action buttons for resolved alerts', () => {
+    it('should display action buttons for resolved alerts (v1.30 update)', () => {
       render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="resolved" />);
 
+      // v1.30: Resolved alerts now show Reopen and Dismiss buttons (Option 1 - Full Flexibility)
+      expect(screen.queryByRole('button', { name: /Reopen/i })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Dismiss/i })).toBeInTheDocument();
+
+      // Should NOT show Mark Resolved button (already resolved)
       expect(screen.queryByRole('button', { name: /Mark Resolved/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Dismiss/i })).not.toBeInTheDocument();
     });
   });
 
@@ -1275,6 +1279,199 @@ describe('AlertCard', () => {
       const card = container.querySelector('[class*="alertCardLow"]');
       expect(card).toBeInTheDocument();
       expect(card?.className).toContain('alertCardLow');
+    });
+  });
+
+  describe('v1.30: Alert State Transitions (Option 1 - Full Flexibility)', () => {
+    describe('Resolved Variant Actions', () => {
+      it('should render "Reopen" and "Dismiss" buttons for resolved alerts', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="resolved" />);
+
+        // Resolved alerts should show Reopen and Dismiss buttons
+        expect(getByText('Reopen')).toBeInTheDocument();
+        expect(getByText('Dismiss')).toBeInTheDocument();
+
+        // Should NOT show Mark Resolved button (already resolved)
+        expect(() => getByText('Mark Resolved')).toThrow();
+      });
+
+      it('should call onAction with "reopen" when Reopen button is clicked', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="resolved" />);
+
+        const reopenButton = getByText('Reopen');
+        fireEvent.click(reopenButton);
+
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'reopen');
+        expect(mockOnAction).toHaveBeenCalledTimes(1);
+      });
+
+      it('should call onAction with "dismiss" when Dismiss button is clicked on resolved alert', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="resolved" />);
+
+        const dismissButton = getByText('Dismiss');
+        fireEvent.click(dismissButton);
+
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'dismiss');
+        expect(mockOnAction).toHaveBeenCalledTimes(1);
+      });
+
+      it('should render InfoTooltips for resolved alert action buttons', () => {
+        const { container } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="resolved" />);
+
+        // Should have 2 InfoTooltip instances (one for each button)
+        const tooltips = container.querySelectorAll('[class*="actionWithTooltip"]');
+        expect(tooltips.length).toBe(2);
+      });
+    });
+
+    describe('Dismissed Variant Actions', () => {
+      it('should render "Reopen" and "Mark Resolved" buttons for dismissed alerts', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="dismissed" />);
+
+        // Dismissed alerts should show Reopen and Mark Resolved buttons
+        expect(getByText('Reopen')).toBeInTheDocument();
+        expect(getByText('Mark Resolved')).toBeInTheDocument();
+
+        // Should NOT show Dismiss button (already dismissed)
+        expect(() => getByText('Dismiss')).toThrow();
+      });
+
+      it('should call onAction with "reopen" when Reopen button is clicked on dismissed alert', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="dismissed" />);
+
+        const reopenButton = getByText('Reopen');
+        fireEvent.click(reopenButton);
+
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'reopen');
+        expect(mockOnAction).toHaveBeenCalledTimes(1);
+      });
+
+      it('should call onAction with "resolve" when Mark Resolved button is clicked on dismissed alert', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="dismissed" />);
+
+        const resolveButton = getByText('Mark Resolved');
+        fireEvent.click(resolveButton);
+
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'resolve');
+        expect(mockOnAction).toHaveBeenCalledTimes(1);
+      });
+
+      it('should render InfoTooltips for dismissed alert action buttons', () => {
+        const { container } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="dismissed" />);
+
+        // Should have 2 InfoTooltip instances (one for each button)
+        const tooltips = container.querySelectorAll('[class*="actionWithTooltip"]');
+        expect(tooltips.length).toBe(2);
+      });
+    });
+
+    describe('Active Variant Actions (Existing Functionality)', () => {
+      it('should still render "Mark Resolved" and "Dismiss" buttons for active alerts', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+
+        // Active alerts should show Mark Resolved and Dismiss buttons (existing)
+        expect(getByText('Mark Resolved')).toBeInTheDocument();
+        expect(getByText('Dismiss')).toBeInTheDocument();
+
+        // Should NOT show Reopen button (already active)
+        expect(() => getByText('Reopen')).toThrow();
+      });
+
+      it('should call onAction with "resolve" when Mark Resolved button is clicked on active alert', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+
+        const resolveButton = getByText('Mark Resolved');
+        fireEvent.click(resolveButton);
+
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'resolve');
+        expect(mockOnAction).toHaveBeenCalledTimes(1);
+      });
+
+      it('should call onAction with "dismiss" when Dismiss button is clicked on active alert', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+
+        const dismissButton = getByText('Dismiss');
+        fireEvent.click(dismissButton);
+
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'dismiss');
+        expect(mockOnAction).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('Full State Transition Coverage', () => {
+      it('should support Active → Resolved transition', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+        fireEvent.click(getByText('Mark Resolved'));
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'resolve');
+      });
+
+      it('should support Active → Dismissed transition', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);
+        fireEvent.click(getByText('Dismiss'));
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'dismiss');
+      });
+
+      it('should support Resolved → Active transition (Reopen)', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="resolved" />);
+        fireEvent.click(getByText('Reopen'));
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'reopen');
+      });
+
+      it('should support Resolved → Dismissed transition', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="resolved" />);
+        fireEvent.click(getByText('Dismiss'));
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'dismiss');
+      });
+
+      it('should support Dismissed → Active transition (Reopen)', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="dismissed" />);
+        fireEvent.click(getByText('Reopen'));
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'reopen');
+      });
+
+      it('should support Dismissed → Resolved transition', () => {
+        const { getByText } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="dismissed" />);
+        fireEvent.click(getByText('Mark Resolved'));
+        expect(mockOnAction).toHaveBeenCalledWith(baseAlert.id, 'resolve');
+      });
+    });
+
+    describe('Button Styling and Variants', () => {
+      it('should render Reopen button with primary variant for resolved alerts', () => {
+        const { getByRole } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="resolved" />);
+        const reopenButton = getByRole('button', { name: /Reopen/i });
+
+        // Button should exist and be clickable
+        expect(reopenButton).toBeInTheDocument();
+        expect(reopenButton.tagName).toBe('BUTTON');
+      });
+
+      it('should render Reopen button with primary variant for dismissed alerts', () => {
+        const { getByRole } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="dismissed" />);
+        const reopenButton = getByRole('button', { name: /Reopen/i });
+
+        // Button should exist and be clickable
+        expect(reopenButton).toBeInTheDocument();
+        expect(reopenButton.tagName).toBe('BUTTON');
+      });
+
+      it('should render Dismiss button with secondary variant for resolved alerts', () => {
+        const { getByRole } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="resolved" />);
+        const dismissButton = getByRole('button', { name: /Dismiss/i });
+
+        // Button should exist and be clickable
+        expect(dismissButton).toBeInTheDocument();
+        expect(dismissButton.tagName).toBe('BUTTON');
+      });
+
+      it('should render Mark Resolved button with success variant for dismissed alerts', () => {
+        const { getByRole } = render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="dismissed" />);
+        const resolveButton = getByRole('button', { name: /Mark Resolved/i });
+
+        // Button should exist and be clickable
+        expect(resolveButton).toBeInTheDocument();
+        expect(resolveButton.tagName).toBe('BUTTON');
+      });
     });
   });
 });
