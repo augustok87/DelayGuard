@@ -383,8 +383,24 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
   // Phase 1.1: Get priority info
   const priorityBadge = getPriorityBadge(alert.delayDays, alert.totalAmount);
 
+  // v1.29: Get priority variant class for color-coded left border
+  const getPriorityVariantClass = (delayDays: number, orderTotal?: number) => {
+    if (delayDays >= 7 || (orderTotal && orderTotal >= 500 && delayDays >= 3)) {
+      return styles.alertCardCritical;
+    }
+    if (delayDays >= 4 || (orderTotal && orderTotal >= 200 && delayDays >= 2)) {
+      return styles.alertCardHigh;
+    }
+    if (delayDays >= 2) {
+      return styles.alertCardMedium;
+    }
+    return styles.alertCardLow;
+  };
+
+  const priorityVariantClass = getPriorityVariantClass(alert.delayDays, alert.totalAmount);
+
   return (
-    <div className={`${styles.alertCard} ${styles[variant]}`}>
+    <div className={`${styles.alertCard} ${styles[variant]} ${priorityVariantClass}`}>
       <div className={styles.header}>
         <div className={styles.orderInfo}>
           <div className={styles.orderHeader}>

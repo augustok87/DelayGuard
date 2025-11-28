@@ -1215,4 +1215,66 @@ describe('AlertCard', () => {
       });
     });
   });
+
+  describe('v1.29: Priority-Based Color Coding', () => {
+    it('should render CRITICAL alert with critical priority variant class', () => {
+      const criticalAlert = {
+        ...baseAlert,
+        delayDays: 7,
+        totalAmount: 300,
+      };
+
+      const { container } = render(<AlertCard alert={criticalAlert} onAction={mockOnAction} variant="active" />);
+
+      // v1.29: CRITICAL alerts should have alertCardCritical class for red left border
+      const card = container.querySelector('[class*="alertCardCritical"]');
+      expect(card).toBeInTheDocument();
+      expect(card?.className).toContain('alertCardCritical');
+    });
+
+    it('should render HIGH alert with high priority variant class', () => {
+      const highAlert = {
+        ...baseAlert,
+        delayDays: 4,
+        totalAmount: 250,
+      };
+
+      const { container } = render(<AlertCard alert={highAlert} onAction={mockOnAction} variant="active" />);
+
+      // v1.29: HIGH alerts should have alertCardHigh class for orange left border
+      const card = container.querySelector('[class*="alertCardHigh"]');
+      expect(card).toBeInTheDocument();
+      expect(card?.className).toContain('alertCardHigh');
+    });
+
+    it('should render MEDIUM alert with medium priority variant class', () => {
+      const mediumAlert = {
+        ...baseAlert,
+        delayDays: 2,
+        totalAmount: 100,
+      };
+
+      const { container } = render(<AlertCard alert={mediumAlert} onAction={mockOnAction} variant="active" />);
+
+      // v1.29: MEDIUM alerts should have alertCardMedium class for amber left border
+      const card = container.querySelector('[class*="alertCardMedium"]');
+      expect(card).toBeInTheDocument();
+      expect(card?.className).toContain('alertCardMedium');
+    });
+
+    it('should render LOW alert with low priority variant class', () => {
+      const lowAlert = {
+        ...baseAlert,
+        delayDays: 1,
+        totalAmount: 50,
+      };
+
+      const { container } = render(<AlertCard alert={lowAlert} onAction={mockOnAction} variant="active" />);
+
+      // v1.29: LOW alerts should have alertCardLow class for emerald left border
+      const card = container.querySelector('[class*="alertCardLow"]');
+      expect(card).toBeInTheDocument();
+      expect(card?.className).toContain('alertCardLow');
+    });
+  });
 });
