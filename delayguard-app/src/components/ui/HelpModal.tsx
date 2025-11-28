@@ -10,9 +10,11 @@
  * - Overlay click to close
  * - Responsive (full-screen on mobile)
  * - Smooth animations
+ * - React Portal rendering (v1.27.1 fix: prevents overflow clipping)
  */
 
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './HelpModal.module.css';
 
 interface HelpModalProps {
@@ -61,7 +63,9 @@ export function HelpModal({ isOpen, onClose, title, children }: HelpModalProps) 
     return null;
   }
 
-  return (
+  // v1.27.1: Use React Portal to render modal at document root
+  // This prevents overflow clipping from parent containers
+  return createPortal(
     <div
       className={styles.overlay}
       onClick={handleOverlayClick}
@@ -114,7 +118,8 @@ export function HelpModal({ isOpen, onClose, title, children }: HelpModalProps) 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
