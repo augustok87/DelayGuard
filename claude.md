@@ -498,6 +498,61 @@ npm run dev
 
 ---
 
+### v1.27.3 (2025-11-28): 🎯 **Bottom-Aligned Learn More Buttons** (Perfect TDD Execution)
+**Test Results**: 48 SettingsCard tests passing (47 previous + 1 new, 100% pass rate), zero linting errors
+**Status**: Learn More buttons now vertically aligned at bottom of all rule cards
+
+**Completed**: Implemented bottom-alignment for Learn More buttons
+- User-requested enhancement: "Now see the buttons within each ruleCards, they are not vertically aligned. I checked and it seems there&apos;s a &apos;gap&apos; and also all the elements within are aligned to the top. Make it so the button always stays at the bottom of the rulCard container."
+- Buttons previously had fixed `margin-top: 1rem`, causing misalignment
+- Elegant CSS-only solution using `margin-top: auto`
+- Perfect TDD execution: RED → GREEN
+
+**UX Impact**:
+- **Visual alignment**: All 3 Learn More buttons vertically aligned at same position
+- **Professional polish**: Consistent button placement regardless of card content length
+- **Better visual rhythm**: Predictable button location across all cards
+- **Responsive**: Works seamlessly with equal-height cards from v1.27.2
+
+**Implementation Details**:
+
+**1. CSS Flexbox Solution** (SettingsCard.module.css):
+- Changed `.learnMoreButton` `margin-top: 1rem` → `margin-top: auto`
+- Parent `.ruleCard` has `display: flex; flex-direction: column; flex: 1`
+- `margin-top: auto` pushes button to bottom of flex container
+- No JavaScript required - pure CSS solution
+- Comment added: "v1.27.3: margin-top: auto pushes button to bottom of flex container for vertical alignment"
+
+**2. Test Coverage** (SettingsCard.test.tsx):
+- **TDD RED Phase**: Wrote 1 test checking for `.learnMoreButton` class FIRST
+- **TDD GREEN Phase**: Changed `margin-top` to `auto`, all 48 tests passing
+- Test verifies all 3 buttons have the correct class for bottom alignment
+
+**Files Modified** (2):
+- delayguard-app/src/components/tabs/DashboardTab/SettingsCard.module.css (changed margin-top to auto)
+- delayguard-app/src/tests/unit/components/SettingsCard.test.tsx (added 1 button alignment test)
+
+**Design Rationale**:
+- **Why `margin-top: auto`?** CSS standard for pushing flex items to bottom of container
+- **Why not absolute positioning?** Flexbox is more maintainable and responsive
+- **Why CSS-only?** No JavaScript needed, better performance
+- **How it works?** Flexbox distributes remaining space to `auto` margins
+
+**Code Quality**: ✅ Zero linting errors, production-ready, minimal elegant change
+
+**CSS Explanation**:
+- Parent `.ruleCard`: `display: flex; flex-direction: column; flex: 1;`
+- Child `.learnMoreButton`: `margin-top: auto;`
+- Result: Button consumes all remaining vertical space above it, pushing to bottom
+- All 3 buttons now aligned at same vertical position across cards
+
+**Lessons Learned**:
+- ✅ `margin-top: auto` in flexbox is the elegant solution for bottom-alignment
+- ✅ Works perfectly with equal-height containers from v1.27.2
+- ✅ Minimal CSS change (1 line) with maximum visual impact
+
+---
+
 ### v1.27.1 (2025-11-28): 🔧 **HelpModal Overflow Clipping Fix** (Perfect TDD Execution)
 **Test Results**: 14 HelpModal tests passing (100% pass rate, unchanged), all existing tests remain passing
 **Status**: Modal now displays correctly without being clipped by parent containers
