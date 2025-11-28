@@ -390,11 +390,12 @@
 }
 
 /* v1.25: Learn More Button - Opens help modal */
+/* v1.27.3: margin-top: auto pushes button to bottom of flex container for vertical alignment */
 .learnMoreButton {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 1rem;
+  margin-top: auto;
   padding: 0.75rem 1.25rem;
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border: 2px solid #3b82f6;

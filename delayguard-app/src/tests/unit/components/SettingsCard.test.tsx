@@ -875,5 +875,23 @@ describe('SettingsCard (Phase 1.4)', () => {
         expect(card.className).toContain('ruleCard');
       });
     });
+
+    it('should render Learn More buttons with learnMoreButton class for bottom alignment', () => {
+      const { container } = render(
+        <SettingsCard
+          shop="test-shop.myshopify.com"
+          settings={mockSettings}
+          loading={false}
+          {...mockCallbacks}
+        />,
+      );
+
+      // v1.27.3: Learn More buttons should have learnMoreButton class (applies margin-top: auto)
+      const learnMoreButtons = container.querySelectorAll('[class*="learnMoreButton"]');
+      expect(learnMoreButtons.length).toBe(3); // One for each rule card
+      learnMoreButtons.forEach((button) => {
+        expect(button.className).toContain('learnMoreButton');
+      });
+    });
   });
 });
