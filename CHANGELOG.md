@@ -2,12 +2,277 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: November 24, 2025
+**Last Updated**: November 29, 2025
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.33 (2025-11-29): 🎨 Complete AlertCard Icon Migration - All Emojis Replaced with Lucide SVG (Perfect TDD Execution)
+**Test Results**: 137 AlertCard tests passing (99 previous + 38 new v1.33 tests, 100% pass rate), zero linting errors
+**Status**: ALL emoji icons in AlertCard replaced with Lucide React SVG icons for cross-platform consistency
+
+**User Request**: "Any other icons within Delay Alerts?" → Identified 16 remaining emojis in AlertCard
+**User Directive**: "Yes, implement all those" → Complete migration using TDD workflow
+
+**What Changed**:
+1. **Replaced all 16 emoji icons in AlertCard with Lucide React SVG icons**:
+   - **Delay Reason Warning** (1): ⚠️ → `<AlertTriangle size={16} />`
+   - **Email Engagement Badges** (4):
+     - Link icon: 🔗 → `<Link size={14} />`
+     - Opened icon: 📧 → `<MailOpen size={14} />`
+     - Sent icon: ✉️ → `<Send size={14} />`
+     - Unopened icon: 📱 → `<Smartphone size={14} />`
+   - **Accordion Section Titles** (4):
+     - Product Details: 📦 → `<Package size={16} />`
+     - Recommended Actions: 💡 → `<Lightbulb size={16} />`
+     - Tracking Timeline: 🚚 → `<Truck size={16} />`
+     - Customer Note: 📖 → `<BookOpen size={16} />`
+   - **Product Placeholder** (1): 📦 → `<Package size={24} />`
+   - **Event Location Pin** (1): 📍 → `<MapPin size={14} />`
+   - **Contact Information** (2):
+     - Email: ✉️ → `<Mail size={16} />`
+     - Phone: 📞 → `<Phone size={16} />`
+   - **Badge Legend Text** (4): Duplicate icons in legend descriptions (same as badges)
+
+2. **Updated Accordion Component Type**:
+   - Changed `title` prop type from `string` to `React.ReactNode`
+   - Allows JSX elements (icons) to be passed as accordion titles
+   - Maintains backwards compatibility with string titles
+
+3. **Established Icon Sizing Standards**:
+   - Small inline (14px): Engagement badges, event location pin
+   - Medium inline (16px): Accordion titles, warnings, contact icons
+   - Large placeholders (24px): Product placeholder
+   - Consistent `strokeWidth={2}` for all icons
+   - All icons: `aria-hidden={true}` (decorative, not semantic)
+
+**Perfect TDD Execution**:
+1. ✅ **RED Phase**: Wrote 38 comprehensive tests FIRST (all failed as expected)
+   - Delay reason warning icon tests (3)
+   - Email engagement badge icon tests (6)
+   - Accordion title icon tests (6)
+   - Product placeholder icon tests (3)
+   - Tracking event location icon tests (3)
+   - Contact information icon tests (4)
+   - Badge legend icon tests (2)
+   - Overall icon integration tests (4)
+   - Fixed 15 OLD tests from earlier phases
+2. ✅ **GREEN Phase**: Implemented all Lucide icon replacements (all 137 tests passing)
+3. ✅ **REFACTOR**: Fixed 15 OLD tests that expected emojis to check for SVG icons instead
+4. ✅ **VERIFY**: All 137 tests passing, zero linting errors
+5. ✅ **DOCUMENT**: Updated CLAUDE.md immediately after completion
+
+**Test Coverage** (38 new tests in v1.33 suite):
+- Delay Reason Warning Icon: 3 tests (SVG rendering, no emoji, aria-hidden)
+- Email Engagement Badge Icons: 6 tests (4 badge types, no emoji check, aria-hidden)
+- Accordion Title Icons: 6 tests (4 accordion types, no emoji check, aria-hidden)
+- Product Placeholder Icon: 3 tests (SVG rendering, no emoji, placeholder structure)
+- Tracking Event Location Icon: 3 tests (MapPin icon, no emoji, aria-hidden)
+- Contact Information Icons: 4 tests (Mail & Phone icons, no emoji, structure)
+- Badge Legend Icons: 2 tests (SVG in legend, no duplicate emoji)
+- Overall Icon Integration: 4 tests (all icons present, no emoji anywhere)
+- Legacy Test Fixes: 15 OLD tests updated to expect SVG icons
+
+**Files Modified** (3):
+1. `src/components/tabs/AlertsTab/AlertCard.tsx`
+   - Added 12 Lucide imports (AlertTriangle, Link, MailOpen, Send, Smartphone, Package, Lightbulb, Truck, MapPin, BookOpen, Mail, Phone)
+   - Replaced 16 emoji icons with corresponding Lucide components
+   - Updated icon sizing and aria attributes
+2. `src/components/ui/Accordion.tsx`
+   - Changed `title` prop type from `string` to `React.ReactNode`
+   - Allows JSX elements in accordion titles
+3. `src/tests/unit/components/AlertCard.test.tsx`
+   - Added 38 new comprehensive icon tests
+   - Updated 15 OLD tests to expect SVG icons instead of emojis
+   - Total: 137 passing tests (100% pass rate)
+
+**Code Quality**:
+- ✅ All 137 tests passing (100% pass rate)
+- ✅ Zero ESLint errors in all v1.33 modified files
+- ✅ TypeScript compilation successful
+- ✅ Production-ready code with proper type safety
+
+**UX Impact**:
+- **Cross-platform consistency**: No more emoji rendering issues across OS/browsers
+- **Professional appearance**: Consistent SVG icons match Shopify design system
+- **Accessibility**: All icons properly marked as decorative with `aria-hidden={true}`
+- **Performance**: Tree-shaken imports, only 12 icons imported (not entire library)
+- **Scalability**: SVG icons scale perfectly at any size without pixelation
+
+**Design Rationale**:
+- **Why Lucide over alternatives?** Consistent design language, tree-shakeable, TypeScript support
+- **Why different sizes?** Context-appropriate sizing (small for inline, large for placeholders)
+- **Why aria-hidden?** Icons are decorative, text labels provide semantic meaning
+- **Why React.ReactNode for title?** Enables flexible JSX content in accordions (icons, badges, etc.)
+
+---
+
+### v1.32 (2025-11-28): ✨ Complete Icon Migration - All Remaining Emojis Replaced
+**Test Results**: 1,774 passing tests (90 suites, 100% pass rate), zero linting errors
+
+**User Context**: Continuation of v1.31 icon migration - completing the professional icon system across entire app
+
+**What Changed**:
+1. **Replaced all 14 remaining emoji icons with Lucide React SVGs**:
+   - **Continuation of v1.31**: Completed professional icon migration
+     - v1.31: TabNavigation + SettingsCard rule icons (6 emojis → Lucide)
+     - v1.32: Helper icons, warnings, empty states (14 emojis → Lucide)
+     - **Result**: Zero emoji icons remaining in UI components (pre-AlertCard)
+
+2. **SettingsCard Helper Icons** (5 emojis → Lucide):
+   - Benchmark icon: 📊 → `<BarChart3 size={16} />`
+   - Warning icon: ⚠ → `<AlertTriangle size={20} />`
+   - Learn More icons (3x): ℹ️ → `<Info size={16} />`
+   - Smart Tip icon: 💡 → `<Lightbulb size={20} />`
+
+3. **NotificationPreferences Warning** (1 emoji → Lucide):
+   - Warning icon: ⚠ → `<AlertTriangle size={20} />`
+
+4. **AlertsTab Empty State Icons** (4 emojis → Lucide):
+   - Active empty: ✅ → `<CheckCircle2 size={48} />`
+   - Resolved empty: 📝 → `<FileCheck size={48} />`
+   - Dismissed empty: 🗑️ → `<Trash2 size={48} />`
+   - Initial empty: 📊 → `<BarChart3 size={48} />`
+
+5. **OrdersTab Empty State Icons** (5 emojis → Lucide):
+   - Processing empty: ⏳ → `<Timer size={48} />`
+   - Shipped empty: 🚚 → `<Truck size={48} />`
+   - Delivered empty: ✅ → `<CheckCircle2 size={48} />`
+   - Initial empty (2x): 📦 → `<Package size={48} />`
+
+**Perfect TDD Execution**:
+1. ✅ **SettingsCard**: 26 tests written FIRST (TDD RED), then implemented (TDD GREEN)
+2. ✅ **NotificationPreferences**: 10 tests written FIRST (TDD RED), then implemented (TDD GREEN)
+3. ✅ **AlertsTab**: 14 tests written FIRST (TDD RED), then implemented (TDD GREEN)
+4. ✅ **OrdersTab**: 14 tests written FIRST (TDD RED), then implemented (TDD GREEN)
+5. ✅ **Fixed 8 legacy tests** that were checking for emoji text (now check accessible text only)
+6. ✅ **Fixed 1 linting error** (regex character class issue)
+
+**Test Coverage** (64 new tests added):
+- SettingsCard: 88 passing tests (26 new v1.32 tests + 62 existing)
+- NotificationPreferences: 25 passing tests (10 new v1.32 tests + 15 existing)
+- AlertsTab: 67 passing tests (14 new v1.32 tests + 53 existing)
+- OrdersTab: 57 passing tests (14 new v1.32 tests + 43 existing)
+- Total test suite: 1,774 passing tests (up from 1,710)
+
+**Files Modified** (8):
+1. `src/components/tabs/DashboardTab/SettingsCard.tsx` (5 helper/warning icons)
+2. `src/components/tabs/DashboardTab/NotificationPreferences.tsx` (1 warning icon)
+3. `src/components/tabs/AlertsTab/index.tsx` (4 empty state icons, changed from string to JSX)
+4. `src/components/tabs/OrdersTab/index.tsx` (5 empty state icons, changed from string to JSX)
+5. `src/tests/unit/components/SettingsCard.test.tsx` (+26 new tests)
+6. `tests/unit/components/NotificationPreferences.test.tsx` (+10 new tests)
+7. `src/tests/unit/components/AlertsTab.test.tsx` (+14 new tests, fixed 4 legacy tests)
+8. `src/tests/unit/components/OrdersTab.test.tsx` (+14 new tests, fixed 4 legacy tests, fixed test data bug)
+
+**Icon Design Standards**:
+- Helper icons: 16px size for inline text elements
+- Warning icons: 20px size for alert messages
+- Empty state icons: 48px size for prominent empty states
+- Consistent stroke: `strokeWidth={2}` for small icons, `strokeWidth={1.5}` for large icons
+- Full accessibility: `aria-hidden={true}` on all decorative icons
+- Type safety: Proper TypeScript types for all icon components
+
+**Code Quality**:
+- ✅ 1,774 tests passing (100% pass rate)
+- ✅ Zero linting errors (fixed regex character class issue)
+- ✅ Production-ready, accessible, platform-consistent design
+
+**UX Impact**:
+- **Cross-platform consistency**: All icons render identically on Windows, Mac, iOS, Android
+- **Scalability**: SVG icons remain crisp at any display size (Retina, 4K, etc.)
+- **Professional aesthetic**: Aligns with Shopify Polaris design system
+- **Reduced bundle size**: Tree-shakeable imports (only 11 icons imported total)
+- **Theming support**: Icons inherit color from CSS (easy to theme in future)
+
+**Design Rationale**:
+- **Why different sizes?** Context-appropriate: 16px for helpers, 20px for warnings, 48px for empty states
+- **Why CheckCircle2 over CheckCircle?** More modern design with thinner stroke
+- **Why FileCheck for resolved?** Semantic meaning of "completed/reviewed"
+- **Why Trash2 for dismissed?** Clear metaphor for archival/deletion
+
+---
+
+### v1.31 (2025-11-28): ✨ Professional Icon System with Lucide React
+**Test Results**: 1,714 passing tests (90 suites), 100% pass rate
+
+**User Context**: First step of professional icon migration - replacing platform-dependent emoji with SVG icons
+
+**What Changed**:
+1. **Introduced Lucide React Professional Icon Library**:
+   - Migrated from platform-dependent emoji to Lucide React SVG icons
+   - Consistent appearance across all platforms (Windows, Mac, iOS, Android)
+   - Scalable SVG graphics with perfect clarity at any size
+   - Customizable colors matching design system
+   - Tree-shakeable (only imports used icons, reduces bundle size)
+
+2. **TabNavigation Icons** (3 emojis → Lucide):
+   - Settings: ⚙️ → `<Settings size={20} strokeWidth={2} />`
+   - Delay Alerts: 🚨 → `<AlertTriangle size={20} strokeWidth={2} />`
+   - Orders: 📦 → `<Package size={20} strokeWidth={2} />`
+
+3. **SettingsCard Rule Icons** (3 emojis → Lucide):
+   - Warehouse Delays: 📦 → `<Package size={24} strokeWidth={2} />`
+   - Carrier Reported Delays: 🚨 → `<AlertTriangle size={24} strokeWidth={2} />`
+   - Stuck in Transit: ⏰ → `<Clock size={24} strokeWidth={2} />`
+
+4. **Full Accessibility**:
+   - All icons have `aria-hidden={true}` (decorative role)
+   - Text labels provide semantic meaning for screen readers
+   - Icons inherit color via `stroke="currentColor"` for theming
+
+**Perfect TDD Execution**:
+1. ✅ **TabNavigation**: 18 new tests written FIRST (TDD RED), then implemented (TDD GREEN)
+2. ✅ **SettingsCard**: 13 new tests written FIRST (TDD RED), then implemented (TDD GREEN)
+3. ✅ **Updated 4 old emoji tests** to verify SVG icons instead
+4. ✅ **Fixed 8 unused variable warnings** during linting
+
+**Package Added**:
+- `lucide-react` v0.263.1 (professional SVG icon library)
+  - Tree-shakeable ES modules
+  - TypeScript definitions included
+  - 1000+ icons available (only import what you use)
+
+**Test Coverage**:
+- TabNavigation: 48 passing tests (18 new v1.31 tests + 30 existing tests)
+- SettingsCard: 62 passing tests (13 new v1.31 tests + 49 existing tests)
+- Zero linting errors (fixed 8 unused variable warnings)
+
+**Files Modified** (4):
+1. `src/components/layout/TabNavigation/index.tsx` (replaced 3 emoji with Lucide icons)
+2. `src/components/tabs/DashboardTab/SettingsCard.tsx` (replaced 3 emoji with Lucide icons)
+3. `src/tests/unit/components/TabNavigation.test.tsx` (+18 new tests, updated 4 old tests)
+4. `src/tests/unit/components/SettingsCard.test.tsx` (+13 new tests, updated 1 old test)
+
+**Icon Design Standards Established**:
+- Consistent sizing: 20px for navigation, 24px for rule cards
+- Uniform stroke width: `strokeWidth={2}` for all icons
+- Color inheritance: `stroke="currentColor"` for theming flexibility
+- Type safety: Using `LucideIcon` type for all icon props
+- Accessibility: `aria-hidden={true}` for all decorative icons
+
+**Code Quality**:
+- ✅ 1,714 tests passing (100% pass rate)
+- ✅ Zero linting errors
+- ✅ TypeScript compilation successful
+- ✅ Production-ready, accessible, cross-platform design
+
+**UX Impact**:
+- **Platform consistency**: Icons look identical on Windows, Mac, Linux, iOS, Android
+- **Professional appearance**: SVG icons align with Shopify Polaris design system
+- **Better performance**: Tree-shakeable imports reduce bundle size vs emoji fallbacks
+- **Future-proof**: Easy to add new icons from Lucide library (1000+ available)
+- **Theming ready**: Icons inherit color from CSS (enables dark mode, custom themes)
+
+**Design Rationale**:
+- **Why Lucide?** Best-in-class SVG icon library, tree-shakeable, TypeScript support, active maintenance
+- **Why 20px nav vs 24px cards?** Hierarchical sizing (nav is secondary, rule cards are primary focus)
+- **Why strokeWidth={2}?** Balances visibility with elegance (not too thin, not too bold)
+- **Why aria-hidden?** Icons are decorative, text labels provide semantic content
+
+---
 
 ### v1.27 (2025-11-24): 🎨 Desktop 3-Column Grid Layout (Perfect TDD)
 **Test Results**: 45 SettingsCard tests passing (39 original + 6 new, 100% pass rate), zero linting errors
