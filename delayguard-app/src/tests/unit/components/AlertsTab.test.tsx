@@ -286,7 +286,7 @@ describe('AlertsTab Component', () => {
 
       render(<AlertsTab alerts={alertsWithoutActive} loading={false} onAlertAction={mockOnAlertAction} />);
 
-      expect(screen.getByText('✅')).toBeInTheDocument();
+      // v1.32: Icon is now SVG (decorative with aria-hidden), so we only check text
       expect(screen.getByText('No active alerts')).toBeInTheDocument();
       expect(screen.getByText('Great! All delays have been resolved or dismissed.')).toBeInTheDocument();
     });
@@ -302,7 +302,7 @@ describe('AlertsTab Component', () => {
       // Click Resolved tab
       fireEvent.click(screen.getByText('Resolved'));
 
-      expect(screen.getByText('📝')).toBeInTheDocument();
+      // v1.32: Icon is now SVG (decorative with aria-hidden), so we only check text
       expect(screen.getByText('No resolved alerts')).toBeInTheDocument();
       expect(screen.getByText('Resolved alerts will appear here after you mark them as handled.')).toBeInTheDocument();
     });
@@ -318,7 +318,7 @@ describe('AlertsTab Component', () => {
       // Click Dismissed tab
       fireEvent.click(screen.getByText('Dismissed'));
 
-      expect(screen.getByText('🗑️')).toBeInTheDocument();
+      // v1.32: Icon is now SVG (decorative with aria-hidden), so we only check text
       expect(screen.getByText('No dismissed alerts')).toBeInTheDocument();
       expect(screen.getByText('Dismissed alerts will appear here.')).toBeInTheDocument();
     });
@@ -328,13 +328,14 @@ describe('AlertsTab Component', () => {
 
       render(<AlertsTab alerts={emptyAlerts} loading={false} onAlertAction={mockOnAlertAction} />);
 
-      // Resolved tab - 📝 icon
+      // v1.32: Icons are now SVG (decorative with aria-hidden), so we check text content instead
+      // Resolved tab - should show empty state
       fireEvent.click(screen.getByText('Resolved'));
-      expect(screen.getByText('📝')).toBeInTheDocument();
+      expect(screen.getByText('No resolved alerts')).toBeInTheDocument();
 
-      // Dismissed tab - 🗑️ icon
+      // Dismissed tab - should show empty state
       fireEvent.click(screen.getByText('Dismissed'));
-      expect(screen.getByText('🗑️')).toBeInTheDocument();
+      expect(screen.getByText('No dismissed alerts')).toBeInTheDocument();
 
       // Active tab - should show alert (not empty)
       fireEvent.click(screen.getByText('Active'));
@@ -502,6 +503,165 @@ describe('AlertsTab Component', () => {
       // Now Resolved should be pressed
       expect(resolvedButton).toHaveAttribute('aria-pressed', 'true');
       expect(activeButton).toHaveAttribute('aria-pressed', 'false');
+    });
+  });
+
+  describe('v1.32: Lucide Icon Integration - Empty State Icons', () => {
+    describe('Initial Empty State Icon (No Alerts)', () => {
+      it('should render SVG icon when no alerts exist', () => {
+        const { container } = render(<AlertsTab alerts={[]} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        // Should have Lucide SVG icon (BarChart3) in initial empty state
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        expect(emptyStateIcon).toBeInTheDocument();
+        expect(emptyStateIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+
+      it('should not contain emoji in initial empty state', () => {
+        const { container } = render(<AlertsTab alerts={[]} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"]');
+        // Should NOT contain chart emoji 📊
+        expect(emptyStateIcon?.textContent).not.toContain('📊');
+      });
+
+      it('should have aria-hidden="true" on initial empty state SVG icon', () => {
+        const { container } = render(<AlertsTab alerts={[]} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        expect(emptyStateIcon).toHaveAttribute('aria-hidden', 'true');
+      });
+    });
+
+    describe('Active Tab Empty State Icon', () => {
+      const allResolvedAlerts: DelayAlert[] = mockAlerts.map(alert => ({
+        ...alert,
+        status: 'resolved' as const,
+      }));
+
+      it('should render SVG icon for no active alerts', () => {
+        const { container } = render(<AlertsTab alerts={allResolvedAlerts} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        // Should have Lucide SVG icon (CheckCircle2) for "no active alerts"
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        expect(emptyStateIcon).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in no active alerts message', () => {
+        const { container } = render(<AlertsTab alerts={allResolvedAlerts} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        const emptyState = container.querySelector('[class*="emptyState"]');
+        // Should NOT contain check emoji ✅
+        expect(emptyState?.textContent).not.toContain('✅');
+      });
+
+      it('should maintain accessible empty state text', () => {
+        render(<AlertsTab alerts={allResolvedAlerts} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        expect(screen.getByText('No active alerts')).toBeInTheDocument();
+        expect(screen.getByText(/Great! All delays have been resolved or dismissed/i)).toBeInTheDocument();
+      });
+    });
+
+    describe('Resolved Tab Empty State Icon', () => {
+      const allActiveAlerts: DelayAlert[] = mockAlerts.map(alert => ({
+        ...alert,
+        status: 'active' as const,
+      }));
+
+      it('should render SVG icon for no resolved alerts', () => {
+        const { container } = render(<AlertsTab alerts={allActiveAlerts} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        // Switch to Resolved tab
+        const resolvedButton = screen.getByText('Resolved').closest('button');
+        fireEvent.click(resolvedButton!);
+
+        // Should have Lucide SVG icon (FileCheck or ClipboardCheck)
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        expect(emptyStateIcon).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in no resolved alerts message', () => {
+        const { container } = render(<AlertsTab alerts={allActiveAlerts} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        // Switch to Resolved tab
+        const resolvedButton = screen.getByText('Resolved').closest('button');
+        fireEvent.click(resolvedButton!);
+
+        const emptyState = container.querySelector('[class*="emptyState"]');
+        // Should NOT contain clipboard emoji 📝
+        expect(emptyState?.textContent).not.toContain('📝');
+      });
+
+      it('should maintain accessible empty state text on Resolved tab', () => {
+        render(<AlertsTab alerts={allActiveAlerts} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        // Switch to Resolved tab
+        const resolvedButton = screen.getByText('Resolved').closest('button');
+        fireEvent.click(resolvedButton!);
+
+        expect(screen.getByText('No resolved alerts')).toBeInTheDocument();
+      });
+    });
+
+    describe('Dismissed Tab Empty State Icon', () => {
+      const allActiveAlerts: DelayAlert[] = mockAlerts.map(alert => ({
+        ...alert,
+        status: 'active' as const,
+      }));
+
+      it('should render SVG icon for no dismissed alerts', () => {
+        const { container } = render(<AlertsTab alerts={allActiveAlerts} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        // Switch to Dismissed tab
+        const dismissedButton = screen.getByText('Dismissed').closest('button');
+        fireEvent.click(dismissedButton!);
+
+        // Should have Lucide SVG icon (Trash2)
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        expect(emptyStateIcon).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in no dismissed alerts message', () => {
+        const { container } = render(<AlertsTab alerts={allActiveAlerts} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        // Switch to Dismissed tab
+        const dismissedButton = screen.getByText('Dismissed').closest('button');
+        fireEvent.click(dismissedButton!);
+
+        const emptyState = container.querySelector('[class*="emptyState"]');
+        // Should NOT contain trash emoji 🗑️
+        expect(emptyState?.textContent).not.toContain('🗑️');
+      });
+
+      it('should maintain accessible empty state text on Dismissed tab', () => {
+        render(<AlertsTab alerts={allActiveAlerts} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        // Switch to Dismissed tab
+        const dismissedButton = screen.getByText('Dismissed').closest('button');
+        fireEvent.click(dismissedButton!);
+
+        expect(screen.getByText('No dismissed alerts')).toBeInTheDocument();
+      });
+    });
+
+    describe('Icon Styling Consistency', () => {
+      it('should apply consistent size to empty state icons', () => {
+        const { container } = render(<AlertsTab alerts={[]} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        // Lucide icons should have width/height attributes
+        expect(emptyStateIcon).toHaveAttribute('width');
+        expect(emptyStateIcon).toHaveAttribute('height');
+      });
+
+      it('should apply currentColor to empty state SVG icons for theming', () => {
+        const { container } = render(<AlertsTab alerts={[]} loading={false} onAlertAction={mockOnAlertAction} />);
+
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        // Lucide icons use currentColor for stroke
+        expect(emptyStateIcon).toHaveAttribute('stroke', 'currentColor');
+      });
     });
   });
 });

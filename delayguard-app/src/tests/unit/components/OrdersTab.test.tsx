@@ -287,7 +287,7 @@ describe('OrdersTab Component', () => {
       // Click Processing tab
       fireEvent.click(screen.getByText('Processing'));
 
-      expect(screen.getByText('⏳')).toBeInTheDocument();
+      // v1.32: Icon is now SVG (decorative with aria-hidden), so we only check text
       expect(screen.getByText('No processing orders')).toBeInTheDocument();
       expect(screen.getByText('Orders being prepared for shipment will appear here.')).toBeInTheDocument();
     });
@@ -300,8 +300,8 @@ describe('OrdersTab Component', () => {
 
       render(<OrdersTab orders={ordersWithoutShipped} loading={false} onOrderAction={mockOnOrderAction} />);
 
+      // v1.32: Icon is now SVG (decorative with aria-hidden), so we only check text
       // Default is Shipped tab
-      expect(screen.getByText('🚚')).toBeInTheDocument();
       expect(screen.getByText('No shipped orders')).toBeInTheDocument();
       expect(screen.getByText('Orders in transit will appear here.')).toBeInTheDocument();
     });
@@ -317,7 +317,7 @@ describe('OrdersTab Component', () => {
       // Click Delivered tab
       fireEvent.click(screen.getByText('Delivered'));
 
-      expect(screen.getByText('✅')).toBeInTheDocument();
+      // v1.32: Icon is now SVG (decorative with aria-hidden), so we only check text
       expect(screen.getByText('No delivered orders')).toBeInTheDocument();
       expect(screen.getByText('Successfully delivered orders will appear here.')).toBeInTheDocument();
     });
@@ -327,13 +327,14 @@ describe('OrdersTab Component', () => {
 
       render(<OrdersTab orders={emptyOrders} loading={false} onOrderAction={mockOnOrderAction} />);
 
-      // Processing tab - ⏳ icon
+      // v1.32: Icons are now SVG (decorative with aria-hidden), so we check text content instead
+      // Processing tab - should show empty state
       fireEvent.click(screen.getByText('Processing'));
-      expect(screen.getByText('⏳')).toBeInTheDocument();
+      expect(screen.getByText('No processing orders')).toBeInTheDocument();
 
-      // Delivered tab - ✅ icon
+      // Delivered tab - should show empty state
       fireEvent.click(screen.getByText('Delivered'));
-      expect(screen.getByText('✅')).toBeInTheDocument();
+      expect(screen.getByText('No delivered orders')).toBeInTheDocument();
 
       // Shipped tab - should show order (not empty)
       fireEvent.click(screen.getByText('Shipped'));
@@ -501,6 +502,164 @@ describe('OrdersTab Component', () => {
       // Now Processing should be pressed
       expect(processingButton).toHaveAttribute('aria-pressed', 'true');
       expect(shippedButton).toHaveAttribute('aria-pressed', 'false');
+    });
+  });
+
+  describe('v1.32: Lucide Icon Integration - Empty State Icons', () => {
+    describe('Initial Empty State Icon (No Orders)', () => {
+      it('should render SVG icon when no orders exist', () => {
+        const { container } = render(<OrdersTab orders={[]} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        // Should have Lucide SVG icon (Package) in initial empty state
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        expect(emptyStateIcon).toBeInTheDocument();
+        expect(emptyStateIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+
+      it('should not contain emoji in initial empty state', () => {
+        const { container } = render(<OrdersTab orders={[]} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"]');
+        // Should NOT contain package emoji 📦
+        expect(emptyStateIcon?.textContent).not.toContain('📦');
+      });
+
+      it('should have aria-hidden="true" on initial empty state SVG icon', () => {
+        const { container } = render(<OrdersTab orders={[]} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        expect(emptyStateIcon).toHaveAttribute('aria-hidden', 'true');
+      });
+    });
+
+    describe('Processing Tab Empty State Icon', () => {
+      const allShippedOrders: Order[] = mockOrders.map(order => ({
+        ...order,
+        status: 'shipped' as const,
+      }));
+
+      it('should render SVG icon for no processing orders', () => {
+        const { container } = render(<OrdersTab orders={allShippedOrders} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        // Switch to Processing tab
+        const processingButton = screen.getByText('Processing').closest('button');
+        fireEvent.click(processingButton!);
+
+        // Should have Lucide SVG icon (Timer or Clock)
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        expect(emptyStateIcon).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in no processing orders message', () => {
+        const { container } = render(<OrdersTab orders={allShippedOrders} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        // Switch to Processing tab
+        const processingButton = screen.getByText('Processing').closest('button');
+        fireEvent.click(processingButton!);
+
+        const emptyState = container.querySelector('[class*="emptyState"]');
+        // Should NOT contain hourglass emoji ⏳
+        expect(emptyState?.textContent).not.toContain('⏳');
+      });
+
+      it('should maintain accessible empty state text on Processing tab', () => {
+        render(<OrdersTab orders={allShippedOrders} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        // Switch to Processing tab
+        const processingButton = screen.getByText('Processing').closest('button');
+        fireEvent.click(processingButton!);
+
+        expect(screen.getByText('No processing orders')).toBeInTheDocument();
+      });
+    });
+
+    describe('Shipped Tab Empty State Icon', () => {
+      const allProcessingOrders: Order[] = mockOrders.map(order => ({
+        ...order,
+        status: 'processing' as const,
+      }));
+
+      it('should render SVG icon for no shipped orders', () => {
+        const { container } = render(<OrdersTab orders={allProcessingOrders} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        // Shipped tab is default, but all orders are processing, so should show empty state
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        expect(emptyStateIcon).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in no shipped orders message', () => {
+        const { container } = render(<OrdersTab orders={allProcessingOrders} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        const emptyState = container.querySelector('[class*="emptyState"]');
+        // Should NOT contain truck emoji 🚚
+        expect(emptyState?.textContent).not.toContain('🚚');
+      });
+
+      it('should maintain accessible empty state text on Shipped tab', () => {
+        render(<OrdersTab orders={allProcessingOrders} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        expect(screen.getByText('No shipped orders')).toBeInTheDocument();
+      });
+    });
+
+    describe('Delivered Tab Empty State Icon', () => {
+      const allProcessingOrders: Order[] = mockOrders.map(order => ({
+        ...order,
+        status: 'processing' as const,
+      }));
+
+      it('should render SVG icon for no delivered orders', () => {
+        const { container } = render(<OrdersTab orders={allProcessingOrders} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        // Switch to Delivered tab
+        const deliveredButton = screen.getByText('Delivered').closest('button');
+        fireEvent.click(deliveredButton!);
+
+        // Should have Lucide SVG icon (CheckCircle2)
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        expect(emptyStateIcon).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in no delivered orders message', () => {
+        const { container } = render(<OrdersTab orders={allProcessingOrders} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        // Switch to Delivered tab
+        const deliveredButton = screen.getByText('Delivered').closest('button');
+        fireEvent.click(deliveredButton!);
+
+        const emptyState = container.querySelector('[class*="emptyState"]');
+        // Should NOT contain check emoji ✅
+        expect(emptyState?.textContent).not.toContain('✅');
+      });
+
+      it('should maintain accessible empty state text on Delivered tab', () => {
+        render(<OrdersTab orders={allProcessingOrders} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        // Switch to Delivered tab
+        const deliveredButton = screen.getByText('Delivered').closest('button');
+        fireEvent.click(deliveredButton!);
+
+        expect(screen.getByText('No delivered orders')).toBeInTheDocument();
+      });
+    });
+
+    describe('Icon Styling Consistency', () => {
+      it('should apply consistent size to empty state icons', () => {
+        const { container } = render(<OrdersTab orders={[]} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        // Lucide icons should have width/height attributes
+        expect(emptyStateIcon).toHaveAttribute('width');
+        expect(emptyStateIcon).toHaveAttribute('height');
+      });
+
+      it('should apply currentColor to empty state SVG icons for theming', () => {
+        const { container } = render(<OrdersTab orders={[]} loading={false} onOrderAction={mockOnOrderAction} />);
+
+        const emptyStateIcon = container.querySelector('[class*="emptyStateIcon"] svg');
+        // Lucide icons use currentColor for stroke
+        expect(emptyStateIcon).toHaveAttribute('stroke', 'currentColor');
+      });
     });
   });
 });

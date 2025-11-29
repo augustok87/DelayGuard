@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Package, AlertTriangle, Clock } from 'lucide-react';
+import { Package, AlertTriangle, Clock, BarChart3, Info, Lightbulb } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { HelpModal } from '../../ui/HelpModal';
@@ -106,7 +106,7 @@ export function SettingsCard({
 
     return (
       <span className={styles.benchmark}>
-        📊 {label}: <strong>{value.toFixed(1)}</strong> {suffix}{comparison}
+        <BarChart3 size={16} aria-hidden={true} strokeWidth={2} /> {label}: <strong>{value.toFixed(1)}</strong> {suffix}{comparison}
       </span>
     );
   };
@@ -124,7 +124,9 @@ export function SettingsCard({
 
             {/* Shopify Connection Status - Not Connected */}
             <div className={`${styles.alert} ${styles.alertWarning}`}>
-              <span className={styles.alertIcon}>⚠</span>
+              <span className={styles.alertIcon}>
+                <AlertTriangle size={20} aria-hidden={true} strokeWidth={2} />
+              </span>
               <div className={styles.alertContent}>
                 <strong>Not Connected</strong>
                 <p className={styles.alertText}>Connect your Shopify store to start monitoring orders</p>
@@ -200,7 +202,9 @@ export function SettingsCard({
                 onClick={() => openHelpModal('warehouse')}
                 type="button"
               >
-                <span className={styles.learnMoreIcon}>ℹ️</span>
+                <span className={styles.learnMoreIcon}>
+                  <Info size={16} aria-hidden={true} strokeWidth={2} />
+                </span>
                 Learn More About Warehouse Delays
               </button>
 
@@ -262,14 +266,16 @@ export function SettingsCard({
                 onClick={() => openHelpModal('carrier')}
                 type="button"
               >
-                <span className={styles.learnMoreIcon}>ℹ️</span>
+                <span className={styles.learnMoreIcon}>
+                  <Info size={16} aria-hidden={true} strokeWidth={2} />
+                </span>
                 Learn More About Carrier Reported Delays
               </button>
 
               {benchmarks && benchmarks.delaysThisMonth !== undefined && (
                 <div className={styles.benchmarkContainer}>
                   <span className={styles.benchmark}>
-                    📊 You&apos;ve had <strong>{benchmarks.delaysThisMonth}</strong> carrier delays this month
+                    <BarChart3 size={16} aria-hidden={true} strokeWidth={2} /> You&apos;ve had <strong>{benchmarks.delaysThisMonth}</strong> carrier delays this month
                     {benchmarks.delaysTrend !== undefined && benchmarks.delaysTrend < 0 && (
                       <span className={styles.trendPositive}> ↓ {Math.abs(benchmarks.delaysTrend)}%</span>
                     )}
@@ -335,7 +341,9 @@ export function SettingsCard({
                 onClick={() => openHelpModal('transit')}
                 type="button"
               >
-                <span className={styles.learnMoreIcon}>ℹ️</span>
+                <span className={styles.learnMoreIcon}>
+                  <Info size={16} aria-hidden={true} strokeWidth={2} />
+                </span>
                 Learn More About Stuck in Transit Detection
               </button>
 
@@ -350,7 +358,9 @@ export function SettingsCard({
 
           {/* Smart Tip */}
           <div className={styles.smartTip}>
-            <span className={styles.tipIcon}>💡</span>
+            <span className={styles.tipIcon}>
+              <Lightbulb size={20} aria-hidden={true} strokeWidth={2} />
+            </span>
             <div className={styles.tipContent}>
               <strong>SMART TIP:</strong> Based on your store&apos;s performance, we recommend a delay threshold of{' '}
               <strong>{Math.ceil((benchmarks?.avgFulfillmentDays || 2) + 1)}</strong> days to catch issues early

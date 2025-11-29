@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CheckCircle2, FileCheck, Trash2, BarChart3 } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { SegmentedControl } from '../../ui/SegmentedControl';
 import { AlertCard } from './AlertCard';
@@ -54,25 +55,25 @@ export function AlertsTab({ alerts, loading, onAlertAction }: AlertsTabProps) {
     switch (activeTab) {
       case 'active':
         return {
-          icon: '✅',
+          icon: <CheckCircle2 size={48} aria-hidden={true} strokeWidth={1.5} />,
           title: 'No active alerts',
           subtitle: 'Great! All delays have been resolved or dismissed.',
         };
       case 'resolved':
         return {
-          icon: '📝',
+          icon: <FileCheck size={48} aria-hidden={true} strokeWidth={1.5} />,
           title: 'No resolved alerts',
           subtitle: 'Resolved alerts will appear here after you mark them as handled.',
         };
       case 'dismissed':
         return {
-          icon: '🗑️',
+          icon: <Trash2 size={48} aria-hidden={true} strokeWidth={1.5} />,
           title: 'No dismissed alerts',
           subtitle: 'Dismissed alerts will appear here.',
         };
       default:
         return {
-          icon: '📊',
+          icon: <BarChart3 size={48} aria-hidden={true} strokeWidth={1.5} />,
           title: 'No alerts found',
           subtitle: 'Alerts will appear here when delays are detected.',
         };
@@ -83,7 +84,9 @@ export function AlertsTab({ alerts, loading, onAlertAction }: AlertsTabProps) {
     return (
       <Card title="Delay Alerts" subtitle="Monitor and manage shipping delay notifications">
         <div className={styles.emptyState}>
-          <div className={styles.emptyStateIcon}>📊</div>
+          <div className={styles.emptyStateIcon}>
+            <BarChart3 size={48} aria-hidden={true} strokeWidth={1.5} />
+          </div>
           <h3>No delay alerts found</h3>
           <p>Alerts will appear here when delays are detected.</p>
         </div>

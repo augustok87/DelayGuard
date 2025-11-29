@@ -943,7 +943,7 @@ describe('SettingsCard (Phase 1.4)', () => {
     });
   });
 
-  describe('v1.31: Lucide Icon Integration', () => {
+  describe('v1.31: Lucide Icon Integration - Rule Icons', () => {
     describe('Rule Icon Rendering', () => {
       it('should render SVG icons for all 3 delay rules', () => {
         const { container } = render(
@@ -1140,6 +1140,400 @@ describe('SettingsCard (Phase 1.4)', () => {
         const transitHeader = container.querySelector('[class*="ruleCardTransit"] [class*="ruleHeader"]');
         // Should NOT contain clock emoji ⏰
         expect(transitHeader?.textContent).not.toContain('⏰');
+      });
+    });
+  });
+
+  describe('v1.32: Lucide Icon Integration - Helper Icons', () => {
+    describe('Benchmark Icon Rendering', () => {
+      it('should render SVG icon for benchmark statistics', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        // Benchmark should have Lucide SVG icon (BarChart3 or TrendingUp)
+        const benchmarkIcons = container.querySelectorAll('[class*="benchmark"] svg');
+        expect(benchmarkIcons.length).toBeGreaterThanOrEqual(2); // Multiple benchmarks displayed
+      });
+
+      it('should not contain emoji in benchmark displays', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        const benchmarkElements = container.querySelectorAll('[class*="benchmark"]');
+        benchmarkElements.forEach(elem => {
+          // Should NOT contain chart emoji 📊
+          expect(elem.textContent).not.toContain('📊');
+        });
+      });
+
+      it('should have aria-hidden="true" on benchmark SVG icons', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        const benchmarkIcons = container.querySelectorAll('[class*="benchmark"] svg');
+        benchmarkIcons.forEach(svg => {
+          expect(svg).toHaveAttribute('aria-hidden', 'true');
+        });
+      });
+
+      it('should maintain readable benchmark text with Lucide icons', () => {
+        render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        // Benchmark text should still be readable
+        expect(screen.getByText(/Your avg fulfillment time:/i)).toBeInTheDocument();
+        expect(screen.getByText(/2.1/)).toBeInTheDocument();
+      });
+    });
+
+    describe('Warning Icon Rendering (Not Connected)', () => {
+      it('should render SVG icon for not connected warning', () => {
+        const { container } = render(
+          <SettingsCard
+            shop={null}
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        // Warning alert should have Lucide SVG icon (AlertTriangle or AlertCircle)
+        const warningIcon = container.querySelector('[class*="alertIcon"] svg');
+        expect(warningIcon).toBeInTheDocument();
+        expect(warningIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+
+      it('should not contain emoji in not connected warning', () => {
+        const { container } = render(
+          <SettingsCard
+            shop={null}
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const warningAlert = container.querySelector('[class*="alertWarning"]');
+        // Should NOT contain warning emoji ⚠
+        expect(warningAlert?.textContent).not.toContain('⚠');
+      });
+
+      it('should have aria-hidden="true" on warning SVG icon', () => {
+        const { container } = render(
+          <SettingsCard
+            shop={null}
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const warningIcon = container.querySelector('[class*="alertIcon"] svg');
+        expect(warningIcon).toHaveAttribute('aria-hidden', 'true');
+      });
+
+      it('should maintain accessible warning text with Lucide icon', () => {
+        render(
+          <SettingsCard
+            shop={null}
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        // Warning text should still be readable
+        expect(screen.getByText('Not Connected')).toBeInTheDocument();
+        expect(screen.getByText(/Connect your Shopify store/i)).toBeInTheDocument();
+      });
+    });
+
+    describe('Learn More Icon Rendering', () => {
+      it('should render SVG icons for all 3 Learn More buttons', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        // All 3 Learn More buttons should have Lucide SVG icon (Info or HelpCircle)
+        const learnMoreIcons = container.querySelectorAll('[class*="learnMoreIcon"] svg');
+        expect(learnMoreIcons.length).toBe(3); // One for each rule
+      });
+
+      it('should not contain emoji in Learn More buttons', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const learnMoreButtons = container.querySelectorAll('[class*="learnMoreButton"]');
+        learnMoreButtons.forEach(button => {
+          // Should NOT contain info emoji ℹ️
+          expect(button.textContent).not.toContain('ℹ️');
+        });
+      });
+
+      it('should have aria-hidden="true" on Learn More SVG icons', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const learnMoreIcons = container.querySelectorAll('[class*="learnMoreIcon"] svg');
+        learnMoreIcons.forEach(svg => {
+          expect(svg).toHaveAttribute('aria-hidden', 'true');
+        });
+      });
+
+      it('should maintain accessible button text with Lucide icons', () => {
+        render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        // Button text should still be readable
+        expect(screen.getByRole('button', { name: /Learn More About Warehouse Delays/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Learn More About Carrier Reported Delays/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Learn More About Stuck in Transit Detection/i })).toBeInTheDocument();
+      });
+
+      it('should render Warehouse Delays Learn More icon', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const warehouseCard = container.querySelector('[class*="ruleCardWarehouse"]');
+        const learnMoreIcon = warehouseCard?.querySelector('[class*="learnMoreIcon"] svg');
+        expect(learnMoreIcon).toBeInTheDocument();
+      });
+
+      it('should render Carrier Delays Learn More icon', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const carrierCard = container.querySelector('[class*="ruleCardCarrier"]');
+        const learnMoreIcon = carrierCard?.querySelector('[class*="learnMoreIcon"] svg');
+        expect(learnMoreIcon).toBeInTheDocument();
+      });
+
+      it('should render Transit Delays Learn More icon', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            {...mockCallbacks}
+          />,
+        );
+
+        const transitCard = container.querySelector('[class*="ruleCardTransit"]');
+        const learnMoreIcon = transitCard?.querySelector('[class*="learnMoreIcon"] svg');
+        expect(learnMoreIcon).toBeInTheDocument();
+      });
+    });
+
+    describe('Smart Tip Icon Rendering', () => {
+      it('should render SVG icon for Smart Tip', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        // Smart Tip should have Lucide SVG icon (Lightbulb)
+        const tipIcon = container.querySelector('[class*="tipIcon"] svg');
+        expect(tipIcon).toBeInTheDocument();
+        expect(tipIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+
+      it('should not contain emoji in Smart Tip', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        const smartTip = container.querySelector('[class*="smartTip"]');
+        // Should NOT contain lightbulb emoji 💡
+        expect(smartTip?.textContent).not.toContain('💡');
+      });
+
+      it('should have aria-hidden="true" on Smart Tip SVG icon', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        const tipIcon = container.querySelector('[class*="tipIcon"] svg');
+        expect(tipIcon).toHaveAttribute('aria-hidden', 'true');
+      });
+
+      it('should maintain readable Smart Tip text with Lucide icon', () => {
+        render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        // Smart Tip text should still be readable
+        expect(screen.getByText(/SMART TIP:/i)).toBeInTheDocument();
+        expect(screen.getByText(/Based on your store's performance/i)).toBeInTheDocument();
+      });
+    });
+
+    describe('Icon Styling Consistency', () => {
+      it('should apply consistent size to helper icons', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        // All helper icons should have width/height attributes
+        const allHelperIcons = container.querySelectorAll('[class*="benchmark"] svg, [class*="tipIcon"] svg, [class*="learnMoreIcon"] svg');
+        allHelperIcons.forEach(svg => {
+          expect(svg).toHaveAttribute('width');
+          expect(svg).toHaveAttribute('height');
+        });
+      });
+
+      it('should apply currentColor to helper SVG icons for theming', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        const allHelperIcons = container.querySelectorAll('[class*="benchmark"] svg, [class*="tipIcon"] svg, [class*="learnMoreIcon"] svg');
+        allHelperIcons.forEach(svg => {
+          // Lucide icons use currentColor for stroke
+          expect(svg).toHaveAttribute('stroke', 'currentColor');
+        });
+      });
+    });
+
+    describe('Overall Helper Icon Integration', () => {
+      it('should render all helper icons when benchmarks provided', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        // Count all helper SVG icons (benchmarks, learn more, smart tip)
+        // Expected: 2+ benchmarks, 3 learn more, 1 smart tip = 6+ total
+        const allHelperIcons = container.querySelectorAll('[class*="benchmark"] svg, [class*="tipIcon"] svg, [class*="learnMoreIcon"] svg');
+        expect(allHelperIcons.length).toBeGreaterThanOrEqual(6);
+      });
+
+      it('should not contain any emoji characters in helper sections', () => {
+        const { container } = render(
+          <SettingsCard
+            shop="test-shop.myshopify.com"
+            settings={mockSettings}
+            loading={false}
+            benchmarks={mockBenchmarks}
+            {...mockCallbacks}
+          />,
+        );
+
+        // Get text content from all helper sections
+        const benchmarks = container.querySelectorAll('[class*="benchmark"]');
+        const smartTip = container.querySelector('[class*="smartTip"]');
+        const learnMoreButtons = container.querySelectorAll('[class*="learnMoreButton"]');
+
+        // Verify no emoji in any helper section
+        benchmarks.forEach(elem => {
+          expect(elem.textContent).not.toMatch(/[\u{1F300}-\u{1F9FF}]/u); // No emoji
+        });
+        expect(smartTip?.textContent).not.toMatch(/[\u{1F300}-\u{1F9FF}]/u);
+        learnMoreButtons.forEach(button => {
+          expect(button.textContent).not.toMatch(/[\u{2139}]/u); // No ℹ emoji
+        });
       });
     });
   });

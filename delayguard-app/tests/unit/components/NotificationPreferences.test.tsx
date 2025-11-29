@@ -526,4 +526,166 @@ describe('NotificationPreferences Component', () => {
       expect(screen.getByText(/Receive warehouse delay notifications at these contact details/i)).toBeInTheDocument();
     });
   });
+
+  describe('v1.32: Lucide Icon Integration - Warning Icon', () => {
+    describe('Warning Icon Rendering', () => {
+      it('should render SVG icon for no notifications warning', () => {
+        const settings = createMockSettings({
+          emailNotifications: false,
+          smsNotifications: false,
+        });
+        const { container } = render(
+          <NotificationPreferences
+            settings={settings}
+            onSettingsChange={mockOnSettingsChange}
+          />,
+        );
+
+        // Warning should have Lucide SVG icon (AlertTriangle)
+        const warningIcon = container.querySelector('[class*="alertIcon"] svg');
+        expect(warningIcon).toBeInTheDocument();
+        expect(warningIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+
+      it('should not contain emoji in warning message', () => {
+        const settings = createMockSettings({
+          emailNotifications: false,
+          smsNotifications: false,
+        });
+        const { container } = render(
+          <NotificationPreferences
+            settings={settings}
+            onSettingsChange={mockOnSettingsChange}
+          />,
+        );
+
+        const warningAlert = container.querySelector('[class*="alertWarning"]');
+        // Should NOT contain warning emoji ⚠
+        expect(warningAlert?.textContent).not.toContain('⚠');
+      });
+
+      it('should have aria-hidden="true" on warning SVG icon', () => {
+        const settings = createMockSettings({
+          emailNotifications: false,
+          smsNotifications: false,
+        });
+        const { container } = render(
+          <NotificationPreferences
+            settings={settings}
+            onSettingsChange={mockOnSettingsChange}
+          />,
+        );
+
+        const warningIcon = container.querySelector('[class*="alertIcon"] svg');
+        expect(warningIcon).toHaveAttribute('aria-hidden', 'true');
+      });
+
+      it('should maintain accessible warning text with Lucide icon', () => {
+        const settings = createMockSettings({
+          emailNotifications: false,
+          smsNotifications: false,
+        });
+        render(
+          <NotificationPreferences
+            settings={settings}
+            onSettingsChange={mockOnSettingsChange}
+          />,
+        );
+
+        // Warning text should still be readable
+        expect(screen.getByText('No notifications enabled')).toBeInTheDocument();
+        expect(screen.getByText(/Customers won't be notified about delays/i)).toBeInTheDocument();
+      });
+    });
+
+    describe('Icon Styling', () => {
+      it('should apply consistent size to warning icon', () => {
+        const settings = createMockSettings({
+          emailNotifications: false,
+          smsNotifications: false,
+        });
+        const { container } = render(
+          <NotificationPreferences
+            settings={settings}
+            onSettingsChange={mockOnSettingsChange}
+          />,
+        );
+
+        const warningIcon = container.querySelector('[class*="alertIcon"] svg');
+        // Lucide icons should have width/height attributes
+        expect(warningIcon).toHaveAttribute('width');
+        expect(warningIcon).toHaveAttribute('height');
+        // Consistent size for warning icon (20px to match SettingsCard)
+        expect(warningIcon?.getAttribute('width')).toBe('20');
+        expect(warningIcon?.getAttribute('height')).toBe('20');
+      });
+
+      it('should apply currentColor to warning SVG icon for theming', () => {
+        const settings = createMockSettings({
+          emailNotifications: false,
+          smsNotifications: false,
+        });
+        const { container } = render(
+          <NotificationPreferences
+            settings={settings}
+            onSettingsChange={mockOnSettingsChange}
+          />,
+        );
+
+        const warningIcon = container.querySelector('[class*="alertIcon"] svg');
+        // Lucide icons use currentColor for stroke
+        expect(warningIcon).toHaveAttribute('stroke', 'currentColor');
+      });
+    });
+
+    describe('Conditional Rendering', () => {
+      it('should NOT render warning icon when email notifications are enabled', () => {
+        const settings = createMockSettings({
+          emailNotifications: true,
+          smsNotifications: false,
+        });
+        const { container } = render(
+          <NotificationPreferences
+            settings={settings}
+            onSettingsChange={mockOnSettingsChange}
+          />,
+        );
+
+        const warningIcon = container.querySelector('[class*="alertIcon"]');
+        expect(warningIcon).not.toBeInTheDocument();
+      });
+
+      it('should NOT render warning icon when SMS notifications are enabled', () => {
+        const settings = createMockSettings({
+          emailNotifications: false,
+          smsNotifications: true,
+        });
+        const { container } = render(
+          <NotificationPreferences
+            settings={settings}
+            onSettingsChange={mockOnSettingsChange}
+          />,
+        );
+
+        const warningIcon = container.querySelector('[class*="alertIcon"]');
+        expect(warningIcon).not.toBeInTheDocument();
+      });
+
+      it('should render warning icon only when both notifications are disabled', () => {
+        const settings = createMockSettings({
+          emailNotifications: false,
+          smsNotifications: false,
+        });
+        const { container } = render(
+          <NotificationPreferences
+            settings={settings}
+            onSettingsChange={mockOnSettingsChange}
+          />,
+        );
+
+        const warningIcon = container.querySelector('[class*="alertIcon"] svg');
+        expect(warningIcon).toBeInTheDocument();
+      });
+    });
+  });
 });

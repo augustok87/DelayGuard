@@ -1,4 +1,5 @@
 import React from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { AppSettings } from '../../../types';
@@ -77,7 +78,9 @@ export function NotificationPreferences({
         {/* Warning when no notifications are enabled */}
         {!settings.emailNotifications && !settings.smsNotifications && (
           <div className={`${styles.alert} ${styles.alertWarning}`}>
-            <span className={styles.alertIcon}>⚠</span>
+            <span className={styles.alertIcon}>
+              <AlertTriangle size={20} aria-hidden={true} strokeWidth={2} />
+            </span>
             <div className={styles.alertContent}>
               <strong>No notifications enabled</strong>
               <p className={styles.alertText}>Customers won&apos;t be notified about delays. Enable at least one notification method.</p>

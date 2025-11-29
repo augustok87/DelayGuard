@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Timer, Truck, CheckCircle2, Package } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { SegmentedControl } from '../../ui/SegmentedControl';
 import { OrderCard } from './OrderCard';
@@ -37,7 +38,9 @@ export function OrdersTab({ orders, loading, onOrderAction }: OrdersTabProps) {
     return (
       <Card title="Recent Orders" subtitle="Track and monitor your order fulfillment">
         <div className={styles.emptyState}>
-          <div className={styles.emptyStateIcon}>📦</div>
+          <div className={styles.emptyStateIcon}>
+            <Package size={48} aria-hidden={true} strokeWidth={1.5} />
+          </div>
           <h3>No orders found</h3>
           <p>Orders will appear here when they are processed.</p>
         </div>
@@ -66,25 +69,25 @@ export function OrdersTab({ orders, loading, onOrderAction }: OrdersTabProps) {
     switch (activeTab) {
       case 'processing':
         return {
-          icon: '⏳',
+          icon: <Timer size={48} aria-hidden={true} strokeWidth={1.5} />,
           title: 'No processing orders',
           subtitle: 'Orders being prepared for shipment will appear here.',
         };
       case 'shipped':
         return {
-          icon: '🚚',
+          icon: <Truck size={48} aria-hidden={true} strokeWidth={1.5} />,
           title: 'No shipped orders',
           subtitle: 'Orders in transit will appear here.',
         };
       case 'delivered':
         return {
-          icon: '✅',
+          icon: <CheckCircle2 size={48} aria-hidden={true} strokeWidth={1.5} />,
           title: 'No delivered orders',
           subtitle: 'Successfully delivered orders will appear here.',
         };
       default:
         return {
-          icon: '📦',
+          icon: <Package size={48} aria-hidden={true} strokeWidth={1.5} />,
           title: 'No orders found',
           subtitle: 'Orders will appear here when they are processed.',
         };
