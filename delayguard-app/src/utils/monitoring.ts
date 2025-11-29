@@ -98,14 +98,14 @@ class MonitoringService {
 
   // Performance decorator
   static trackPerformance(operation: string) {
-    return function (
+    return function(
       target: any,
       propertyName: string,
       descriptor: PropertyDescriptor,
     ) {
       const method = descriptor.value;
 
-      descriptor.value = async function (...args: unknown[]) {
+      descriptor.value = async function(...args: unknown[]) {
         const start = Date.now();
         let success = true;
         let error: Error | null = null;

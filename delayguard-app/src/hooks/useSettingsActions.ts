@@ -27,7 +27,7 @@ export const useSettingsActions = () => {
   } = useToasts();
 
   const saveSettings = useCallback(
-    async (settings: AppSettings) => {
+    async(settings: AppSettings) => {
       try {
         const validation = validateSettings(settings);
 
@@ -47,7 +47,7 @@ export const useSettingsActions = () => {
     [updateSettings, validateSettings, showErrorToast, showSaveSuccessToast],
   );
 
-  const resetToDefaults = useCallback(async () => {
+  const resetToDefaults = useCallback(async() => {
     try {
       await resetSettings();
       showSuccessToast("Settings reset to defaults successfully!");
@@ -59,7 +59,7 @@ export const useSettingsActions = () => {
   }, [resetSettings, showSuccessToast, showErrorToast]);
 
   const applySettingsPreset = useCallback(
-    async (preset: "conservative" | "balanced" | "aggressive") => {
+    async(preset: "conservative" | "balanced" | "aggressive") => {
       try {
         await applyPreset(preset);
         showSuccessToast(
@@ -74,7 +74,7 @@ export const useSettingsActions = () => {
     [applyPreset, showSuccessToast, showErrorToast],
   );
 
-  const testDelayDetection = useCallback(async () => {
+  const testDelayDetection = useCallback(async() => {
     try {
       showInfoToast("Testing delay detection system...");
 
@@ -97,7 +97,7 @@ export const useSettingsActions = () => {
     }
   }, [showInfoToast, showTestSuccessToast, showTestErrorToast, showErrorToast]);
 
-  const connectToShopify = useCallback(async () => {
+  const connectToShopify = useCallback(async() => {
     try {
       showInfoToast("Connecting to Shopify...");
 
@@ -137,7 +137,7 @@ export const useSettingsActions = () => {
   }, [exportSettings, showSuccessToast, showErrorToast]);
 
   const importSettingsFromFile = useCallback(
-    async (file: File) => {
+    async(file: File) => {
       try {
         const result = await importSettings(file);
         showSuccessToast("Settings imported successfully!");

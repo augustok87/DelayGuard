@@ -11,7 +11,7 @@ import { checkWarehouseDelay } from '../../src/services/delay-detection-service'
 
 describe('Warehouse Delay Detection (Rule 1)', () => {
   describe('Unfulfilled Order Detection', () => {
-    it('should detect delay when order is unfulfilled for 2+ days', async () => {
+    it('should detect delay when order is unfulfilled for 2+ days', async() => {
       const mockOrder = {
         id: 1,
         status: 'unfulfilled',
@@ -25,7 +25,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(result.delayReason).toBe('WAREHOUSE_DELAY');
     });
 
-    it('should NOT detect delay when order is unfulfilled for less than threshold', async () => {
+    it('should NOT detect delay when order is unfulfilled for less than threshold', async() => {
       const mockOrder = {
         id: 1,
         status: 'unfulfilled',
@@ -38,7 +38,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(result.delayDays).toBe(1);
     });
 
-    it('should NOT detect delay when order is fulfilled', async () => {
+    it('should NOT detect delay when order is fulfilled', async() => {
       const mockOrder = {
         id: 1,
         status: 'fulfilled',
@@ -51,7 +51,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(result.delayDays).toBe(0);
     });
 
-    it('should NOT detect delay when order is partially fulfilled', async () => {
+    it('should NOT detect delay when order is partially fulfilled', async() => {
       const mockOrder = {
         id: 1,
         status: 'partial',
@@ -65,7 +65,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
   });
 
   describe('Threshold Configuration', () => {
-    it('should respect custom threshold of 1 day', async () => {
+    it('should respect custom threshold of 1 day', async() => {
       const mockOrder = {
         id: 1,
         status: 'unfulfilled',
@@ -78,7 +78,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(result.delayDays).toBe(1);
     });
 
-    it('should respect custom threshold of 5 days', async () => {
+    it('should respect custom threshold of 5 days', async() => {
       const mockOrder = {
         id: 1,
         status: 'unfulfilled',
@@ -91,7 +91,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(result.delayDays).toBe(4);
     });
 
-    it('should detect delay when exactly at threshold', async () => {
+    it('should detect delay when exactly at threshold', async() => {
       const mockOrder = {
         id: 1,
         status: 'unfulfilled',
@@ -106,7 +106,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should handle orders created today (0 days old)', async () => {
+    it('should handle orders created today (0 days old)', async() => {
       const mockOrder = {
         id: 1,
         status: 'unfulfilled',
@@ -119,7 +119,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(result.delayDays).toBe(0);
     });
 
-    it('should handle very old unfulfilled orders (30+ days)', async () => {
+    it('should handle very old unfulfilled orders (30+ days)', async() => {
       const mockOrder = {
         id: 1,
         status: 'unfulfilled',
@@ -133,7 +133,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(result.delayReason).toBe('WAREHOUSE_DELAY');
     });
 
-    it('should handle null/undefined status as unfulfilled', async () => {
+    it('should handle null/undefined status as unfulfilled', async() => {
       const mockOrder = {
         id: 1,
         status: null,
@@ -145,7 +145,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(result.isDelayed).toBe(true); // Treat null as unfulfilled
     });
 
-    it('should handle archived order status', async () => {
+    it('should handle archived order status', async() => {
       const mockOrder = {
         id: 1,
         status: 'archived',
@@ -157,7 +157,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(result.isDelayed).toBe(false); // Archived orders don't need alerts
     });
 
-    it('should handle cancelled order status', async () => {
+    it('should handle cancelled order status', async() => {
       const mockOrder = {
         id: 1,
         status: 'cancelled',
@@ -171,7 +171,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
   });
 
   describe('Delay Days Calculation', () => {
-    it('should calculate delay days correctly (fractional days rounded down)', async () => {
+    it('should calculate delay days correctly (fractional days rounded down)', async() => {
       const mockOrder = {
         id: 1,
         status: 'unfulfilled',
@@ -184,7 +184,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(result.delayDays).toBe(2); // Should floor to 2
     });
 
-    it('should calculate delay days correctly across month boundaries', async () => {
+    it('should calculate delay days correctly across month boundaries', async() => {
       // Create date exactly 5 days ago (accounting for month boundaries)
       const fiveDaysAgo = new Date();
       fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
@@ -203,7 +203,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
   });
 
   describe('Return Value Structure', () => {
-    it('should return all required fields when delay detected', async () => {
+    it('should return all required fields when delay detected', async() => {
       const mockOrder = {
         id: 1,
         status: 'unfulfilled',
@@ -220,7 +220,7 @@ describe('Warehouse Delay Detection (Rule 1)', () => {
       expect(typeof result.delayReason).toBe('string');
     });
 
-    it('should return isDelayed: false with delayDays when no delay', async () => {
+    it('should return isDelayed: false with delayDays when no delay', async() => {
       const mockOrder = {
         id: 1,
         status: 'unfulfilled',

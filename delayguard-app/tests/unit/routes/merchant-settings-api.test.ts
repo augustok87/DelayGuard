@@ -23,7 +23,7 @@ describe.skip('GET /api/merchant-settings', () => {
     jest.clearAllMocks();
   });
 
-  it('should fetch merchant contact fields from shops table', async () => {
+  it('should fetch merchant contact fields from shops table', async() => {
     // Arrange
     mockQuery.mockResolvedValueOnce([
       {
@@ -54,7 +54,7 @@ describe.skip('GET /api/merchant-settings', () => {
     );
   });
 
-  it('should fetch delay toggle fields from app_settings table', async () => {
+  it('should fetch delay toggle fields from app_settings table', async() => {
     // Arrange
     mockQuery.mockResolvedValueOnce([
       {
@@ -93,7 +93,7 @@ describe.skip('GET /api/merchant-settings', () => {
     );
   });
 
-  it('should return merchant contact and toggle settings in response', async () => {
+  it('should return merchant contact and toggle settings in response', async() => {
     // Arrange
     mockQuery.mockResolvedValueOnce([
       {
@@ -130,7 +130,7 @@ describe.skip('GET /api/merchant-settings', () => {
     expect(true).toBe(true);
   });
 
-  it('should handle NULL merchant contact fields gracefully', async () => {
+  it('should handle NULL merchant contact fields gracefully', async() => {
     // Arrange
     mockQuery.mockResolvedValueOnce([
       {
@@ -162,7 +162,7 @@ describe.skip('GET /api/merchant-settings', () => {
     expect(true).toBe(true);
   });
 
-  it('should return 404 if shop not found', async () => {
+  it('should return 404 if shop not found', async() => {
     // Arrange
     mockQuery.mockResolvedValueOnce([] as any); // Empty result
 
@@ -181,7 +181,7 @@ describe.skip('PUT /api/merchant-settings', () => {
     jest.clearAllMocks();
   });
 
-  it('should update merchant contact fields in shops table', async () => {
+  it('should update merchant contact fields in shops table', async() => {
     // Arrange
     const shopDomain = 'test-shop.myshopify.com';
     const updates = {
@@ -203,7 +203,7 @@ describe.skip('PUT /api/merchant-settings', () => {
     );
   });
 
-  it('should update delay toggle fields in app_settings table', async () => {
+  it('should update delay toggle fields in app_settings table', async() => {
     // Arrange
     const shopDomain = 'test-shop.myshopify.com';
     const updates = {
@@ -225,7 +225,7 @@ describe.skip('PUT /api/merchant-settings', () => {
     );
   });
 
-  it('should update both merchant contact and toggles in single transaction', async () => {
+  it('should update both merchant contact and toggles in single transaction', async() => {
     // Arrange
     const shopDomain = 'test-shop.myshopify.com';
     const updates = {
@@ -248,7 +248,7 @@ describe.skip('PUT /api/merchant-settings', () => {
     expect(mockQuery).toHaveBeenCalledTimes(3); // 1 SELECT + 2 UPDATEs
   });
 
-  it('should allow partial updates (only merchant contact)', async () => {
+  it('should allow partial updates (only merchant contact)', async() => {
     // Arrange
     const shopDomain = 'test-shop.myshopify.com';
     const updates = {
@@ -269,7 +269,7 @@ describe.skip('PUT /api/merchant-settings', () => {
     expect(true).toBe(true);
   });
 
-  it('should allow partial updates (only toggles)', async () => {
+  it('should allow partial updates (only toggles)', async() => {
     // Arrange
     const shopDomain = 'test-shop.myshopify.com';
     const updates = {
@@ -290,7 +290,7 @@ describe.skip('PUT /api/merchant-settings', () => {
     expect(true).toBe(true);
   });
 
-  it('should return 404 if shop not found', async () => {
+  it('should return 404 if shop not found', async() => {
     // Arrange
     mockQuery.mockResolvedValueOnce([] as any); // Empty result
 
@@ -304,7 +304,7 @@ describe.skip('PUT /api/merchant-settings', () => {
     expect(true).toBe(true);
   });
 
-  it('should validate email format before updating', async () => {
+  it('should validate email format before updating', async() => {
     // Arrange
     const shopDomain = 'test-shop.myshopify.com';
     const updates = {
@@ -318,7 +318,7 @@ describe.skip('PUT /api/merchant-settings', () => {
     expect(true).toBe(true);
   });
 
-  it('should validate phone format before updating', async () => {
+  it('should validate phone format before updating', async() => {
     // Arrange
     const shopDomain = 'test-shop.myshopify.com';
     const updates = {
@@ -338,7 +338,7 @@ describe.skip('API Integration - Edge Cases', () => {
     jest.clearAllMocks();
   });
 
-  it('should handle database errors gracefully', async () => {
+  it('should handle database errors gracefully', async() => {
     // Arrange
     mockQuery.mockRejectedValueOnce(new Error('Database connection failed'));
 
@@ -351,7 +351,7 @@ describe.skip('API Integration - Edge Cases', () => {
     expect(true).toBe(true);
   });
 
-  it('should prevent SQL injection in shop domain parameter', async () => {
+  it('should prevent SQL injection in shop domain parameter', async() => {
     // Arrange
     const maliciousShopDomain = "test-shop'; DROP TABLE shops; --";
 
@@ -367,7 +367,7 @@ describe.skip('API Integration - Edge Cases', () => {
     );
   });
 
-  it('should return default toggle values if app_settings not initialized', async () => {
+  it('should return default toggle values if app_settings not initialized', async() => {
     // Arrange
     mockQuery.mockResolvedValueOnce([
       {

@@ -46,7 +46,7 @@ export function useAsyncResource<T>(
 
   // Create new item
   const createItem = useCallback(
-    async (
+    async(
       itemData: Partial<T>,
     ): Promise<{ success: boolean; error?: string }> => {
       try {
@@ -70,7 +70,7 @@ export function useAsyncResource<T>(
 
   // Update existing item
   const updateItem = useCallback(
-    async (
+    async(
       id: string,
       updates: Partial<T>,
     ): Promise<{ success: boolean; error?: string }> => {
@@ -90,7 +90,7 @@ export function useAsyncResource<T>(
 
   // Delete existing item
   const deleteItem = useCallback(
-    async (id: string): Promise<{ success: boolean; error?: string }> => {
+    async(id: string): Promise<{ success: boolean; error?: string }> => {
       try {
         await dispatch(deleteAction(id)).unwrap();
         logInfo(`Deleted ${resourceName}`, { id });

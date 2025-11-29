@@ -7,7 +7,7 @@ export const useOrderActions = () => {
   const { showSuccessToast, showErrorToast, showInfoToast } = useToasts();
 
   const trackOrder = useCallback(
-    async (_orderId: string) => {
+    async(_orderId: string) => {
       try {
         // In a real app, this would open tracking in a new window or modal
         showInfoToast("Opening tracking information...");
@@ -26,7 +26,7 @@ export const useOrderActions = () => {
   );
 
   const viewOrderDetails = useCallback(
-    async (_orderId: string) => {
+    async(_orderId: string) => {
       try {
         // In a real app, this would open order details in a modal or new page
         showInfoToast("Loading order details...");
@@ -45,7 +45,7 @@ export const useOrderActions = () => {
   );
 
   const updateOrderStatus = useCallback(
-    async (orderId: string, status: string) => {
+    async(orderId: string, status: string) => {
       try {
         const result = await updateOrder(orderId, { status });
 
@@ -65,7 +65,7 @@ export const useOrderActions = () => {
   );
 
   const addTrackingNumber = useCallback(
-    async (orderId: string, trackingNumber: string, carrierCode?: string) => {
+    async(orderId: string, trackingNumber: string, carrierCode?: string) => {
       try {
         const result = await updateOrder(orderId, {
           trackingNumber,
@@ -88,7 +88,7 @@ export const useOrderActions = () => {
   );
 
   const deleteOrderPermanently = useCallback(
-    async (orderId: string) => {
+    async(orderId: string) => {
       try {
         const result = await deleteOrder(orderId);
 
@@ -108,7 +108,7 @@ export const useOrderActions = () => {
   );
 
   const bulkUpdateOrderStatus = useCallback(
-    async (orderIds: string[], status: string) => {
+    async(orderIds: string[], status: string) => {
       const results = await Promise.allSettled(
         orderIds.map((id) => updateOrderStatus(id, status)),
       );
@@ -133,7 +133,7 @@ export const useOrderActions = () => {
   );
 
   const exportOrders = useCallback(
-    async (_orderIds?: string[]) => {
+    async(_orderIds?: string[]) => {
       try {
         showInfoToast("Preparing order export...");
 

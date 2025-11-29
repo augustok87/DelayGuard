@@ -1,4 +1,6 @@
-1- What is the difference between the "npm run build" command and the "vercel --prod", which I've been currently using to really deploy to Vercel. Deep research our project to understand what they're both doing. 
+1- Done
+
+What is the difference between the "npm run build" command and the "vercel --prod", which I've been currently using to really deploy to Vercel. Deep research our project to understand what they're both doing. 
 
 ALREADY ASKED.
 
@@ -6,7 +8,9 @@ ALREADY ASKED.
 
 
 
-2- In relation to:
+2- Done
+
+In relation to:
 
 ```
 
@@ -40,8 +44,6 @@ Most customer complaints happen when orders don't ship on time. This rule catche
 Can you confirm how would we go about getting an "unfulfilled" status from an order? show me exact functions that would be in charged of knowing that in our codebase.
 
 
-ALREADY ASKED
-
 
 
 
@@ -64,13 +66,27 @@ Also, I would assume that for the Carrier and Stuck in Transit delays, we would 
 
 
 
- 4- 
+4- Pending
 
  Make sure our APP doesn't cause CSS/JS Leakeage causing problems to our Merchant's site.
 
 
 
-5-
+5- Pending
 
 I want you to build me 20 questions and answers pretending that you're being interviewed by other tech leaders that are curious to know about your application. You can start with simple question and answers that would give knowledge about our APP, the reasons behind why we did it as we did, and then progressively move towards questions that answers specific technical decisions and implementations.
 
+
+6- Pending
+
+Now that we're set in terms of UI/UX, I'd like to spend some time to make sure all the data that we're basically offering to our client merchants are actually real data that we can provide to them. I'd like you to deeply analyze the exact origin on where It might come from. And if you're not sure we should mark it at least in our docs as such. Then I would like you to succintly explain to me how we would go about testing this with a development store, which we still haven't made. I would like you to first make a list of every data fact that we can dynamically offer through our App so far.
+
+
+7- In progress
+In order to make our App's look and feel much better, I think we could also replace all of the default icons we're using that are basically coming probably from MAC OS, we should use beautiful images as icons that would be aligned elegantly with all of the rest of the asthetics of the page. What do you suggest we could do.
+
+
+8- Done
+Right now we can move an alert from active to resolved or dismissed.
+But we don't have that option from resolved and dismissed alerts.
+Could it be useful to allow that?

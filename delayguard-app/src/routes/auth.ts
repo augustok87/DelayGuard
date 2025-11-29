@@ -5,7 +5,7 @@ import { query } from "../database/connection";
 const router = new Router();
 
 // OAuth initiation endpoint
-router.get("/", async (ctx) => {
+router.get("/", async(ctx) => {
   try {
     const shop = ctx.query.shop as string;
 
@@ -39,7 +39,7 @@ router.get("/", async (ctx) => {
 });
 
 // Store shop information after OAuth
-router.post("/callback", async (ctx) => {
+router.post("/callback", async(ctx) => {
   try {
     const { shop, accessToken, scope } = ctx.state.shopify.session;
 
@@ -80,7 +80,7 @@ router.post("/callback", async (ctx) => {
 });
 
 // Get current shop information
-router.get("/shop", async (ctx) => {
+router.get("/shop", async(ctx) => {
   try {
     const shop = ctx.state.shopify.session.shop;
 

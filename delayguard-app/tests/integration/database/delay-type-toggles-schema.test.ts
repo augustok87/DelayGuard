@@ -20,20 +20,20 @@ dotenv.config();
 process.env.DATABASE_URL = 'postgresql://localhost:5432/delayguard_dev';
 
 describe('Delay Type Toggle Schema', () => {
-  beforeAll(async () => {
+  beforeAll(async() => {
     // Initialize database connection and run migrations
     await setupDatabase();
     await runMigrations();
   });
 
-  afterAll(async () => {
+  afterAll(async() => {
     // Clean up test data
     await query(`DELETE FROM shops WHERE shop_domain LIKE 'test-delay-toggles%'`);
     await pool.end();
   });
 
   describe('Column Existence', () => {
-    it('should have warehouse_delays_enabled column in app_settings table', async () => {
+    it('should have warehouse_delays_enabled column in app_settings table', async() => {
       const result = await query(`
         SELECT column_name, data_type, column_default
         FROM information_schema.columns
@@ -46,7 +46,7 @@ describe('Delay Type Toggle Schema', () => {
       expect((result[0] as any).column_default).toBe('true'); // DEFAULT TRUE
     });
 
-    it('should have carrier_delays_enabled column in app_settings table', async () => {
+    it('should have carrier_delays_enabled column in app_settings table', async() => {
       const result = await query(`
         SELECT column_name, data_type, column_default
         FROM information_schema.columns
@@ -59,7 +59,7 @@ describe('Delay Type Toggle Schema', () => {
       expect((result[0] as any).column_default).toBe('true'); // DEFAULT TRUE
     });
 
-    it('should have transit_delays_enabled column in app_settings table', async () => {
+    it('should have transit_delays_enabled column in app_settings table', async() => {
       const result = await query(`
         SELECT column_name, data_type, column_default
         FROM information_schema.columns
@@ -72,7 +72,7 @@ describe('Delay Type Toggle Schema', () => {
       expect((result[0] as any).column_default).toBe('true'); // DEFAULT TRUE
     });
 
-    it('should have DEFAULT TRUE for all toggle columns', async () => {
+    it('should have DEFAULT TRUE for all toggle columns', async() => {
       const result = await query(`
         SELECT column_name, column_default
         FROM information_schema.columns
@@ -91,7 +91,7 @@ describe('Delay Type Toggle Schema', () => {
   describe('Data Operations', () => {
     let testShopId: number;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
       // Create test shop for app_settings
       const shopResult = await query(`
         INSERT INTO shops (shop_domain, access_token)
@@ -102,12 +102,12 @@ describe('Delay Type Toggle Schema', () => {
       testShopId = (shopResult[0] as any).id;
     });
 
-    afterEach(async () => {
+    afterEach(async() => {
       // Clean up test shop (CASCADE will delete app_settings)
       await query('DELETE FROM shops WHERE id = $1', [testShopId]);
     });
 
-    it('should use DEFAULT TRUE when inserting new app_settings', async () => {
+    it('should use DEFAULT TRUE when inserting new app_settings', async() => {
       await query(`
         INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled)
         VALUES ($1, 2, true, false)
@@ -124,7 +124,7 @@ describe('Delay Type Toggle Schema', () => {
       expect((result[0] as any).transit_delays_enabled).toBe(true);
     });
 
-    it('should allow UPDATE to FALSE for warehouse_delays_enabled', async () => {
+    it('should allow UPDATE to FALSE for warehouse_delays_enabled', async() => {
       await query(`
         INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled)
         VALUES ($1, 2, true, false)
@@ -145,7 +145,7 @@ describe('Delay Type Toggle Schema', () => {
       expect((result[0] as any).warehouse_delays_enabled).toBe(false);
     });
 
-    it('should allow UPDATE to FALSE for carrier_delays_enabled', async () => {
+    it('should allow UPDATE to FALSE for carrier_delays_enabled', async() => {
       await query(`
         INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled)
         VALUES ($1, 2, true, false)
@@ -166,7 +166,7 @@ describe('Delay Type Toggle Schema', () => {
       expect((result[0] as any).carrier_delays_enabled).toBe(false);
     });
 
-    it('should allow UPDATE to FALSE for transit_delays_enabled', async () => {
+    it('should allow UPDATE to FALSE for transit_delays_enabled', async() => {
       await query(`
         INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled)
         VALUES ($1, 2, true, false)
@@ -187,7 +187,7 @@ describe('Delay Type Toggle Schema', () => {
       expect((result[0] as any).transit_delays_enabled).toBe(false);
     });
 
-    it('should allow all 3 flags to be independently toggled', async () => {
+    it('should allow all 3 flags to be independently toggled', async() => {
       await query(`
         INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled)
         VALUES ($1, 2, true, false)
@@ -213,7 +213,7 @@ describe('Delay Type Toggle Schema', () => {
       expect((result[0] as any).transit_delays_enabled).toBe(false);
     });
 
-    it('should SELECT toggle flags in JOIN with shops table', async () => {
+    it('should SELECT toggle flags in JOIN with shops table', async() => {
       await query(`
         INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled, warehouse_delays_enabled)
         VALUES ($1, 2, true, false, false)
@@ -234,7 +234,7 @@ describe('Delay Type Toggle Schema', () => {
   });
 
   describe('Migration Idempotency', () => {
-    it('should be idempotent - running migration twice should not cause errors', async () => {
+    it('should be idempotent - running migration twice should not cause errors', async() => {
       // Verify each column exists exactly once
       const warehouseExists = await query(`
         SELECT COUNT(*) as count

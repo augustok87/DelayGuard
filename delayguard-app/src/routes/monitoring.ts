@@ -19,7 +19,7 @@ const router = new Router();
 const monitoringService = new MonitoringService(config);
 
 // Health check endpoint
-router.get("/health", async (ctx) => {
+router.get("/health", async(ctx) => {
   try {
     const checks = await monitoringService.performHealthChecks();
     const overallStatus = checks.every((c) => c.status === "healthy")
@@ -48,7 +48,7 @@ router.get("/health", async (ctx) => {
 });
 
 // System metrics endpoint
-router.get("/metrics", async (ctx) => {
+router.get("/metrics", async(ctx) => {
   try {
     const metrics = await monitoringService.collectSystemMetrics();
 
@@ -68,7 +68,7 @@ router.get("/metrics", async (ctx) => {
 });
 
 // System status endpoint
-router.get("/status", async (ctx) => {
+router.get("/status", async(ctx) => {
   try {
     const status = await monitoringService.getSystemStatus();
 
@@ -89,7 +89,7 @@ router.get("/status", async (ctx) => {
 });
 
 // Alerts endpoint
-router.get("/alerts", async (ctx) => {
+router.get("/alerts", async(ctx) => {
   try {
     const alerts = await monitoringService.checkAlerts();
 
@@ -108,7 +108,7 @@ router.get("/alerts", async (ctx) => {
 });
 
 // Metrics history endpoint
-router.get("/metrics/history", async (ctx) => {
+router.get("/metrics/history", async(ctx) => {
   try {
     const hours = parseInt(ctx.query.hours as string) || 24;
     const limit = parseInt(ctx.query.limit as string) || 100;
@@ -144,7 +144,7 @@ router.get("/metrics/history", async (ctx) => {
 });
 
 // Performance summary endpoint
-router.get("/performance", async (ctx) => {
+router.get("/performance", async(ctx) => {
   try {
     const status = await monitoringService.getSystemStatus();
 
@@ -195,7 +195,7 @@ router.get("/performance", async (ctx) => {
 });
 
 // System diagnostics endpoint
-router.get("/diagnostics", async (ctx) => {
+router.get("/diagnostics", async(ctx) => {
   try {
     const checks = await monitoringService.performHealthChecks();
     const status = await monitoringService.getSystemStatus();

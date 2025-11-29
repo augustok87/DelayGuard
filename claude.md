@@ -388,6 +388,75 @@ npm run dev
 ## RECENT VERSION HISTORY
 *For complete version history, see [CHANGELOG.md](CHANGELOG.md)*
 
+### v1.33 (2025-11-29): 🎨 **Complete AlertCard Icon Migration - All Emojis Replaced with Lucide SVG** (Perfect TDD Execution)
+**Test Results**: 137 AlertCard tests passing (99 previous + 38 new v1.33 tests, 100% pass rate), zero linting errors
+**Status**: ALL emoji icons in AlertCard replaced with Lucide React SVG icons for cross-platform consistency
+
+**Completed**: Replaced all 16 remaining emoji icons in AlertCard with Lucide React SVG icons
+- User request: "Any other icons within Delay Alerts?" → Identified 16 remaining emojis in AlertCard
+- User directive: "Yes, implement all those" → Complete migration using TDD workflow
+- Perfect TDD execution: RED (38 tests written first) → GREEN (all icons implemented) → VERIFY (all tests passing)
+
+**Icons Replaced** (16 total):
+1. **Delay Reason Warning** (1): ⚠️ → AlertTriangle
+2. **Email Engagement Badges** (4): 🔗 → Link, 📧 → MailOpen, ✉️ → Send, 📱 → Smartphone
+3. **Accordion Section Titles** (4): 📦 → Package, 💡 → Lightbulb, 🚚 → Truck, 📖 → BookOpen
+4. **Product Placeholder** (1): 📦 → Package (24px large icon)
+5. **Event Location Pin** (1): 📍 → MapPin
+6. **Contact Information** (2): ✉️ → Mail, 📞 → Phone
+7. **Badge Legend Text** (4): Duplicate icons in legend descriptions (same as badges)
+
+**Implementation Details**:
+- **AlertCard.tsx**: Added 12 Lucide imports (AlertTriangle, Link, MailOpen, Send, Smartphone, Package, Lightbulb, Truck, MapPin, BookOpen, Mail, Phone)
+- **Accordion.tsx**: Updated `title` prop type from `string` to `React.ReactNode` (allows JSX elements)
+- **Icon Sizing Standards**:
+  - Small inline (14px): Engagement badges, event location
+  - Medium inline (16px): Accordion titles, warnings, contact icons
+  - Large placeholders (24px): Product placeholder
+  - Consistent `strokeWidth={2}` for all icons
+  - All icons: `aria-hidden={true}` (decorative, not semantic)
+
+**Test Coverage** (38 new tests in v1.33 suite):
+- **Delay Reason Warning Icon**: 3 tests (SVG rendering, no emoji, aria-hidden)
+- **Email Engagement Badge Icons**: 6 tests (4 badge types, no emoji check, aria-hidden)
+- **Accordion Title Icons**: 6 tests (4 accordion types, no emoji check, aria-hidden)
+- **Product Placeholder Icon**: 3 tests (SVG rendering, no emoji, placeholder structure)
+- **Tracking Event Location Icon**: 3 tests (MapPin icon, no emoji, aria-hidden)
+- **Contact Information Icons**: 4 tests (Mail & Phone icons, no emoji, structure)
+- **Badge Legend Icons**: 2 tests (SVG in legend, no duplicate emoji)
+- **Overall Icon Integration**: 4 tests (all icons present, no emoji anywhere)
+- **Fixed 15 OLD tests**: Updated tests from earlier phases that expected emojis to check for SVG icons
+
+**UX Impact**:
+- **Cross-platform consistency**: No more emoji rendering issues across OS/browsers
+- **Professional appearance**: Consistent SVG icons match Shopify design system
+- **Accessibility**: All icons properly marked as decorative with aria-hidden
+- **Performance**: Tree-shaken imports, only 12 icons imported (not entire library)
+- **Scalability**: SVG icons scale perfectly at any size without pixelation
+
+**Files Modified** (3):
+- `src/components/tabs/AlertsTab/AlertCard.tsx` (replaced 16 emoji icons with Lucide)
+- `src/components/ui/Accordion.tsx` (type update for JSX titles)
+- `src/tests/unit/components/AlertCard.test.tsx` (38 new tests + 15 OLD tests updated)
+
+**Code Quality**:
+- ✅ All 137 tests passing (100% pass rate)
+- ✅ Zero ESLint errors in all v1.33 modified files
+- ✅ TypeScript compilation successful
+- ✅ Production-ready code with proper type safety
+
+**TDD Workflow Excellence**:
+- ✅ **RED Phase**: Wrote 38 comprehensive tests FIRST (all failed as expected)
+- ✅ **GREEN Phase**: Implemented all Lucide icon replacements (all tests passing)
+- ✅ **REFACTOR**: Fixed 15 OLD tests to expect SVG icons instead of emojis
+- ✅ **VERIFY**: All 137 tests passing, zero linting errors
+- ✅ **DOCUMENT**: Updated CLAUDE.md immediately after completion
+
+**Completion Date**: 2025-11-29
+**Next**: v1.34 - Consider remaining UX polish opportunities
+
+---
+
 ### v1.30 (2025-11-28): 🔄 **Alert State Transitions - Full Flexibility** (Perfect TDD Execution)
 **Test Results**: 106 AlertCard tests passing (85 previous + 21 new, 100% pass rate), zero linting errors
 **Status**: Full bidirectional alert state transitions (Option 1 implementation)

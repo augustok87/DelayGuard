@@ -29,7 +29,7 @@ export const useDebouncedCallback = <T extends (...args: unknown[]) => unknown>(
         clearTimeout(debounceTimerRef.current);
       }
 
-      debounceTimerRef.current = setTimeout(async () => {
+      debounceTimerRef.current = setTimeout(async() => {
         try {
           const result = callback(...args);
           // Handle promises

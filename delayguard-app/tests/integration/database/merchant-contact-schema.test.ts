@@ -20,20 +20,20 @@ dotenv.config();
 process.env.DATABASE_URL = 'postgresql://localhost:5432/delayguard_dev';
 
 describe('Merchant Contact Schema', () => {
-  beforeAll(async () => {
+  beforeAll(async() => {
     // Initialize database connection and run migrations
     await setupDatabase();
     await runMigrations();
   });
 
-  afterAll(async () => {
+  afterAll(async() => {
     // Clean up test data
     await query(`DELETE FROM shops WHERE shop_domain LIKE 'test-merchant-contact%'`);
     await pool.end();
   });
 
   describe('Column Existence', () => {
-    it('should have merchant_email column in shops table', async () => {
+    it('should have merchant_email column in shops table', async() => {
       const result = await query(`
         SELECT column_name, data_type, character_maximum_length
         FROM information_schema.columns
@@ -46,7 +46,7 @@ describe('Merchant Contact Schema', () => {
       expect((result[0] as any).character_maximum_length).toBe(255);
     });
 
-    it('should have merchant_phone column in shops table', async () => {
+    it('should have merchant_phone column in shops table', async() => {
       const result = await query(`
         SELECT column_name, data_type, character_maximum_length
         FROM information_schema.columns
@@ -59,7 +59,7 @@ describe('Merchant Contact Schema', () => {
       expect((result[0] as any).character_maximum_length).toBe(255);
     });
 
-    it('should have merchant_name column in shops table', async () => {
+    it('should have merchant_name column in shops table', async() => {
       const result = await query(`
         SELECT column_name, data_type, character_maximum_length
         FROM information_schema.columns
@@ -72,7 +72,7 @@ describe('Merchant Contact Schema', () => {
       expect((result[0] as any).character_maximum_length).toBe(255);
     });
 
-    it('should allow NULL values for all merchant contact fields', async () => {
+    it('should allow NULL values for all merchant contact fields', async() => {
       const result = await query(`
         SELECT column_name, is_nullable
         FROM information_schema.columns
@@ -89,7 +89,7 @@ describe('Merchant Contact Schema', () => {
   });
 
   describe('Data Operations', () => {
-    it('should INSERT shop with merchant contact fields', async () => {
+    it('should INSERT shop with merchant contact fields', async() => {
       const testDomain = 'test-merchant-contact-insert.myshopify.com';
 
       await query(`
@@ -99,7 +99,7 @@ describe('Merchant Contact Schema', () => {
 
       const result = await query(
         'SELECT merchant_email, merchant_phone, merchant_name FROM shops WHERE shop_domain = $1',
-        [testDomain]
+        [testDomain],
       );
 
       expect(result.length).toBe(1);
@@ -108,7 +108,7 @@ describe('Merchant Contact Schema', () => {
       expect((result[0] as any).merchant_name).toBe('Test Merchant');
     });
 
-    it('should UPDATE merchant contact fields', async () => {
+    it('should UPDATE merchant contact fields', async() => {
       const testDomain = 'test-merchant-contact-update.myshopify.com';
 
       // Insert initial record
@@ -126,7 +126,7 @@ describe('Merchant Contact Schema', () => {
 
       const result = await query(
         'SELECT merchant_email, merchant_phone, merchant_name FROM shops WHERE shop_domain = $1',
-        [testDomain]
+        [testDomain],
       );
 
       expect((result[0] as any).merchant_email).toBe('updated@example.com');
@@ -134,7 +134,7 @@ describe('Merchant Contact Schema', () => {
       expect((result[0] as any).merchant_name).toBe('Updated Merchant');
     });
 
-    it('should SELECT merchant fields with JOIN to orders table', async () => {
+    it('should SELECT merchant fields with JOIN to orders table', async() => {
       const testDomain = 'test-merchant-contact-join.myshopify.com';
 
       // Insert shop with merchant info
@@ -166,7 +166,7 @@ describe('Merchant Contact Schema', () => {
       expect((result[0] as any).merchant_name).toBe('Join Test');
     });
 
-    it('should handle NULL values for all merchant fields', async () => {
+    it('should handle NULL values for all merchant fields', async() => {
       const testDomain = 'test-merchant-contact-null.myshopify.com';
 
       await query(`
@@ -176,7 +176,7 @@ describe('Merchant Contact Schema', () => {
 
       const result = await query(
         'SELECT merchant_email, merchant_phone, merchant_name FROM shops WHERE shop_domain = $1',
-        [testDomain]
+        [testDomain],
       );
 
       expect((result[0] as any).merchant_email).toBeNull();
@@ -186,7 +186,7 @@ describe('Merchant Contact Schema', () => {
   });
 
   describe('Data Validation', () => {
-    it('should accept valid email format in merchant_email', async () => {
+    it('should accept valid email format in merchant_email', async() => {
       const testDomain = 'test-merchant-email-valid.myshopify.com';
       const validEmails = [
         'simple@example.com',
@@ -203,14 +203,14 @@ describe('Merchant Contact Schema', () => {
 
         const result = await query(
           'SELECT merchant_email FROM shops WHERE shop_domain = $1',
-          [testDomain]
+          [testDomain],
         );
 
         expect((result[0] as any).merchant_email).toBe(email);
       }
     });
 
-    it('should accept international phone formats in merchant_phone', async () => {
+    it('should accept international phone formats in merchant_phone', async() => {
       const testDomain = 'test-merchant-phone-intl.myshopify.com';
       const validPhones = [
         '+1-555-0100',         // US format with dashes
@@ -228,14 +228,14 @@ describe('Merchant Contact Schema', () => {
 
         const result = await query(
           'SELECT merchant_phone FROM shops WHERE shop_domain = $1',
-          [testDomain]
+          [testDomain],
         );
 
         expect((result[0] as any).merchant_phone).toBe(phone);
       }
     });
 
-    it('should accept special characters in merchant_name', async () => {
+    it('should accept special characters in merchant_name', async() => {
       const testDomain = 'test-merchant-name-special.myshopify.com';
       const names = [
         "O'Brien's Store",
@@ -253,16 +253,16 @@ describe('Merchant Contact Schema', () => {
 
         const result = await query(
           'SELECT merchant_name FROM shops WHERE shop_domain = $1',
-          [testDomain]
+          [testDomain],
         );
 
         expect((result[0] as any).merchant_name).toBe(name);
       }
     });
 
-    it('should enforce VARCHAR(255) length limit on merchant_email', async () => {
+    it('should enforce VARCHAR(255) length limit on merchant_email', async() => {
       const testDomain = 'test-merchant-email-length.myshopify.com';
-      const longEmail = 'a'.repeat(240) + '@example.com'; // 252 characters, under limit
+      const longEmail = `${'a'.repeat(240)}@example.com`; // 252 characters, under limit
 
       await query(`
         INSERT INTO shops (shop_domain, access_token, merchant_email)
@@ -271,16 +271,16 @@ describe('Merchant Contact Schema', () => {
 
       const result = await query(
         'SELECT merchant_email FROM shops WHERE shop_domain = $1',
-        [testDomain]
+        [testDomain],
       );
 
       expect((result[0] as any).merchant_email).toBe(longEmail);
       expect((result[0] as any).merchant_email.length).toBeLessThanOrEqual(255);
     });
 
-    it('should enforce VARCHAR(255) length limit on merchant_phone', async () => {
+    it('should enforce VARCHAR(255) length limit on merchant_phone', async() => {
       const testDomain = 'test-merchant-phone-length.myshopify.com';
-      const longPhone = '+1-' + '5'.repeat(250); // 253 characters, under limit
+      const longPhone = `+1-${'5'.repeat(250)}`; // 253 characters, under limit
 
       await query(`
         INSERT INTO shops (shop_domain, access_token, merchant_phone)
@@ -289,14 +289,14 @@ describe('Merchant Contact Schema', () => {
 
       const result = await query(
         'SELECT merchant_phone FROM shops WHERE shop_domain = $1',
-        [testDomain]
+        [testDomain],
       );
 
       expect((result[0] as any).merchant_phone).toBe(longPhone);
       expect((result[0] as any).merchant_phone.length).toBeLessThanOrEqual(255);
     });
 
-    it('should enforce VARCHAR(255) length limit on merchant_name', async () => {
+    it('should enforce VARCHAR(255) length limit on merchant_name', async() => {
       const testDomain = 'test-merchant-name-length.myshopify.com';
       const longName = 'A'.repeat(255);
 
@@ -307,7 +307,7 @@ describe('Merchant Contact Schema', () => {
 
       const result = await query(
         'SELECT merchant_name FROM shops WHERE shop_domain = $1',
-        [testDomain]
+        [testDomain],
       );
 
       expect((result[0] as any).merchant_name).toBe(longName);
@@ -316,7 +316,7 @@ describe('Merchant Contact Schema', () => {
   });
 
   describe('Migration Idempotency', () => {
-    it('should be idempotent - running migration twice should not cause errors', async () => {
+    it('should be idempotent - running migration twice should not cause errors', async() => {
       // This test verifies that the DO $$ IF NOT EXISTS block works correctly
       // By checking column existence, we confirm migration can run multiple times safely
 

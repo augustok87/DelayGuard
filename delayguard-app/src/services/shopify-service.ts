@@ -75,7 +75,7 @@ export async function createGraphQLClient(
   });
 
   return {
-    query: async (queryString: string, variables: Record<string, any> = {}) => {
+    query: async(queryString: string, variables: Record<string, any> = {}) => {
       const url = `https://${normalizedDomain}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`;
 
       const response = await fetch(url, {
