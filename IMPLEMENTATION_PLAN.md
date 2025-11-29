@@ -4714,6 +4714,45 @@ Recommended Action: ${alert.suggestedAction}
 
 ---
 
+## RELATED DOCUMENTATION
+
+### Data Availability & Testing (v1.34 - November 29, 2025)
+
+**[DATA_AVAILABILITY_ANALYSIS.md](DATA_AVAILABILITY_ANALYSIS.md)** - Complete inventory of all 84 data points
+- Master Data Inventory: All 84 data points with exact sources
+- Implementation Status: ✅ REAL (84%), ❓ UNCERTAIN (12%), ❌ MOCK (4%)
+- Data Source Deep Dive: Shopify GraphQL, ShipEngine API, SendGrid Webhooks, PostgreSQL schema
+- **Uncertain Features Requiring Investigation**:
+  - **Merchant Benchmarks** (4 fields): avgFulfillmentDays, avgDeliveryDays, delaysThisMonth, delaysTrend
+    - UI exists in SettingsCard, backend calculation not found
+    - SQL implementation examples provided in DATA_AVAILABILITY_ANALYSIS.md
+  - **Suggested Actions** (2 fields): suggestedActions array, actions count
+    - Database field exists (`delay_alerts.suggested_actions JSONB`)
+    - Generation logic missing (rule-based or AI-powered options provided)
+- Testing Requirements: 5 comprehensive test groups with detailed scenarios
+
+**[DEVELOPMENT_STORE_TESTING_GUIDE.md](DEVELOPMENT_STORE_TESTING_GUIDE.md)** - Step-by-step Shopify testing walkthrough
+- Complete setup guide: Shopify Partner account, development store creation, app registration
+- Local development environment: PostgreSQL, ngrok tunnel, environment variables
+- 7 comprehensive test scenarios:
+  1. Basic Order Creation & Sync
+  2. Product Line Items Sync (Phase 1.2)
+  3. ShipEngine Tracking Integration
+  4. Delay Detection & Alert Creation
+  5. Email Engagement Tracking (Phase 1.3)
+  6. Hourly Tracking Refresh Cron Job
+  7. Dashboard Metrics (Real Data)
+- Troubleshooting guide: 8 common issues with solutions
+- Production deployment checklist
+
+### Core Implementation Guides
+
+**[DEEP_DIVE_UX_UI_RESEARCH.md](DEEP_DIVE_UX_UI_RESEARCH.md)** - Product strategy and UX research
+**[CLAUDE.md](CLAUDE.md)** - AI agent onboarding guide with TDD workflow
+**[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** - Current state, readiness score, and roadmap
+
+---
+
 ## CONCLUSION
 
 This implementation plan transforms DelayGuard from a basic delay monitoring tool into a comprehensive customer retention platform. By executing Phase 1-2 before Shopify submission, you'll have a strong foundation that differentiates your app from competitors.

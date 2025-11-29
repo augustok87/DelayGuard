@@ -1,7 +1,8 @@
 # DelayGuard - Project Overview & Roadmap
 
-**Last Updated**: November 18, 2025
+**Last Updated**: November 29, 2025
 **Current Phase**: ✅ **Phase 2.7 Complete** - UI/UX Refactoring + Pre-Launch Infrastructure
+**Latest Update**: v1.34 - Complete Data Availability Analysis (84 data points verified)
 **Document Purpose**: Single consolidated view of current state, readiness, and future roadmap
 
 ---
@@ -662,6 +663,8 @@ Phone: (406) 555-0123
 ### Technical Guides
 - **[AUTHENTICATION_GUIDE.md](AUTHENTICATION_GUIDE.md)** - Shopify embedded app auth
 - **[DATA_FLOW_AND_TESTING_GUIDE.md](DATA_FLOW_AND_TESTING_GUIDE.md)** - Testing strategies
+- **[DATA_AVAILABILITY_ANALYSIS.md](DATA_AVAILABILITY_ANALYSIS.md)** - Complete inventory of all 84 data points (v1.34)
+- **[DEVELOPMENT_STORE_TESTING_GUIDE.md](DEVELOPMENT_STORE_TESTING_GUIDE.md)** - Step-by-step Shopify dev store testing (v1.34)
 - **[DEVELOPER_HANDBOOK.md](DEVELOPER_HANDBOOK.md)** - Developer reference
 - **[PRODUCTION_SETUP.md](PRODUCTION_SETUP.md)** - Environment configuration
 

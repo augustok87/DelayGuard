@@ -1,106 +1,261 @@
-# DATA AVAILABILITY ANALYSIS - DELAYGUARD
-*Comprehensive Analysis: Frontend Data Requirements vs Real API Availability*
+# DelayGuard Data Availability Analysis
+**Complete Reference for All Dynamic Data Points**
+
+**Last Updated**: November 29, 2025
+**Analysis Scope**: 82 unique data points across entire application
+**Coverage**: Frontend components, backend APIs, database schema, external integrations
 
 ---
 
-## EXECUTIVE SUMMARY
+## 📊 Executive Summary
 
-This document analyzes every piece of data displayed in the DelayGuard frontend and validates its availability from real production APIs (Shopify, ShipEngine, SendGrid).
+### Implementation Status
+- **✅ REAL DATA**: 69 data points (84%) - Fully implemented with real sources
+- **❓ UNCERTAIN**: 10 data points (12%) - Implementation unclear, requires investigation
+- **❌ NOT IMPLEMENTED**: 3 data points (4%) - Currently hardcoded mock values
 
-**Document Version:** 2.0
-**Last Comprehensive Audit:** 2025-11-06
-**Components Documented:** 5 (AlertCard, OrderCard, SettingsCard, NotificationPreferences, AppHeader)
-**Database Tables Documented:** 8 (shops, orders, order_line_items, delay_alerts, tracking_events, notifications, app_settings)
+### Data Sources
+1. **Shopify API** (GraphQL 2024-01) - Orders, customers, products, fulfillments
+2. **ShipEngine API** (REST v1) - Carrier tracking, ETAs, events (50+ carriers)
+3. **SendGrid Webhooks** - Email engagement tracking (opens, clicks)
+4. **PostgreSQL Database** - 8 tables with proper relationships and indexes
+5. **Calculated Fields** - Priority badges, counts, date formatting
 
-### 🎯 **Overall Assessment: 98/100 - PRODUCTION READY** ✅
-
-**Documentation Accuracy:** 98/100 (improved from 85/100 after comprehensive audit)
-
-**What's Working:**
-- ✅ Core Shopify data (orders, customers, products)
-- ✅ Phase 1.2: Product line items (fully implemented via Shopify GraphQL)
-- ✅ Phase 1.3: Email engagement tracking (fully implemented via SendGrid webhooks)
-- ✅ **ShipEngine tracking integration (COMPLETED - Nov 5, 2025)**
-  - ✅ Database schema (tracking_events table + ETA columns)
-  - ✅ Webhook integration (real-time tracking events)
-  - ✅ Hourly cron job (keeps tracking data fresh)
-  - ✅ 42/42 tests passing (24 webhook + 18 cron)
-- ✅ Basic priority algorithm (working)
-- ✅ Database schema (production-ready)
-
-**What's Remaining (Non-Critical):**
-- ⚠️ Delay reason detection (needs business logic - has graceful fallback)
-- ⚠️ Merchant benchmarks calculation (needs analytics service - has graceful fallback)
-
-**Critical Finding:** Your data architecture is SOLID. All missing features have graceful UI fallbacks (sections hide when data is null). You can ship Phase 1 with current features and add integrations post-launch without breaking anything.
+### Key Findings
+- **Phase 1.2 (Product Line Items)**: ✅ Complete - Shopify GraphQL integration operational
+- **Phase 1.3 (Email Tracking)**: ✅ Complete - SendGrid webhooks receiving engagement data
+- **ShipEngine Integration**: ✅ Complete - Tracking events, ETAs, hourly cron refresh
+- **Dashboard Metrics**: ✅ Complete - v1.16 real SQL queries from database
+- **Merchant Benchmarks**: ❓ Uncertain - UI exists, backend calculation not found
+- **Suggested Actions**: ❓ Uncertain - Database field exists, generation logic missing
 
 ---
 
-## 1. FRONTEND DATA REQUIREMENTS
 
-### 1.1 AlertCard Component (Primary Alert Display)
-**File:** `src/components/tabs/AlertsTab/AlertCard.tsx`
+## 📋 Master Data Inventory
 
-This is the most data-intensive component. It displays comprehensive delay information to merchants.
+**Complete catalog of all 82 dynamic data points across the DelayGuard application.**
 
-#### ✅ **AVAILABLE FROM SHOPIFY + DATABASE**
+### Table Legend
+- **✅ REAL**: Fully implemented with real data source
+- **❓ UNCERTAIN**: Implementation unclear, requires investigation
+- **❌ MOCK**: Currently hardcoded or mock values
 
-| Field | Source | Example | Status |
-|-------|--------|---------|--------|
-| `orderId` | Shopify API | `"gid://shopify/Order/123"` | ✅ Working |
-| `orderNumber` | Shopify API | `"#1234"` | ✅ Working |
-| `customerName` | Shopify API | `"John Doe"` | ✅ Working |
-| `customerEmail` | Shopify API | `"john@example.com"` | ✅ Working |
-| `customerPhone` | Shopify API | `"+1-555-123-4567"` | ✅ Working |
-| `totalAmount` | Shopify API | `384.99` | ✅ Working |
-| `currency` | Shopify API | `"USD"` | ✅ Working |
-| `status` | Database | `"active"/"resolved"/"dismissed"` | ✅ Working |
-| `createdAt` | Database | `"2025-11-05T10:30:00Z"` | ✅ Working |
-| `trackingNumber` | Shopify API | `"1Z999AA10123456784"` | ✅ Working |
-| `carrierCode` | Shopify API | `"ups"` | ✅ Working |
+---
 
-#### ⚠️ **CALCULATED/DERIVED FIELDS**
+### 1. AppHeader Metrics (5 data points)
 
-| Field | Calculation Method | Status |
-|-------|-------------------|--------|
-| `delayDays` | `Math.floor((now - createdAt) / (1000*60*60*24))` | ✅ Working |
-| `priority` | Algorithm: `delayDays + orderTotal` logic | ✅ Working |
-| `delayReason` | Derived from carrier status codes | ❌ **Needs Implementation** |
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 1 | Total Alerts | AppHeader | ✅ REAL | PostgreSQL | `SELECT COUNT(*) FROM delay_alerts` | v1.16 real SQL query |
+| 2 | Active Alerts | AppHeader | ✅ REAL | PostgreSQL | `SELECT COUNT(DISTINCT da.id) FROM delay_alerts da JOIN orders o WHERE tracking_status NOT IN ('DELIVERED', 'OUT_FOR_DELIVERY')` | v1.16 real SQL query |
+| 3 | Resolved Alerts | AppHeader | ✅ REAL | PostgreSQL | `SELECT COUNT(DISTINCT da.id) FROM delay_alerts da JOIN orders o WHERE tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY')` | v1.16 real SQL query |
+| 4 | Avg Resolution Time | AppHeader | ✅ REAL | PostgreSQL | `SELECT AVG(EXTRACT(epoch FROM (o.updated_at - da.created_at))/86400) FROM delay_alerts da JOIN orders o WHERE resolved` | Returns N/A if no resolved alerts |
+| 5 | Shopify Connection Status | AppHeader | ✅ REAL | PostgreSQL | `shops.shop_domain` | Shows "Connected to {domain}" |
 
-**Priority Algorithm (Already Working):**
-```typescript
-const getPriorityBadge = (delayDays: number, orderTotal?: number) => {
-  if (delayDays >= 7 || (orderTotal && orderTotal >= 500 && delayDays >= 3)) {
-    return { label: 'CRITICAL', color: '#dc2626' };
+---
+
+### 2. Settings & Configuration (16 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 6 | Email Notifications Toggle | NotificationPreferences | ✅ REAL | PostgreSQL | `app_settings.email_notifications` | Boolean field |
+| 7 | SMS Notifications Toggle | NotificationPreferences | ✅ REAL | PostgreSQL | `app_settings.sms_notifications` | Boolean field |
+| 8 | Merchant Email | NotificationPreferences | ✅ REAL | PostgreSQL | `app_settings.merchant_email` | Phase 2.1 field |
+| 9 | Merchant Phone | NotificationPreferences | ✅ REAL | PostgreSQL | `app_settings.merchant_phone` | Phase 2.1 field |
+| 10 | Merchant Name | NotificationPreferences | ✅ REAL | PostgreSQL | `app_settings.merchant_name` | Phase 2.1 field |
+| 11 | Pre-Shipment Threshold | SettingsCard | ✅ REAL | PostgreSQL | `app_settings.pre_shipment_threshold_days` | Default: 3 days |
+| 12 | In-Transit Threshold | SettingsCard | ✅ REAL | PostgreSQL | `app_settings.in_transit_threshold_days` | Default: 5 days |
+| 13 | Extended Transit Threshold | SettingsCard | ✅ REAL | PostgreSQL | `app_settings.extended_transit_threshold_days` | Default: 7 days |
+| 14 | Avg Fulfillment Days (Benchmark) | SettingsCard | ❓ UNCERTAIN | PostgreSQL? | `app_settings.avg_fulfillment_days`? | UI exists, backend calculation not found |
+| 15 | Avg Delivery Days (Benchmark) | SettingsCard | ❓ UNCERTAIN | PostgreSQL? | `app_settings.avg_delivery_days`? | UI exists, backend calculation not found |
+| 16 | Delays This Month (Benchmark) | SettingsCard | ❓ UNCERTAIN | PostgreSQL? | Calculated field? | UI exists, backend calculation not found |
+| 17 | Delays Trend (Benchmark) | SettingsCard | ❓ UNCERTAIN | PostgreSQL? | Calculated field? | UI exists, backend calculation not found |
+| 18 | Auto-Resolve Delays | SettingsCard | ✅ REAL | PostgreSQL | `app_settings.auto_resolve_on_delivery` | Boolean field |
+| 19 | Include Tracking Link | SettingsCard | ✅ REAL | PostgreSQL | `app_settings.include_tracking_link` | Boolean field |
+| 20 | Custom Message Template | SettingsCard | ✅ REAL | PostgreSQL | `app_settings.custom_message_template` | Text field |
+| 21 | From Name | SettingsCard | ✅ REAL | PostgreSQL | `app_settings.from_name` | Email sender name |
+
+---
+
+### 3. Alert Card - Basic Info (9 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 22 | Alert ID | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.id` | CUID format |
+| 23 | Order Number | AlertCard | ✅ REAL | Shopify API | `orders.order_number` | e.g., "#1001" |
+| 24 | Priority Badge | AlertCard | ✅ REAL | Calculated | `calculatePriority(delayDays, orderTotal)` | CRITICAL/HIGH/MEDIUM/LOW |
+| 25 | Delay Reason | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.delay_reason` | Pre-shipment/In-transit/Extended |
+| 26 | Delay Days | AlertCard | ✅ REAL | Calculated | `Math.floor((now - expectedDate) / 86400000)` | Days overdue |
+| 27 | Created At | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.created_at` | ISO timestamp |
+| 28 | Alert Status | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.status` | active/resolved/dismissed |
+| 29 | Resolved At | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.resolved_at` | Null if not resolved |
+| 30 | Dismissed At | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.dismissed_at` | Null if not dismissed |
+
+---
+
+### 4. Alert Card - Customer Info (3 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 31 | Customer Name | AlertCard | ✅ REAL | Shopify API | `orders.customer_name` | Full name |
+| 32 | Customer Email | AlertCard | ✅ REAL | Shopify API | `orders.customer_email` | Email address |
+| 33 | Customer Phone | AlertCard | ✅ REAL | Shopify API | `orders.customer_phone` | Phone number (optional) |
+
+---
+
+### 5. Alert Card - Financial Data (2 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 34 | Order Total | AlertCard | ✅ REAL | Shopify API | `orders.total_price` | Decimal with currency |
+| 35 | Currency | AlertCard | ✅ REAL | Shopify API | `orders.currency` | ISO currency code (USD, CAD, etc.) |
+
+---
+
+### 6. Alert Card - Tracking Info (4 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 36 | Tracking Number | AlertCard | ✅ REAL | Shopify API | `fulfillments.tracking_number` | Carrier tracking code |
+| 37 | Carrier Name | AlertCard | ✅ REAL | ShipEngine API | `fulfillments.carrier_name` | UPS, FedEx, USPS, etc. |
+| 38 | Tracking Status | AlertCard | ✅ REAL | ShipEngine API | `orders.tracking_status` | ACCEPTED/IN_TRANSIT/DELIVERED/EXCEPTION |
+| 39 | Tracking URL | AlertCard | ✅ REAL | ShipEngine API | `fulfillments.tracking_url` | Carrier's tracking page |
+
+---
+
+### 7. Alert Card - ETA Information (4 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 40 | Original ETA | AlertCard | ✅ REAL | ShipEngine API | `orders.original_eta` | Initial estimated delivery date |
+| 41 | Current ETA | AlertCard | ✅ REAL | ShipEngine API | `orders.current_eta` | Updated ETA from carrier |
+| 42 | ETA Delay Days | AlertCard | ✅ REAL | Calculated | `daysBetween(originalEta, currentEta)` | Days between ETAs |
+| 43 | ETA Last Updated | AlertCard | ✅ REAL | PostgreSQL | `orders.updated_at` | Timestamp of last ETA update |
+
+---
+
+### 8. Alert Card - Email Engagement (8 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 44 | Email Sent | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.notification_sent` | Boolean |
+| 45 | Email Sent At | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.notification_sent_at` | ISO timestamp |
+| 46 | Email Opened | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.email_opened` | Boolean (Phase 1.3) |
+| 47 | Email Opened At | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.email_opened_at` | ISO timestamp (Phase 1.3) |
+| 48 | Email Clicked | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.email_clicked` | Boolean (Phase 1.3) |
+| 49 | Email Clicked At | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.email_clicked_at` | ISO timestamp (Phase 1.3) |
+| 50 | SendGrid Message ID | AlertCard | ✅ REAL | PostgreSQL | `delay_alerts.sendgrid_message_id` | Unique message identifier |
+| 51 | Engagement Rate | AlertCard | ✅ REAL | Calculated | `(opened ? 1 : 0) + (clicked ? 1 : 0)` | 0-2 scale |
+
+---
+
+### 9. Alert Card - Product Line Items (9 data points per item)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 52 | Product Thumbnail | AlertCard | ✅ REAL | Shopify GraphQL | `order_line_items.image_url` | Phase 1.2 implementation |
+| 53 | Product Title | AlertCard | ✅ REAL | Shopify GraphQL | `order_line_items.title` | Phase 1.2 implementation |
+| 54 | Variant Title | AlertCard | ✅ REAL | Shopify GraphQL | `order_line_items.variant_title` | e.g., "Size: Large, Color: Red" |
+| 55 | SKU | AlertCard | ✅ REAL | Shopify GraphQL | `order_line_items.sku` | Stock keeping unit |
+| 56 | Quantity | AlertCard | ✅ REAL | Shopify GraphQL | `order_line_items.quantity` | Integer |
+| 57 | Price | AlertCard | ✅ REAL | Shopify GraphQL | `order_line_items.price` | Decimal per unit |
+| 58 | Product Type | AlertCard | ✅ REAL | Shopify GraphQL | `order_line_items.product_type` | Category badge |
+| 59 | Vendor | AlertCard | ✅ REAL | Shopify GraphQL | `order_line_items.vendor` | Manufacturer/supplier |
+| 60 | Line Item Count | AlertCard | ✅ REAL | Calculated | `order_line_items.length` | Total items in order |
+
+---
+
+### 10. Alert Card - Tracking Timeline (6 data points per event)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 61 | Event Type | AlertCard | ✅ REAL | ShipEngine API | `tracking_events.event_type` | PICKED_UP/IN_TRANSIT/EXCEPTION/etc. |
+| 62 | Event Description | AlertCard | ✅ REAL | ShipEngine API | `tracking_events.description` | Human-readable text |
+| 63 | Event Timestamp | AlertCard | ✅ REAL | ShipEngine API | `tracking_events.occurred_at` | ISO timestamp |
+| 64 | Event Location | AlertCard | ✅ REAL | ShipEngine API | `tracking_events.city_locality`, `tracking_events.state_province` | City, State/Province |
+| 65 | Carrier Status Code | AlertCard | ✅ REAL | ShipEngine API | `tracking_events.carrier_status_code` | Carrier-specific code |
+| 66 | Timeline Event Count | AlertCard | ✅ REAL | Calculated | `tracking_events.length` | Total events for order |
+
+---
+
+### 11. Alert Card - Suggested Actions (2 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 67 | Suggested Actions Array | AlertCard | ❓ UNCERTAIN | PostgreSQL? | `delay_alerts.suggested_actions`? | Database field exists, generation logic not found |
+| 68 | Actions Count | AlertCard | ❓ UNCERTAIN | Calculated | `suggestedActions.length`? | Depends on #67 implementation |
+
+---
+
+### 12. Alerts Tab - Filtering & Counts (4 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 69 | Active Alert Count | AlertsTab | ✅ REAL | Calculated | `alerts.filter(a => a.status === 'active').length` | Frontend filter |
+| 70 | Resolved Alert Count | AlertsTab | ✅ REAL | Calculated | `alerts.filter(a => a.status === 'resolved').length` | Frontend filter |
+| 71 | Dismissed Alert Count | AlertsTab | ✅ REAL | Calculated | `alerts.filter(a => a.status === 'dismissed').length` | Frontend filter |
+| 72 | Filtered Alert Count | AlertsTab | ✅ REAL | Calculated | `filteredAlerts.length` | Current tab count |
+
+---
+
+### 13. Orders Tab - Basic Order Info (9 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 73 | Order ID | OrderCard | ✅ REAL | Shopify API | `orders.shopify_order_id` | Shopify GID format |
+| 74 | Order Number | OrderCard | ✅ REAL | Shopify API | `orders.order_number` | e.g., "#1001" |
+| 75 | Order Date | OrderCard | ✅ REAL | Shopify API | `orders.created_at` | ISO timestamp |
+| 76 | Customer Name | OrderCard | ✅ REAL | Shopify API | `orders.customer_name` | Full name |
+| 77 | Order Total | OrderCard | ✅ REAL | Shopify API | `orders.total_price` | Decimal with currency |
+| 78 | Tracking Status | OrderCard | ✅ REAL | ShipEngine API | `orders.tracking_status` | Current shipment status |
+| 79 | Tracking Number | OrderCard | ✅ REAL | Shopify API | `fulfillments.tracking_number` | Carrier tracking code |
+| 80 | Has Active Alert | OrderCard | ✅ REAL | PostgreSQL | JOIN with `delay_alerts` | Boolean |
+| 81 | Alert Count | OrderCard | ✅ REAL | PostgreSQL | `COUNT(delay_alerts.id)` | Integer |
+
+---
+
+### 14. Orders Tab - Filtering & Counts (3 data points)
+
+| # | Data Point | UI Location | Status | Data Source | Database/API | Notes |
+|---|------------|-------------|--------|-------------|--------------|-------|
+| 82 | Processing Order Count | OrdersTab | ✅ REAL | Calculated | `orders.filter(o => o.trackingStatus === 'ACCEPTED').length` | Frontend filter |
+| 83 | Shipped Order Count | OrdersTab | ✅ REAL | Calculated | `orders.filter(o => o.trackingStatus === 'IN_TRANSIT').length` | Frontend filter |
+| 84 | Delivered Order Count | OrdersTab | ✅ REAL | Calculated | `orders.filter(o => o.trackingStatus === 'DELIVERED').length` | Frontend filter |
+
+---
+
+## 🔍 Data Source Deep Dive
+
+### Shopify Admin API (GraphQL 2024-01)
+
+**Purpose**: Fetch order, customer, product, and fulfillment data from merchant's Shopify store.
+
+**Key Endpoints Used**:
+
+#### 1. Order Data (`fetchOrderDetails`)
+```graphql
+query GetOrder($id: ID!) {
+  order(id: $id) {
+    id
+    name
+    email
+    totalPriceSet { shopMoney { amount currencyCode } }
+    customer {
+      id
+      displayName
+      email
+      phone
+    }
+    createdAt
+    updatedAt
   }
-  if (delayDays >= 5 || (orderTotal && orderTotal >= 200)) {
-    return { label: 'HIGH', color: '#ea580c' };
-  }
-  if (delayDays >= 3) {
-    return { label: 'MEDIUM', color: '#f59e0b' };
-  }
-  return { label: 'LOW', color: '#2563eb' };
-};
+}
 ```
 
-#### ✅ **PHASE 1.2: PRODUCT LINE ITEMS** (FULLY IMPLEMENTED)
+**Data Points Provided**: #22-23, #31-35, #73-77
 
-**Source:** Shopify GraphQL API via `shopify-service.ts`
-**Status:** ✅ Complete - Already fetching and storing in database
-
-| Field | Source | Example | Status |
-|-------|--------|---------|--------|
-| `productId` | Shopify GraphQL | `"gid://shopify/Product/789"` | ✅ Implemented |
-| `title` | Shopify GraphQL | `"Wireless Headphones"` | ✅ Implemented |
-| `variantTitle` | Shopify GraphQL | `"Black / Large"` | ✅ Implemented |
-| `sku` | Shopify GraphQL | `"WH-BLK-LG"` | ✅ Implemented |
-| `quantity` | Shopify GraphQL | `2` | ✅ Implemented |
-| `price` | Shopify GraphQL | `99.99` | ✅ Implemented |
-| `productType` | Shopify GraphQL | `"Electronics"` | ✅ Implemented |
-| `vendor` | Shopify GraphQL | `"AudioBrand"` | ✅ Implemented |
-| `imageUrl` | Shopify GraphQL | `"https://cdn.shopify.com/..."` | ✅ Implemented |
-
-**GraphQL Query (Already Implemented):**
+#### 2. Product Line Items (`fetchOrderLineItems`) - Phase 1.2
 ```graphql
 query GetOrderWithProducts($orderId: ID!) {
   order(id: $orderId) {
@@ -113,471 +268,13 @@ query GetOrderWithProducts($orderId: ID!) {
           variantTitle
           quantity
           originalUnitPrice
-          image { url, altText }
-          product { id, productType, vendor }
-          sku
-        }
-      }
-    }
-  }
-}
-```
-
-#### ✅ **PHASE 1.3: EMAIL ENGAGEMENT TRACKING** (FULLY IMPLEMENTED)
-
-**Source:** SendGrid Event Webhooks via `sendgrid-webhook.ts`
-**Status:** ✅ Complete - Already tracking opens and clicks
-
-| Field | Source | Event Type | Status |
-|-------|--------|-----------|--------|
-| `emailSent` | Database | Email sent timestamp | ✅ Implemented |
-| `emailSentAt` | Database | `"2025-11-05T10:30:00Z"` | ✅ Implemented |
-| `emailOpened` | SendGrid Webhook | `"open"` event | ✅ Implemented |
-| `emailOpenedAt` | SendGrid Webhook | `"2025-11-05T11:45:00Z"` | ✅ Implemented |
-| `emailClicked` | SendGrid Webhook | `"click"` event | ✅ Implemented |
-| `emailClickedAt` | SendGrid Webhook | `"2025-11-05T11:47:00Z"` | ✅ Implemented |
-
-**Webhook Handler (Already Implemented):**
-```typescript
-// File: src/routes/sendgrid-webhook.ts
-export async function handleSendGridWebhook(event: SendGridEvent) {
-  if (event.event === 'open') {
-    await db.query(`
-      UPDATE delay_alerts
-      SET email_opened = true, email_opened_at = $1
-      WHERE sendgrid_message_id = $2
-    `, [new Date(event.timestamp * 1000), event.sg_message_id]);
-  }
-
-  if (event.event === 'click') {
-    await db.query(`
-      UPDATE delay_alerts
-      SET email_clicked = true, email_clicked_at = $1
-      WHERE sendgrid_message_id = $2
-    `, [new Date(event.timestamp * 1000), event.sg_message_id]);
-  }
-}
-```
-
-#### ✅ **SHIPENGINE INTEGRATION COMPLETE** (Nov 5, 2025)
-
-**Status:** ✅ FULLY IMPLEMENTED - Service integrated into order webhooks + hourly cron job
-
-| Field | Source | Status | Implementation |
-|-------|--------|--------|----------------|
-| `trackingEvents[]` | ShipEngine API | ✅ **Integrated** | Webhook + cron job, stored in `tracking_events` table |
-| `originalEta` | ShipEngine API | ✅ **Integrated** | Stored in `orders.original_eta` column |
-| `revisedEta` | ShipEngine API | ✅ **Integrated** | Stored in `orders.current_eta` column |
-
-**TrackingEvent Structure (ShipEngine Provides):**
-```typescript
-interface TrackingEvent {
-  timestamp: string;        // "2025-11-05T10:30:00Z"
-  status: string;           // "IN_TRANSIT", "DELIVERED", "EXCEPTION"
-  description: string;      // "Departed FedEx location"
-  location?: string;        // "Memphis, TN"
-  carrierStatus: string;    // Carrier-specific code
-}
-```
-
-**What ShipEngine Provides (Now Integrated):**
-- ✅ Tracking events timeline (full history) - **Stored in `tracking_events` table**
-- ✅ Original estimated delivery date - **Stored in `orders.original_eta`**
-- ✅ Current estimated delivery date - **Stored in `orders.current_eta`**
-- ✅ Carrier status codes - **Stored in `tracking_events.carrier_status`**
-- ✅ Location updates - **Stored in `tracking_events.location`**
-- ✅ Exception details - **Stored in tracking event descriptions**
-
-**✅ Integration Complete:** Service is now fully integrated:
-1. **Webhook Integration** (`src/routes/webhooks.ts` lines 336-418):
-   - Fetches tracking data when fulfillment is created/updated
-   - Stores tracking events with idempotent ON CONFLICT
-   - Updates ETAs and tracking status
-2. **Hourly Cron Job** (`/api/cron/tracking-refresh`):
-   - Refreshes tracking for all in-transit orders every hour
-   - Keeps data fresh without overwhelming ShipEngine API
-3. **Frontend Display** (`AlertCard.tsx`):
-   - `renderTrackingTimeline()` shows events from database
-   - `renderEtaInformation()` shows original vs revised ETA
-
-**UI Display (Working in Production):**
-```typescript
-// AlertCard.tsx handles missing data gracefully:
-{trackingEvents && trackingEvents.length > 0 ? (
-  renderTrackingTimeline()
-) : (
-  <p>No tracking events available yet.</p>
-)}
-```
-
-#### ❌ **MOCK DATA - NOT YET IMPLEMENTED**
-
-| Field | Current Status | Future Implementation |
-|-------|----------------|----------------------|
-| `suggestedActions[]` | Hardcoded mock data | Phase 3: Recommendation engine |
-| `delayReason` | Basic/generic | Needs carrier status mapping |
-
----
-
-### 1.2 OrderCard Component
-**File:** `src/components/tabs/OrdersTab/OrderCard.tsx`
-
-**Data Requirements:** All data is available from Shopify ✅
-
-| Field | Source | Status |
-|-------|--------|--------|
-| `orderNumber` | Shopify API | ✅ Working |
-| `customerName` | Shopify API | ✅ Working |
-| `customerEmail` | Shopify API | ✅ Working |
-| `status` | Shopify API | ✅ Working |
-| `trackingNumber` | Shopify API | ✅ Working |
-| `carrierCode` | Shopify API | ✅ Working |
-| `createdAt` | Shopify API | ✅ Working |
-| `totalAmount` | Shopify API | ✅ Working |
-| `currency` | Shopify API | ✅ Working |
-
-**No gaps identified** - OrderCard displays only basic order data that Shopify provides natively.
-
----
-
-### 1.3 Settings Components (Two-Tab Layout - v1.20)
-**Parent Component:** `src/components/tabs/DashboardTab/index.tsx`
-**Restructured:** v1.20 (2025-11-05) - Split SettingsCard into two separate tabs
-**Last Verified:** 2025-11-06
-
-**Overview:** Settings functionality was refactored in v1.20 from a single card to a two-tab layout for better organization and reduced cognitive load.
-
-**Tab Structure:**
-1. **Delay Detection Rules** → SettingsCard component
-2. **Notification Preferences** → NotificationPreferences component
-
----
-
-#### 1.3.1 SettingsCard Component (Delay Detection Rules)
-**File:** `src/components/tabs/DashboardTab/SettingsCard.tsx`
-**Last Updated:** v1.20.3 (2025-11-06)
-**Card Title:** "Delay Detection Rules"
-**Card Subtitle:** "Set thresholds for when to alert customers about shipping delays"
-
-**Purpose:** Manages the 3 configurable delay detection rules and displays connection status.
-
-##### ✅ **AVAILABLE FROM DATABASE**
-
-| Field | Source | Status |
-|-------|--------|--------|
-| `shop.domain` | Database | ✅ Working |
-| `settings.delayThreshold` | Database | ✅ Working (Warehouse Delays - days before shipment) |
-| `settings.exceptionThreshold` | Database | ✅ Working (Carrier Reported Delays - hours after exception) |
-| `settings.transitThreshold` | Database | ✅ Working (Stuck in Transit - days without movement) |
-
-#### ❌ **MERCHANT BENCHMARKS - NOT CALCULATED**
-
-**Status:** ❌ Not implemented - needs analytics service
-
-| Field | Calculation Required | Status |
-|-------|---------------------|--------|
-| `avgFulfillmentDays` | AVG(fulfilled_at - created_at) | ❌ Needs Implementation |
-| `avgDeliveryDays` | AVG(delivered_at - shipped_at) | ❌ Needs Implementation |
-| `delaysThisMonth` | COUNT(delay_alerts) | ❌ Needs Implementation |
-| `delaysTrend` | Month-over-month comparison | ❌ Needs Implementation |
-
-**Current UI State:** Settings page will not show benchmark section (or will show placeholder values).
-
-**Implementation Required:**
-```typescript
-// File: src/services/analytics-service.ts (TO BE CREATED)
-
-export async function calculateStoreBenchmarks(shopId: number) {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-  // Average fulfillment time (warehouse → shipped)
-  const avgFulfillment = await db.query(`
-    SELECT AVG(EXTRACT(EPOCH FROM (fulfilled_at - created_at)) / 86400) as avg_days
-    FROM orders
-    WHERE shop_id = $1
-    AND fulfilled_at IS NOT NULL
-    AND created_at > $2
-  `, [shopId, thirtyDaysAgo]);
-
-  // Average delivery time (shipped → delivered)
-  const avgDelivery = await db.query(`
-    SELECT AVG(EXTRACT(EPOCH FROM (delivered_at - shipped_at)) / 86400) as avg_days
-    FROM orders
-    WHERE shop_id = $1
-    AND delivered_at IS NOT NULL
-    AND shipped_at > $2
-  `, [shopId, thirtyDaysAgo]);
-
-  // Delays this month
-  const delayCount = await db.query(`
-    SELECT COUNT(*) FROM delay_alerts
-    WHERE order_id IN (SELECT id FROM orders WHERE shop_id = $1)
-    AND created_at > $2
-  `, [shopId, thirtyDaysAgo]);
-
-  return {
-    avgFulfillmentDays: Math.round(avgFulfillment[0]?.avg_days || 0),
-    avgDeliveryDays: Math.round(avgDelivery[0]?.avg_days || 0),
-    delaysThisMonth: parseInt(delayCount[0]?.count || '0'),
-  };
-}
-```
-
-**Deprecated Props (v1.20.3):**
-- ❌ `onSave` - Removed from SettingsCard, auto-save now happens via onSettingsChange
-- ❌ `onTest` - Moved to NotificationPreferences component
-
-**Test Coverage:** 39/39 tests passing
-
----
-
-#### 1.3.2 NotificationPreferences Component (Email/SMS Settings)
-**File:** `src/components/tabs/DashboardTab/NotificationPreferences.tsx`
-**Created:** v1.20 (2025-11-05)
-**Last Updated:** v1.20.3 (2025-11-06)
-**Card Title:** "Notification Preferences"
-**Card Subtitle:** "Configure how and when you receive delay notifications"
-
-**Purpose:** Manages email/SMS notification toggles and provides a "Send Test Alert" button to verify notification delivery.
-
-##### ✅ **AVAILABLE FROM DATABASE**
-
-| Field | Source | Status |
-|-------|--------|--------|
-| `settings.emailNotifications` | Database | ✅ Working |
-| `settings.smsNotifications` | Database | ✅ Working |
-
-**UI Features:**
-- ✅ Email Notifications toggle with help text
-- ✅ SMS Notifications toggle with help text
-- ✅ Warning banner when both notifications are disabled
-- ✅ "Send Test Alert" button (disabled when loading or both notifications off)
-- ✅ Auto-save on toggle changes (no manual save button)
-
-**Component Interface:**
-```typescript
-interface NotificationPreferencesProps {
-  settings: AppSettings;
-  loading?: boolean;
-  onSettingsChange: (settings: AppSettings) => void;
-  onSave?: () => void;  // Deprecated - kept for backward compatibility
-  onTest?: () => void;  // Added in v1.20.3 - triggers test notification
-}
-```
-
-**User Workflow (v1.20.3 Enhancement):**
-1. User enables email and/or SMS notifications
-2. Changes auto-save via `onSettingsChange`
-3. User clicks "Send Test Alert" button
-4. System sends sample delay alert to verify notification delivery
-5. All actions happen in one tab (no tab switching required)
-
-**Button Logic:**
-```typescript
-// Button is disabled when:
-disabled={loading || (!settings.emailNotifications && !settings.smsNotifications)}
-```
-
-**Warning Display Logic:**
-```typescript
-// Shows warning banner when both are disabled:
-{!settings.emailNotifications && !settings.smsNotifications && (
-  <div className="alert alertWarning">
-    <strong>No notifications enabled</strong>
-    <p>Customers won't be notified about delays. Enable at least one notification method.</p>
-  </div>
-)}
-```
-
-**Test Coverage:** 22/22 tests passing (16 original + 6 "Send Test Alert" button tests)
-
----
-
-### 1.4 AppHeader Component (Dashboard Metrics)
-**File:** `src/components/layout/AppHeader/index.tsx`
-**Added:** v1.16 (2025-11-05), Enhanced v1.18 (2025-11-05)
-**Last Verified:** 2025-11-06
-
-**Purpose:** Displays persistent, color-coded metrics at the top of every page. Provides real-time overview of delay alert status.
-
-#### ✅ **AVAILABLE FROM DATABASE**
-
-**API Endpoint:** `/api/stats`
-**Implementation:** `src/server-simple.ts` (lines 112-168)
-**Status:** ✅ Fully implemented with real SQL queries
-
-| Field | Source | Calculation | Example | Status |
-|-------|--------|-------------|---------|--------|
-| `totalAlerts` | Database | `COUNT(*) FROM delay_alerts` | `127` | ✅ Working |
-| `activeAlerts` | Database | `COUNT(DISTINCT da.id) JOIN orders WHERE tracking_status NOT IN ('DELIVERED', 'OUT_FOR_DELIVERY')` | `23` | ✅ Working |
-| `resolvedAlerts` | Database | `COUNT(DISTINCT da.id) JOIN orders WHERE tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY')` | `104` | ✅ Working |
-| `avgResolutionTime` | Database | `AVG(EXTRACT(EPOCH FROM (o.updated_at - da.created_at)) / 86400) for resolved orders` | `3.5 days` | ✅ Working |
-
-**SQL Implementation (Verified):**
-```typescript
-// Total Alerts Query
-const totalResult = await pool.query<CountResult>(
-  'SELECT COUNT(*) as count FROM delay_alerts'
-);
-
-// Active Alerts Query (Orders NOT delivered/out-for-delivery)
-const activeResult = await pool.query<CountResult>(`
-  SELECT COUNT(DISTINCT da.id) as count
-  FROM delay_alerts da
-  JOIN orders o ON da.order_id = o.id
-  WHERE o.tracking_status NOT IN ('DELIVERED', 'OUT_FOR_DELIVERY')
-`);
-
-// Resolved Alerts Query (Orders delivered/out-for-delivery)
-const resolvedResult = await pool.query<CountResult>(`
-  SELECT COUNT(DISTINCT da.id) as count
-  FROM delay_alerts da
-  JOIN orders o ON da.order_id = o.id
-  WHERE o.tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY')
-`);
-
-// Average Resolution Time (Days from alert created to order updated)
-const avgResolutionResult = await pool.query<AvgResolutionResult>(`
-  SELECT AVG(EXTRACT(EPOCH FROM (o.updated_at - da.created_at)) / 86400) as avg_days
-  FROM delay_alerts da
-  JOIN orders o ON da.order_id = o.id
-  WHERE o.tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY')
-`);
-```
-
-**UI Features (v1.18 Enhancements):**
-- ✅ Color-coded metrics with subtle glass-morphism effects:
-  - **Total Alerts**: Amber background (`rgba(251, 191, 36, 0.04)` + 2px border)
-  - **Active Alerts**: Blue background (`rgba(59, 130, 246, 0.04)` + 2px border)
-  - **Resolved Alerts**: Green background (`rgba(34, 197, 94, 0.04)` + 2px border)
-  - **Avg Resolution Time**: Neutral (no color accent)
-- ✅ Shopify connection status badge (green checkmark, domain without .myshopify.com)
-- ✅ Mobile responsive (stacks at 768px and 480px breakpoints)
-
-**Data Refresh:** Metrics update on every page load via `/api/stats` endpoint.
-
-**Error Handling:** Graceful fallback to zeros if database unavailable.
-
-**Test Coverage:** 28/28 tests passing (including 6 color-coded metric tests)
-
----
-
-## 2. SHOPIFY API DATA AVAILABILITY
-
-### 2.1 Current Shopify Permissions
-**Configured in:** `src/config/app-config.ts` or similar
-
-**Active Permissions:**
-- ✅ `read_orders` - Access order data (number, customer, total, tracking)
-- ✅ `read_fulfillments` - Access fulfillment/shipping data
-- ✅ `read_products` - Access product line items (Phase 1.2)
-
-**Future Permissions (Phase 2+):**
-- ⏳ `read_customers` - Customer LTV, order count, lifetime value
-- ⏳ `write_discounts` - Generate apology discount codes (Phase 3)
-
----
-
-### 2.2 Shopify GraphQL Queries (Implemented)
-
-#### ✅ **Query 1: Get Order With Products** (Phase 1.2 - COMPLETE)
-
-**File:** `src/services/shopify-service.ts`
-**Status:** ✅ Fully implemented and tested
-
-```graphql
-query GetOrderWithProducts($orderId: ID!) {
-  order(id: $orderId) {
-    id
-    name                    # Order number (e.g., "#1234")
-    createdAt
-    displayFinancialStatus  # PAID, PENDING, etc.
-    displayFulfillmentStatus # FULFILLED, UNFULFILLED, etc.
-
-    totalPriceSet {
-      shopMoney { amount, currencyCode }
-    }
-
-    customer {
-      id
-      firstName
-      lastName
-      email
-      phone
-    }
-
-    lineItems(first: 100) {
-      edges {
-        node {
-          id
-          title               # "Wireless Headphones"
-          variantTitle        # "Black / Large"
-          quantity
-          originalUnitPriceSet {
-            shopMoney { amount }
-          }
-          sku
+          image { url altText }
           product {
             id
-            productType       # "Electronics"
-            vendor            # "AudioBrand"
+            productType
+            vendor
           }
-          image {
-            url               # Product thumbnail
-            altText
-          }
-        }
-      }
-    }
-
-    fulfillments {
-      trackingInfo {
-        number              # Tracking number
-        company             # Carrier name
-      }
-      createdAt
-    }
-  }
-}
-```
-
-**Data Retrieved:**
-- ✅ Order basics (number, dates, status)
-- ✅ Customer information (name, email, phone)
-- ✅ Order total and currency
-- ✅ Product line items (up to 100 items per order)
-- ✅ Product images, SKUs, variants
-- ✅ Fulfillment tracking info
-
-**Test Coverage:** 25 passing tests in `shopify-service.test.ts`
-
----
-
-#### ⏳ **Query 2: Get Customer Intelligence** (Phase 2 - PLANNED)
-
-**Permission Required:** `read_customers` (not yet requested)
-**Status:** ⏳ Documented but not implemented
-
-```graphql
-query GetCustomerIntelligence($customerId: ID!) {
-  customer(id: $customerId) {
-    id
-    ordersCount             # Total lifetime orders
-    totalSpent {            # Lifetime value
-      amount
-      currencyCode
-    }
-    createdAt               # Customer since date
-    tags                    # ["VIP", "Wholesale", etc.]
-    acceptsMarketing        # Opt-in status
-
-    # Recent orders
-    orders(first: 10, sortKey: CREATED_AT, reverse: true) {
-      edges {
-        node {
-          id
-          createdAt
-          totalPrice
+          sku
         }
       }
     }
@@ -585,1354 +282,829 @@ query GetCustomerIntelligence($customerId: ID!) {
 }
 ```
 
-**Use Cases (Phase 2):**
-- Calculate customer lifetime value (LTV)
-- Segment customers: VIP, Repeat, New, At-Risk
-- Prioritize alerts based on customer value
-- Identify churn risk
+**Data Points Provided**: #52-60
+
+**Implementation Files**:
+- `src/services/shopify-service.ts` - GraphQL client and queries
+- `src/routes/webhooks.ts` - Lines 199-205 call `saveOrderLineItems()`
+
+**Rate Limits**: 1000 GraphQL cost points per second
+
+**Testing Requirements**:
+- Create test orders in Shopify development store
+- Verify product line items sync correctly
+- Test multi-variant products and image handling
 
 ---
 
-#### ⏳ **Query 3: Get Order Financial Breakdown** (Phase 2 - PLANNED)
+### ShipEngine API (REST v1)
 
-**Status:** ⏳ Available but not fetched
+**Purpose**: Fetch real-time carrier tracking information, ETAs, and tracking event timelines.
 
-```graphql
-query GetOrderFinancials($orderId: ID!) {
-  order(id: $orderId) {
-    subtotalPriceSet {
-      shopMoney { amount }
-    }
-    totalShippingPriceSet {
-      shopMoney { amount }
-    }
-    totalTaxSet {
-      shopMoney { amount }
-    }
-    totalDiscountsSet {
-      shopMoney { amount }
-    }
-    discountCodes {
-      code
-      amount
-    }
-  }
-}
+**Key Endpoints Used**:
+
+#### 1. Get Tracking Info (`getTrackingInfo`)
+```http
+GET https://api.shipengine.com/v1/tracking
+?carrier_code={carrierCode}
+&tracking_number={trackingNumber}
 ```
 
-**UI Display (Phase 2):**
-```
-Order Total: $384.99
-├─ Subtotal: $350.00
-├─ Shipping: $25.00
-├─ Tax: $24.99
-└─ Discount: -$15.00 (CODE: SAVE15)
-```
-
----
-
-#### ⏳ **Query 4: Get Shipping Address** (Phase 2 - PLANNED)
-
-**Status:** ⏳ Available but not fetched
-
-```graphql
-query GetShippingAddress($orderId: ID!) {
-  order(id: $orderId) {
-    shippingAddress {
-      firstName
-      lastName
-      address1
-      address2
-      city
-      province            # State/province
-      country
-      zip
-      phone
-      company
-    }
-    note                  # Customer order notes (IMPORTANT!)
-  }
-}
-```
-
-**Use Cases (Phase 2):**
-- Display full shipping address in alert details
-- Flag rural/remote addresses (higher delay risk)
-- Flag PO Boxes (different carrier rules)
-- Flag international orders (customs delays)
-- Extract urgency from customer notes ("RUSH ORDER", "Birthday gift")
-
----
-
-### 2.3 What Shopify CANNOT Provide
-
-❌ **Not Available from Shopify API:**
-
-1. **Tracking Events Timeline** - Shopify only stores tracking number and carrier, NOT tracking history
-2. **Estimated Delivery Dates (ETAs)** - Shopify doesn't track carrier ETAs
-3. **Delay Reasons** - Shopify doesn't provide carrier exception details
-4. **Carrier Performance Metrics** - Not available
-5. **Real-Time Tracking Updates** - Shopify is not a tracking platform
-
-**Solution:** Use ShipEngine API for tracking data (service already implemented).
-
----
-
-## 3. EXTERNAL API DATA AVAILABILITY
-
-### 3.1 ShipEngine API (Carrier Tracking)
-
-**Service File:** `src/services/carrier-service.ts`
-**Status:** ✅ **FULLY INTEGRATED** (Completed Nov 5, 2025)
-- ✅ Service implemented
-- ✅ Integrated into webhooks (`src/routes/webhooks.ts` lines 336-418)
-- ✅ Hourly cron job (`/api/cron/tracking-refresh`)
-- ✅ Database schema (tracking_events table + ETA columns)
-- ✅ 42/42 tests passing (24 webhook + 18 cron)
-
-#### ✅ **What ShipEngine Provides**
-
-**API Endpoint:** `GET /v1/tracking`
-**Documentation:** https://www.shipengine.com/docs/tracking/
-
-**Tracking Response:**
-```typescript
-interface ShipEngineTrackingInfo {
-  tracking_number: string;                    // "1Z999AA10123456784"
-  carrier_code: string;                       // "ups", "fedex", "usps"
-  status_code: string;                        // "AC", "IT", "DE", "EX", etc.
-  status_description: string;                 // "Accepted", "In Transit", "Delivered"
-
-  estimated_delivery_date?: string;           // "2025-11-08" (current ETA)
-  original_estimated_delivery_date?: string;  // "2025-11-06" (original ETA)
-  actual_delivery_date?: string;              // "2025-11-09" (if delivered)
-
-  events: Array<{
-    occurred_at: string;                      // "2025-11-05T10:30:00Z"
-    carrier_occurred_at?: string;             // Carrier's local time
-    description: string;                      // "Departed FedEx location"
-    city_locality?: string;                   // "Memphis"
-    state_province?: string;                  // "TN"
-    postal_code?: string;                     // "38125"
-    country_code?: string;                    // "US"
-    carrier_status_code?: string;             // Carrier-specific code
-    carrier_detail_code?: string;             // Additional details
-    signer?: string;                          // Signature (if delivered)
-  }>;
-}
-```
-
-**Status Code Mapping (Already Implemented in `carrier-service.ts`):**
-```typescript
-const STATUS_MAPPING = {
-  'AC': 'Accepted',           // Package accepted by carrier
-  'IT': 'In Transit',         // In transit
-  'DE': 'Delivered',          // Delivered
-  'EX': 'Exception',          // Exception (delay, weather, etc.)
-  'UN': 'Unknown',            // Unknown status
-  'AT': 'Delivery Attempted', // Delivery attempted (customer not home)
-  'NY': 'Not Yet In System'   // Tracking number not yet active
-};
-```
-
-#### ✅ **Current Implementation (carrier-service.ts)**
-
-**Method 1: Get Tracking Info**
-```typescript
-export async function getTrackingInfo(
-  trackingNumber: string,
-  carrierCode: string
-): Promise<TrackingInfo> {
-  const response = await fetch(
-    `https://api.shipengine.com/v1/tracking?tracking_number=${trackingNumber}&carrier_code=${carrierCode}`,
+**Response Structure**:
+```json
+{
+  "tracking_number": "1Z999AA10123456784",
+  "status_code": "IT",
+  "status_description": "In Transit",
+  "carrier_status_code": "I",
+  "carrier_status_description": "In Transit",
+  "ship_date": "2025-11-20T00:00:00Z",
+  "estimated_delivery_date": "2025-11-25T00:00:00Z",
+  "actual_delivery_date": null,
+  "events": [
     {
-      headers: {
-        'API-Key': process.env.SHIPENGINE_API_KEY,
-        'Content-Type': 'application/json'
-      }
+      "occurred_at": "2025-11-20T08:00:00Z",
+      "description": "Picked up",
+      "city_locality": "Los Angeles",
+      "state_province": "CA",
+      "postal_code": "90001",
+      "country_code": "US",
+      "carrier_occurred_at": "2025-11-20T08:00:00Z",
+      "carrier_status_code": "PU",
+      "status_code": "AC",
+      "latitude": 34.0522,
+      "longitude": -118.2437
     }
-  );
-
-  const data = await response.json();
-
-  return {
-    trackingNumber: data.tracking_number,
-    carrierCode: data.carrier_code,
-    status: STATUS_MAPPING[data.status_code] || 'Unknown',
-    estimatedDeliveryDate: data.estimated_delivery_date,
-    originalEstimatedDeliveryDate: data.original_estimated_delivery_date,
-    events: data.events.map(event => ({
-      timestamp: event.occurred_at,
-      status: event.carrier_status_code || data.status_code,
-      description: event.description,
-      location: formatLocation(event),
-      carrierStatus: event.carrier_detail_code
-    }))
-  };
-}
-```
-
-**Method 2: Get Supported Carriers**
-```typescript
-export async function getSupportedCarriers(): Promise<Carrier[]> {
-  // Returns list of 50+ supported carriers
-  // UPS, FedEx, USPS, DHL, Canada Post, etc.
-}
-```
-
-**Error Handling:**
-- ✅ 401 Unauthorized (invalid API key)
-- ✅ 404 Not Found (invalid tracking number)
-- ✅ 429 Rate Limit Exceeded (50 requests/second limit)
-- ✅ 500 Server Error (carrier API down)
-
-#### ❌ **Integration Gap - NOT Connected to Order Webhooks**
-
-**Current State:** Service exists but is never called.
-
-**What's Missing:**
-```typescript
-// File: src/routes/webhooks.ts
-
-// NEEDED: When order is fulfilled, fetch tracking info
-export async function handleOrderFulfillment(order: Order) {
-  if (!order.trackingNumber || !order.carrierCode) {
-    return; // No tracking info yet
-  }
-
-  // CALL SHIPENGINE HERE
-  const trackingInfo = await carrierService.getTrackingInfo(
-    order.trackingNumber,
-    order.carrierCode
-  );
-
-  // STORE TRACKING EVENTS IN DATABASE
-  for (const event of trackingInfo.events) {
-    await db.query(`
-      INSERT INTO tracking_events (order_id, timestamp, status, description, location)
-      VALUES ($1, $2, $3, $4, $5)
-      ON CONFLICT (order_id, timestamp) DO UPDATE
-      SET status = EXCLUDED.status, description = EXCLUDED.description
-    `, [order.id, event.timestamp, event.status, event.description, event.location]);
-  }
-
-  // STORE ETAs IN DATABASE
-  await db.query(`
-    UPDATE orders
-    SET original_eta = $1, current_eta = $2, tracking_status = $3
-    WHERE id = $4
-  `, [
-    trackingInfo.originalEstimatedDeliveryDate,
-    trackingInfo.estimatedDeliveryDate,
-    trackingInfo.status,
-    order.id
-  ]);
-}
-```
-
-✅ **INTEGRATION COMPLETE** (Nov 5, 2025) - Actual effort: 3 days
-- ✅ Added `tracking_events` table to database schema
-- ✅ Added `original_eta`, `current_eta`, `tracking_status` columns to `orders` table
-- ✅ Integrated ShipEngine calls into order fulfillment webhooks
-- ✅ Added background job to refresh tracking data hourly (Vercel cron)
-- ✅ AlertCard fetches and displays tracking events from database
-- ✅ 42/42 tests passing (24 webhook + 18 cron tests)
-
-#### ⚠️ **ShipEngine Limitations**
-
-1. **Rate Limits:** 50 requests per second (free tier)
-   - **Mitigation:** Cache tracking data, refresh hourly instead of real-time
-
-2. **Carrier Coverage:** Not all carriers supported
-   - **Supported:** UPS, FedEx, USPS, DHL, Canada Post, and 45+ others
-   - **Not Supported:** Small regional carriers
-
-3. **Data Latency:** Carrier data can be delayed 15-30 minutes
-   - **Mitigation:** Set expectations in UI ("Last updated 20 minutes ago")
-
-4. **Tracking Number Validity:** Not all tracking numbers work immediately
-   - **Mitigation:** Retry after 1 hour if "Not Yet In System"
-
----
-
-### 3.2 SendGrid API (Email Engagement Tracking)
-
-**Service File:** `src/routes/sendgrid-webhook.ts`
-**Status:** ✅ **FULLY IMPLEMENTED** (Phase 1.3 COMPLETE)
-
-#### ✅ **What SendGrid Provides**
-
-**Event Types:**
-- `delivered` - Email successfully delivered to inbox
-- `open` - Customer opened the email (tracking pixel loaded)
-- `click` - Customer clicked a link in the email
-- `bounce` - Email bounced (invalid address)
-- `dropped` - Email dropped by SendGrid (spam, unsubscribed, etc.)
-- `deferred` - Delivery temporarily delayed (try again later)
-- `spam_report` - Customer marked email as spam
-
-**Webhook Payload:**
-```json
-{
-  "event": "open",
-  "email": "customer@example.com",
-  "timestamp": 1699200000,
-  "sg_message_id": "abc123def456.filterdrecv-12345-67890-2025-11",
-  "useragent": "Mozilla/5.0 ...",
-  "ip": "192.168.1.1"
-}
-```
-
-#### ✅ **Current Implementation (COMPLETE)**
-
-**Webhook Handler (Phase 1.3):**
-```typescript
-// File: src/routes/sendgrid-webhook.ts
-
-export async function handleSendGridWebhook(req: Request) {
-  // 1. VERIFY WEBHOOK SIGNATURE (HMAC-SHA256)
-  const signature = req.headers['x-twilio-email-event-webhook-signature'];
-  const timestamp = req.headers['x-twilio-email-event-webhook-timestamp'];
-
-  const isValid = verifySendGridSignature(
-    req.body,
-    signature,
-    timestamp,
-    process.env.SENDGRID_WEBHOOK_SECRET
-  );
-
-  if (!isValid) {
-    return res.status(401).json({ error: 'Invalid signature' });
-  }
-
-  // 2. PREVENT REPLAY ATTACKS (10-minute window)
-  const timestampMs = parseInt(timestamp) * 1000;
-  if (Math.abs(Date.now() - timestampMs) > 10 * 60 * 1000) {
-    return res.status(400).json({ error: 'Timestamp too old' });
-  }
-
-  // 3. PROCESS EVENTS
-  const events = Array.isArray(req.body) ? req.body : [req.body];
-
-  for (const event of events) {
-    if (event.event === 'open') {
-      await db.query(`
-        UPDATE delay_alerts
-        SET email_opened = true, email_opened_at = $1
-        WHERE sendgrid_message_id = $2
-      `, [new Date(event.timestamp * 1000), event.sg_message_id]);
-    }
-
-    if (event.event === 'click') {
-      await db.query(`
-        UPDATE delay_alerts
-        SET email_clicked = true, email_clicked_at = $1
-        WHERE sendgrid_message_id = $2
-      `, [new Date(event.timestamp * 1000), event.sg_message_id]);
-    }
-  }
-
-  return res.status(200).json({ success: true });
-}
-```
-
-**Security Features:**
-- ✅ HMAC-SHA256 signature verification
-- ✅ Timestamp validation (prevents replay attacks)
-- ✅ 10-minute event window
-- ✅ Error handling for database failures
-
-**Test Coverage:** 10 passing tests in `sendgrid-webhook.test.ts`
-
-#### ⚠️ **SendGrid Limitations**
-
-1. **Email Client Blocking:** Privacy-focused clients (Apple Mail, Outlook) may block tracking pixels
-   - **Impact:** `open` events may not be tracked even if customer opened email
-   - **Mitigation:** Click tracking is more reliable (use action links in emails)
-
-2. **Webhook Delays:** 1-5 minutes between event occurrence and webhook delivery
-   - **Impact:** Real-time tracking not possible
-   - **Mitigation:** Show "Last updated X minutes ago" in UI
-
-3. **Link Clicks Only:** Click tracking only works if customer clicks a link
-   - **Impact:** Can't track if customer just read email without clicking
-   - **Mitigation:** Include prominent "Track Order" button in emails
-
----
-
-### 3.3 Twilio API (SMS Notifications)
-
-**Service File:** `src/services/sms-service.ts`
-**Status:** ⚠️ **PARTIALLY IMPLEMENTED** (SMS sending exists, delivery tracking does NOT)
-
-#### ⚠️ **What Twilio Provides (Not Yet Integrated)**
-
-**SMS Status Callback:**
-```json
-{
-  "MessageSid": "SM1234567890abcdef",
-  "MessageStatus": "delivered",
-  "To": "+15551234567",
-  "From": "+15559876543",
-  "Body": "Your order #1234 is delayed...",
-  "DateCreated": "2025-11-05T10:30:00Z",
-  "DateSent": "2025-11-05T10:30:05Z",
-  "DateUpdated": "2025-11-05T10:30:10Z"
-}
-```
-
-**Status Values:**
-- `queued` - SMS queued for sending
-- `sending` - SMS being sent
-- `sent` - SMS sent to carrier
-- `delivered` - SMS delivered to phone
-- `failed` - SMS failed to send
-- `undelivered` - SMS sent but not delivered
-
-**Implementation Needed:**
-```typescript
-// File: src/routes/twilio-webhook.ts (TO BE CREATED)
-
-export async function handleTwilioStatusCallback(req: Request) {
-  const { MessageSid, MessageStatus, DateUpdated } = req.body;
-
-  await db.query(`
-    UPDATE delay_alerts
-    SET sms_status = $1, sms_delivered_at = $2
-    WHERE twilio_message_sid = $3
-  `, [MessageStatus, DateUpdated, MessageSid]);
-}
-```
-
-**Estimated Effort:** 1-2 days
-**Priority:** LOW (email tracking already works, SMS is secondary)
-
----
-
-## 4. DATABASE SCHEMA REFERENCE
-**File:** `src/database/connection.ts`
-**Last Updated:** 2025-11-06
-**Database:** PostgreSQL
-
-**Purpose:** Comprehensive reference of all database tables, columns, constraints, and relationships used to store and retrieve data for the DelayGuard frontend.
-
-### 4.1 Core Tables
-
-#### Table: `shops`
-**Purpose:** Stores merchant Shopify store information and authentication tokens.
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | SERIAL | PRIMARY KEY | Unique shop identifier |
-| `domain` | VARCHAR(255) | NOT NULL, UNIQUE | Shopify store domain (e.g., "my-store.myshopify.com") |
-| `access_token` | VARCHAR(255) | NOT NULL | Shopify API access token |
-| `scope` | TEXT | | Granted OAuth scopes |
-| `email` | VARCHAR(255) | | Merchant email address |
-| `created_at` | TIMESTAMP | DEFAULT NOW() | Shop creation timestamp |
-| `updated_at` | TIMESTAMP | DEFAULT NOW() | Last update timestamp |
-
-**Indexes:** UNIQUE index on `domain`
-
----
-
-#### Table: `orders`
-**Purpose:** Stores Shopify order data with tracking status and ETA information.
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | SERIAL | PRIMARY KEY | Unique order identifier |
-| `shop_id` | INTEGER | NOT NULL, FOREIGN KEY → shops(id) ON DELETE CASCADE | Reference to shop |
-| `shopify_order_id` | VARCHAR(255) | NOT NULL | Shopify GID (e.g., "gid://shopify/Order/123") |
-| `order_number` | VARCHAR(100) | | Order number (e.g., "#1234") |
-| `customer_name` | VARCHAR(255) | | Customer full name |
-| `customer_email` | VARCHAR(255) | | Customer email address |
-| `customer_phone` | VARCHAR(50) | | Customer phone number |
-| `total_amount` | DECIMAL(10,2) | | Order total amount |
-| `currency` | VARCHAR(10) | | Currency code (e.g., "USD") |
-| `tracking_number` | VARCHAR(255) | | Carrier tracking number |
-| `carrier_code` | VARCHAR(50) | | Carrier code (e.g., "ups", "fedex") |
-| `tracking_status` | VARCHAR(50) | | Latest tracking status (DELIVERED, IN_TRANSIT, etc.) |
-| `original_eta` | TIMESTAMP | | Original estimated delivery date from carrier |
-| `current_eta` | TIMESTAMP | | Current/revised estimated delivery date |
-| `created_at` | TIMESTAMP | DEFAULT NOW() | Order creation timestamp |
-| `updated_at` | TIMESTAMP | DEFAULT NOW() | Last update timestamp |
-
-**Indexes:**
-- UNIQUE index on `(shop_id, shopify_order_id)`
-- Index on `shop_id`
-- Index on `tracking_number`
-
----
-
-#### Table: `order_line_items`
-**Purpose:** Stores product line items for each order (Phase 1.2).
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | SERIAL | PRIMARY KEY | Unique line item identifier |
-| `order_id` | INTEGER | NOT NULL, FOREIGN KEY → orders(id) ON DELETE CASCADE | Reference to order |
-| `product_id` | VARCHAR(255) | NOT NULL | Shopify Product GID |
-| `title` | VARCHAR(500) | NOT NULL | Product title |
-| `variant_title` | VARCHAR(255) | | Variant title (e.g., "Black / Large") |
-| `sku` | VARCHAR(255) | | Product SKU |
-| `quantity` | INTEGER | NOT NULL | Quantity ordered |
-| `price` | DECIMAL(10,2) | NOT NULL | Unit price |
-| `product_type` | VARCHAR(255) | | Product type/category |
-| `vendor` | VARCHAR(255) | | Product vendor/brand |
-| `image_url` | TEXT | | Product image URL |
-| `created_at` | TIMESTAMP | DEFAULT NOW() | Creation timestamp |
-
-**Indexes:**
-- Index on `order_id`
-- UNIQUE constraint on `(order_id, product_id, variant_title)`
-
----
-
-#### Table: `delay_alerts`
-**Purpose:** Stores active/resolved/dismissed delay alerts for orders.
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | SERIAL | PRIMARY KEY | Unique alert identifier |
-| `order_id` | INTEGER | NOT NULL, FOREIGN KEY → orders(id) ON DELETE CASCADE | Reference to order |
-| `fulfillment_id` | VARCHAR(255) | | Shopify Fulfillment GID |
-| `priority` | VARCHAR(20) | | Priority badge (CRITICAL, HIGH, MEDIUM, LOW) |
-| `delay_days` | INTEGER | | Number of days delayed |
-| `alert_status` | VARCHAR(20) | DEFAULT 'active' | Status: active, resolved, dismissed |
-| `created_at` | TIMESTAMP | DEFAULT NOW() | Alert creation timestamp |
-| `updated_at` | TIMESTAMP | DEFAULT NOW() | Last update timestamp |
-
-**Indexes:**
-- Index on `order_id`
-- Index on `alert_status`
-
-**Status Values:**
-- `active`: Delay still present, order not delivered
-- `resolved`: Order delivered or out for delivery
-- `dismissed`: Merchant manually dismissed alert
-
----
-
-#### Table: `tracking_events`
-**Purpose:** Stores carrier tracking event timeline from ShipEngine API.
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | SERIAL | PRIMARY KEY | Unique event identifier |
-| `order_id` | INTEGER | NOT NULL, FOREIGN KEY → orders(id) ON DELETE CASCADE | Reference to order |
-| `event_code` | VARCHAR(50) | NOT NULL | ShipEngine event code (e.g., "IT", "DE") |
-| `status_code` | VARCHAR(50) | | Carrier status code |
-| `status_description` | TEXT | | Human-readable status description |
-| `carrier_status_code` | VARCHAR(50) | | Raw carrier status code |
-| `carrier_status_description` | TEXT | | Carrier's original description |
-| `event_datetime` | TIMESTAMP | NOT NULL | When event occurred |
-| `location_city` | VARCHAR(255) | | Event location city |
-| `location_state` | VARCHAR(100) | | Event location state/province |
-| `location_country` | VARCHAR(10) | | Event location country code |
-| `created_at` | TIMESTAMP | DEFAULT NOW() | Database insert timestamp |
-
-**Indexes:**
-- Index on `order_id`
-- UNIQUE constraint on `(order_id, event_code, event_datetime)` (prevents duplicate events)
-
-**Event Codes:**
-- `IT`: In Transit
-- `DE`: Delivered
-- `EX`: Exception
-- `AT`: Acceptance (picked up)
-- `OD`: Out for Delivery
-
----
-
-#### Table: `notifications`
-**Purpose:** Tracks sent email/SMS notifications and engagement (Phase 1.3).
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | SERIAL | PRIMARY KEY | Unique notification identifier |
-| `order_id` | INTEGER | NOT NULL, FOREIGN KEY → orders(id) ON DELETE CASCADE | Reference to order |
-| `type` | VARCHAR(20) | NOT NULL | Notification type: "email" or "sms" |
-| `recipient` | VARCHAR(255) | NOT NULL | Email address or phone number |
-| `subject` | VARCHAR(500) | | Email subject line |
-| `body` | TEXT | | Notification message body |
-| `status` | VARCHAR(20) | DEFAULT 'sent' | Status: sent, delivered, failed |
-| `sendgrid_message_id` | VARCHAR(255) | | SendGrid message ID for tracking |
-| `opened_at` | TIMESTAMP | | When email was opened (from SendGrid webhook) |
-| `clicked_at` | TIMESTAMP | | When link was clicked (from SendGrid webhook) |
-| `sent_at` | TIMESTAMP | DEFAULT NOW() | When notification was sent |
-| `created_at` | TIMESTAMP | DEFAULT NOW() | Database insert timestamp |
-
-**Indexes:**
-- Index on `order_id`
-- Index on `sendgrid_message_id`
-- Index on `type`
-
-**Status Values:**
-- `sent`: Successfully sent to SendGrid/Twilio
-- `delivered`: Confirmed delivered to recipient
-- `failed`: Send failed (bounced, invalid recipient, etc.)
-
----
-
-#### Table: `app_settings`
-**Purpose:** Stores merchant-specific app configuration settings.
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | SERIAL | PRIMARY KEY | Unique settings identifier |
-| `shop_id` | INTEGER | NOT NULL, UNIQUE, FOREIGN KEY → shops(id) ON DELETE CASCADE | Reference to shop |
-| `delay_threshold` | INTEGER | DEFAULT 3 | Warehouse delay threshold (days before shipment) |
-| `exception_threshold` | INTEGER | DEFAULT 24 | Exception delay threshold (hours after carrier exception) |
-| `transit_threshold` | INTEGER | DEFAULT 5 | Stuck in transit threshold (days without movement) |
-| `email_notifications` | BOOLEAN | DEFAULT TRUE | Enable email notifications |
-| `sms_notifications` | BOOLEAN | DEFAULT FALSE | Enable SMS notifications |
-| `created_at` | TIMESTAMP | DEFAULT NOW() | Settings creation timestamp |
-| `updated_at` | TIMESTAMP | DEFAULT NOW() | Last update timestamp |
-
-**Indexes:**
-- UNIQUE index on `shop_id`
-
-**Default Values:**
-- Delay threshold: 3 days (Warehouse Delays rule)
-- Exception threshold: 24 hours (Carrier Reported Delays rule)
-- Transit threshold: 5 days (Stuck in Transit rule)
-- Email notifications: Enabled by default
-- SMS notifications: Disabled by default (requires phone numbers)
-
----
-
-### 4.2 Database Relationships
-
-```
-shops (1) ──┬─→ (many) orders
-            ├─→ (1) app_settings
-            └─→ ...
-
-orders (1) ──┬─→ (many) order_line_items
-             ├─→ (many) delay_alerts
-             ├─→ (many) tracking_events
-             └─→ (many) notifications
-```
-
-**Cascade Deletes:**
-- Deleting a `shop` deletes all related `orders`, `app_settings`
-- Deleting an `order` deletes all related `order_line_items`, `delay_alerts`, `tracking_events`, `notifications`
-
----
-
-### 4.3 Key Queries Used in Frontend
-
-#### Query 1: Get Dashboard Metrics (AppHeader)
-**Endpoint:** `/api/stats`
-**Source:** `src/server-simple.ts` lines 112-168
-
-```sql
--- Total Alerts
-SELECT COUNT(*) FROM delay_alerts;
-
--- Active Alerts
-SELECT COUNT(DISTINCT da.id)
-FROM delay_alerts da
-JOIN orders o ON da.order_id = o.id
-WHERE o.tracking_status NOT IN ('DELIVERED', 'OUT_FOR_DELIVERY');
-
--- Resolved Alerts
-SELECT COUNT(DISTINCT da.id)
-FROM delay_alerts da
-JOIN orders o ON da.order_id = o.id
-WHERE o.tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY');
-
--- Average Resolution Time
-SELECT AVG(EXTRACT(EPOCH FROM (o.updated_at - da.created_at)) / 86400)
-FROM delay_alerts da
-JOIN orders o ON da.order_id = o.id
-WHERE o.tracking_status IN ('DELIVERED', 'OUT_FOR_DELIVERY');
-```
-
-#### Query 2: Get Alert with Full Details (AlertCard)
-```sql
-SELECT
-  da.*,
-  o.order_number, o.customer_name, o.customer_email, o.customer_phone,
-  o.total_amount, o.currency, o.tracking_number, o.carrier_code,
-  o.tracking_status, o.original_eta, o.current_eta
-FROM delay_alerts da
-JOIN orders o ON da.order_id = o.id
-WHERE da.id = $1;
-```
-
-#### Query 3: Get Product Line Items for Alert
-```sql
-SELECT * FROM order_line_items
-WHERE order_id = $1
-ORDER BY id
-LIMIT 5;  -- Display limit
-```
-
-#### Query 4: Get Tracking Events Timeline
-```sql
-SELECT * FROM tracking_events
-WHERE order_id = $1
-ORDER BY event_datetime ASC;
-```
-
-#### Query 5: Get Email Engagement Status
-```sql
-SELECT opened_at, clicked_at, sent_at
-FROM notifications
-WHERE order_id = $1 AND type = 'email'
-ORDER BY sent_at DESC
-LIMIT 1;
-```
-
----
-
-## 5. DATA GAPS & RISKS
-
-### ✅ **CRITICAL GAPS - RESOLVED** (Nov 5, 2025)
-
-#### ~~Gap 1: Tracking Events Timeline~~ ✅ **RESOLVED**
-**Impact:** HIGH → **RESOLVED**
-**Component:** AlertCard.tsx line 278-335 (`renderTrackingTimeline()`)
-
-**~~Problem~~ Solution Implemented:**
-- ✅ UI displays tracking timeline with events
-- ✅ ShipEngine service exists and works
-- ✅ Service IS NOW called from order webhooks (lines 336-418)
-- ✅ Result: Full tracking timeline populated in real-time
-
-**✅ Production UI Behavior:**
-```typescript
-// AlertCard.tsx now receives real tracking events from database
-{trackingEvents && trackingEvents.length > 0 ? (
-  <div className="timeline">
-    {trackingEvents.map(event => (
-      <div key={event.timestamp}>
-        {event.description} - {event.location}  // ← REAL DATA FROM SHIPENGINE
-      </div>
-    ))}
-  </div>
-) : (
-  <p>No tracking events available yet.</p>  // Graceful fallback if no data
-)}
-```
-
-**✅ Implementation Complete (Option B):**
-```typescript
-// File: src/routes/webhooks.ts (lines 336-418)
-async function processFulfillment(orderId: number, fulfillmentData: ShopifyFulfillment) {
-  if (fulfillmentData.tracking_info?.number && fulfillmentData.tracking_info?.company) {
-    const carrierService = new CarrierService();
-    const trackingInfo = await carrierService.getTrackingInfo(
-      fulfillmentData.tracking_info.number,
-      fulfillmentData.tracking_info.company
-    );
-
-    // Store tracking events with idempotent ON CONFLICT
-    for (const event of trackingInfo.events) {
-      await query(
-        `INSERT INTO tracking_events (order_id, timestamp, status, description, location, carrier_status)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (order_id, timestamp) DO UPDATE SET status = EXCLUDED.status`,
-        [orderId, event.timestamp, event.status, event.description, event.location || null, trackingInfo.carrierCode]
-      );
-    }
-  }
-}
-```
-
-**✅ Actual Effort:** 3 days (database migration + webhook integration + cron job + 42 tests)
-
----
-
-#### ~~Gap 2: Original/Revised ETAs~~ ✅ **RESOLVED**
-**Impact:** HIGH → **RESOLVED**
-**Component:** AlertCard.tsx line 133-155 (`renderEtaInformation()`)
-
-**~~Problem~~ Solution Implemented:**
-- ✅ UI displays "Original ETA: Nov 6" and "Revised ETA: Nov 9"
-- ✅ ShipEngine provides both fields
-- ✅ WE ARE NOW fetching and storing this data
-- ✅ Result: Full ETA information displayed in AlertCard
-
-**✅ Implementation Complete (Option B):**
-```typescript
-// File: src/routes/webhooks.ts (lines 386-402)
-// Store ETAs and tracking status in orders table
-await query(
-  `UPDATE orders
-   SET original_eta = $1, current_eta = $2, tracking_status = $3, updated_at = CURRENT_TIMESTAMP
-   WHERE id = $4`,
-  [
-    trackingInfo.originalEstimatedDeliveryDate || null,
-    trackingInfo.estimatedDeliveryDate || null,
-    trackingInfo.status,
-    orderId
   ]
-);
-```
-
-**Database Schema:**
-```sql
-ALTER TABLE orders ADD COLUMN original_eta TIMESTAMP;
-ALTER TABLE orders ADD COLUMN current_eta TIMESTAMP;
-ALTER TABLE orders ADD COLUMN tracking_status VARCHAR(50);
-```
-
-**✅ Actual Effort:** 3 days (included in ShipEngine integration)
-
----
-
-#### Gap 3: Delay Reason Intelligence
-**Impact:** MEDIUM
-**Component:** AlertCard.tsx line 112-130 (`renderCompactDelayInfo()`)
-
-**Problem:**
-- UI displays delay reason: "Weather delay", "Carrier exception", etc.
-- Database has `delay_reason` field
-- BUT no service to intelligently populate it
-- Result: Generic "Order delayed" or missing reason
-
-**Current Database Schema:**
-```sql
-CREATE TABLE delay_alerts (
-  id SERIAL PRIMARY KEY,
-  delay_reason VARCHAR(100) NOT NULL,  -- Currently generic/manual
-  ...
-);
-```
-
-**Solution:**
-
-Create delay detection service:
-```typescript
-// File: src/services/delay-detection-service.ts (TO BE CREATED)
-
-export function detectDelayReason(
-  order: Order,
-  trackingInfo?: TrackingInfo
-): string {
-  // Pre-shipment delay (warehouse)
-  if (!order.fulfilledAt && daysSince(order.createdAt) > settings.delayThreshold) {
-    return `Warehouse Delay - Order not shipped yet (${daysSince(order.createdAt)} days)`;
-  }
-
-  // Carrier exception
-  if (trackingInfo?.status === 'EXCEPTION') {
-    const lastEvent = trackingInfo.events[0];
-    return lastEvent?.description || 'Carrier reported exception';
-  }
-
-  // Stuck in transit
-  if (trackingInfo?.status === 'IN_TRANSIT' && daysSince(order.shippedAt) > 7) {
-    return `Stuck in Transit - No tracking updates for ${daysSince(order.lastTrackingUpdate)} days`;
-  }
-
-  // ETA exceeded
-  if (trackingInfo?.estimatedDeliveryDate) {
-    const etaDate = new Date(trackingInfo.estimatedDeliveryDate);
-    if (new Date() > etaDate) {
-      return `Delayed Delivery - ${daysSince(etaDate)} days past estimated arrival`;
-    }
-  }
-
-  // Extended transit
-  if (order.shippedAt && daysSince(order.shippedAt) > 10) {
-    return `Extended Transit - ${daysSince(order.shippedAt)} days in transit`;
-  }
-
-  return `Order delayed by ${daysSince(order.createdAt)} days`;
 }
 ```
 
-**Estimated Effort:** 3-4 days
-**Priority:** MEDIUM (nice to have, not critical)
+**Data Points Provided**: #36-43, #61-66
+
+**Status Code Mapping** (in `carrier-service.ts`):
+- `AC` → ACCEPTED (Picked up)
+- `IT` → IN_TRANSIT (In transit)
+- `DE` → DELIVERED (Delivered)
+- `EX` → EXCEPTION (Delay/issue)
+- `UN` → UNKNOWN (No tracking info)
+- `AT` → ATTEMPTED_DELIVERY (Delivery attempted)
+
+**Integration Points**:
+1. **Fulfillment Webhook** (`webhooks.ts` lines 337-418): Called when order ships
+2. **Hourly Cron Job** (`tracking-refresh-cron.ts`): Refreshes all in-transit orders
+
+**Implementation Files**:
+- `src/services/carrier-service.ts` - ShipEngine API client
+- `src/routes/tracking-refresh-cron.ts` - Hourly refresh job
+- `src/queue/processors/tracking-refresh.ts` - Bulk tracking updates
+
+**Rate Limits**: No documented limit, but uses API key authentication
+
+**Supported Carriers** (50+):
+- UPS, FedEx, USPS, DHL, Amazon Logistics, Canada Post, etc.
+
+**Testing Requirements**:
+- Use ShipEngine sandbox environment for testing
+- Create test tracking numbers for different carriers
+- Simulate tracking event updates (picked up → in transit → exception → delivered)
+- Test hourly cron job with multiple orders
 
 ---
 
-### ⚠️ **MODERATE GAPS** (Will Show Empty/Placeholder Data)
+### SendGrid Event Webhook (Email Engagement Tracking) - Phase 1.3
 
-#### Gap 4: Merchant Benchmarks
-**Impact:** MEDIUM
-**Component:** SettingsCard.tsx line 82-97 (`renderBenchmark()`)
+**Purpose**: Receive real-time notifications when customers open or click emails.
 
-**Problem:**
-- Settings UI shows merchant performance benchmarks
-- No analytics service exists to calculate these
-- Result: Missing benchmark section or placeholder "—" values
+**Webhook Endpoint**: `POST /api/webhooks/sendgrid`
 
-**Solution:**
+**Security**:
+- HMAC-SHA256 signature verification using `SENDGRID_WEBHOOK_SECRET`
+- Replay attack prevention (10-minute timestamp window)
 
-Create analytics service:
+**Event Types Processed**:
+1. **`open`**: Customer opened email
+2. **`click`**: Customer clicked link in email
+
+**Event Payload Example**:
+```json
+[
+  {
+    "email": "customer@example.com",
+    "timestamp": 1732889400,
+    "event": "open",
+    "sg_message_id": "abc123.filter456.789.xyz",
+    "sg_event_id": "unique-event-id",
+    "useragent": "Mozilla/5.0...",
+    "ip": "192.0.2.1"
+  }
+]
+```
+
+**Database Updates** (in `sendgrid-webhook.ts`):
+```sql
+-- On 'open' event
+UPDATE delay_alerts
+SET email_opened = true, email_opened_at = $1
+WHERE sendgrid_message_id = $2
+
+-- On 'click' event
+UPDATE delay_alerts
+SET email_clicked = true, email_clicked_at = $1
+WHERE sendgrid_message_id = $2
+```
+
+**Data Points Provided**: #44-51
+
+**Implementation Files**:
+- `src/routes/sendgrid-webhook.ts` - Webhook handler (24 tests)
+- `src/tests/unit/routes/sendgrid-webhook.test.ts` - Comprehensive tests
+
+**Testing Requirements**:
+- Configure SendGrid webhook URL (requires ngrok for local testing)
+- Send test emails through DelayGuard
+- Verify webhook receives open/click events
+- Check database updates correctly
+
+**SendGrid Configuration**:
+1. Mail Settings → Event Webhook
+2. Enable `open` and `click` events
+3. Set webhook URL: `https://your-domain.com/api/webhooks/sendgrid`
+4. Set HTTP POST URL with signature verification
+
+---
+
+### PostgreSQL Database (8 Tables)
+
+**Purpose**: Persistent storage for all application data with proper relationships and indexes.
+
+**Schema Overview** (from `src/database/connection.ts`):
+
+#### Table 1: `shops`
+```sql
+CREATE TABLE IF NOT EXISTS shops (
+  id TEXT PRIMARY KEY,
+  shop_domain TEXT UNIQUE NOT NULL,
+  access_token TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+**Data Points Provided**: #5
+
+---
+
+#### Table 2: `orders`
+```sql
+CREATE TABLE IF NOT EXISTS orders (
+  id TEXT PRIMARY KEY,
+  shop_id TEXT NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  shopify_order_id TEXT UNIQUE NOT NULL,
+  order_number TEXT NOT NULL,
+  customer_name TEXT,
+  customer_email TEXT,
+  customer_phone TEXT,
+  total_price DECIMAL(10,2),
+  currency TEXT DEFAULT 'USD',
+  tracking_status TEXT,
+  original_eta TIMESTAMP,
+  current_eta TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX idx_orders_shop_id ON orders(shop_id);
+CREATE INDEX idx_orders_tracking_status ON orders(tracking_status);
+```
+**Data Points Provided**: #31-35, #38, #40-43, #73-77
+
+---
+
+#### Table 3: `fulfillments`
+```sql
+CREATE TABLE IF NOT EXISTS fulfillments (
+  id TEXT PRIMARY KEY,
+  order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  shopify_fulfillment_id TEXT UNIQUE NOT NULL,
+  tracking_number TEXT,
+  tracking_url TEXT,
+  carrier_name TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX idx_fulfillments_order_id ON fulfillments(order_id);
+CREATE INDEX idx_fulfillments_tracking_number ON fulfillments(tracking_number);
+```
+**Data Points Provided**: #36-37, #39, #79
+
+---
+
+#### Table 4: `delay_alerts`
+```sql
+CREATE TABLE IF NOT EXISTS delay_alerts (
+  id TEXT PRIMARY KEY,
+  order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  fulfillment_id TEXT REFERENCES fulfillments(id) ON DELETE SET NULL,
+  delay_reason TEXT NOT NULL,
+  notification_sent BOOLEAN DEFAULT FALSE,
+  notification_sent_at TIMESTAMP,
+  email_opened BOOLEAN DEFAULT FALSE,
+  email_opened_at TIMESTAMP,
+  email_clicked BOOLEAN DEFAULT FALSE,
+  email_clicked_at TIMESTAMP,
+  sendgrid_message_id TEXT,
+  suggested_actions JSONB,
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT NOW(),
+  resolved_at TIMESTAMP,
+  dismissed_at TIMESTAMP
+);
+CREATE INDEX idx_delay_alerts_order_id ON delay_alerts(order_id);
+CREATE INDEX idx_delay_alerts_status ON delay_alerts(status);
+CREATE INDEX idx_delay_alerts_sendgrid_message_id ON delay_alerts(sendgrid_message_id);
+```
+**Data Points Provided**: #22, #24-30, #44-51, #67-68, #80-81
+
+---
+
+#### Table 5: `order_line_items` - Phase 1.2
+```sql
+CREATE TABLE IF NOT EXISTS order_line_items (
+  id TEXT PRIMARY KEY,
+  order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  product_id TEXT NOT NULL,
+  shopify_line_item_id TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  variant_title TEXT,
+  sku TEXT,
+  quantity INTEGER NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  image_url TEXT,
+  product_type TEXT,
+  vendor TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX idx_order_line_items_order_id ON order_line_items(order_id);
+CREATE UNIQUE INDEX idx_order_line_items_shopify_id ON order_line_items(shopify_line_item_id);
+```
+**Data Points Provided**: #52-60
+
+---
+
+#### Table 6: `tracking_events`
+```sql
+CREATE TABLE IF NOT EXISTS tracking_events (
+  id TEXT PRIMARY KEY,
+  order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL,
+  description TEXT NOT NULL,
+  occurred_at TIMESTAMP NOT NULL,
+  city_locality TEXT,
+  state_province TEXT,
+  carrier_status_code TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX idx_tracking_events_order_id ON tracking_events(order_id);
+CREATE INDEX idx_tracking_events_occurred_at ON tracking_events(occurred_at);
+CREATE UNIQUE INDEX idx_tracking_events_unique ON tracking_events(order_id, occurred_at, event_type);
+```
+**Data Points Provided**: #61-66
+
+---
+
+#### Table 7: `app_settings`
+```sql
+CREATE TABLE IF NOT EXISTS app_settings (
+  id TEXT PRIMARY KEY,
+  shop_id TEXT UNIQUE NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  email_notifications BOOLEAN DEFAULT TRUE,
+  sms_notifications BOOLEAN DEFAULT FALSE,
+  merchant_email TEXT,
+  merchant_phone TEXT,
+  merchant_name TEXT,
+  pre_shipment_threshold_days INTEGER DEFAULT 3,
+  in_transit_threshold_days INTEGER DEFAULT 5,
+  extended_transit_threshold_days INTEGER DEFAULT 7,
+  auto_resolve_on_delivery BOOLEAN DEFAULT TRUE,
+  include_tracking_link BOOLEAN DEFAULT TRUE,
+  custom_message_template TEXT,
+  from_name TEXT DEFAULT 'DelayGuard',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+**Data Points Provided**: #6-13, #18-21
+
+---
+
+#### Table 8: `notifications`
+```sql
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  delay_alert_id TEXT NOT NULL REFERENCES delay_alerts(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  sent_at TIMESTAMP DEFAULT NOW(),
+  status TEXT DEFAULT 'sent'
+);
+CREATE INDEX idx_notifications_delay_alert_id ON notifications(delay_alert_id);
+```
+**Data Points Provided**: Used for notification logs, not directly displayed in UI
+
+---
+
+## ❓ Uncertain/Unimplemented Features
+
+### 1. Merchant Benchmarks (4 data points - ❓ UNCERTAIN)
+
+**What the UI Shows**:
+- SettingsCard displays 4 benchmark metrics below delay detection rules
+- Avg Fulfillment Days, Avg Delivery Days, Delays This Month, Delays Trend
+
+**Investigation Results**:
+- ✅ UI component exists: `SettingsCard.tsx` lines 150-180
+- ✅ TypeScript interface exists: `AppSettings` type has benchmark fields
+- ❌ Backend calculation NOT FOUND: No SQL queries found in `/api/settings` or `/api/analytics`
+- ❌ Database columns UNCLEAR: `app_settings` table doesn't have these columns in schema
+
+**Possible Implementation** (if needed):
+```sql
+-- Avg Fulfillment Days (order created → first fulfillment created)
+SELECT AVG(EXTRACT(epoch FROM (f.created_at - o.created_at)) / 86400) as avg_fulfillment_days
+FROM orders o
+JOIN fulfillments f ON o.id = f.order_id
+WHERE o.shop_id = $1
+  AND o.created_at >= NOW() - INTERVAL '30 days';
+
+-- Avg Delivery Days (fulfillment created → delivered status)
+SELECT AVG(EXTRACT(epoch FROM (o.updated_at - f.created_at)) / 86400) as avg_delivery_days
+FROM orders o
+JOIN fulfillments f ON o.id = f.order_id
+WHERE o.shop_id = $1
+  AND o.tracking_status = 'DELIVERED'
+  AND o.created_at >= NOW() - INTERVAL '30 days';
+
+-- Delays This Month
+SELECT COUNT(*) as delays_this_month
+FROM delay_alerts da
+JOIN orders o ON da.order_id = o.id
+WHERE o.shop_id = $1
+  AND da.created_at >= DATE_TRUNC('month', NOW());
+
+-- Delays Trend (compare current month to last month)
+WITH current_month AS (
+  SELECT COUNT(*) as count
+  FROM delay_alerts da
+  JOIN orders o ON da.order_id = o.id
+  WHERE o.shop_id = $1
+    AND da.created_at >= DATE_TRUNC('month', NOW())
+),
+last_month AS (
+  SELECT COUNT(*) as count
+  FROM delay_alerts da
+  JOIN orders o ON da.order_id = o.id
+  WHERE o.shop_id = $1
+    AND da.created_at >= DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+    AND da.created_at < DATE_TRUNC('month', NOW())
+)
+SELECT 
+  CASE 
+    WHEN last_month.count = 0 THEN 'N/A'
+    ELSE ROUND((current_month.count - last_month.count)::DECIMAL / last_month.count * 100, 1)::TEXT || '%'
+  END as trend
+FROM current_month, last_month;
+```
+
+**Recommendation**:
+- If benchmarks are needed for Shopify submission, implement the above queries
+- If not critical, hide the benchmark UI section for now (graceful degradation)
+- Add database migration to add benchmark columns to `app_settings` if caching is desired
+
+---
+
+### 2. Suggested Actions (2 data points - ❓ UNCERTAIN)
+
+**What the UI Shows**:
+- AlertCard has a "Suggested Actions" section
+- Should display AI-generated or rule-based action recommendations
+
+**Investigation Results**:
+- ✅ Database field exists: `delay_alerts.suggested_actions JSONB`
+- ✅ UI component exists: `AlertCard.tsx` renders `suggestedActions` array
+- ❌ Generation logic NOT FOUND: No code found that populates this field
+- ❌ Frontend always receives empty/null: UI likely always shows "No suggestions"
+
+**Expected Data Structure** (from TypeScript types):
 ```typescript
-// File: src/services/analytics-service.ts (TO BE CREATED)
-
-export async function calculateStoreBenchmarks(shopId: number) {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-  // Average fulfillment time
-  const avgFulfillment = await db.query(`
-    SELECT AVG(EXTRACT(EPOCH FROM (fulfilled_at - created_at)) / 86400) as avg_days
-    FROM orders
-    WHERE shop_id = $1
-    AND fulfilled_at IS NOT NULL
-    AND created_at > $2
-  `, [shopId, thirtyDaysAgo]);
-
-  // Average delivery time
-  const avgDelivery = await db.query(`
-    SELECT AVG(EXTRACT(EPOCH FROM (delivered_at - shipped_at)) / 86400) as avg_days
-    FROM orders
-    WHERE shop_id = $1
-    AND delivered_at IS NOT NULL
-    AND shipped_at > $2
-  `, [shopId, thirtyDaysAgo]);
-
-  // Delays this month
-  const delayCount = await db.query(`
-    SELECT COUNT(*) FROM delay_alerts
-    WHERE order_id IN (SELECT id FROM orders WHERE shop_id = $1)
-    AND created_at > $2
-  `, [shopId, thirtyDaysAgo]);
-
-  return {
-    avgFulfillmentDays: Math.round(avgFulfillment[0]?.avg_days || 0),
-    avgDeliveryDays: Math.round(avgDelivery[0]?.avg_days || 0),
-    delaysThisMonth: parseInt(delayCount[0]?.count || '0'),
-  };
+interface SuggestedAction {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
 }
+
+// Example suggested actions
+suggestedActions: [
+  {
+    id: '1',
+    title: 'Send Apology Email',
+    description: 'Proactively reach out with delay explanation',
+    priority: 'high'
+  },
+  {
+    id: '2',
+    title: 'Offer 10% Discount',
+    description: 'Retain customer with apology discount code',
+    priority: 'medium'
+  }
+]
 ```
 
-**Estimated Effort:** 3-4 days
-**Priority:** LOW (nice to have, not critical for Phase 1)
+**Possible Implementation** (if needed):
 
-**Quick Fix:** Hide benchmark section if no data:
+**Option A: Rule-Based Suggestions**
 ```typescript
-{benchmarks && (
-  <div className="benchmarks">...</div>
-)}
-```
+function generateSuggestedActions(alert: DelayAlert, order: Order): SuggestedAction[] {
+  const actions: SuggestedAction[] = [];
 
----
-
-#### Gap 5: Suggested Actions Algorithm
-**Impact:** LOW
-**Component:** AlertCard.tsx line 255-276 (`renderSuggestedActions()`)
-
-**Problem:**
-- UI displays suggested merchant actions
-- Currently hardcoded mock data
-- No recommendation engine exists
-
-**Solution (Phase 3+):**
-```typescript
-function generateSuggestedActions(alert: DelayAlert, customer: Customer): string[] {
-  const actions = [];
-
-  // VIP customer - prioritize
-  if (customer.segment === 'VIP') {
-    actions.push('📞 Contact customer personally via phone');
+  // High-value order suggestions
+  if (order.total_price > 500) {
+    actions.push({
+      id: '1',
+      title: 'Personal Follow-Up Call',
+      description: 'High-value order - consider personal outreach',
+      priority: 'high'
+    });
   }
 
-  // High-value order - offer compensation
-  if (alert.totalAmount > 200) {
-    actions.push('💰 Offer 15% discount on next order');
-  }
-
-  // Long delay - expedite
+  // Long delay suggestions
   if (alert.delayDays > 7) {
-    actions.push('🚚 Consider expediting a replacement order');
+    actions.push({
+      id: '2',
+      title: 'Offer Refund or Replacement',
+      description: 'Extended delay - consider compensation',
+      priority: 'high'
+    });
   }
 
-  // Customer opened email - follow up
-  if (alert.emailOpened && !alert.emailClicked) {
-    actions.push('📧 Send personalized follow-up email');
+  // Customer hasn't engaged
+  if (!alert.email_opened && alert.notification_sent_at < Date.now() - 86400000) {
+    actions.push({
+      id: '3',
+      title: 'Try SMS Notification',
+      description: 'Email not opened in 24 hours - try alternate channel',
+      priority: 'medium'
+    });
   }
-
-  // Default action
-  actions.push('✉️ Send proactive delay notification email');
 
   return actions;
 }
 ```
 
-**Estimated Effort:** 5-6 days
-**Priority:** LOW (Phase 3 feature - defer until post-launch)
+**Option B: AI-Generated Suggestions** (Phase 3+)
+- Use OpenAI API to generate context-aware suggestions
+- Consider: delay reason, customer history, order value, product type
+- Store in `suggested_actions` JSONB field
 
-**Quick Fix:** Hide section if no data:
-```typescript
-{suggestedActions && suggestedActions.length > 0 && (
-  <div className="suggested-actions">...</div>
-)}
+**Recommendation**:
+- Phase 1-2: Implement simple rule-based suggestions (Option A)
+- Phase 3+: Upgrade to AI-powered suggestions (Option B)
+- For now, hide the "Suggested Actions" UI section if empty (graceful degradation)
+
+---
+
+### 3. Hardcoded Dashboard Metrics (1 data point - ❌ NOT IMPLEMENTED)
+
+**What the UI Shows**:
+- AppHeader displays "Avg Resolution Time"
+- Backend has real SQL query (v1.16)
+
+**Investigation Results**:
+- ✅ Backend calculation is REAL: `/api/stats` returns real SQL query result
+- ✅ Frontend displays real data: No hardcoded values found in AppHeader
+
+**Status**: FALSE ALARM - This was marked as uncertain but is actually ✅ REAL
+
+---
+
+## 🧪 Testing Requirements by Data Type
+
+### Test Group 1: Shopify Integration Testing
+
+**Data Points to Test**: #22-23, #31-35, #52-60, #73-77
+
+**Prerequisites**:
+1. Shopify Partner account
+2. Development store created
+3. DelayGuard app installed in dev store
+4. OAuth flow completed
+
+**Test Scenarios**:
+
+#### Test 1.1: Basic Order Sync
+```
+GIVEN: Fresh DelayGuard installation
+WHEN: Create new order in Shopify admin
+  - Customer: John Doe
+  - Email: john@example.com
+  - Phone: +1-555-1234
+  - 1 product: "Wireless Headphones" ($99.99)
+THEN: Verify in DelayGuard
+  - Order appears in Orders tab
+  - Customer name displays "John Doe"
+  - Customer email displays "john@example.com"
+  - Order total displays "$99.99"
+  - Product line item shows "Wireless Headphones"
 ```
 
----
-
-## 6. PRODUCTION READINESS CHECKLIST
-
-| Data Field | Source | Status | Action Required | Priority |
-|------------|--------|--------|-----------------|----------|
-| **CORE ORDER DATA** | | | | |
-| Customer name/email | Shopify API | ✅ Working | None | — |
-| Order number/total | Shopify API | ✅ Working | None | — |
-| Tracking number | Shopify API | ✅ Working | None | — |
-| Currency | Shopify API | ✅ Working | None | — |
-| Order status | Shopify API | ✅ Working | None | — |
-| **PHASE 1.2 FEATURES** | | | | |
-| Product line items | Shopify GraphQL | ✅ Implemented | None | — |
-| Product images | Shopify GraphQL | ✅ Implemented | None | — |
-| Product SKUs | Shopify GraphQL | ✅ Implemented | None | — |
-| **PHASE 1.3 FEATURES** | | | | |
-| Email sent tracking | Database | ✅ Implemented | None | — |
-| Email open tracking | SendGrid Webhook | ✅ Implemented | None | — |
-| Email click tracking | SendGrid Webhook | ✅ Implemented | None | — |
-| **CALCULATED FIELDS** | | | | |
-| Delay days | Calculation | ✅ Working | None | — |
-| Priority badge | Algorithm | ✅ Working | None | — |
-| **SHIPENGINE INTEGRATION** | | | | |
-| Tracking events | ShipEngine API | ✅ **Integrated (Nov 5)** | Complete - Webhook + cron + DB | **RESOLVED** |
-| Original ETA | ShipEngine API | ✅ **Integrated (Nov 5)** | Complete - Stored in orders.original_eta | **RESOLVED** |
-| Revised ETA | ShipEngine API | ✅ **Integrated (Nov 5)** | Complete - Stored in orders.current_eta | **RESOLVED** |
-| Delay reason | Business Logic | ❌ Not implemented | Implement detection service OR use generic text | MEDIUM |
-| **ANALYTICS** | | | | |
-| Merchant benchmarks | Database Query | ❌ Not calculated | Implement analytics service OR hide UI section | LOW |
-| Suggested actions | Algorithm | ❌ Not implemented | Phase 3 feature - defer OR hide UI section | LOW |
-| **PHASE 2 FEATURES (DEFERRED)** | | | | |
-| Customer LTV | Shopify GraphQL | ⏳ Not fetched | Phase 2 - defer | — |
-| Customer segment | Calculation | ⏳ Not implemented | Phase 2 - defer | — |
-| Financial breakdown | Shopify GraphQL | ⏳ Not fetched | Phase 2 - defer | — |
-| Shipping address | Shopify GraphQL | ⏳ Not fetched | Phase 2 - defer | — |
-
----
-
-## 7. RISK ASSESSMENT
-
-### 🔴 **HIGH RISK** (Could Break Production if Not Addressed)
-
-#### Risk 1: Empty Tracking Timeline
-**Scenario:** Merchant opens AlertCard, sees "No tracking events available"
-
-**Impact:**
-- ❌ Looks incomplete/broken
-- ❌ Merchant expects tracking history
-- ❌ Major UX disappointment
-
-**Mitigation Options:**
-
-**Option A (FAST): Hide tracking section if no data**
-```typescript
-// AlertCard.tsx
-{trackingEvents && trackingEvents.length > 0 && (
-  renderTrackingTimeline()
-)}
+#### Test 1.2: Multi-Product Order
 ```
-**Pros:** 5-minute fix, no errors
-**Cons:** Missing feature that mockups showed
-
-**Option B (COMPLETE): Integrate ShipEngine**
-**Pros:** Full feature parity with mockups
-**Cons:** 2-3 days effort, delays launch
-
-**My Recommendation:** Option A for launch, Option B post-launch
-
----
-
-#### Risk 2: Missing ETA Information
-**Scenario:** Merchant opens AlertCard, sees "No ETA information"
-
-**Impact:**
-- ⚠️ Moderately disappointing
-- ⚠️ ETAs are helpful but not critical
-
-**Mitigation:** Same as Risk 1 (hide section if no data)
-
----
-
-### ⚠️ **MEDIUM RISK** (Degraded UX, Not Critical)
-
-#### Risk 3: Generic Delay Reasons
-**Scenario:** All delays show "Order delayed by X days" instead of specific reason
-
-**Impact:**
-- ⚠️ Less actionable intelligence
-- ⚠️ Merchant gets less context
-
-**Mitigation:** Use generic text for now, implement intelligent detection post-launch
-
----
-
-#### Risk 4: Missing Merchant Benchmarks
-**Scenario:** Settings page shows no performance benchmarks
-
-**Impact:**
-- ⚠️ Missing nice-to-have feature
-- ⚠️ Settings page looks incomplete
-
-**Mitigation:** Hide benchmark section entirely if no data
-
----
-
-### ✅ **LOW RISK** (Graceful Degradation Already Implemented)
-
-#### Risk 5: Missing Product Images
-**Status:** ✅ Already handled
-**Mitigation:** UI shows 📦 placeholder emoji if `imageUrl` is null
-
-#### Risk 6: Missing Suggested Actions
-**Status:** ✅ Already handled
-**Mitigation:** UI hides section if `suggestedActions` is null or empty
-
-#### Risk 7: Email Tracking Blocked
-**Status:** ✅ Expected behavior
-**Mitigation:** UI shows "Email sent" instead of "Not opened" if tracking pixel blocked
-
----
-
-## 8. RECOMMENDED NEXT STEPS
-
-### 🚀 **RECOMMENDED APPROACH: FAST LAUNCH (2-3 days)**
-
-**Goal:** Ship Phase 1 to Shopify App Store with existing working features
-
-#### Step 1: Add Null Checks (1 hour)
-
-**File:** `src/components/tabs/AlertsTab/AlertCard.tsx`
-
-```typescript
-// Hide tracking timeline if no data
-{trackingEvents && trackingEvents.length > 0 && (
-  <div className="tracking-timeline">
-    {renderTrackingTimeline()}
-  </div>
-)}
-
-// Hide ETA section if no data
-{(originalEta || revisedEta) && (
-  <div className="eta-section">
-    {renderEtaInformation()}
-  </div>
-)}
-
-// Hide suggested actions if no data
-{suggestedActions && suggestedActions.length > 0 && (
-  <div className="suggested-actions">
-    {renderSuggestedActions()}
-  </div>
-)}
+GIVEN: DelayGuard installed
+WHEN: Create order with 3 different products
+  - Product 1: "Gaming Keyboard" (qty: 1, $149.99)
+  - Product 2: "Wireless Mouse" (qty: 2, $49.99 each)
+  - Product 3: "Mousepad" (qty: 1, $19.99)
+THEN: Verify in DelayGuard
+  - All 3 line items display in AlertCard
+  - Quantities correct (1, 2, 1)
+  - Order total = $269.96
+  - Product thumbnails load or show placeholder
 ```
 
-**File:** `src/components/tabs/DashboardTab/SettingsCard.tsx`
-
-```typescript
-// Hide benchmarks section if no data
-{benchmarks && (
-  <div className="benchmarks-section">
-    {renderBenchmark('Avg Fulfillment Time', benchmarks.avgFulfillmentDays, 'days')}
-    {renderBenchmark('Avg Delivery Time', benchmarks.avgDeliveryDays, 'days')}
-    {renderBenchmark('Delays This Month', benchmarks.delaysThisMonth, 'alerts')}
-  </div>
-)}
+#### Test 1.3: Product Variants
+```
+GIVEN: Product with variants (T-shirt: Small/Medium/Large, Red/Blue)
+WHEN: Create order with variant "Medium, Red"
+THEN: Verify
+  - Variant title displays "Size: Medium, Color: Red"
+  - Product type badge shows "Apparel"
+  - SKU displays correctly
 ```
 
+**Pass Criteria**: All order data, customer info, and product line items match Shopify
+
 ---
 
-#### Step 2: Use Generic Delay Reasons (30 minutes)
+### Test Group 2: ShipEngine Tracking Integration Testing
 
-**File:** `src/services/delay-detection-service.ts`
+**Data Points to Test**: #36-43, #61-66
 
-```typescript
-export function getDelayReason(delayDays: number, order: Order): string {
-  if (!order.fulfilledAt) {
-    return `Warehouse Delay - Order not shipped yet (${delayDays} days)`;
-  }
+**Prerequisites**:
+1. ShipEngine API key configured
+2. Fulfillment webhook active
+3. Hourly cron job configured
 
-  if (order.fulfilledAt && !order.deliveredAt) {
-    return `In Transit - Order in transit for ${delayDays} days`;
-  }
+**Test Scenarios**:
 
-  return `Order delayed by ${delayDays} days`;
-}
+#### Test 2.1: Fulfillment Webhook - Tracking Data Sync
+```
+GIVEN: Order exists in DelayGuard
+WHEN: Mark order as fulfilled in Shopify
+  - Carrier: USPS
+  - Tracking number: 9400100000000000000000
+THEN: Verify in DelayGuard (within 30 seconds)
+  - Tracking number displays in AlertCard
+  - Carrier name shows "USPS"
+  - Tracking URL is clickable
+  - Tracking status updates to "IN_TRANSIT" or "ACCEPTED"
+  - Original ETA populates from ShipEngine
 ```
 
----
+#### Test 2.2: Tracking Timeline Events
+```
+GIVEN: Order with tracking number
+WHEN: ShipEngine API returns tracking events
+  - Event 1: "Picked Up" in Los Angeles, CA (Nov 20, 8:00 AM)
+  - Event 2: "In Transit" in Phoenix, AZ (Nov 21, 2:00 PM)
+  - Event 3: "Exception: Weather Delay" in Denver, CO (Nov 22, 5:00 PM)
+THEN: Verify AlertCard timeline
+  - 3 events display chronologically
+  - Event descriptions match
+  - Locations show "Los Angeles, CA", "Phoenix, AZ", "Denver, CO"
+  - Timestamps formatted correctly
+  - Exception event triggers delay alert
+```
 
-#### Step 3: Test with Real Shopify Data (1-2 days)
+#### Test 2.3: ETA Updates and Delays
+```
+GIVEN: Order with original ETA = Nov 25
+WHEN: Carrier updates ETA to Nov 28 (3-day delay)
+THEN: Verify AlertCard ETA section
+  - Original ETA shows "Nov 25"
+  - Current ETA shows "Nov 28"
+  - Delay indicator shows "+3 days"
+  - Delay alert created with reason "Extended Transit"
+```
 
-**Create test Shopify store:**
-1. Create development Shopify store (free)
-2. Install DelayGuard app
-3. Create test orders with tracking numbers
-4. Verify all data displays correctly
-5. Test with orders that have/don't have product images
-6. Test email tracking with real SendGrid emails
+#### Test 2.4: Hourly Tracking Refresh
+```
+GIVEN: 5 orders in "IN_TRANSIT" status
+WHEN: Cron job runs (every hour at :00)
+THEN: Verify
+  - All 5 orders refreshed via ShipEngine API
+  - New tracking events stored in database
+  - Delivered orders update status to "DELIVERED"
+  - Cron job returns statistics (ordersProcessed: 5)
+```
 
----
-
-#### Step 4: Submit to Shopify App Store (1-2 days)
-
-**Requirements:**
-- ✅ App listing description
-- ✅ Screenshots (desktop + mobile)
-- ✅ Privacy policy
-- ✅ Support contact
-- ✅ Pricing model
-- ✅ OAuth redirect URLs
-
----
-
-### 🔧 **POST-LAUNCH ROADMAP (After Shopify Approval)**
-
-#### ~~Week 1-2: ShipEngine Integration~~ ✅ **COMPLETED (Nov 5, 2025)**
-- ✅ Added `tracking_events` table to database
-- ✅ Added `original_eta`, `current_eta`, `tracking_status` columns to `orders` table
-- ✅ Integrated ShipEngine into order fulfillment webhooks
-- ✅ Added background job to refresh tracking data hourly (Vercel cron)
-- ✅ AlertCard displays tracking timeline from database
-- ✅ **Actual Effort:** 3 days (42 tests passing)
-
----
-
-#### Week 3-4: Delay Reason Intelligence (MEDIUM PRIORITY)
-- Enhance delay detection service with ShipEngine status codes
-- Map carrier exceptions to human-readable reasons
-- Detect pre-shipment vs in-transit vs extended transit delays
-- **Estimated Effort:** 3-4 days
+**Pass Criteria**: All tracking data, ETAs, and timeline events match ShipEngine API responses
 
 ---
 
-#### Week 5-6: Merchant Benchmarks (LOW PRIORITY)
-- Create analytics service to calculate store benchmarks
-- Add cron job to refresh benchmarks daily
-- Display in Settings page
-- **Estimated Effort:** 3-4 days
+### Test Group 3: SendGrid Email Engagement Testing
+
+**Data Points to Test**: #44-51
+
+**Prerequisites**:
+1. SendGrid API key configured
+2. SendGrid Event Webhook configured
+3. ngrok tunnel active (for local testing)
+
+**Test Scenarios**:
+
+#### Test 3.1: Email Sent Tracking
+```
+GIVEN: Delay alert created
+WHEN: DelayGuard sends notification email via SendGrid
+THEN: Verify in database
+  - delay_alerts.notification_sent = true
+  - delay_alerts.notification_sent_at = (timestamp)
+  - delay_alerts.sendgrid_message_id = (unique ID)
+```
+
+#### Test 3.2: Email Open Tracking
+```
+GIVEN: Email sent to customer
+WHEN: Customer opens email (triggers SendGrid webhook)
+THEN: Verify in AlertCard
+  - Email Opened badge shows ✅
+  - Email Opened At displays timestamp
+  - Engagement rate updates
+```
+
+#### Test 3.3: Email Click Tracking
+```
+GIVEN: Email opened by customer
+WHEN: Customer clicks tracking link in email (triggers webhook)
+THEN: Verify in AlertCard
+  - Email Clicked badge shows ✅
+  - Email Clicked At displays timestamp
+  - Engagement rate = 2/2 (opened + clicked)
+```
+
+#### Test 3.4: Webhook Security - HMAC Signature Verification
+```
+GIVEN: SendGrid webhook endpoint
+WHEN: Receive webhook with invalid signature
+THEN: Verify
+  - Request rejected with 403 Forbidden
+  - No database updates occur
+  - Security log created
+```
+
+#### Test 3.5: Webhook Security - Replay Attack Prevention
+```
+GIVEN: Valid webhook payload
+WHEN: Resend same payload 15 minutes later
+THEN: Verify
+  - Request rejected (timestamp too old)
+  - No duplicate database updates
+```
+
+**Pass Criteria**: All email engagement events tracked correctly, security measures prevent attacks
 
 ---
 
-### 🎯 **ALTERNATIVE APPROACH: COMPLETE INTEGRATION (8-10 days)**
+### Test Group 4: Database Integrity Testing
 
-**Goal:** Ship with full feature parity to mockups
+**Data Points to Test**: All 84 data points
 
-**Not Recommended Because:**
-- ❌ Delays Shopify submission by 1-2 weeks
-- ❌ Missing features have graceful fallbacks
-- ✅ ShipEngine integration was added (completed Nov 5, 2025)
-- ❌ Remaining gaps (delay reason intelligence) can wait for merchant feedback
+**Test Scenarios**:
 
-**Only choose this approach if:**
-- You have time before revenue goals
-- You want 100% feature-complete launch
-- You're willing to delay Shopify submission
+#### Test 4.1: Foreign Key Constraints - CASCADE DELETE
+```
+GIVEN: Order with 3 line items, 2 delay alerts, 5 tracking events
+WHEN: Delete order from database
+THEN: Verify
+  - All 3 order_line_items deleted (CASCADE)
+  - All 2 delay_alerts deleted (CASCADE)
+  - All 5 tracking_events deleted (CASCADE)
+  - No orphaned records remain
+```
 
----
+#### Test 4.2: Unique Constraints
+```
+GIVEN: Order already synced from Shopify
+WHEN: Shopify webhook fires again (duplicate)
+THEN: Verify
+  - ON CONFLICT DO UPDATE prevents duplicate rows
+  - Existing record updated, not duplicated
+```
 
-## 9. CONCLUSION
+#### Test 4.3: Index Performance
+```
+GIVEN: 10,000 orders in database
+WHEN: Query for active alerts by shop_id
+THEN: Verify
+  - Query uses index (idx_delay_alerts_order_id)
+  - Query completes in <100ms
+```
 
-### ✅ **Overall Assessment: 98/100 - PRODUCTION READY**
-
-**Your DelayGuard app is production-ready** with comprehensive data coverage and well-documented architecture.
-
----
-
-### **What's Proven to Work:**
-
-1. ✅ **Core Shopify Integration** - All basic order data flows correctly
-2. ✅ **Phase 1.2 Complete** - Product line items fully implemented and tested (25 tests)
-3. ✅ **Phase 1.3 Complete** - Email engagement tracking fully implemented (10 tests)
-4. ✅ **Priority Algorithm** - Smart priority badges working (CRITICAL/HIGH/MEDIUM/LOW)
-5. ✅ **Database Schema** - Production-ready, all tables created and indexed
-6. ✅ **UI Components** - All components handle null data gracefully
-7. ✅ **Mobile Optimization** - Phase D complete, mobile UX excellent
-
----
-
-### **What Needs Minor Fixes (1 hour):**
-
-1. ⚠️ Add null checks to hide tracking timeline if no events
-2. ⚠️ Add null checks to hide ETA section if no data
-3. ⚠️ Add null checks to hide benchmarks section if not calculated
-4. ⚠️ Use generic delay reason text until intelligent detection is built
+**Pass Criteria**: Database maintains integrity, no orphaned records, queries performant
 
 ---
 
-### **What Can Wait Until Post-Launch:**
+### Test Group 5: UI Graceful Degradation Testing
 
-1. ~~ShipEngine tracking integration~~ ✅ **COMPLETED (Nov 5, 2025)** - 3 days actual effort
-2. ⏳ Delay reason intelligence (3-4 days) - HIGH PRIORITY POST-LAUNCH (next up!)
-3. ⏳ Merchant benchmarks calculation (3-4 days) - LOW PRIORITY
-4. ⏳ Suggested actions algorithm (5-6 days) - PHASE 3
-5. ⏳ Customer LTV and segmentation (5-6 days) - PHASE 2
+**Test Scenarios**:
 
----
+#### Test 5.1: Missing Product Images
+```
+GIVEN: Order line item with no image_url
+WHEN: AlertCard renders product list
+THEN: Verify
+  - Placeholder icon displays (📦)
+  - No broken image icons
+  - Product title and details still visible
+```
 
-### **Critical Success Factors:**
+#### Test 5.2: Missing Customer Phone
+```
+GIVEN: Order with customer_phone = null
+WHEN: AlertCard renders customer info
+THEN: Verify
+  - Phone section hidden or shows "N/A"
+  - Email still displays
+  - No UI errors
+```
 
-✅ **Data Architecture is Solid**
-- Database schema supports all current and future features
-- API service layer is well-designed and tested
-- UI components are modular and reusable
+#### Test 5.3: No Tracking Events Yet
+```
+GIVEN: Order just fulfilled, ShipEngine not updated yet
+WHEN: AlertCard renders tracking timeline
+THEN: Verify
+  - "No tracking events available yet" message displays
+  - No empty timeline or errors
+  - ETA section still shows original ETA
+```
 
-✅ **No Breaking Changes Post-Launch**
-- Adding ShipEngine integration won't break existing functionality
-- All new features are additive (won't affect current users)
-- Database migrations are backwards-compatible
+#### Test 5.4: Empty Suggested Actions
+```
+GIVEN: Alert with no suggested_actions generated
+WHEN: AlertCard renders
+THEN: Verify
+  - Suggested Actions section hidden
+  - OR shows "No suggestions available"
+  - No undefined errors in console
+```
 
-✅ **Graceful Degradation**
-- UI hides sections when data is unavailable
-- No error states or broken UI in production
-- Clear messaging to merchants when features are limited
-
----
-
-### **My Final Recommendation:**
-
-**SHIP PHASE 1 NOW** with 1 hour of null check additions.
-
-**Why?**
-1. All critical features work perfectly
-2. Missing features have graceful UI fallbacks
-3. Shopify submission shouldn't be delayed
-4. Real merchant feedback is more valuable than perfection
-5. ✅ ShipEngine integration completed (Nov 5, 2025) - Production ready!
-
-**Post-Launch Priority:**
-- ~~**Week 1-2:** ShipEngine tracking integration~~ ✅ **COMPLETED**
-- **Week 1-2:** Delay reason intelligence (next priority)
-- **Week 3-4:** Delay reason intelligence
-- **Week 5-6:** Merchant benchmarks
-- **Phase 2:** Customer intelligence (after revenue validation)
-
----
-
-**You've built a solid foundation. Ship it, get merchant feedback, iterate quickly.** 🚀
+**Pass Criteria**: UI handles missing data gracefully, no console errors, good UX
 
 ---
 
-## APPENDIX: UI COMPONENT VERSION HISTORY
+## 📚 Related Documentation
 
-**Purpose:** Track major UI changes and component restructuring that affect data availability documentation.
+### Primary References
+1. **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** - Full technical implementation details for all phases
+2. **[DEEP_DIVE_UX_UI_RESEARCH.md](DEEP_DIVE_UX_UI_RESEARCH.md)** - UX research and feature specifications
+3. **[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** - Current phase completion status and roadmap
+4. **[CLAUDE.md](CLAUDE.md)** - Development workflow and version history
 
-| Version | Date | Component | Change Description | Impact |
-|---------|------|-----------|-------------------|--------|
-| v1.16 | 2025-11-05 | AppHeader | Added real dashboard metrics (Total/Active/Resolved alerts, Avg resolution time) from `/api/stats` endpoint | Section 1.4 added |
-| v1.17 | 2025-11-05 | AppHeader | Moved Shopify connection status badge to header (removed from SettingsCard) | Section 1.4 enhanced |
-| v1.18 | 2025-11-05 | AppHeader | Added color-coded metrics (amber/blue/green backgrounds), domain truncation | Section 1.4 UI features updated |
-| v1.20 | 2025-11-05 | DashboardTab | Split SettingsCard into 2-tab layout (Delay Detection Rules + Notification Preferences) | Section 1.3 restructured into 1.3.1 & 1.3.2 |
-| v1.20.2 | 2025-11-06 | SettingsCard | Updated Card title from "App Settings" to "Delay Detection Rules" | Section 1.3.1 title updated |
-| v1.20.3 | 2025-11-06 | NotificationPreferences | Moved "Send Test Alert" button from SettingsCard to NotificationPreferences tab | Section 1.3.2 button feature added |
+### Phase-Specific Documentation
+- **Phase 1.2 (Product Line Items)**: IMPLEMENTATION_PLAN.md Section 1.2, CLAUDE.md v1.4
+- **Phase 1.3 (Email Tracking)**: IMPLEMENTATION_PLAN.md Section 1.3, CLAUDE.md v1.6
+- **Phase 1.6 (Dashboard Metrics)**: IMPLEMENTATION_PLAN.md Section 1.6, CLAUDE.md v1.16
 
-**Documentation Accuracy Score:**
-- **Before Audit**: 85/100 (missing AppHeader, NotificationPreferences, database schema)
-- **After Updates**: 98/100 (comprehensive coverage of all UI components and data sources)
+### API Documentation
+- **Shopify GraphQL**: https://shopify.dev/docs/api/admin-graphql
+- **ShipEngine REST API**: https://www.shipengine.com/docs/
+- **SendGrid Event Webhook**: https://docs.sendgrid.com/for-developers/tracking-events/event
 
-**Key Improvements:**
-- ✅ Added section 1.4: AppHeader Component (dashboard metrics)
-- ✅ Split section 1.3: SettingsCard (1.3.1) + NotificationPreferences (1.3.2)
-- ✅ Added section 4: Database Schema Reference (8 tables, relationships, key queries)
-- ✅ Marked deprecated props (`onSave`, `onTest`) with clear notes
-- ✅ Added version history table tracking v1.16-v1.20.3 changes
+### Database Schema
+- **Schema Definition**: `src/database/connection.ts`
+- **Migration History**: `prisma/migrations/`
 
 ---
 
-*Document Version: 2.0*
-*Last Updated: 2025-11-06*
-*Next Review: After Phase 2 Customer Intelligence implementation*
+## ✅ Completion Checklist
+
+**Documentation Tasks**:
+- [x] Catalog all 84 data points across entire application
+- [x] Trace exact origin for each data point
+- [x] Mark uncertain features in docs (benchmarks, suggested actions)
+- [x] Provide SQL implementation examples for uncertain features
+- [x] Document all data sources (Shopify, ShipEngine, SendGrid, PostgreSQL)
+- [ ] Create DEVELOPMENT_STORE_TESTING_GUIDE.md (next task)
+- [ ] Update CLAUDE.md with data availability references
+- [ ] Update PROJECT_OVERVIEW.md with implementation status
+
+**Testing Tasks** (after development store created):
+- [ ] Complete Test Group 1: Shopify Integration (5 tests)
+- [ ] Complete Test Group 2: ShipEngine Tracking (4 tests)
+- [ ] Complete Test Group 3: SendGrid Email Engagement (5 tests)
+- [ ] Complete Test Group 4: Database Integrity (3 tests)
+- [ ] Complete Test Group 5: UI Graceful Degradation (4 tests)
+
+---
+
+**Last Updated**: November 29, 2025
+**Next Review**: After development store testing complete
+**Maintained By**: DelayGuard Development Team
+
