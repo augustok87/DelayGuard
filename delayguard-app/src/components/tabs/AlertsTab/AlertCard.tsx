@@ -12,6 +12,20 @@
  */
 
 import React, { useState } from 'react';
+import {
+  AlertTriangle,
+  Link,
+  MailOpen,
+  Send,
+  Smartphone,
+  Package,
+  Lightbulb,
+  Truck,
+  MapPin,
+  BookOpen,
+  Mail,
+  Phone,
+} from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { Accordion } from '../../ui/Accordion';
 import { InfoTooltip } from '../../ui/InfoTooltip'; // Phase A: UX clarity
@@ -116,7 +130,7 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
           className={styles.delayDaysInline}
           style={{ color: getPriorityColor(alert.delayDays, alert.totalAmount) }}
         >
-          {alert.delayReason && '⚠️ '}
+          {alert.delayReason && <AlertTriangle size={16} aria-hidden={true} strokeWidth={2} style={{ display: 'inline', marginRight: '0.25rem' }} />}
           {getDaysText(alert.delayDays)} delay
         </span>
         {alert.delayReason && (
@@ -163,15 +177,15 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
 
     // Phase A: Updated badge labels for better merchant clarity
     if (emailClicked) {
-      badges.push({ icon: '🔗', label: 'Engaged', style: styles.badgeClicked });
+      badges.push({ icon: <Link size={14} aria-hidden={true} strokeWidth={2} />, label: 'Engaged', style: styles.badgeClicked });
     } else if (emailOpened) {
-      badges.push({ icon: '📧', label: 'Read', style: styles.badgeOpened });
+      badges.push({ icon: <MailOpen size={14} aria-hidden={true} strokeWidth={2} />, label: 'Read', style: styles.badgeOpened });
     } else if (emailSent) {
-      badges.push({ icon: '✉️', label: 'Delivered', style: styles.badgeSent });
+      badges.push({ icon: <Send size={14} aria-hidden={true} strokeWidth={2} />, label: 'Delivered', style: styles.badgeSent });
     }
 
     if (smsSent) {
-      badges.push({ icon: '📱', label: 'SMS', style: styles.badgeSms });
+      badges.push({ icon: <Smartphone size={14} aria-hidden={true} strokeWidth={2} />, label: 'SMS', style: styles.badgeSms });
     }
 
     if (badges.length === 0) return null;
@@ -198,7 +212,12 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
 
     return (
       <Accordion
-        title={`📦 View Order Contents (${alert.lineItems.length} item${alert.lineItems.length !== 1 ? 's' : ''})`}
+        title={
+          <>
+            <Package size={16} aria-hidden={true} strokeWidth={2} style={{ display: 'inline', marginRight: '0.5rem' }} />
+            View Order Contents ({alert.lineItems.length} item{alert.lineItems.length !== 1 ? 's' : ''})
+          </>
+        }
         className={styles.productDetailsAccordion}
         defaultOpen={false}
       >
@@ -214,7 +233,9 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
                     className={styles.productThumbnail}
                   />
                 ) : (
-                  <div className={styles.productPlaceholder}>📦</div>
+                  <div className={styles.productPlaceholder}>
+                    <Package size={24} aria-hidden={true} strokeWidth={1.5} />
+                  </div>
                 )}
 
                 {/* Product information */}
@@ -257,7 +278,12 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
 
     return (
       <Accordion
-        title={`💡 Suggested Actions (${alert.suggestedActions.length})`}
+        title={
+          <>
+            <Lightbulb size={16} aria-hidden={true} strokeWidth={2} style={{ display: 'inline', marginRight: '0.5rem' }} />
+            Suggested Actions ({alert.suggestedActions.length})
+          </>
+        }
         className={styles.suggestedActionsAccordion}
         defaultOpen={false}
       >
@@ -288,7 +314,12 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
 
     return (
       <Accordion
-        title={`🚚 Tracking Timeline (${sortedEvents.length} event${sortedEvents.length !== 1 ? 's' : ''})`}
+        title={
+          <>
+            <Truck size={16} aria-hidden={true} strokeWidth={2} style={{ display: 'inline', marginRight: '0.5rem' }} />
+            Tracking Timeline ({sortedEvents.length} event{sortedEvents.length !== 1 ? 's' : ''})
+          </>
+        }
         className={styles.trackingTimelineAccordion}
         defaultOpen={false}
       >
@@ -302,7 +333,10 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
                   <div className={styles.eventHeader}>
                     <span className={styles.eventTime}>{formatDate(event.timestamp)}</span>
                     {event.location && (
-                      <span className={styles.eventLocation}>📍 {event.location}</span>
+                      <span className={styles.eventLocation}>
+                        <MapPin size={14} aria-hidden={true} strokeWidth={2} style={{ display: 'inline', marginRight: '0.25rem' }} />
+                        {event.location}
+                      </span>
                     )}
                   </div>
                   <div className={styles.eventDescription}>{event.description}</div>
@@ -344,14 +378,19 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
 
     return (
       <Accordion
-        title="📖 What do these badges mean?"
+        title={
+          <>
+            <BookOpen size={16} aria-hidden={true} strokeWidth={2} style={{ display: 'inline', marginRight: '0.5rem' }} />
+            What do these badges mean?
+          </>
+        }
         className={styles.badgeLegendAccordion}
         defaultOpen={false}
       >
         <div className={styles.badgeLegend}>
           <div className={styles.legendItem}>
             <span className={`${styles.notificationBadgeCompact} ${styles.badgeClicked}`}>
-              🔗 Engaged
+              <Link size={14} aria-hidden={true} strokeWidth={2} /> Engaged
             </span>
             <span className={styles.legendText}>
               Customer clicked a link in your email (highest engagement!)
@@ -359,19 +398,19 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
           </div>
           <div className={styles.legendItem}>
             <span className={`${styles.notificationBadgeCompact} ${styles.badgeOpened}`}>
-              📧 Read
+              <MailOpen size={14} aria-hidden={true} strokeWidth={2} /> Read
             </span>
             <span className={styles.legendText}>Customer opened and read your email</span>
           </div>
           <div className={styles.legendItem}>
             <span className={`${styles.notificationBadgeCompact} ${styles.badgeSent}`}>
-              ✉️ Delivered
+              <Send size={14} aria-hidden={true} strokeWidth={2} /> Delivered
             </span>
             <span className={styles.legendText}>Email notification sent to customer</span>
           </div>
           <div className={styles.legendItem}>
             <span className={`${styles.notificationBadgeCompact} ${styles.badgeSms}`}>
-              📱 SMS
+              <Smartphone size={14} aria-hidden={true} strokeWidth={2} /> SMS
             </span>
             <span className={styles.legendText}>Text message sent to customer</span>
           </div>
@@ -417,13 +456,17 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
           <div className={styles.contactDetails}>
             {alert.customerEmail && (
               <span className={styles.contactItem}>
-                <span className={styles.contactIcon}>✉️</span>
+                <span className={styles.contactIcon}>
+                  <Mail size={16} aria-hidden={true} strokeWidth={2} />
+                </span>
                 {alert.customerEmail}
               </span>
             )}
             {alert.customerPhone && (
               <span className={styles.contactItem}>
-                <span className={styles.contactIcon}>📞</span>
+                <span className={styles.contactIcon}>
+                  <Phone size={16} aria-hidden={true} strokeWidth={2} />
+                </span>
                 {alert.customerPhone}
               </span>
             )}

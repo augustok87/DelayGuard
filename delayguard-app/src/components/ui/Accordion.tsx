@@ -17,8 +17,8 @@ import React, { useState, useId } from 'react';
 import styles from './Accordion.module.css';
 
 export interface AccordionProps {
-  /** Accordion header text */
-  title: string;
+  /** Accordion header text or element */
+  title: React.ReactNode;
   /** Content to show/hide */
   children: React.ReactNode;
   /** Whether accordion is open by default */

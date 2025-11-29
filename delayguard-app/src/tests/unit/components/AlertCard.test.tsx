@@ -213,11 +213,16 @@ describe('AlertCard', () => {
         customerPhone: '+1-555-0123',
       };
 
-      render(<AlertCard alert={alertWithContact} onAction={mockOnAction} variant="active" />);
+      const { container } = render(<AlertCard alert={alertWithContact} onAction={mockOnAction} variant="active" />);
 
-      // Check for presence of icons (emojis in this case)
-      expect(screen.getByText(/✉️/)).toBeInTheDocument();
-      expect(screen.getByText(/📞/)).toBeInTheDocument();
+      // v1.33: Check for SVG icons (Mail and Phone) instead of emojis
+      const contactIcons = container.querySelectorAll('.contactIcon svg');
+      expect(contactIcons.length).toBe(2); // Email icon and Phone icon
+
+      // Verify both icons are SVG elements
+      contactIcons.forEach(icon => {
+        expect(icon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
     });
   });
 
@@ -233,11 +238,15 @@ describe('AlertCard', () => {
         },
       };
 
-      render(<AlertCard alert={alertWithOpened} onAction={mockOnAction} variant="active" />);
+      const { container } = render(<AlertCard alert={alertWithOpened} onAction={mockOnAction} variant="active" />);
 
-      // Phase 1 & A: Shows "📧 Read" badge (multiple instances due to legend)
+      // v1.33: Shows "Read" badge with MailOpen SVG icon (multiple instances due to legend)
       expect(screen.getAllByText(/Read/).length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText(/📧/).length).toBeGreaterThanOrEqual(1);
+
+      // Check for MailOpen SVG icons (in both badge and legend)
+      const mailOpenIcons = container.querySelectorAll('svg');
+      const hasSvgIcons = mailOpenIcons.length > 0;
+      expect(hasSvgIcons).toBe(true);
     });
 
     it('should display "Clicked" badge when email link is clicked', () => {
@@ -289,10 +298,11 @@ describe('AlertCard', () => {
         },
       };
 
-      render(<AlertCard alert={alertWithOpened} onAction={mockOnAction} variant="active" />);
+      const { container } = render(<AlertCard alert={alertWithOpened} onAction={mockOnAction} variant="active" />);
 
-      // Phase A: Opened emails show 📧 (multiple due to legend)
-      expect(screen.getAllByText(/📧/).length).toBeGreaterThanOrEqual(1);
+      // v1.33: Opened emails show MailOpen SVG icon (multiple due to legend)
+      const svgIcons = container.querySelectorAll('svg');
+      expect(svgIcons.length).toBeGreaterThan(0);
     });
 
     it('should show highest engagement state when multiple states exist', () => {
@@ -308,13 +318,15 @@ describe('AlertCard', () => {
         },
       };
 
-      render(<AlertCard alert={alertFullEngagement} onAction={mockOnAction} variant="active" />);
+      const { container } = render(<AlertCard alert={alertFullEngagement} onAction={mockOnAction} variant="active" />);
 
-      // Phase A: Shows only highest engagement (Engaged) in status, plus legend
+      // v1.33: Shows only highest engagement (Engaged) with Link SVG icon in status, plus legend
       const engagedElements = screen.getAllByText(/Engaged/);
       expect(engagedElements.length).toBeGreaterThanOrEqual(1);
-      const linkIconElements = screen.getAllByText(/🔗/);
-      expect(linkIconElements.length).toBeGreaterThanOrEqual(1);
+
+      // Check for Link SVG icons (in both badge and legend)
+      const svgIcons = container.querySelectorAll('svg');
+      expect(svgIcons.length).toBeGreaterThan(0);
       // "Read" appears in legend but not in notification status (progressive disclosure)
       const readElements = screen.getAllByText(/Read/);
       expect(readElements.length).toBe(1); // Only in legend
@@ -430,12 +442,14 @@ describe('AlertCard', () => {
         },
       };
 
-      render(<AlertCard alert={alertWithNotification} onAction={mockOnAction} variant="active" />);
+      const { container } = render(<AlertCard alert={alertWithNotification} onAction={mockOnAction} variant="active" />);
 
-      // Phase A: Shows "✉️ Delivered" badge (multiple instances due to legend)
+      // v1.33: Shows "Delivered" badge with Send SVG icon (multiple instances due to legend)
       expect(screen.getAllByText(/Delivered/i).length).toBeGreaterThanOrEqual(1);
-      // Note: ✉️ appears in both contact info and notification badge
-      expect(screen.getAllByText(/✉️/).length).toBeGreaterThan(0);
+
+      // Check for SVG icons (Mail in contact info + Send in notification badge)
+      const svgIcons = container.querySelectorAll('svg');
+      expect(svgIcons.length).toBeGreaterThan(0);
     });
 
     it('should display SMS sent status', () => {
@@ -447,11 +461,14 @@ describe('AlertCard', () => {
         },
       };
 
-      render(<AlertCard alert={alertWithNotification} onAction={mockOnAction} variant="active" />);
+      const { container } = render(<AlertCard alert={alertWithNotification} onAction={mockOnAction} variant="active" />);
 
-      // Phase A: Shows "📱 SMS" badge (multiple instances due to legend)
+      // v1.33: Shows "SMS" badge with Smartphone SVG icon (multiple instances due to legend)
       expect(screen.getAllByText(/SMS/i).length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText(/📱/).length).toBeGreaterThanOrEqual(1);
+
+      // Check for Smartphone SVG icons (in both badge and legend)
+      const svgIcons = container.querySelectorAll('svg');
+      expect(svgIcons.length).toBeGreaterThan(0);
     });
 
     it('should display both email and SMS status when both sent', () => {
@@ -726,7 +743,7 @@ describe('AlertCard', () => {
         ],
       };
 
-      render(<AlertCard alert={comprehensiveAlert} onAction={mockOnAction} variant="active" />);
+      const { container } = render(<AlertCard alert={comprehensiveAlert} onAction={mockOnAction} variant="active" />);
 
       // Phase 1.1 features
       expect(screen.getByText('$384.99')).toBeInTheDocument();
@@ -742,10 +759,9 @@ describe('AlertCard', () => {
       expect(screen.getByText(/Original ETA:/i)).toBeInTheDocument();
       expect(screen.getByText(/Revised ETA:/i)).toBeInTheDocument();
 
-      // Phase A: Check for engagement badges (multiple due to legend)
-      expect(screen.getAllByText(/🔗/).length).toBeGreaterThanOrEqual(1); // Engaged badge
-      // Note: 📱 appears in both contact info (phone number) and SMS notification badge
-      expect(screen.getAllByText(/📱/).length).toBeGreaterThan(0); // SMS badge
+      // v1.33: Check for engagement SVG icons (multiple due to legend)
+      const svgIcons = container.querySelectorAll('svg');
+      expect(svgIcons.length).toBeGreaterThan(0); // Link (Engaged) + Smartphone (SMS) + other icons
 
       // Phase 1 Compact Format: Suggested Actions and Tracking Timeline in accordions
       expect(screen.getByText(/Suggested Actions \(2\)/i)).toBeInTheDocument();
@@ -1022,7 +1038,11 @@ describe('AlertCard', () => {
 
       const placeholderIcon = container.querySelector('.productPlaceholder');
       expect(placeholderIcon).toBeInTheDocument();
-      expect(placeholderIcon?.textContent).toContain('📦');
+
+      // v1.33: Check for Package SVG icon instead of emoji
+      const packageIcon = placeholderIcon?.querySelector('svg');
+      expect(packageIcon).toBeInTheDocument();
+      expect(packageIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
     });
 
     it('should display empty state when lineItems array is empty', () => {
@@ -1471,6 +1491,669 @@ describe('AlertCard', () => {
         // Button should exist and be clickable
         expect(resolveButton).toBeInTheDocument();
         expect(resolveButton.tagName).toBe('BUTTON');
+      });
+    });
+  });
+
+  describe('v1.33: Lucide Icon Integration - All Remaining Icons', () => {
+    describe('Delay Reason Warning Icon', () => {
+      it('should render SVG icon instead of emoji for delay reason warning', () => {
+        const alertWithReason = {
+          ...baseAlert,
+          delayReason: 'Weather delay in transit',
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithReason} onAction={mockOnAction} variant="active" />,
+        );
+
+        // Delay warning icon is in delayDaysInline (before "X days delay" text)
+        const delayDaysSection = container.querySelector('[class*="delayDaysInline"]');
+        const warningIcon = delayDaysSection?.querySelector('svg');
+        expect(warningIcon).toBeInTheDocument();
+        expect(warningIcon).toHaveAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      });
+
+      it('should not contain emoji in delay reason text', () => {
+        const alertWithReason = {
+          ...baseAlert,
+          delayReason: 'Weather delay in transit',
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithReason} onAction={mockOnAction} variant="active" />,
+        );
+
+        const delayInfoSection = container.querySelector('[class*="delayInfo"]');
+        // Should NOT contain warning emoji ⚠️
+        expect(delayInfoSection?.textContent).not.toContain('⚠️');
+        expect(delayInfoSection?.textContent).not.toContain('⚠');
+      });
+
+      it('should have aria-hidden="true" on delay reason warning icon', () => {
+        const alertWithReason = {
+          ...baseAlert,
+          delayReason: 'Weather delay in transit',
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithReason} onAction={mockOnAction} variant="active" />,
+        );
+
+        const delayDaysSection = container.querySelector('[class*="delayDaysInline"]');
+        const warningIcon = delayDaysSection?.querySelector('svg');
+        expect(warningIcon).toHaveAttribute('aria-hidden', 'true');
+      });
+    });
+
+    describe('Email Engagement Badge Icons', () => {
+      it('should render SVG icon for "Engaged" badge (link clicked)', () => {
+        const alertWithEngagement = {
+          ...baseAlert,
+          notificationStatus: {
+            emailOpened: true,
+            emailClicked: true,
+          },
+        };
+        render(<AlertCard alert={alertWithEngagement} onAction={mockOnAction} variant="active" />);
+
+        // Find the "Engaged" badge
+        const engagedBadge = screen.getByText('Engaged').closest('[class*="badge"]');
+        const icon = engagedBadge?.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+      });
+
+      it('should render SVG icon for "Read" badge (email opened)', () => {
+        const alertWithEngagement = {
+          ...baseAlert,
+          notificationStatus: {
+            emailOpened: true,
+          },
+        };
+        render(<AlertCard alert={alertWithEngagement} onAction={mockOnAction} variant="active" />);
+
+        // Find the "Read" badge
+        const readBadge = screen.getByText('Read').closest('[class*="badge"]');
+        const icon = readBadge?.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+      });
+
+      it('should render SVG icon for "Delivered" badge (email sent)', () => {
+        const alertWithEngagement = {
+          ...baseAlert,
+          notificationStatus: {
+            emailSent: true,
+          },
+        };
+        render(<AlertCard alert={alertWithEngagement} onAction={mockOnAction} variant="active" />);
+
+        // Find the "Delivered" badge - use notificationBadgeCompact class (text appears multiple times in legend too)
+        const deliveredBadges = screen.getAllByText('Delivered');
+        const deliveredBadge = deliveredBadges[0].closest('[class*="notificationBadge"]');
+        const icon = deliveredBadge?.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+      });
+
+      it('should render SVG icon for "SMS" badge', () => {
+        const alertWithSms = {
+          ...baseAlert,
+          notificationStatus: {
+            smsSent: true,
+          },
+        };
+        render(<AlertCard alert={alertWithSms} onAction={mockOnAction} variant="active" />);
+
+        // Find the "SMS" badge - use notificationBadgeCompact class (text appears multiple times in legend too)
+        const smsBadges = screen.getAllByText('SMS');
+        const smsBadge = smsBadges[0].closest('[class*="notificationBadge"]');
+        const icon = smsBadge?.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in engagement badges', () => {
+        const alertWithAll = {
+          ...baseAlert,
+          notificationStatus: {
+            emailSent: true,
+            emailOpened: true,
+            emailClicked: true,
+            smsSent: true,
+          },
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithAll} onAction={mockOnAction} variant="active" />,
+        );
+
+        // Check all badges for emoji - use notificationBadgeCompact class
+        const badges = container.querySelectorAll('[class*="notificationBadge"]');
+        badges.forEach(badge => {
+          expect(badge.textContent).not.toContain('🔗'); // Engaged
+          expect(badge.textContent).not.toContain('📧'); // Read
+          expect(badge.textContent).not.toContain('✉️'); // Delivered
+          expect(badge.textContent).not.toContain('📱'); // SMS
+        });
+      });
+
+      it('should have aria-hidden="true" on all engagement badge icons', () => {
+        const alertWithAll = {
+          ...baseAlert,
+          notificationStatus: {
+            emailSent: true,
+            emailOpened: true,
+            emailClicked: true,
+            smsSent: true,
+          },
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithAll} onAction={mockOnAction} variant="active" />,
+        );
+
+        const badgeIcons = container.querySelectorAll('[class*="notificationBadge"] svg');
+        badgeIcons.forEach(icon => {
+          expect(icon).toHaveAttribute('aria-hidden', 'true');
+        });
+      });
+    });
+
+    describe('Accordion Title Icons', () => {
+      it('should render SVG icon in "View Order Contents" accordion title', () => {
+        const alertWithProducts = {
+          ...baseAlert,
+          lineItems: [
+            {
+              id: 'line-1',
+              productId: 'prod-1',
+              title: 'Wireless Headphones',
+              quantity: 2,
+              price: 49.99,
+            },
+          ],
+        };
+        render(<AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />);
+
+        // Accordion title should contain SVG icon (Package)
+        const accordionTitle = screen.getByText(/View Order Contents/i);
+        const icon = accordionTitle.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+      });
+
+      it('should render SVG icon in "Suggested Actions" accordion title', () => {
+        const alertWithActions = {
+          ...baseAlert,
+          suggestedActions: ['Contact customer', 'Issue refund'],
+        };
+        render(<AlertCard alert={alertWithActions} onAction={mockOnAction} variant="active" />);
+
+        // Accordion title should contain SVG icon (Lightbulb)
+        const accordionTitle = screen.getByText(/Suggested Actions/i);
+        const icon = accordionTitle.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+      });
+
+      it('should render SVG icon in "Tracking Timeline" accordion title', () => {
+        const alertWithEvents: DelayAlert = {
+          ...baseAlert,
+          trackingEvents: [
+            {
+              id: 'evt-1',
+              timestamp: '2025-10-20T10:00:00Z',
+              description: 'Package picked up',
+              location: 'New York, NY',
+              status: 'PICKED_UP',
+            },
+          ] as TrackingEvent[],
+        };
+        render(<AlertCard alert={alertWithEvents} onAction={mockOnAction} variant="active" />);
+
+        // Accordion title should contain SVG icon (Truck)
+        const accordionTitle = screen.getByText(/Tracking Timeline/i);
+        const icon = accordionTitle.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+      });
+
+      it('should render SVG icon in "Badge Legend" accordion title', () => {
+        const alertWithEngagement = {
+          ...baseAlert,
+          notificationStatus: { emailSent: true },
+        };
+        render(<AlertCard alert={alertWithEngagement} onAction={mockOnAction} variant="active" />);
+
+        // Accordion title should contain SVG icon (BookOpen)
+        const accordionTitle = screen.getByText(/What do these badges mean/i);
+        const icon = accordionTitle.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in accordion titles', () => {
+        const alertWithAll: DelayAlert = {
+          ...baseAlert,
+          lineItems: [{ id: 'line-1', productId: 'prod-1', title: 'Product', quantity: 1, price: 10 }],
+          suggestedActions: ['Action 1'],
+          trackingEvents: [
+            {
+              id: 'evt-1',
+              timestamp: '2025-10-20T10:00:00Z',
+              description: 'Event',
+              location: 'NYC',
+              status: 'PICKED_UP',
+            },
+          ] as TrackingEvent[],
+          notificationStatus: { emailSent: true },
+        };
+        render(<AlertCard alert={alertWithAll} onAction={mockOnAction} variant="active" />);
+
+        // Check accordion titles for emoji
+        const orderContents = screen.getByText(/View Order Contents/i);
+        const suggestedActions = screen.getByText(/Suggested Actions/i);
+        const trackingTimeline = screen.getByText(/Tracking Timeline/i);
+        const badgeLegend = screen.getByText(/What do these badges mean/i);
+
+        expect(orderContents.textContent).not.toContain('📦');
+        expect(suggestedActions.textContent).not.toContain('💡');
+        expect(trackingTimeline.textContent).not.toContain('🚚');
+        expect(badgeLegend.textContent).not.toContain('📖');
+      });
+
+      it('should have aria-hidden="true" on all accordion title icons', () => {
+        const alertWithAll: DelayAlert = {
+          ...baseAlert,
+          lineItems: [{ id: 'line-1', productId: 'prod-1', title: 'Product', quantity: 1, price: 10 }],
+          suggestedActions: ['Action 1'],
+          trackingEvents: [
+            {
+              id: 'evt-1',
+              timestamp: '2025-10-20T10:00:00Z',
+              description: 'Event',
+              location: 'NYC',
+              status: 'PICKED_UP',
+            },
+          ] as TrackingEvent[],
+          notificationStatus: { emailSent: true },
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithAll} onAction={mockOnAction} variant="active" />,
+        );
+
+        // All accordion title icons should have aria-hidden
+        const accordionIcons = container.querySelectorAll('summary svg, [role="button"] svg');
+        accordionIcons.forEach(icon => {
+          expect(icon).toHaveAttribute('aria-hidden', 'true');
+        });
+      });
+    });
+
+    describe('Product Placeholder Icon', () => {
+      it('should render SVG icon for product placeholder (no image)', () => {
+        const alertWithProducts = {
+          ...baseAlert,
+          lineItems: [
+            {
+              id: 'line-1',
+              productId: 'prod-1',
+              title: 'Wireless Headphones',
+              quantity: 2,
+              price: 49.99,
+              // No imageUrl - should show placeholder
+            },
+          ],
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />,
+        );
+
+        // Product placeholder should have SVG icon (Package)
+        const placeholder = container.querySelector('[class*="productPlaceholder"]');
+        const icon = placeholder?.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in product placeholder', () => {
+        const alertWithProducts = {
+          ...baseAlert,
+          lineItems: [
+            {
+              id: 'line-1',
+              productId: 'prod-1',
+              title: 'Product',
+              quantity: 1,
+              price: 10,
+            },
+          ],
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />,
+        );
+
+        const placeholder = container.querySelector('[class*="productPlaceholder"]');
+        // Should NOT contain package emoji 📦
+        expect(placeholder?.textContent).not.toContain('📦');
+      });
+
+      it('should have aria-hidden="true" on product placeholder icon', () => {
+        const alertWithProducts = {
+          ...baseAlert,
+          lineItems: [
+            {
+              id: 'line-1',
+              productId: 'prod-1',
+              title: 'Product',
+              quantity: 1,
+              price: 10,
+            },
+          ],
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithProducts} onAction={mockOnAction} variant="active" />,
+        );
+
+        const placeholder = container.querySelector('[class*="productPlaceholder"]');
+        const icon = placeholder?.querySelector('svg');
+        expect(icon).toHaveAttribute('aria-hidden', 'true');
+      });
+    });
+
+    describe('Tracking Event Location Icon', () => {
+      it('should render SVG icon for event location', () => {
+        const alertWithEvents: DelayAlert = {
+          ...baseAlert,
+          trackingEvents: [
+            {
+              id: 'evt-1',
+              timestamp: '2025-10-20T10:00:00Z',
+              description: 'Package picked up',
+              location: 'New York, NY',
+              status: 'PICKED_UP',
+            },
+          ] as TrackingEvent[],
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithEvents} onAction={mockOnAction} variant="active" />,
+        );
+
+        // Event location should have SVG icon (MapPin)
+        const eventLocation = container.querySelector('[class*="eventLocation"]');
+        const icon = eventLocation?.querySelector('svg');
+        expect(icon).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in event location', () => {
+        const alertWithEvents: DelayAlert = {
+          ...baseAlert,
+          trackingEvents: [
+            {
+              id: 'evt-1',
+              timestamp: '2025-10-20T10:00:00Z',
+              description: 'Package picked up',
+              location: 'New York, NY',
+              status: 'PICKED_UP',
+            },
+          ] as TrackingEvent[],
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithEvents} onAction={mockOnAction} variant="active" />,
+        );
+
+        const eventLocation = container.querySelector('[class*="eventLocation"]');
+        // Should NOT contain pin emoji 📍
+        expect(eventLocation?.textContent).not.toContain('📍');
+      });
+
+      it('should have aria-hidden="true" on event location icon', () => {
+        const alertWithEvents: DelayAlert = {
+          ...baseAlert,
+          trackingEvents: [
+            {
+              id: 'evt-1',
+              timestamp: '2025-10-20T10:00:00Z',
+              description: 'Package picked up',
+              location: 'New York, NY',
+              status: 'PICKED_UP',
+            },
+          ] as TrackingEvent[],
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithEvents} onAction={mockOnAction} variant="active" />,
+        );
+
+        const eventLocation = container.querySelector('[class*="eventLocation"]');
+        const icon = eventLocation?.querySelector('svg');
+        expect(icon).toHaveAttribute('aria-hidden', 'true');
+      });
+    });
+
+    describe('Contact Information Icons', () => {
+      it('should render SVG icon for email contact', () => {
+        const { container } = render(
+          <AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />,
+        );
+
+        // Email contact should have SVG icon (Mail)
+        const contactIcons = container.querySelectorAll('[class*="contactIcon"]');
+        const emailIcon = Array.from(contactIcons).find(icon =>
+          icon.closest('[class*="contactDetail"]')?.textContent?.includes(baseAlert.customerEmail || ''),
+        );
+        const svg = emailIcon?.querySelector('svg');
+        expect(svg).toBeInTheDocument();
+      });
+
+      it('should render SVG icon for phone contact', () => {
+        const alertWithPhone = {
+          ...baseAlert,
+          customerPhone: '+1-555-1234',
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithPhone} onAction={mockOnAction} variant="active" />,
+        );
+
+        // Phone contact should have SVG icon (Phone)
+        const contactIcons = container.querySelectorAll('[class*="contactIcon"]');
+        const phoneIcon = Array.from(contactIcons).find(icon =>
+          icon.closest('[class*="contactDetail"]')?.textContent?.includes(alertWithPhone.customerPhone!),
+        );
+        const svg = phoneIcon?.querySelector('svg');
+        expect(svg).toBeInTheDocument();
+      });
+
+      it('should not contain emoji in contact icons', () => {
+        const alertWithPhone = {
+          ...baseAlert,
+          customerPhone: '+1-555-1234',
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithPhone} onAction={mockOnAction} variant="active" />,
+        );
+
+        const contactIcons = container.querySelectorAll('[class*="contactIcon"]');
+        contactIcons.forEach(icon => {
+          expect(icon.textContent).not.toContain('✉️'); // Email
+          expect(icon.textContent).not.toContain('📞'); // Phone
+        });
+      });
+
+      it('should have aria-hidden="true" on contact icons', () => {
+        const alertWithPhone = {
+          ...baseAlert,
+          customerPhone: '+1-555-1234',
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithPhone} onAction={mockOnAction} variant="active" />,
+        );
+
+        const contactIconSvgs = container.querySelectorAll('[class*="contactIcon"] svg');
+        contactIconSvgs.forEach(svg => {
+          expect(svg).toHaveAttribute('aria-hidden', 'true');
+        });
+      });
+    });
+
+    describe('Badge Legend Icons (Accordion Content)', () => {
+      it('should render SVG icons in badge legend descriptions', () => {
+        const alertWithEngagement = {
+          ...baseAlert,
+          notificationStatus: {
+            emailSent: true,
+          },
+        };
+        render(<AlertCard alert={alertWithEngagement} onAction={mockOnAction} variant="active" />);
+
+        // Click accordion to open
+        const legendAccordion = screen.getByText(/What do these badges mean/i);
+        fireEvent.click(legendAccordion);
+
+        // Legend items should contain SVG icons
+        const legendItems = screen.getByText(/Engaged/).closest('[class*="legendItem"]')?.parentElement;
+        const icons = legendItems?.querySelectorAll('svg');
+        expect(icons && icons.length).toBeGreaterThan(0);
+      });
+
+      it('should not contain duplicate emoji in badge legend text', () => {
+        const alertWithEngagement = {
+          ...baseAlert,
+          notificationStatus: {
+            emailSent: true,
+          },
+        };
+        const { container } = render(
+          <AlertCard alert={alertWithEngagement} onAction={mockOnAction} variant="active" />,
+        );
+
+        // Click accordion to open
+        const legendAccordion = screen.getByText(/What do these badges mean/i);
+        fireEvent.click(legendAccordion);
+
+        // Check legend text for emoji
+        const legendText = container.querySelectorAll('[class*="legendText"]');
+        legendText.forEach(text => {
+          expect(text.textContent).not.toContain('🔗'); // Engaged
+          expect(text.textContent).not.toContain('📧'); // Read
+          expect(text.textContent).not.toContain('✉️'); // Delivered
+          expect(text.textContent).not.toContain('📱'); // SMS
+        });
+      });
+    });
+
+    describe('Overall Icon Integration', () => {
+      it('should render all Lucide icons consistently across AlertCard', () => {
+        const fullAlert: DelayAlert = {
+          ...baseAlert,
+          delayReason: 'Weather delay',
+          notificationStatus: {
+            emailSent: true,
+            emailOpened: true,
+            emailClicked: true,
+            smsSent: true,
+          },
+          customerPhone: '+1-555-1234',
+          lineItems: [{ id: 'line-1', productId: 'prod-1', title: 'Product', quantity: 1, price: 10 }],
+          suggestedActions: ['Action 1'],
+          trackingEvents: [
+            {
+              id: 'evt-1',
+              timestamp: '2025-10-20T10:00:00Z',
+              description: 'Event',
+              location: 'NYC',
+              status: 'PICKED_UP',
+            },
+          ] as TrackingEvent[],
+        };
+        const { container } = render(
+          <AlertCard alert={fullAlert} onAction={mockOnAction} variant="active" />,
+        );
+
+        // Count all SVG icons in the card
+        const allIcons = container.querySelectorAll('svg');
+        // Should have multiple icons (delay warning, badges, accordion titles, contact icons, etc.)
+        expect(allIcons.length).toBeGreaterThan(5);
+      });
+
+      it('should not contain any emoji characters in AlertCard', () => {
+        const fullAlert: DelayAlert = {
+          ...baseAlert,
+          delayReason: 'Weather delay',
+          notificationStatus: {
+            emailSent: true,
+            emailOpened: true,
+            emailClicked: true,
+            smsSent: true,
+          },
+          customerPhone: '+1-555-1234',
+          lineItems: [{ id: 'line-1', productId: 'prod-1', title: 'Product', quantity: 1, price: 10 }],
+          suggestedActions: ['Action 1'],
+          trackingEvents: [
+            {
+              id: 'evt-1',
+              timestamp: '2025-10-20T10:00:00Z',
+              description: 'Event',
+              location: 'NYC',
+              status: 'PICKED_UP',
+            },
+          ] as TrackingEvent[],
+        };
+        const { container } = render(
+          <AlertCard alert={fullAlert} onAction={mockOnAction} variant="active" />,
+        );
+
+        const alertCardText = container.textContent || '';
+        // Should NOT contain any of the replaced emojis
+        expect(alertCardText).not.toContain('⚠️');
+        expect(alertCardText).not.toContain('⚠');
+        expect(alertCardText).not.toContain('🔗');
+        expect(alertCardText).not.toContain('📧');
+        expect(alertCardText).not.toContain('✉️');
+        expect(alertCardText).not.toContain('📱');
+        expect(alertCardText).not.toContain('📦');
+        expect(alertCardText).not.toContain('💡');
+        expect(alertCardText).not.toContain('🚚');
+        expect(alertCardText).not.toContain('📍');
+        expect(alertCardText).not.toContain('📖');
+        expect(alertCardText).not.toContain('📞');
+      });
+
+      it('should apply consistent sizing to all icons', () => {
+        const fullAlert: DelayAlert = {
+          ...baseAlert,
+          delayReason: 'Weather delay',
+          notificationStatus: {
+            emailSent: true,
+          },
+          customerPhone: '+1-555-1234',
+          lineItems: [{ id: 'line-1', productId: 'prod-1', title: 'Product', quantity: 1, price: 10 }],
+          trackingEvents: [
+            {
+              id: 'evt-1',
+              timestamp: '2025-10-20T10:00:00Z',
+              description: 'Event',
+              location: 'NYC',
+              status: 'PICKED_UP',
+            },
+          ] as TrackingEvent[],
+        };
+        const { container } = render(
+          <AlertCard alert={fullAlert} onAction={mockOnAction} variant="active" />,
+        );
+
+        const allIcons = container.querySelectorAll('svg');
+        allIcons.forEach(icon => {
+          // All Lucide icons should have width/height attributes
+          expect(icon).toHaveAttribute('width');
+          expect(icon).toHaveAttribute('height');
+        });
+      });
+
+      it('should apply currentColor to all icons for theming', () => {
+        const fullAlert: DelayAlert = {
+          ...baseAlert,
+          delayReason: 'Weather delay',
+          notificationStatus: {
+            emailSent: true,
+          },
+        };
+        const { container } = render(
+          <AlertCard alert={fullAlert} onAction={mockOnAction} variant="active" />,
+        );
+
+        const allIcons = container.querySelectorAll('svg');
+        allIcons.forEach(icon => {
+          // Lucide icons use currentColor for stroke
+          expect(icon).toHaveAttribute('stroke', 'currentColor');
+        });
       });
     });
   });
