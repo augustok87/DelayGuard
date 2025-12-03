@@ -1085,22 +1085,41 @@ THEN: Verify
 
 ## ✅ Completion Checklist
 
-**Documentation Tasks**:
+**Documentation Tasks**: ✅ ALL COMPLETE
 - [x] Catalog all 84 data points across entire application
 - [x] Trace exact origin for each data point
 - [x] Mark uncertain features in docs (benchmarks, suggested actions)
 - [x] Provide SQL implementation examples for uncertain features
 - [x] Document all data sources (Shopify, ShipEngine, SendGrid, PostgreSQL)
-- [ ] Create DEVELOPMENT_STORE_TESTING_GUIDE.md (next task)
-- [ ] Update CLAUDE.md with data availability references
-- [ ] Update PROJECT_OVERVIEW.md with implementation status
+- [x] Create DEVELOPMENT_STORE_TESTING_GUIDE.md (~1,200 lines)
+- [x] Update CLAUDE.md with data availability references (v1.34)
+- [x] Update PROJECT_OVERVIEW.md with implementation status
+- [x] Update IMPLEMENTATION_PLAN.md with uncertain features documentation
+- [x] Commit all documentation updates (commit 851b2e12)
 
-**Testing Tasks** (after development store created):
-- [ ] Complete Test Group 1: Shopify Integration (5 tests)
-- [ ] Complete Test Group 2: ShipEngine Tracking (4 tests)
-- [ ] Complete Test Group 3: SendGrid Email Engagement (5 tests)
-- [ ] Complete Test Group 4: Database Integrity (3 tests)
-- [ ] Complete Test Group 5: UI Graceful Degradation (4 tests)
+**Testing Tasks** ⏳ READY TO START (requires Shopify development store):
+- [ ] **STEP 1**: Create Shopify Partner account (if not already done)
+- [ ] **STEP 2**: Create development store (follow DEVELOPMENT_STORE_TESTING_GUIDE.md Section 2)
+- [ ] **STEP 3**: Register DelayGuard app (follow Section 3)
+- [ ] **STEP 4**: Set up local environment (follow Section 4)
+- [ ] **STEP 5**: Install app in dev store (follow Section 5)
+- [ ] **STEP 6**: Run 7 comprehensive test scenarios (Section 6)
+  - [ ] Test 1: Basic Order Creation & Sync
+  - [ ] Test 2: Product Line Items Sync (Phase 1.2)
+  - [ ] Test 3: ShipEngine Tracking Integration
+  - [ ] Test 4: Delay Detection & Alert Creation
+  - [ ] Test 5: Email Engagement Tracking (Phase 1.3)
+  - [ ] Test 6: Hourly Tracking Refresh Cron Job
+  - [ ] Test 7: Dashboard Metrics (Real Data)
+- [ ] **STEP 7**: Test uncertain features (Section 7)
+  - [ ] Merchant Benchmarks (if implemented)
+  - [ ] Suggested Actions (if implemented)
+- [ ] **STEP 8**: Verify all 5 test groups
+  - [ ] Test Group 1: Shopify Integration (3 test scenarios)
+  - [ ] Test Group 2: ShipEngine Tracking (4 test scenarios)
+  - [ ] Test Group 3: SendGrid Email Engagement (5 test scenarios)
+  - [ ] Test Group 4: Database Integrity (3 test scenarios)
+  - [ ] Test Group 5: UI Graceful Degradation (4 test scenarios)
 
 ---
 
