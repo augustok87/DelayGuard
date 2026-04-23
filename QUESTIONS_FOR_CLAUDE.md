@@ -48,9 +48,7 @@ Can you confirm how would we go about getting an "unfulfilled" status from an or
 
 
 
-
-
-3- 
+3- Done
 
 I think we should also clarify that alerts coming from Warehouse Delays should be directed towards merchants, meaning, the phone number and email of the store owner, since the responsibility of not shipping a product would almost 100% be probably on the merchant's side.
 
@@ -68,7 +66,7 @@ Also, I would assume that for the Carrier and Stuck in Transit delays, we would 
 
 4- Pending
 
- Make sure our APP doesn't cause CSS/JS Leakeage causing problems to our Merchant's site.
+Make sure our APP doesn't cause CSS/JS Leakeage causing problems to our Merchant's site.
 
 
 
@@ -77,12 +75,12 @@ Also, I would assume that for the Carrier and Stuck in Transit delays, we would 
 I want you to build me 20 questions and answers pretending that you're being interviewed by other tech leaders that are curious to know about your application. You can start with simple question and answers that would give knowledge about our APP, the reasons behind why we did it as we did, and then progressively move towards questions that answers specific technical decisions and implementations.
 
 
-6- Pending
+6- In Progress
 
-Now that we're set in terms of UI/UX, I'd like to spend some time to make sure all the data that we're basically offering to our client merchants are actually real data that we can provide to them. I'd like you to deeply analyze the exact origin on where It might come from. And if you're not sure we should mark it at least in our docs as such. Then I would like you to succintly explain to me how we would go about testing this with a development store, which we still haven't made. I would like you to first make a list of every data fact that we can dynamically offer through our App so far.
+Now that we're set in terms of UI/UX, I'd like to spend some time to make sure all the data that we're basically offering to our client merchants are actually real data that we can provide to them. I'd like you to deeply analyze the exact origin on where It might come from. And if you're not sure we should mark it at least in our docs as such. Then I would like you to succintly explain to me how we would go about testing this with a development store, which we still haven't made. I would like you to first make a list of every data fact that we can dynamically offer through our App so far. Make sure to actively go through our entire App and see all of the possible scenarios.
 
 
-7- In progress
+7- Done
 In order to make our App's look and feel much better, I think we could also replace all of the default icons we're using that are basically coming probably from MAC OS, we should use beautiful images as icons that would be aligned elegantly with all of the rest of the asthetics of the page. What do you suggest we could do.
 
 
@@ -90,3 +88,22 @@ In order to make our App's look and feel much better, I think we could also repl
 Right now we can move an alert from active to resolved or dismissed.
 But we don't have that option from resolved and dismissed alerts.
 Could it be useful to allow that?
+
+
+9- In progress
+
+Rethink the UI/UX again in the most bigger sense so that it allows us to build a similar experience such as the services helped by (https://www.anchour.com/work/). In the previous endpoing analyze specifically the ones that are clients that offer services such as:
+
+    1. Lighthouse
+    The credit union on a mission to modernize financial wellness.
+
+    2. Payground
+    Revolutionizing how families manage healthcare payments.
+
+    3. Tribal Credit
+    Showcasing the advantages of a new kind of credit card for startups.
+  
+
+See if we can apply similar principles and aesthetics, including the photo styles that they utilize. In order to get high quality pictures, we'll use another service specialed in generating images with AI. But at least you'll need to tell me the precise prompt in order to get the image that you're imagining. Also, though it might be obvious, think about the service we're providing to the Shopify Merchants as Delayguard-App. Consider only the services that we're mostly sure we can provide based on our DATA_AVAILABILITY_ANALYSIS.md.
+
+Give me detailed steps.

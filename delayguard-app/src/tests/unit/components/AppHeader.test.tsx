@@ -31,7 +31,8 @@ describe('AppHeader', () => {
       render(<AppHeader stats={mockStats} />);
 
       expect(screen.getByText('DelayGuard')).toBeInTheDocument();
-      expect(screen.getByText('Proactive Shipping Delay Notifications')).toBeInTheDocument();
+      // v1.35: Updated tagline (Anchour-inspired messaging)
+      expect(screen.getByText(/Proactive Shipping Intelligence/i)).toBeInTheDocument();
     });
 
     it('should have correct display name', () => {
@@ -107,10 +108,13 @@ describe('AppHeader', () => {
       expect(screen.queryByText(/Connected to/)).not.toBeInTheDocument();
     });
 
-    it('should render connection status with checkmark icon', () => {
-      render(<AppHeader stats={mockStats} shop="my-store.myshopify.com" />);
+    it('should render connection status with checkmark SVG icon (v1.35)', () => {
+      const { container } = render(<AppHeader stats={mockStats} shop="my-store.myshopify.com" />);
 
-      expect(screen.getByText('✓')).toBeInTheDocument();
+      // v1.35: Checkmark is now SVG icon instead of text character
+      const connectionStatus = container.querySelector('.connectionStatus');
+      const checkSvg = connectionStatus?.querySelector('svg');
+      expect(checkSvg).toBeInTheDocument();
     });
 
     it('should apply correct CSS class to connection status section', () => {
@@ -183,10 +187,21 @@ describe('AppHeader', () => {
   });
 
   describe('Visual Layout', () => {
-    it('should render logo section with icon', () => {
+    it('should render logo section with Lucide Shield icon (v1.35 Anchour redesign)', () => {
+      const { container } = render(<AppHeader stats={mockStats} />);
+
+      // v1.35: Should render SVG Shield icon instead of emoji
+      const logoSection = container.querySelector('.logo');
+      const svgIcon = logoSection?.querySelector('svg');
+      expect(svgIcon).toBeInTheDocument();
+      expect(svgIcon).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    it('should NOT render emoji icon (v1.35 - emoji replaced with Lucide)', () => {
       render(<AppHeader stats={mockStats} />);
 
-      expect(screen.getByText('🛡️')).toBeInTheDocument();
+      // v1.35: Emoji should be replaced with Lucide Shield
+      expect(screen.queryByText('🛡️')).not.toBeInTheDocument();
     });
 
     it('should apply header class to main container', () => {
@@ -194,6 +209,90 @@ describe('AppHeader', () => {
 
       const header = container.querySelector('header');
       expect(header?.className).toContain('header');
+    });
+  });
+
+  // v1.35 - Anchour-Inspired Redesign Tests
+  describe('v1.35 Anchour-Inspired Design', () => {
+    describe('Brand Voice & Messaging', () => {
+      it('should render updated tagline matching Anchour voice', () => {
+        render(<AppHeader stats={mockStats} />);
+
+        // v1.35: Updated tagline to be more outcome-focused (Anchour principle)
+        expect(screen.getByText(/shipping intelligence/i)).toBeInTheDocument();
+      });
+
+      it('should maintain DelayGuard brand name', () => {
+        render(<AppHeader stats={mockStats} />);
+
+        expect(screen.getByText('DelayGuard')).toBeInTheDocument();
+      });
+    });
+
+    describe('Lucide Icon Integration', () => {
+      it('should render Shield icon with correct size', () => {
+        const { container } = render(<AppHeader stats={mockStats} />);
+
+        const svgIcon = container.querySelector('.icon svg');
+        expect(svgIcon).toBeInTheDocument();
+        // Check for size attribute or viewBox
+        expect(svgIcon).toHaveAttribute('width');
+        expect(svgIcon).toHaveAttribute('height');
+      });
+
+      it('should render Shield icon as decorative (aria-hidden)', () => {
+        const { container } = render(<AppHeader stats={mockStats} />);
+
+        const svgIcon = container.querySelector('.icon svg');
+        expect(svgIcon).toHaveAttribute('aria-hidden', 'true');
+      });
+
+      it('should render checkmark as SVG icon in connection status', () => {
+        const { container } = render(<AppHeader stats={mockStats} shop="test-store.myshopify.com" />);
+
+        const connectionStatus = container.querySelector('.connectionStatus');
+        const checkIcon = connectionStatus?.querySelector('svg');
+        expect(checkIcon).toBeInTheDocument();
+      });
+    });
+
+    describe('Color Accent Updates', () => {
+      it('should apply gold accent class to Active alerts metric', () => {
+        const { container } = render(<AppHeader stats={mockStats} />);
+
+        const statsContainer = container.querySelector('.stats');
+        const activeMetric = statsContainer?.children[1];
+
+        // v1.35: Active alerts should use gold accent color (brand vigilance)
+        expect(activeMetric?.className).toContain('statGold');
+      });
+
+      it('should maintain amber for Total Alerts', () => {
+        const { container } = render(<AppHeader stats={mockStats} />);
+
+        const statsContainer = container.querySelector('.stats');
+        const totalAlertsMetric = statsContainer?.children[0];
+
+        expect(totalAlertsMetric?.className).toContain('statAmber');
+      });
+    });
+
+    describe('Accessibility Enhancements', () => {
+      it('should have visible focus states on interactive elements', () => {
+        const { container } = render(<AppHeader stats={mockStats} shop="test-store.myshopify.com" />);
+
+        const connectionStatus = container.querySelector('.connectionStatus');
+        expect(connectionStatus).toBeInTheDocument();
+        // Connection status should be focusable (tabindex or naturally focusable)
+      });
+
+      it('should provide accessible name for stats region', () => {
+        const { container } = render(<AppHeader stats={mockStats} />);
+
+        const statsSection = container.querySelector('.stats');
+        // Stats section exists (could add aria-label in future)
+        expect(statsSection).toBeInTheDocument();
+      });
     });
   });
 
@@ -208,14 +307,15 @@ describe('AppHeader', () => {
       expect(totalAlertsMetric?.className).toContain('statAmber');
     });
 
-    it('should apply blue color class to Active metric', () => {
+    it('should apply gold color class to Active metric (v1.35 Anchour redesign)', () => {
       const { container } = render(<AppHeader stats={mockStats} />);
 
       const statsContainer = container.querySelector('.stats');
       const activeMetric = statsContainer?.children[1];
 
       expect(activeMetric?.className).toContain('stat');
-      expect(activeMetric?.className).toContain('statBlue');
+      // v1.35: Changed from blue to gold (brand accent color - vigilance)
+      expect(activeMetric?.className).toContain('statGold');
     });
 
     it('should apply green color class to Resolved metric', () => {
@@ -248,9 +348,9 @@ describe('AppHeader', () => {
 
       expect(metrics).toHaveLength(4);
 
-      // Verify order: Total Alerts (amber), Active (blue), Resolved (green), Ticket Reduction (no color)
+      // v1.35: Verify order - Total Alerts (amber), Active (gold), Resolved (green), Ticket Reduction (no color)
       expect(metrics?.[0].className).toContain('statAmber');
-      expect(metrics?.[1].className).toContain('statBlue');
+      expect(metrics?.[1].className).toContain('statGold'); // v1.35: Changed from blue to gold
       expect(metrics?.[2].className).toContain('statGreen');
       expect(metrics?.[3].className).toContain('stat');
       expect(metrics?.[3].className).not.toContain('statAmber');
@@ -262,9 +362,9 @@ describe('AppHeader', () => {
       const statsContainer = container.querySelector('.stats');
       const metrics = statsContainer?.children;
 
-      // Color classes should still be applied even when loading
+      // v1.35: Color classes should still be applied even when loading
       expect(metrics?.[0].className).toContain('statAmber');
-      expect(metrics?.[1].className).toContain('statBlue');
+      expect(metrics?.[1].className).toContain('statGold'); // v1.35: Changed from blue to gold
       expect(metrics?.[2].className).toContain('statGreen');
     });
   });

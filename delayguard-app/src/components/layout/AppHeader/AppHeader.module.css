@@ -19,9 +19,16 @@
   gap: 1rem;
 }
 
+/* v1.35: Updated for Lucide SVG icons */
 .icon {
-  font-size: 2.5rem;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b; /* Gold accent - brand vigilance */
+}
+
+.icon svg {
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));
 }
 
 .title {
@@ -77,17 +84,20 @@
   box-shadow: 0 4px 12px -2px rgba(45, 212, 191, 0.15);
 }
 
+/* v1.35: Updated for Lucide Check icon */
 .checkmark {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.125rem;
-  height: 1.125rem;
-  background: rgba(45, 212, 191, 0.15);
+  width: 1.25rem;
+  height: 1.25rem;
+  background: rgba(45, 212, 191, 0.2);
   border-radius: 50%;
-  font-size: 0.625rem;
   color: #5eead4;
-  font-weight: 700;
+}
+
+.checkmark svg {
+  flex-shrink: 0;
 }
 
 .connectionText {
@@ -159,6 +169,18 @@
 .statBlue:hover {
   background: rgba(59, 130, 246, 0.08);
   border-left-color: rgba(59, 130, 246, 0.6);
+}
+
+/* v1.35: Gold accent for Active alerts - brand vigilance color */
+.statGold {
+  border-left: 2px solid rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.06);
+}
+
+.statGold:hover {
+  background: rgba(245, 158, 11, 0.1);
+  border-left-color: rgba(245, 158, 11, 0.7);
+  box-shadow: 0 8px 16px -4px rgba(245, 158, 11, 0.15);
 }
 
 .statGreen {

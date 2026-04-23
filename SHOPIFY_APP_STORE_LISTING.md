@@ -482,9 +482,30 @@ shipping delays, order tracking, delay alerts, shipping notifications, customer 
 
 ---
 
-**Document Version:** 1.0.0  
-**Last Updated:** October 23, 2025  
-**Status:** Ready for Shopify App Store Submission  
+## 📊 Go-to-Market Strategy & Business Metrics
+
+### Go-to-Market Phases
+1. **Pre-Launch (Weeks 1-2)**: App Store listing, pre-launch landing page, recruit 10-20 affiliates (30% rev share for 12 months), 5 tutorial videos
+2. **Launch (Month 1)**: Shopify Community + Reddit + Product Hunt, 2-3 content pieces/week, short-form videos 3-5/week
+3. **Growth (Months 2-12)**: Comparison SEO, referral program, email nurturing free→paid, scale paid ads after organic learnings
+
+### Channels
+- **Primary (organic)**: Shopify Community, Reddit, SEO, YouTube, TikTok/Reels
+- **Secondary (paid, after Month 3-4)**: Google Ads, App Store ads, retargeting
+- **Partnerships**: Affiliates (YouTubers, agencies), complementary app co-marketing
+
+### Metrics & Targets (Year 1)
+- CAC (blended): $13-18 | LTV: ~$250 | LTV/CAC: 14-19:1
+- Year 1: 1,000-1,500 installs, 150-200 paid conversions
+- First month: 50-100 installs with multi-channel launch
+
+> **Note**: Pricing in this document ($29/$79/$199) reflects App Store listing. Early business strategy considered lower entry pricing ($7/$25). Final pricing TBD before launch.
+
+---
+
+**Document Version:** 1.0.0
+**Last Updated:** October 23, 2025
+**Status:** Ready for Shopify App Store Submission
 **Next Steps:** Create app icon, set up Partner account, submit for review
 
 ---

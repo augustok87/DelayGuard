@@ -18,6 +18,11 @@
 **Time to Submission**: 8-12 hours of focused work
 **Time to First Customer**: 2-4 weeks after approval
 
+### ⚠️ Critical Deployment Notes
+- **Database migrations must run separately**: `vercel env pull && npm run migrate:vercel` (removed from auto-run to prevent race conditions)
+- **BullMQ workers don't run in serverless**: Use Vercel Cron, External Workers, or migrate to serverless queues
+- **Database connection pool**: Set to max: 1 for serverless (prevents connection exhaustion)
+
 ---
 
 ## Table of Contents

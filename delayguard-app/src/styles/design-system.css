@@ -1,16 +1,47 @@
 /**
  * DelayGuard Design System
  * World-class design system for professional Shopify app
- * Version: 2.0.0
- * Last Updated: October 23, 2025
+ * Version: 3.0.0 - Anchour-Inspired Redesign
+ * Last Updated: December 11, 2025
+ * Design Inspiration: Lighthouse Credit Union, Payground (Anchour Portfolio)
  */
 
 :root {
   /* ========================================
+   * ANCHOUR-INSPIRED BRAND PALETTE
+   * Deep navy + amber gold = Trust + Vigilance
+   * ======================================== */
+
+  /* Brand Navy - Trust, Professionalism */
+  --dg-navy-50: #f0f4f8;
+  --dg-navy-100: #d9e2ec;
+  --dg-navy-200: #bcccdc;
+  --dg-navy-300: #9fb3c8;
+  --dg-navy-400: #829ab1;
+  --dg-navy-500: #627d98;
+  --dg-navy-600: #486581;
+  --dg-navy-700: #334e68;
+  --dg-navy-800: #243b53;
+  --dg-navy-900: #1e3a5f;   /* Primary Brand Navy */
+  --dg-navy-950: #0f172a;   /* Deep Hero Navy */
+
+  /* Brand Gold/Amber - Vigilance, Attention, Action */
+  --dg-gold-50: #fffbeb;
+  --dg-gold-100: #fef3c7;
+  --dg-gold-200: #fde68a;
+  --dg-gold-300: #fcd34d;
+  --dg-gold-400: #fbbf24;
+  --dg-gold-500: #f59e0b;   /* Primary Brand Gold */
+  --dg-gold-600: #d97706;
+  --dg-gold-700: #b45309;
+  --dg-gold-800: #92400e;
+  --dg-gold-900: #78350f;
+
+  /* ========================================
    * COLOR PALETTE - Modern & Professional
    * ======================================== */
-  
-  /* Primary - Professional Blue */
+
+  /* Primary - Professional Blue (kept for compatibility) */
   --dg-primary-50: #eff6ff;
   --dg-primary-100: #dbeafe;
   --dg-primary-200: #bfdbfe;
@@ -96,6 +127,43 @@
   --dg-text-secondary: var(--dg-gray-600);
   --dg-text-tertiary: var(--dg-gray-500);
   --dg-text-disabled: var(--dg-gray-400);
+
+  /* ========================================
+   * ANCHOUR-INSPIRED SEMANTIC MAPPINGS
+   * v3.0.0 - Trust + Vigilance Theme
+   * ======================================== */
+
+  /* Hero/Header Colors */
+  --dg-hero-bg: var(--dg-navy-950);
+  --dg-hero-bg-gradient: linear-gradient(135deg, var(--dg-navy-900) 0%, var(--dg-navy-950) 100%);
+  --dg-hero-text: #ffffff;
+  --dg-hero-text-muted: #94a3b8;
+
+  /* Accent Colors - Gold for CTAs and attention */
+  --dg-accent: var(--dg-gold-500);
+  --dg-accent-hover: var(--dg-gold-400);
+  --dg-accent-light: var(--dg-gold-100);
+  --dg-accent-glow: rgba(245, 158, 11, 0.15);
+
+  /* Alert Priority Colors */
+  --dg-priority-critical: #dc2626;
+  --dg-priority-critical-light: rgba(220, 38, 38, 0.1);
+  --dg-priority-high: #ea580c;
+  --dg-priority-high-light: rgba(234, 88, 12, 0.1);
+  --dg-priority-medium: #d97706;
+  --dg-priority-medium-light: rgba(217, 119, 6, 0.1);
+  --dg-priority-low: #059669;
+  --dg-priority-low-light: rgba(5, 150, 105, 0.1);
+
+  /* Status Colors */
+  --dg-status-active: var(--dg-gold-500);
+  --dg-status-resolved: #059669;
+  --dg-status-dismissed: var(--dg-gray-500);
+
+  /* Glassmorphism Effects */
+  --dg-glass-bg: rgba(255, 255, 255, 0.05);
+  --dg-glass-border: rgba(255, 255, 255, 0.1);
+  --dg-glass-blur: blur(12px);
 
   /* ========================================
    * TYPOGRAPHY - Modern Scale
