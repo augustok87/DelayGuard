@@ -830,6 +830,17 @@ Retainer scope includes **quarterly version audits**: check for upcoming depreca
 
 ---
 
+## Summary of the proposal
+
+*Synthesizing `CHECKOUT_EXT_02_PRIVATE_PREMIUM_PROPOSAL.md` and this architecture reference into two paragraphs you can deliver verbatim.*
+
+The proposal reframes DelayGuard — today a pre-launch public SaaS — into a bespoke single-merchant engagement for a Shopify Plus client, distributed via Shopify's **custom distribution** model. Because the client is on Plus, every extension surface is unlocked: pre-purchase Checkout UI extensions for shipping-confidence trust signals, a Shopify Function for delivery customization, Customer Account UI extensions for branded order-status and self-service flows, and Admin UI Extension blocks so the merchant ops team sees delay context inline on the order page without switching apps. Two honest constraints up front: custom apps can't use the Billing API (we invoice directly — matches a retainer shape anyway) and can't use App Bridge for a full embedded admin dashboard (our ops portal lives at a dedicated URL). And honest personal context: I haven't shipped a Checkout UI extension to production yet. The model isn't foreign though — DelayGuard already uses the same session-token JWT middleware extensions need, and the Preact-plus-Web-Components primitives map cleanly onto patterns I work with daily.
+
+Delivery is 10 to 14 weeks across eight phases — discovery, core platform, customer account extensions, thank-you and admin extensions, pre-purchase plus Shopify Function, enterprise integrations, analytics and self-service, then hardening and launch. Commercially this lands around **$80–180k project fee plus $6–15k monthly retainer**, driven by integration count and whether we deploy agency-hosted or into the client's own AWS/GCP/Azure. The strategic thesis is that DelayGuard's backend becomes **reusable IP** — Koa, the 3-rule delay engine, HMAC webhook verification, session-token JWT middleware, BullMQ scaffolding, 1,348-test suite — while each client gets bespoke Preact extension bundles styled to their brand, adapters wired into their enterprise systems, Shopify Function rule logic, and a tailored ops dashboard. First engagement funds the framework; every one after ships 30 to 50% faster because the core is battle-tested. Biggest risk is ERP integration drift — mitigated by contract tests, circuit breakers, and polling fallbacks. This is how one bespoke engagement becomes a repeatable premium practice rather than a one-off build.
+
+---
+
 ## End of document
 
 If there's a question this document doesn't answer, flag it — I'd rather learn about the gap now than discover it mid-meeting.
+
