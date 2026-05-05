@@ -94,8 +94,14 @@ temp/
 *.swo
 *~
 
-# Claude Code local settings (machine-specific)
-.claude/
+# Claude Code: ignore everything inside .claude/ by default, then negate the
+# team-shared bits. Pattern uses `.claude/*` (not `.claude/`) so negations can
+# re-include — git won't recurse into a fully-ignored directory.
+# .claude/settings.local.json stays ignored (per-developer permission allowlist).
+.claude/*
+!.claude/settings.json
+!.claude/rules/
+!.claude/hooks/
 
 # OS generated files
 .DS_Store
