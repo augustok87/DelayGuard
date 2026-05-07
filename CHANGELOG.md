@@ -2,7 +2,7 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 7, 2026
+**Last Updated**: May 7, 2026 (v1.36.1 — audit Wave 1.2 + Wave 1.1 polish)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
@@ -30,8 +30,8 @@
 - Chosen over a `cron_state` Postgres table: writes are idempotent (`ON CONFLICT (order_id, timestamp)`), so a lost cursor only re-does at most one batch — acceptable cost vs. adding an additive-only forward-compatible migration.
 
 **3. Cron schedule corrected** ([delayguard-app/vercel.json](delayguard-app/vercel.json)):
-- `0 0 * * *` (daily) → `*/15 * * * *` (every 15 min). The daily schedule defeated the product — a "delay" alert ≤24h late is not actionable.
-- 96 ticks/day × 25 orders/tick = 2,400 orders/day theoretical max — well past current volume.
+- Wave 1.1 originally shipped `0 0 * * *` → `*/15 * * * *` (96 ticks/day × 25 orders = 2,400 orders/day theoretical max). The daily schedule defeated the product — a "delay" alert ≤24h late is not actionable.
+- **2026-05-07 follow-up:** rolled back to `0 0 * * *` after a quota review found the project is on Vercel **Hobby**, which the current docs (last_updated 2026-03-04) cap at once-per-day. Hourly and every-30-min expressions are rejected at deploy: "Hobby accounts are limited to cron jobs that run once per day." ShipEngine (200 req/min default) is not the binding constraint here. Re-enable `*/15` when the project upgrades to Pro.
 
 **4. Pre-existing TS errors fixed in [delayguard-app/src/routes/tracking-refresh-cron.ts](delayguard-app/src/routes/tracking-refresh-cron.ts)**:
 - Line 49: `logger.error(msg, {ip, userAgent})` was passing the context object as the `error?` slot. Fix: pass `undefined` as the error arg, context as the third arg.
@@ -48,7 +48,32 @@ The previously-misleading `should batch process orders to avoid overwhelming Shi
 
 **Out of scope (flagged, not fixed)**:
 - 2 pre-existing lint errors on clean main: `tests/integration/database/tracking-events-schema.test.ts:2` (unused `query` import), `tests/unit/components/HelpModal.test.tsx:162` (`href` accessibility). Verified against stashed clean main.
-- Husky `_/` helper not installed locally; pre-commit hook does not actually run. Tracked separately.
+- **Husky pre-commit gate is non-functional and the fix is bigger than originally noted** (diagnosed 2026-05-07): `husky` is not in `delayguard-app/package.json` devDependencies, no `prepare` script, `core.hooksPath` unset, and `npx husky` from `delayguard-app/` errors because `.git` is one level up. Real fix needs devDep + prepare wiring. Carried forward as a standalone audit item before the next contributor onboards. Tracked in [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 1.1.
+
+---
+
+### v1.36.1 (2026-05-06 → 2026-05-07): Audit Wave 1.2 + Wave 1.1 polish
+
+**Test Results**: 1,810 passing, 25 skipped, 0 failing (verified via `npm test`).
+
+**Wave 1.2 — placeholder-test cleanup (commit `18892492`, 2026-05-06)**
+
+Per [.claude/rules/tests.md](.claude/rules/tests.md) v1.20, `expect(true).toBe(true)` stubs silently mask unfinished work and were the shape of the v1.20 incident. Suite had 25 such stubs across 5 files; now zero.
+
+- `tests/integration/security.test.ts` — 6 stubs → `it.skip("FUTURE: ...")` with intent.
+- `tests/unit/routes/merchant-settings-api.test.ts` — 11 stubs deleted (Phase 2.6 `describe.skip` scaffolding); file-level `eslint-disable` added for intentional unused locals.
+- `tests/unit/queue/delay-check-notification-routing.test.ts` — 2 stubs → `it.skip("FUTURE: carrier delay routing")`.
+- `tests/unit/components/RefactoredApp.test.tsx` — 1 stub → `expect(() => unmount()).not.toThrow()`.
+- `tests/unit/hooks/usePerformance.test.ts` — 5 trailing stubs cleaned (3 deleted as redundant, 2 wrapped in `expect(...).not.toThrow()`).
+- `scripts/quality-gates.js` — new "No Placeholder Tests" gate prevents regressions.
+
+Side effect: project-wide lint errors 24 → 2 (the 2 pre-existing errors Wave 1.1 flagged in untouched files).
+
+**Wave 1.1 polish (commit `fb59a384`, 2026-05-07)**
+
+- `CLAUDE.md` test count refreshed: 1,348 → 1,810 passing, 25 skipped.
+- `vercel.json` cron rolled back: `*/15 * * * *` → `0 0 * * *`. Required because Vercel Hobby caps at once-per-day per current docs (last_updated 2026-03-04). Cadence to revisit when the project upgrades to Pro (1-min minimum interval, 100 crons/project).
+- Husky deeper diagnosis recorded in `rules-audit-plan.md` Wave 1.1 (the original "missing `_/` helper" note understated the problem).
 
 ---
 
