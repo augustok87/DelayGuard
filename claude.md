@@ -6,7 +6,7 @@ Shopify app (not a theme): React 18 + TS frontend, Koa + PostgreSQL + BullMQ/Red
 ## Status
 
 - **Phase**: 1 complete (98/100 readiness for Shopify App Store submission). Phase 2 (customer intelligence & priority scoring) is next.
-- **Tests**: 1,348 passing, 0 failing. Local CI gate: `npm test && npm run lint && npm run type-check && npm run build` (run from `delayguard-app/`).
+- **Tests**: 1,810 passing, 25 skipped, 0 failing. Local CI gate: `npm test && npm run lint && npm run type-check && npm run build` (run from `delayguard-app/`).
 - **Husky**: pre-commit runs `node scripts/quality-gates.js` automatically. Don't bypass with `--no-verify`.
 
 ## Canonical docs (point at these instead of re-explaining)
