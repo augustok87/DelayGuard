@@ -14,7 +14,7 @@
  * {
  *   "crons": [{
  *     "path": "/api/cron/tracking-refresh",
- *     "schedule": "0 * * * *"  // Every hour
+ *     "schedule": "*\/15 * * * *"  // Every 15 minutes — drains BATCH_SIZE per tick
  *   }]
  * }
  */
@@ -45,7 +45,7 @@ router.post("/api/cron/tracking-refresh", async(ctx: Context) => {
     }
 
     if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
-      logger.error("Unauthorized cron job attempt", {
+      logger.error("Unauthorized cron job attempt", undefined, {
         ip: ctx.ip,
         userAgent: ctx.get("User-Agent"),
       });
@@ -59,7 +59,7 @@ router.post("/api/cron/tracking-refresh", async(ctx: Context) => {
     // Process tracking refresh
     const stats = await processTrackingRefresh();
 
-    logger.info("✅ Tracking refresh cron job completed", stats);
+    logger.info("✅ Tracking refresh cron job completed", { ...stats });
 
     ctx.status = 200;
     ctx.body = {

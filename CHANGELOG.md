@@ -2,12 +2,55 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: December 11, 2025
+**Last Updated**: May 7, 2026
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.36 (2026-05-07): Audit Wave 1.1 — tracking-refresh cron batching (Vercel 30s cap fix)
+
+**Test Results**: 1,810 tests passing, 25 skipped (placeholder cleanups), 0 failing. 4 new tests + 1 rewritten test in `tracking-refresh.test.ts`.
+**Status**: Production blast-radius fix per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 1.1.
+
+**Problem**: `processTrackingRefresh` iterated every in-transit order without LIMIT, calling ShipEngine + writing tracking_events synchronously per row. With ~30+ active orders the cron would exceed Vercel's 30s `maxDuration` (per [.claude/rules/deploy.md](.claude/rules/deploy.md)).
+
+**What Changed**:
+
+**1. Bounded batch + time-budget early break** ([delayguard-app/src/queue/processors/tracking-refresh.ts](delayguard-app/src/queue/processors/tracking-refresh.ts)):
+- New `BATCH_SIZE = 25` enforced in SQL via `LIMIT $4`.
+- New `TIME_BUDGET_MS = 25_000` checked at the top of each loop iteration; logs a warn and breaks before the next ShipEngine call when exceeded. 5s headroom under the 30s function cap.
+
+**2. Redis cursor for resumable sweeps** (key `tracking-refresh:cursor:last-id`):
+- SELECT now filters `WHERE o.id > $cursor ORDER BY o.id ASC LIMIT $batch`.
+- Cursor reads from Redis at job start (defaults to 0 on miss / parse failure).
+- Cursor advances to last-processed id (including failures, so a permanently-broken order doesn't stall the queue).
+- Cursor resets to `0` when a tick returns fewer than `BATCH_SIZE` rows — the in-transit queue has drained, so the next sweep re-scans newly-IN_TRANSIT low-id orders.
+- Chosen over a `cron_state` Postgres table: writes are idempotent (`ON CONFLICT (order_id, timestamp)`), so a lost cursor only re-does at most one batch — acceptable cost vs. adding an additive-only forward-compatible migration.
+
+**3. Cron schedule corrected** ([delayguard-app/vercel.json](delayguard-app/vercel.json)):
+- `0 0 * * *` (daily) → `*/15 * * * *` (every 15 min). The daily schedule defeated the product — a "delay" alert ≤24h late is not actionable.
+- 96 ticks/day × 25 orders/tick = 2,400 orders/day theoretical max — well past current volume.
+
+**4. Pre-existing TS errors fixed in [delayguard-app/src/routes/tracking-refresh-cron.ts](delayguard-app/src/routes/tracking-refresh-cron.ts)**:
+- Line 49: `logger.error(msg, {ip, userAgent})` was passing the context object as the `error?` slot. Fix: pass `undefined` as the error arg, context as the third arg.
+- Line 62: `logger.info(msg, stats)` failed because `TrackingRefreshStats` lacks an index signature. Fix: spread to a fresh object literal.
+- Header comment schedule example aligned to `*/15 * * * *`.
+
+**TDD**: 4 new tests written first, observed RED, then implemented:
+- `should respect BATCH_SIZE limit in the SQL query` — asserts SQL contains `LIMIT $N` and the params include `25`.
+- `should break out of the loop when the 25s time budget elapses mid-batch` — `Date.now` spy advances 13s per ShipEngine call; asserts exactly 2 calls before the break.
+- `should resume from the cursor saved in Redis on a subsequent invocation` — pre-seeds cursor=42, asserts SQL has `id > $N` filter with 42 as a param and cursor advances to 67 (last id of a full 25-row batch).
+- `should reset the cursor to 0 when the in-transit queue drains in this tick` — asserts cursor reset when `rows < BATCH_SIZE` returned.
+
+The previously-misleading `should batch process orders to avoid overwhelming ShipEngine` test (mocked 50 orders, asserted 50 calls — was not actually testing batching) was rewritten as the BATCH_SIZE-limit test above.
+
+**Out of scope (flagged, not fixed)**:
+- 2 pre-existing lint errors on clean main: `tests/integration/database/tracking-events-schema.test.ts:2` (unused `query` import), `tests/unit/components/HelpModal.test.tsx:162` (`href` accessibility). Verified against stashed clean main.
+- Husky `_/` helper not installed locally; pre-commit hook does not actually run. Tracked separately.
+
+---
 
 ### v1.35 (2025-12-11): 🎨 Anchour-Inspired UI/UX Redesign Phase 1 - Color System & AppHeader (Perfect TDD Execution)
 **Test Results**: 38 AppHeader tests passing (100% pass rate), zero linting errors

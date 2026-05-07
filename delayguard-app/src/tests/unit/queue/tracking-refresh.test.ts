@@ -12,18 +12,37 @@
 import { processTrackingRefresh } from '../../../queue/processors/tracking-refresh';
 import { CarrierService } from '../../../services/carrier-service';
 import { query } from '../../../database/connection';
+import { getRedisConnection } from '../../../services/redis-connection';
+import type Redis from 'ioredis';
 
 // Mock dependencies
 jest.mock('../../../services/carrier-service');
 jest.mock('../../../database/connection');
+jest.mock('../../../services/redis-connection');
 jest.mock('../../../utils/logger');
 
 describe('Tracking Refresh Cron Job', () => {
   const mockQuery = query as jest.MockedFunction<typeof query>;
   const mockCarrierService = CarrierService as jest.MockedClass<typeof CarrierService>;
+  const mockGetRedisConnection = getRedisConnection as jest.MockedFunction<typeof getRedisConnection>;
+  const mockRedisGet = jest.fn();
+  const mockRedisSet = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRedisGet.mockReset();
+    mockRedisSet.mockReset();
+    mockRedisGet.mockResolvedValue(null);
+    mockRedisSet.mockResolvedValue('OK');
+    mockGetRedisConnection.mockResolvedValue({
+      get: mockRedisGet,
+      set: mockRedisSet,
+    } as unknown as Redis);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   describe('processTrackingRefresh', () => {
@@ -327,25 +346,120 @@ describe('Tracking Refresh Cron Job', () => {
       );
     });
 
-    it('should batch process orders to avoid overwhelming ShipEngine', async() => {
-      // Create 50 orders
-      const manyOrders = Array.from({ length: 50 }, (_, i) => ({
+    it('should respect BATCH_SIZE limit in the SQL query and stop calling ShipEngine after BATCH_SIZE rows', async() => {
+      // Simulate the SQL LIMIT having already trimmed the result set to BATCH_SIZE.
+      // The mock cannot enforce LIMIT itself; this asserts the implementation passes
+      // BATCH_SIZE as a param AND processes only what came back.
+      const batchOfTwentyFive = Array.from({ length: 25 }, (_, i) => ({
         id: i + 1,
         tracking_number: `tracking-${i + 1}`,
         carrier_code: 'ups',
         shop_domain: 'test-shop.myshopify.com',
       }));
 
-      mockQuery.mockResolvedValueOnce(manyOrders);
-      mockQuery.mockResolvedValue([]); // For subsequent queries
+      mockQuery.mockResolvedValueOnce(batchOfTwentyFive);
+      mockQuery.mockResolvedValue([]);
 
       const mockGetTrackingInfo = jest.fn().mockResolvedValue(mockTrackingInfo);
       mockCarrierService.prototype.getTrackingInfo = mockGetTrackingInfo;
 
       await processTrackingRefresh();
 
-      // Should process all orders
-      expect(mockGetTrackingInfo).toHaveBeenCalledTimes(50);
+      // SQL must include a LIMIT clause; one of the params must be 25 (BATCH_SIZE).
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringMatching(/LIMIT\s+\$\d+/),
+        expect.arrayContaining([25]),
+      );
+      expect(mockGetTrackingInfo).toHaveBeenCalledTimes(25);
+    });
+
+    it('should break out of the loop when the 25s time budget elapses mid-batch', async() => {
+      const fortyOrders = Array.from({ length: 40 }, (_, i) => ({
+        id: i + 1,
+        tracking_number: `tracking-${i + 1}`,
+        carrier_code: 'ups',
+        shop_domain: 'test-shop.myshopify.com',
+      }));
+
+      mockQuery.mockResolvedValueOnce(fortyOrders);
+      mockQuery.mockResolvedValue([]);
+
+      // Simulate wall-clock advancing 13s per ShipEngine call.
+      // Iter 1: t=0  → call (t→13_000)
+      // Iter 2: t=13_000 (still under 25s) → call (t→26_000)
+      // Iter 3: t=26_000 (over 25s budget) → break
+      // Expected: exactly 2 calls.
+      let now = 0;
+      const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => now);
+
+      const mockGetTrackingInfo = jest.fn().mockImplementation(async() => {
+        now += 13_000;
+        return mockTrackingInfo;
+      });
+      mockCarrierService.prototype.getTrackingInfo = mockGetTrackingInfo;
+
+      await processTrackingRefresh();
+
+      expect(mockGetTrackingInfo).toHaveBeenCalledTimes(2);
+      dateNowSpy.mockRestore();
+    });
+
+    it('should resume from the cursor saved in Redis on a subsequent invocation', async() => {
+      // Pre-seed the cursor: previous tick stopped after order id 42.
+      mockRedisGet.mockResolvedValue('42');
+
+      // Return a full batch (BATCH_SIZE = 25 rows starting from id 43) — signals
+      // "more work pending", so the cursor should advance to the last id, not reset.
+      const fullBatch = Array.from({ length: 25 }, (_, i) => ({
+        id: 43 + i,
+        tracking_number: `t${43 + i}`,
+        carrier_code: 'ups',
+        shop_domain: 'test-shop.myshopify.com',
+      }));
+      mockQuery.mockResolvedValueOnce(fullBatch);
+      mockQuery.mockResolvedValue([]);
+
+      const mockGetTrackingInfo = jest.fn().mockResolvedValue(mockTrackingInfo);
+      mockCarrierService.prototype.getTrackingInfo = mockGetTrackingInfo;
+
+      await processTrackingRefresh();
+
+      // Cursor must have been read from the canonical key.
+      expect(mockRedisGet).toHaveBeenCalledWith('tracking-refresh:cursor:last-id');
+
+      // Orders SELECT must include `id >` filter and pass the cursor (42) as a param.
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringMatching(/id\s*>\s*\$\d+/),
+        expect.arrayContaining([42]),
+      );
+
+      // After processing, cursor must advance to the last processed id (67 = 43 + 24).
+      expect(mockRedisSet).toHaveBeenCalledWith(
+        'tracking-refresh:cursor:last-id',
+        '67',
+      );
+    });
+
+    it('should reset the cursor to 0 when the in-transit queue drains in this tick', async() => {
+      // Cursor mid-sweep…
+      mockRedisGet.mockResolvedValue('100');
+
+      // …but only 2 rows came back (< BATCH_SIZE), so this tick drained the queue.
+      mockQuery.mockResolvedValueOnce([
+        { id: 101, tracking_number: 't101', carrier_code: 'ups', shop_domain: 'test-shop.myshopify.com' },
+        { id: 102, tracking_number: 't102', carrier_code: 'ups', shop_domain: 'test-shop.myshopify.com' },
+      ]);
+      mockQuery.mockResolvedValue([]);
+
+      mockCarrierService.prototype.getTrackingInfo = jest.fn().mockResolvedValue(mockTrackingInfo);
+
+      await processTrackingRefresh();
+
+      // Cursor must reset so the next tick re-scans newly-IN_TRANSIT orders with low ids.
+      expect(mockRedisSet).toHaveBeenCalledWith(
+        'tracking-refresh:cursor:last-id',
+        '0',
+      );
     });
 
     it('should handle empty result (no in-transit orders)', async() => {
