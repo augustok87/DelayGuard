@@ -4,8 +4,11 @@
  * Tests for GET /api/merchant-settings and PUT /api/merchant-settings
  * Part of Phase 2.6 - API endpoints for merchant contact settings
  *
- * TDD RED Phase: These tests should FAIL until API routes are implemented
+ * TDD RED Phase: every `describe` here is `describe.skip` until the API
+ * routes are implemented. The shopDomain/updates locals document the
+ * eventual call signatures — they're intentionally unused for now.
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { query } from '../../../src/database/connection';
 
@@ -116,7 +119,7 @@ describe.skip('GET /api/merchant-settings', () => {
     // Act
     // const result = await getMerchantSettings(shopDomain);
 
-    // Assert
+    // Assert (uncomment when getMerchantSettings is implemented)
     // expect(result).toEqual({
     //   merchantEmail: 'merchant@shop.com',
     //   merchantPhone: '+1-555-9999',
@@ -125,9 +128,6 @@ describe.skip('GET /api/merchant-settings', () => {
     //   carrierDelaysEnabled: true,
     //   transitDelaysEnabled: false,
     // });
-
-    // Placeholder until implementation
-    expect(true).toBe(true);
   });
 
   it('should handle NULL merchant contact fields gracefully', async() => {
@@ -153,13 +153,10 @@ describe.skip('GET /api/merchant-settings', () => {
     // Act
     // const result = await getMerchantSettings(shopDomain);
 
-    // Assert
+    // Assert (uncomment when getMerchantSettings is implemented)
     // expect(result.merchantEmail).toBeNull();
     // expect(result.merchantPhone).toBeNull();
     // expect(result.merchantName).toBeNull();
-
-    // Placeholder until implementation
-    expect(true).toBe(true);
   });
 
   it('should return 404 if shop not found', async() => {
@@ -168,11 +165,8 @@ describe.skip('GET /api/merchant-settings', () => {
 
     const shopDomain = 'nonexistent-shop.myshopify.com';
 
-    // Act & Assert
+    // Act & Assert (uncomment when getMerchantSettings is implemented)
     // await expect(getMerchantSettings(shopDomain)).rejects.toThrow('Shop not found');
-
-    // Placeholder until implementation
-    expect(true).toBe(true);
   });
 });
 
@@ -262,11 +256,8 @@ describe.skip('PUT /api/merchant-settings', () => {
     // Act
     // await updateMerchantSettings(shopDomain, updates);
 
-    // Assert - Only shops table updated
+    // Assert - Only shops table updated (uncomment when implemented)
     // expect(mockQuery).toHaveBeenCalledTimes(2); // 1 SELECT + 1 UPDATE
-
-    // Placeholder until implementation
-    expect(true).toBe(true);
   });
 
   it('should allow partial updates (only toggles)', async() => {
@@ -283,11 +274,8 @@ describe.skip('PUT /api/merchant-settings', () => {
     // Act
     // await updateMerchantSettings(shopDomain, updates);
 
-    // Assert - Only app_settings table updated
+    // Assert - Only app_settings table updated (uncomment when implemented)
     // expect(mockQuery).toHaveBeenCalledTimes(2); // 1 SELECT + 1 UPDATE
-
-    // Placeholder until implementation
-    expect(true).toBe(true);
   });
 
   it('should return 404 if shop not found', async() => {
@@ -297,11 +285,8 @@ describe.skip('PUT /api/merchant-settings', () => {
     const shopDomain = 'nonexistent-shop.myshopify.com';
     const updates = { merchantEmail: 'test@shop.com' };
 
-    // Act & Assert
+    // Act & Assert (uncomment when updateMerchantSettings is implemented)
     // await expect(updateMerchantSettings(shopDomain, updates)).rejects.toThrow('Shop not found');
-
-    // Placeholder until implementation
-    expect(true).toBe(true);
   });
 
   it('should validate email format before updating', async() => {
@@ -311,11 +296,8 @@ describe.skip('PUT /api/merchant-settings', () => {
       merchantEmail: 'invalid-email', // Invalid format
     };
 
-    // Act & Assert
+    // Act & Assert (uncomment when updateMerchantSettings is implemented)
     // await expect(updateMerchantSettings(shopDomain, updates)).rejects.toThrow('Invalid email format');
-
-    // Placeholder until implementation
-    expect(true).toBe(true);
   });
 
   it('should validate phone format before updating', async() => {
@@ -325,11 +307,8 @@ describe.skip('PUT /api/merchant-settings', () => {
       merchantPhone: '12345', // Invalid format (too short)
     };
 
-    // Act & Assert
+    // Act & Assert (uncomment when updateMerchantSettings is implemented)
     // await expect(updateMerchantSettings(shopDomain, updates)).rejects.toThrow('Invalid phone format');
-
-    // Placeholder until implementation
-    expect(true).toBe(true);
   });
 });
 
@@ -344,11 +323,8 @@ describe.skip('API Integration - Edge Cases', () => {
 
     const shopDomain = 'test-shop.myshopify.com';
 
-    // Act & Assert
+    // Act & Assert (uncomment when getMerchantSettings is implemented)
     // await expect(getMerchantSettings(shopDomain)).rejects.toThrow('Database connection failed');
-
-    // Placeholder until implementation
-    expect(true).toBe(true);
   });
 
   it('should prevent SQL injection in shop domain parameter', async() => {
@@ -384,12 +360,9 @@ describe.skip('API Integration - Edge Cases', () => {
     // Act
     // const result = await getMerchantSettings(shopDomain);
 
-    // Assert - Defaults to TRUE (from schema DEFAULT values)
+    // Assert - Defaults to TRUE from schema DEFAULT values (uncomment when implemented)
     // expect(result.warehouseDelaysEnabled).toBe(true);
     // expect(result.carrierDelaysEnabled).toBe(true);
     // expect(result.transitDelaysEnabled).toBe(true);
-
-    // Placeholder until implementation
-    expect(true).toBe(true);
   });
 });

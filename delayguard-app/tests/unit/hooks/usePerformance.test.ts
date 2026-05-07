@@ -103,17 +103,14 @@ describe('usePerformance', () => {
       }),
     );
 
-    // Just verify the hook doesn't crash and can be unmounted
+    // FPS tracking is hard to assert deterministically in jsdom; the
+    // expect().not.toThrow() above is the actual assertion.
     expect(() => {
       act(() => {
         jest.advanceTimersByTime(100);
       });
       unmount();
     }).not.toThrow();
-
-    // The FPS tracking is complex to test in this environment,
-    // so we just verify the hook works without crashing
-    expect(true).toBe(true);
   });
 
   it('logs to console when enabled', () => {
@@ -160,7 +157,7 @@ describe('useComponentPerformance', () => {
   });
 
   it('tracks component performance on mount and unmount', () => {
-    const { unmount } = renderHook(() => 
+    const { unmount } = renderHook(() =>
       useComponentPerformance('TestComponent', []),
     );
 
@@ -169,10 +166,7 @@ describe('useComponentPerformance', () => {
       jest.advanceTimersByTime(100);
     });
 
-    unmount();
-
-    // Just verify the hook works without crashing
-    expect(true).toBe(true);
+    expect(() => unmount()).not.toThrow();
   });
 
   it('tracks performance when dependencies change', () => {
@@ -186,15 +180,12 @@ describe('useComponentPerformance', () => {
       jest.advanceTimersByTime(100);
     });
 
-    rerender({ deps: [2] });
-
-    // Advance timers after rerender
-    act(() => {
-      jest.advanceTimersByTime(100);
-    });
-
-    // Just verify the hook works without crashing
-    expect(true).toBe(true);
+    expect(() => {
+      rerender({ deps: [2] });
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+    }).not.toThrow();
   });
 });
 
@@ -209,8 +200,6 @@ describe('useAsyncPerformance', () => {
     });
 
     expect(mockOperation).toHaveBeenCalled();
-    // Just verify the hook works without crashing
-    expect(true).toBe(true);
   });
 
   it('handles async operation errors', async() => {
@@ -227,8 +216,6 @@ describe('useAsyncPerformance', () => {
     });
 
     expect(mockOperation).toHaveBeenCalled();
-    // Just verify the hook works without crashing
-    expect(true).toBe(true);
   });
 
   it('returns operation result', async() => {

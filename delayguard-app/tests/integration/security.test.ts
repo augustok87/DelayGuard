@@ -1,46 +1,57 @@
 // Security Integration Tests
-// Note: These tests are simplified to avoid Jest/ESM issues with Shopify dependencies
+//
+// These tests are intentionally skipped — Jest/ESM issues with Shopify
+// dependencies prevent the integration runner from booting the middleware
+// chain in the unit test environment. They surface in CI output as skipped
+// (per .claude/rules/tests.md v1.20) so reviewers can see the coverage gap
+// instead of mistaking tautological placeholders for real assertions.
+//
+// Restoring these requires:
+//   - moving the integration runner under `npm run test:integration` with a
+//     real Koa app instance, OR
+//   - migrating the Shopify imports out of the hot path so jsdom + ts-jest
+//     can load the middleware modules directly.
 
 describe('Security Integration Tests', () => {
   describe('Security Headers', () => {
-    it('should have security headers configured', () => {
-      // Test that security headers middleware is properly configured
-      expect(true).toBe(true); // Placeholder test
+    it.skip('FUTURE: should have security headers configured', () => {
+      // Asserts the security-headers middleware sets X-Frame-Options,
+      // Content-Security-Policy, etc. on every response.
     });
   });
 
   describe('Rate Limiting', () => {
-    it('should have rate limiting configured', () => {
-      // Test that rate limiting middleware is properly configured
-      expect(true).toBe(true); // Placeholder test
+    it.skip('FUTURE: should have rate limiting configured', () => {
+      // Asserts the rate-limiting middleware throttles requests beyond the
+      // configured RPS for a given shop domain.
     });
   });
 
   describe('CSRF Protection', () => {
-    it('should have CSRF protection configured', () => {
-      // Test that CSRF protection middleware is properly configured
-      expect(true).toBe(true); // Placeholder test
+    it.skip('FUTURE: should have CSRF protection configured', () => {
+      // Asserts state-changing routes require a valid CSRF token and reject
+      // missing/forged ones with 403.
     });
   });
 
   describe('Input Sanitization', () => {
-    it('should have input sanitization configured', () => {
-      // Test that input sanitization middleware is properly configured
-      expect(true).toBe(true); // Placeholder test
+    it.skip('FUTURE: should have input sanitization configured', () => {
+      // Asserts the sanitization middleware strips/escapes script tags and
+      // SQL-injection payloads before handlers see them.
     });
   });
 
   describe('Security Monitoring', () => {
-    it('should have security monitoring configured', () => {
-      // Test that security monitoring is properly configured
-      expect(true).toBe(true); // Placeholder test
+    it.skip('FUTURE: should have security monitoring configured', () => {
+      // Asserts security-monitor records auth failures, rate-limit trips,
+      // and CSRF violations to the audit log.
     });
   });
 
   describe('Error Handling', () => {
-    it('should handle security errors gracefully', () => {
-      // Test that security errors are handled properly
-      expect(true).toBe(true); // Placeholder test
+    it.skip('FUTURE: should handle security errors gracefully', () => {
+      // Asserts middleware errors return safe responses without leaking
+      // stack traces or internal state.
     });
   });
 });

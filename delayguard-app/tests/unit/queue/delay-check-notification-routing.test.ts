@@ -386,10 +386,10 @@ describe('Delay Check Processor - Notification Routing', () => {
       );
     });
 
-    it('should pass delayType=CARRIER_DELAY for carrier reported delays', async() => {
-      // Arrange - This test will be implemented when carrier delay logic is updated
-      // For now, this documents the expected behavior
-      expect(true).toBe(true);
+    it.skip('FUTURE: should pass delayType=CARRIER_DELAY for carrier reported delays', async() => {
+      // Pending — carrier delay logic not yet wired through processDelayCheck.
+      // When implemented, mock carrier-reported delay and assert
+      // mockAddNotificationJob receives delayType: 'CARRIER_DELAY'.
     });
 
     it('should pass delayType=TRANSIT_DELAY for stuck in transit delays', async() => {
@@ -498,9 +498,10 @@ describe('Delay Check Processor - Notification Routing', () => {
       );
     });
 
-    it('should pass customer_email and customer_phone for carrier delays', async() => {
-      // This documents expected behavior - will be tested when carrier delay routing is implemented
-      expect(true).toBe(true);
+    it.skip('FUTURE: should pass customer_email and customer_phone for carrier delays', async() => {
+      // Pending — carrier delay routing not yet implemented.
+      // When implemented, assert mockAddNotificationJob receives
+      // customerEmail/customerPhone (not merchantEmail) for CARRIER_DELAY.
     });
 
     it('should pass customer_email and customer_phone for transit delays', async() => {

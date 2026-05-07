@@ -254,7 +254,7 @@ const qualityGates = [
 
   new QualityGate('Linting Check', async() => {
     try {
-      const output = execSync('npm run lint', { 
+      const output = execSync('npm run lint', {
         stdio: 'pipe',
         encoding: 'utf8',
       });
@@ -266,7 +266,7 @@ const qualityGates = [
       // Check if it's just warnings (exit code 1 with output)
       const output = error.stdout || error.stderr || '';
       const hasErrors = output.includes('error') && !output.includes('0 errors');
-      
+
       if (hasErrors) {
         return {
           passed: false,
@@ -278,6 +278,48 @@ const qualityGates = [
           message: 'Linting passed (warnings only)',
         };
       }
+    }
+  }),
+
+  // v1.20 incident guard — placeholder tests like `expect(true).toBe(true)`
+  // previously masked unfinished work. Reject any new ones outside known
+  // exceptions (see .claude/rules/tests.md). Use `it.skip("FUTURE: ...")`
+  // for deferred work.
+  new QualityGate('No Placeholder Tests', async() => {
+    try {
+      // ripgrep first (fast); fall back to grep -r for portability
+      let output;
+      try {
+        output = execSync(
+          'rg -n --no-heading "expect\\(true\\)\\.toBe\\(true\\)|expect\\(1\\)\\.toBe\\(1\\)" tests/ src/ 2>/dev/null || true',
+          { encoding: 'utf8' },
+        );
+      } catch (_rgErr) {
+        output = execSync(
+          'grep -rn -E "expect\\(true\\)\\.toBe\\(true\\)|expect\\(1\\)\\.toBe\\(1\\)" tests/ src/ 2>/dev/null || true',
+          { encoding: 'utf8' },
+        );
+      }
+
+      const hits = output.split('\n').filter(Boolean);
+      if (hits.length === 0) {
+        return {
+          passed: true,
+          message: 'No placeholder tests found',
+        };
+      }
+
+      return {
+        passed: false,
+        message:
+          `Found ${hits.length} placeholder test(s) — replace with real assertions or it.skip("FUTURE: ...").\n` +
+          hits.map((line) => `    ${line}`).join('\n'),
+      };
+    } catch (error) {
+      return {
+        passed: false,
+        message: `Placeholder check failed: ${error.message}`,
+      };
     }
   }),
 ];

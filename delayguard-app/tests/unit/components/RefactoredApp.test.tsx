@@ -450,11 +450,7 @@ describe('RefactoredApp', () => {
   it('should handle component unmounting', () => {
     const { unmount } = render(<RefactoredApp />);
 
-    // Unmount component
-    unmount();
-
-    // Should not throw any errors
-    expect(true).toBe(true);
+    expect(() => unmount()).not.toThrow();
   });
 
   it('should handle prop changes', () => {
