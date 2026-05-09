@@ -1,8 +1,9 @@
 import Router from "koa-router";
 import { logger } from "../utils/logger";
-import { query } from "../database/connection";
+import { ShopAuthService } from "../services/shop-auth-service";
 
 const router = new Router();
+const shopAuth = new ShopAuthService();
 
 // OAuth initiation endpoint
 router.get("/", async(ctx) => {
@@ -43,31 +44,11 @@ router.post("/callback", async(ctx) => {
   try {
     const { shop, accessToken, scope } = ctx.state.shopify.session;
 
-    // Store shop information in database
-    await query(
-      `
-      INSERT INTO shops (shop_domain, access_token, scope)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (shop_domain)
-      DO UPDATE SET
-        access_token = EXCLUDED.access_token,
-        scope = EXCLUDED.scope,
-        updated_at = CURRENT_TIMESTAMP
-    `,
-      [shop, accessToken, scope.split(",")],
-    );
-
-    // Create default app settings for the shop
-    await query(
-      `
-      INSERT INTO app_settings (shop_id, delay_threshold_days, email_enabled, sms_enabled, notification_template)
-      SELECT id, 2, true, false, 'default'
-      FROM shops
-      WHERE shop_domain = $1
-      ON CONFLICT (shop_id) DO NOTHING
-    `,
-      [shop],
-    );
+    await shopAuth.upsertShop({
+      shopDomain: shop,
+      accessToken,
+      scope,
+    });
 
     logger.info(`✅ Shop ${shop} authenticated and stored successfully`);
 
@@ -84,18 +65,15 @@ router.get("/shop", async(ctx) => {
   try {
     const shop = ctx.state.shopify.session.shop;
 
-    const result = await query(
-      "SELECT shop_domain, created_at, updated_at FROM shops WHERE shop_domain = $1",
-      [shop],
-    );
+    const metadata = await shopAuth.loadShopByDomain(shop);
 
-    if (result.length === 0) {
+    if (metadata === null) {
       ctx.status = 404;
       ctx.body = { error: "Shop not found" };
       return;
     }
 
-    ctx.body = result[0];
+    ctx.body = metadata;
   } catch (error) {
     logger.error("Error fetching shop information", error as Error);
     ctx.status = 500;

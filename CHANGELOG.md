@@ -2,12 +2,43 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 7, 2026 (v1.36.1 — audit Wave 1.2 + Wave 1.1 polish)
+**Last Updated**: May 9, 2026 (v1.37 — audit Wave 1.3 shop-auth-service extraction)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.37 (2026-05-09): Audit Wave 1.3 — shop-auth-service extraction
+
+**Test Results**: 1,820 passing (+10), 25 skipped, 0 failing. New `src/services/shop-auth-service.test.ts` adds 10 sibling tests for the extracted service.
+**Status**: Service-layer compliance fix per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 1.3.
+
+**Problem**: [delayguard-app/src/routes/auth.ts](delayguard-app/src/routes/auth.ts) had three inline `query(...)` calls (lines 47, 61, 87) covering the highest-stakes write in the app — Shopify access-token persistence and the OAuth bootstrap of default `app_settings`. Per [.claude/rules/backend.md](.claude/rules/backend.md), DB queries belong in services; routes parse → call service → respond. Phase 2 will add more endpoints, so doing this on top of inline-SQL routes would 2× the eventual cleanup cost.
+
+**What Changed**:
+
+**1. New service** ([delayguard-app/src/services/shop-auth-service.ts](delayguard-app/src/services/shop-auth-service.ts)):
+- `upsertShop({ shopDomain, accessToken, scope })` — idempotent install / re-auth. Splits the comma-separated scope string into a trimmed `text[]` and writes the shop row, then seeds default `app_settings` (`ON CONFLICT (shop_id) DO NOTHING` so re-auth doesn't clobber merchant settings).
+- `loadShopByDomain(shopDomain)` — returns a typed `ShopMetadata | null` (`{ shopDomain, createdAt, updatedAt }` in camelCase). **Deliberately does not read `access_token`** — the route never needed it, and exposing it through a thin handler would defeat the extraction. The actual token read lives in [middleware/shopify-session.ts:31](delayguard-app/src/middleware/shopify-session.ts), and a real `loadShopToken` method belongs in a future wave that extracts that middleware.
+- `ShopMetadata` interface exported and used by the route as the response shape, eliminating untyped column plucking at the boundary.
+
+**2. Route refactored** ([delayguard-app/src/routes/auth.ts](delayguard-app/src/routes/auth.ts)):
+- All three `query(...)` calls removed; the route is now OAuth dance + redirects + service calls. Verified via `grep -n "query(" src/routes/auth.ts` → zero matches.
+- `GET /auth/shop` response is now camelCase (`{ shopDomain, createdAt, updatedAt }`) instead of snake_case. Verified no internal consumer relied on the old shape (`rg "/auth/shop|authRoutes"` returns only the route definition itself).
+
+**TDD**: 10 sibling tests written first, observed RED (module-not-found), then implemented:
+- *upsertShop*: ON CONFLICT shape, token rotation across two installs, default app_settings seeding, scope-splitting whitespace/empty-entry handling, single-scope edge case, DB failure on shops upsert (app_settings not invoked), DB failure on app_settings.
+- *loadShopByDomain*: typed camelCase return on hit, null on miss, error propagation. Boundary contract asserts `result` does NOT carry `shop_domain` / `created_at` / `updated_at` / `access_token` properties — guards against accidental snake_case leak or token exposure.
+
+**v1.19 field-population rule applied**: every column written has an explicit `expect(shopParams).toEqual([...])` assertion against the SQL parameter array, including the `text[]` coercion for the `scope` column. Not just a return-value or 200-response check.
+
+**Out of scope (smallest blast radius — flagged for future waves)**:
+- 2 pre-existing lint errors carried over from Wave 1.1 (`tests/integration/database/tracking-events-schema.test.ts:2`, `tests/unit/components/HelpModal.test.tsx:162`) — untouched per the audit plan.
+- Husky pre-commit gate is still non-functional (deeper diagnosis recorded in audit plan Wave 1.1) — not bypassed, just doesn't fire. Tracked separately.
+- Wave 2.x extractions (`api.ts` MerchantApiService, `webhooks.ts` persistence services) — deliberately deferred; Wave 1.3 was a focused extraction of the highest-stakes write path only.
+
+---
 
 ### v1.36 (2026-05-07): Audit Wave 1.1 — tracking-refresh cron batching (Vercel 30s cap fix)
 
