@@ -2,12 +2,55 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 14, 2026 (v1.38 — audit Wave 2.1 merchant-api-service extraction)
+**Last Updated**: May 14, 2026 (v1.39 — audit Wave 2.2 webhook persistence services extraction)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.39 (2026-05-14): Audit Wave 2.2 — webhook persistence services extraction
+
+**Test Results**: 1,886 passing (+33), 25 skipped, 0 failing. Three new sibling test files: `order-upsert-service.test.ts` (17 tests), `fulfillment-persistence-service.test.ts` (6 tests), `tracking-ingest-service.test.ts` (10 tests).
+**Status**: Service-layer compliance fix per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 2.2.
+
+**Problem**: [delayguard-app/src/routes/webhooks.ts](delayguard-app/src/routes/webhooks.ts) was 463 LOC with 11 inline `query(...)` calls across four helpers (`processOrderUpdate`, `processFulfillmentUpdate`, `processOrderPaid`, `processFulfillment`). Per [.claude/rules/backend.md](.claude/rules/backend.md), DB queries belong in services; the route should be HMAC verify → parse → service → enqueue → respond. `processFulfillment` alone composed six responsibilities (fulfillments UPSERT + ShipEngine HTTP + tracking_events UPSERT + orders ETA UPDATE + shop_domain JOIN + delay-check job enqueue), which is precisely the kind of glue Wave 2.1's pattern was meant to dissolve.
+
+**What Changed**:
+
+**1. Three new services**:
+
+- **[delayguard-app/src/services/order-upsert-service.ts](delayguard-app/src/services/order-upsert-service.ts)** — owns every orders-table write:
+  - `upsertOrderFromWebhook(shopDomain, orderData)` → returns `{ orderId, accessToken } | null`. Resolves shop + UPSERTs the order row + re-reads the orderId. Returns `null` on shop-not-found (silent-skip — see preserved-behavior note below).
+  - `markOrderAsPaid(shopDomain, orderData)` → `boolean`. Resolves shop + UPDATEs status to "paid". Returns `false` on shop-not-found.
+  - `findOrderId(shopDomain, shopifyOrderId)` → `string | null`. Resolves shop + looks up the internal orderId for the `/fulfillments/updated` flow. Returns `null` on either miss.
+- **[delayguard-app/src/services/fulfillment-persistence-service.ts](delayguard-app/src/services/fulfillment-persistence-service.ts)** — `upsertFulfillment(orderId, fulfillmentData)`. Pure persistence — no ShipEngine HTTP. The internal `orderId` (resolved upstream) is the multi-tenant guard; the Shopify-supplied `order_id` from the payload is never trusted directly.
+- **[delayguard-app/src/services/tracking-ingest-service.ts](delayguard-app/src/services/tracking-ingest-service.ts)** — `ingestTracking(orderId, trackingNumber, carrierCode)`. Composes the ShipEngine `getTrackingInfo` call + the per-event `tracking_events` UPSERT loop + the orders ETA/tracking_status/`last_tracking_update` UPDATE. Lazy `CarrierService` injection so the route module loads in test/dev environments where `SHIPENGINE_API_KEY` may be unset.
+
+**2. Webhook silent-skip semantics PRESERVED VERBATIM**: distinct from Wave 2.1's `MerchantApiService` contract, the webhook services do NOT throw `ShopNotFoundError`. They return `null` / `false` so the route still 200s. Shopify retries on non-2xx — a `404` on shop-not-found would create a retry storm against shops that have uninstalled. This is called out in the service file headers and in the sibling tests (each "silent-skips" test asserts no throw + no downstream DB calls + a `logger.info` line).
+
+**3. ShipEngine failure semantics PRESERVED VERBATIM**: `TrackingIngestService.ingestTracking` swallows ShipEngine HTTP errors (logs and returns void), matching the pre-refactor route's "tracking data is nice-to-have" behavior. The route still 200s and still enqueues `addDelayCheckJob`. The bug-shaped test asserts this explicitly: `getTrackingInfo` rejects, `ingestTracking` resolves, no DB writes happen, and `logger.error` is called once. DB-failure paths on the *persistence* side still propagate — Shopify retries on a 500, which is the right behavior for a transient outage.
+
+**4. Route refactored** ([delayguard-app/src/routes/webhooks.ts](delayguard-app/src/routes/webhooks.ts), 463 → 224 LOC):
+- Every handler is now `HMAC verify → parse → service(s) → optional enqueue → respond`. Verified: `grep -c "query(" src/routes/webhooks.ts` → 0.
+- HMAC verification stays in the route per backend.md ("Never short-circuit signature verification") — no service-level signature bypass, no `skipVerify` flag.
+- `saveOrderLineItems` (Shopify GraphQL fetch + line_items writes via `shopify-service.ts`) stays in the route as a side-effect compose with try/catch-and-log semantics preserved. Already lives in a service module — not an inline-query violation.
+- `addDelayCheckJob` enqueue stays in the route. The redundant `SELECT shop_domain FROM shops s JOIN orders o ON s.id = o.shop_id` lookup was DROPPED: the route already has `shopDomain` from the `X-Shopify-Shop-Domain` header (which was verified via HMAC), and the JOIN returned the same value because the order was just upserted under that exact shop. One fewer DB round-trip per fulfilled-order webhook.
+
+**TDD**: 33 sibling tests written first, each observed RED (module-not-found), then implemented:
+- **OrderUpsertService** (17 tests): resolve-shop SQL shape, silent-skip return + log on shop-not-found, orders UPSERT v1.19 every-column param-array assertion, customer_name composition (first+last / first-only / "Unknown" fallback), default fulfillment_status "unfulfilled", multi-tenant guard on the orderId re-read (scopes on resolved `shop_id`, not raw `shopDomain`), DB-failure propagation, equivalent coverage for `markOrderAsPaid` (with v1.19 param assertion on the status UPDATE) and `findOrderId` (silent-skip on shop-miss vs order-miss with distinct log lines).
+- **FulfillmentPersistenceService** (6 tests): canonical ON CONFLICT shape, v1.19 every-column param-array assertion, default status "pending", null tracking columns when tracking_info absent, multi-tenant guard (asserts the Shopify-supplied `order_id` from the payload does NOT appear in the params), DB-failure propagation.
+- **TrackingIngestService** (10 tests): ShipEngine call signature, per-event UPSERT v1.19 every-column assertion, null location when event omits it, **orders ETA UPDATE v1.19 every-column assertion including `last_tracking_update`** (the column the v1.19 incident was originally about), `last_tracking_update` derives from the most recent event timestamp regardless of input order, null ETAs when ShipEngine returns no estimated delivery dates, no-events branch (no event UPSERTs + null `last_tracking_update`), **ShipEngine failure is swallowed** (resolves without throwing, no DB writes, `logger.error` called once — bug-shaped test), DB-failure propagation on the event UPSERT and on the orders UPDATE separately.
+
+**v1.19 field-population rule applied**: every UPDATE/INSERT in the new services has an explicit `expect(params).toEqual([...everyColumn])` assertion against the SQL parameter array. Coverage: orders UPSERT (7 cols), orders status UPDATE (3 cols incl. status/shop_id/shopify_order_id), fulfillments UPSERT (6 cols), tracking_events UPSERT (6 cols), and the orders ETA UPDATE (5 cols including `last_tracking_update`).
+
+**Out of scope (smallest blast radius — flagged for future waves)**:
+- 2 pre-existing lint errors carried over from Wave 1.1 (`tests/integration/database/tracking-events-schema.test.ts:2`, `tests/unit/components/HelpModal.test.tsx:162`) — untouched per the audit plan.
+- Husky pre-commit gate is still non-functional (deeper diagnosis recorded in audit plan Wave 1.1) — not bypassed, just doesn't fire. Tracked separately.
+- **Found while extracting** (tripped over, deliberately not fixed): `TrackingEvent` interface is declared TWICE in [delayguard-app/src/types/index.ts](delayguard-app/src/types/index.ts) (lines 22 and 148) with conflicting shapes — the second declaration requires `id: string` but `CarrierService.getTrackingInfo` produces events without one. The second declaration silently overrides the first in TS's last-wins behavior. Latent type-lie. Should be reconciled in Wave 3 (`any` cleanup) or its own focused PR.
+- Wave 2.3 (health-check `ping()` methods), Wave 3 (`any` cleanup), Wave 4 (sibling-test debt), Wave 7 (dead-code: `analytics-service.ts` vs `AnalyticsService.ts`, `delay-detection.ts` vs `delay-detection-service.ts`) — each remains gated on this finishing.
+
+---
 
 ### v1.38 (2026-05-14): Audit Wave 2.1 — merchant-api-service extraction
 
