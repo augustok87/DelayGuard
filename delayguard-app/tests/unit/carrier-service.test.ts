@@ -123,4 +123,86 @@ describe('CarrierService', () => {
       expect(result[0]).toEqual({ code: 'ups', name: 'UPS' });
     });
   });
+
+  describe('ping', () => {
+    it('returns status="healthy" with latencyMs on upstream 200', async() => {
+      mockAxiosInstance.get.mockResolvedValue({ status: 200, data: { carriers: [] } });
+
+      const result = await carrierService.ping();
+
+      expect(result.status).toBe('healthy');
+      expect(typeof result.latencyMs).toBe('number');
+      expect(result.latencyMs).toBeGreaterThanOrEqual(0);
+      // Regression guard: ping must use the lightest probe endpoint, not /v1/tracking
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/v1/carriers', expect.any(Object));
+    });
+
+    it('passes a 5000ms timeout to axios (regression guard against silent disable)', async() => {
+      mockAxiosInstance.get.mockResolvedValue({ status: 200, data: { carriers: [] } });
+
+      await carrierService.ping();
+
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/v1/carriers', expect.objectContaining({ timeout: 5000 }));
+    });
+
+    it('returns status="degraded" with HTTP status in error on upstream non-2xx', async() => {
+      const mockedAxiosLib = require('axios');
+      mockedAxiosLib.isAxiosError = jest.fn().mockReturnValue(true);
+      const axiosError = new Error('Request failed with status code 500');
+      (axiosError as any).response = { status: 500, statusText: 'Internal Server Error' };
+      (axiosError as any).isAxiosError = true;
+      mockAxiosInstance.get.mockRejectedValue(axiosError);
+
+      const result = await carrierService.ping();
+
+      expect(result.status).toBe('degraded');
+      if (result.status === 'degraded') {
+        expect(result.error).toMatch(/HTTP 500/);
+        expect(typeof result.latencyMs).toBe('number');
+      }
+    });
+
+    it('returns status="unhealthy" with /timeout/i error when axios aborts after 5s', async() => {
+      const mockedAxiosLib = require('axios');
+      mockedAxiosLib.isAxiosError = jest.fn().mockReturnValue(true);
+      const timeoutError = new Error('timeout of 5000ms exceeded');
+      (timeoutError as any).code = 'ECONNABORTED';
+      (timeoutError as any).isAxiosError = true;
+      mockAxiosInstance.get.mockRejectedValue(timeoutError);
+
+      const result = await carrierService.ping();
+
+      expect(result.status).toBe('unhealthy');
+      if (result.status === 'unhealthy') {
+        expect(result.error).toMatch(/timeout/i);
+      }
+    });
+
+    it('returns status="unhealthy" on network failure (no response)', async() => {
+      const mockedAxiosLib = require('axios');
+      mockedAxiosLib.isAxiosError = jest.fn().mockReturnValue(true);
+      const networkError = new Error('connect ECONNREFUSED');
+      (networkError as any).code = 'ECONNREFUSED';
+      (networkError as any).isAxiosError = true;
+      mockAxiosInstance.get.mockRejectedValue(networkError);
+
+      const result = await carrierService.ping();
+
+      expect(result.status).toBe('unhealthy');
+      if (result.status === 'unhealthy') {
+        expect(result.error).toMatch(/ECONNREFUSED/);
+      }
+    });
+
+    it('never throws — always resolves to a PingResult across every failure path', async() => {
+      const mockedAxiosLib = require('axios');
+      mockedAxiosLib.isAxiosError = jest.fn().mockReturnValue(false);
+      // Non-axios, non-Error rejection — the nastiest shape ping() must still tolerate
+      mockAxiosInstance.get.mockRejectedValue('plain-string-rejection');
+
+      await expect(carrierService.ping()).resolves.toBeDefined();
+      const result = await carrierService.ping();
+      expect(result.status).toBe('unhealthy');
+    });
+  });
 });

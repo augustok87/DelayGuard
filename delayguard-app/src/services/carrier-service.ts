@@ -5,6 +5,7 @@ import {
   CarrierService as ICarrierService,
   ExternalServiceError,
 } from "../types";
+import { PingResult, PING_TIMEOUT_MS } from "./ping-result";
 
 export class CarrierService implements ICarrierService {
   private client: AxiosInstance;
@@ -125,6 +126,44 @@ export class CarrierService implements ICarrierService {
       return true;
     } catch (error) {
       return false;
+    }
+  }
+
+  async ping(): Promise<PingResult> {
+    const startTime = Date.now();
+    try {
+      await this.client.get("/v1/carriers", { timeout: PING_TIMEOUT_MS });
+      return { status: "healthy", latencyMs: Date.now() - startTime };
+    } catch (error) {
+      const latencyMs = Date.now() - startTime;
+      if (axios.isAxiosError(error)) {
+        if (error.code === "ECONNABORTED" || error.code === "ERR_CANCELED") {
+          return {
+            status: "unhealthy",
+            latencyMs,
+            error: `timeout after ${PING_TIMEOUT_MS}ms`,
+          };
+        }
+        if (error.response) {
+          const statusText = error.response.statusText ?? "";
+          return {
+            status: "degraded",
+            latencyMs,
+            error:
+              `HTTP ${error.response.status}${statusText ? `: ${statusText}` : ""}`.trim(),
+          };
+        }
+        return {
+          status: "unhealthy",
+          latencyMs,
+          error: error.message || "Unknown ShipEngine error",
+        };
+      }
+      return {
+        status: "unhealthy",
+        latencyMs,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   }
 

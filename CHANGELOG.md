@@ -2,12 +2,61 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 14, 2026 (v1.39 — audit Wave 2.2 webhook persistence services extraction)
+**Last Updated**: May 14, 2026 (v1.40 — audit Wave 2.3 health-check ping() methods)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.40 (2026-05-14): Audit Wave 2.3 — health-check `ping()` methods
+
+**Test Results**: 1,911 passing (+25), 25 skipped, 0 failing. Three new ping-focused test surfaces: 6 cases appended to `tests/unit/carrier-service.test.ts`, new sibling `src/services/email-service.test.ts` (7 cases), new sibling `src/services/sms-service.test.ts` (6 cases), new sibling `src/routes/health.test.ts` (6 cases for the route-level `PingResult → ServiceStatus` mapping).
+**Status**: Test-mocking compliance fix per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 2.3.
+
+**Problem**: [delayguard-app/src/routes/health.ts:236,284,321](delayguard-app/src/routes/health.ts) had three direct `fetch(...)` calls against ShipEngine, SendGrid, and Twilio — one per vendor — used as liveness probes inside `/health`. Per [.claude/rules/tests.md](.claude/rules/tests.md), mocks belong at the service-method level. Calling `fetch` from a route forces tests to mock global `fetch`, which is brittle (global-state leaks between tests) and bypasses the wrapper each service already provides. The pre-refactor `/v1/addresses/validate` POST against ShipEngine was also a *heavier* probe than necessary for a liveness check.
+
+**What Changed**:
+
+**1. Three new `ping()` methods, one per external-call service**:
+
+- **[delayguard-app/src/services/carrier-service.ts](delayguard-app/src/services/carrier-service.ts)** — `ping()` reuses the existing axios client and hits `/v1/carriers` (the same lightweight endpoint `getCarrierList` already uses) with a per-call `timeout: 5000`. ShipEngine documents 200 req/min so the once-per-health-check spike is well under quota; `/v1/addresses/validate` was previously used as the probe — heavier than needed.
+- **[delayguard-app/src/services/email-service.ts](delayguard-app/src/services/email-service.ts)** — `ping()` issues a fetch to `https://api.sendgrid.com/v3/user/profile` with the existing API key in the `Authorization: Bearer …` header. SendGrid's `@sendgrid/mail` package is a thin send-only wrapper, so the service uses `fetch` internally with an `AbortController` — the *route* no longer calls `fetch` directly, which is what Wave 2.3 is about.
+- **[delayguard-app/src/services/sms-service.ts](delayguard-app/src/services/sms-service.ts)** — `ping()` calls `client.api.v2010.accounts(accountSid).fetch()` — Twilio's canonical lightweight liveness probe. The Twilio Node SDK doesn't accept an `AbortSignal`, so the timeout is enforced via `Promise.race` against a 5s timer (the upstream request keeps running in the background on timeout, which is fine for a liveness check — the result is what matters, not strict cancellation). The local `TwilioClient` interface was extended additively with `api.v2010.accounts(sid).fetch()`; the existing `messages.create` surface is untouched.
+
+**2. Shared `PingResult` discriminated union** ([delayguard-app/src/services/ping-result.ts](delayguard-app/src/services/ping-result.ts)):
+
+```ts
+type PingResult =
+  | { status: "healthy";   latencyMs: number }
+  | { status: "degraded";  latencyMs: number; error: string }
+  | { status: "unhealthy"; latencyMs: number; error: string };
+```
+
+Picked over `{ ok: boolean, latencyMs, error? }` (the audit-spec literal) after a reverse-prompt: the binary collapse would have folded "upstream reachable but 4xx/5xx" (currently `degraded` — bad creds, vendor-side error, network reached) into "couldn't reach upstream at all" (currently `unhealthy`), changing the response body's `external_apis.<vendor>.status` value for upstream-non-2xx and flipping `/health` HTTP from 200 to 503 in that case. The discriminated union preserves the existing tri-state 1:1 — wire shape unchanged, HTTP contract unchanged. `PING_TIMEOUT_MS = 5000` exported from the same module so 3 vendors × 5s = 15s, comfortably under the Vercel 30s function cap.
+
+**3. `ping()` MUST NEVER THROW** — every upstream failure (network, 5xx, timeout, auth) resolves to a `PingResult`. The route's `Promise.allSettled` only sees a *rejected* settlement when the *service constructor* threw (e.g. missing API key), never when ping itself failed. Bug-shaped test in each service: rejection-via-plain-string still resolves to `{ status: "unhealthy" }`.
+
+**4. Route refactored** ([delayguard-app/src/routes/health.ts](delayguard-app/src/routes/health.ts)):
+- `checkShipEngine`, `checkSendGrid`, `checkTwilio` private methods deleted. `checkExternalApis` now calls `Promise.allSettled([carrier.ping(), email.ping(), sms.ping()])` after constructing each service (with a per-service try/wrap so a missing API key surfaces as a rejected settlement rather than a 500 on `/health`).
+- `pingSettledToServiceStatus(settled, timestamp)` helper (module-scoped, exported for direct testing) maps each `PromiseSettledResult<PingResult>` back into the existing `ServiceStatus` wire shape. Each discriminant maps 1:1; a rejected settlement maps to `status: "unhealthy"` carrying the constructor error message.
+- Verified: `grep -c "fetch(" src/routes/health.ts` → 0 (one match remaining is the comment "routes never call fetch() directly").
+- **/health response body shape preserved verbatim**: same keys, same values (with the upstream 4xx/5xx case still emitting `"degraded"`), same 200-vs-503 HTTP behavior. External uptime checks and the frontend monitoring consumer continue to parse the same shape.
+
+**TDD**: 25 new tests written first, each observed RED (TS2339 "ping does not exist") then implemented:
+- **CarrierService.ping** (6 tests): happy path with the lightweight `/v1/carriers` endpoint asserted, 5s `timeout` regression guard (axios's `signal` equivalent), `degraded` on upstream non-2xx with `HTTP 500` in the error, `unhealthy` with `/timeout/i` on `ECONNABORTED`, `unhealthy` on `ECONNREFUSED` (no `response`), never-throws across non-Error rejection shapes.
+- **EmailService.ping** (7 tests): happy path with Authorization header asserted, `AbortSignal` regression guard (asserts `init.signal instanceof AbortSignal`), correct endpoint URL assertion, `degraded` on 401 (real-world: bad API key), `unhealthy` with `/timeout/i` after `jest.useFakeTimers() + advanceTimersByTimeAsync(5000)`, `unhealthy` on `fetch failed: ECONNREFUSED`, never-throws across non-Error rejection shapes.
+- **SMSService.ping** (6 tests): happy path with Twilio account fetch asserted, `accountsFactory("AC_TEST_SID")` regression guard for the correct account being probed, `degraded` on Twilio error carrying an HTTP `status` (`HTTP 401: Authentication Error`), `unhealthy` with `/timeout/i` when the Twilio call never resolves (Promise.race against the 5s timer), `unhealthy` on `ECONNREFUSED` (no `status` on the error), never-throws across non-Error rejection shapes.
+- **routes/health.ts → pingSettledToServiceStatus** (6 tests): each `PingResult` discriminant maps to the right `ServiceStatus` shape (`response_time` on success, `error` preserved on degraded/unhealthy, no `error` on healthy), rejected settlements with `Error` / plain-string / non-Error reasons all map to `status: "unhealthy"` carrying a sensible message. **No global `fetch` mock anywhere in this file** — the abstraction the wave introduces removes the need for it.
+
+**Out of scope (smallest blast radius — flagged for future waves)**:
+- 2 pre-existing lint errors carried over from Wave 1.1 (`tests/integration/database/tracking-events-schema.test.ts:2`, `tests/unit/components/HelpModal.test.tsx:162`) — untouched per the audit plan.
+- Husky pre-commit gate is still non-functional (deeper diagnosis recorded in audit plan Wave 1.1) — not bypassed, just doesn't fire.
+- `TrackingEvent` interface declared twice in [delayguard-app/src/types/index.ts](delayguard-app/src/types/index.ts) (lines 22 and 148) with conflicting shapes — surfaced during Wave 2.2, still deferred to Wave 3.
+- Broader Wave 4 sibling-test gap: `email-service.ts` and `sms-service.ts` still lack full sibling tests for the `sendDelayEmail` / `sendDelaySMS` paths. The new test files cover **only** `ping()` per the wave's scope discipline; the broader gap remains tracked for Wave 4.
+- Found while extracting: `npm run lint:fix` runs a project-local script ([scripts/lint-fix.js](delayguard-app/scripts/lint-fix.js)) that invokes `npx prettier --write src/**/*.{ts,tsx,js,jsx}`. Prettier's defaults and the project's ESLint `space-before-function-paren: never` rule disagree, so running `lint:fix` reformats ~40 source files and introduces ~190 new lint errors. Worked around by using `npx eslint --fix <files>` directly on the two new test files instead. Tracked separately as an audit item (the lint:fix script is unsafe to invoke; the husky gate that would have prevented it from landing is non-functional per Wave 1.1).
+
+---
 
 ### v1.39 (2026-05-14): Audit Wave 2.2 — webhook persistence services extraction
 

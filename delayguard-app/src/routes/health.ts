@@ -9,6 +9,10 @@ import { Context } from "koa";
 import envValidator from "../config/environment";
 import { setupDatabase, getDatabaseClient } from "../database/connection";
 import { createRedisConnection } from "../services/redis-connection";
+import { CarrierService } from "../services/carrier-service";
+import { EmailService } from "../services/email-service";
+import { SMSService } from "../services/sms-service";
+import { PingResult } from "../services/ping-result";
 
 interface HealthStatus {
   status: "healthy" | "degraded" | "unhealthy";
@@ -37,6 +41,50 @@ interface ServiceStatus {
   response_time?: number;
   error?: string;
   last_check: string;
+}
+
+/**
+ * Map a settled service ping() into the /health response's ServiceStatus shape.
+ *
+ * Wire contract: the existing { status, response_time?, error?, last_check }
+ * shape is preserved. Each ping() PingResult discriminant maps 1:1 onto the
+ * three status values, so the response body and 200-vs-503 HTTP behaviour
+ * stay identical to the pre-Wave-2.3 implementation.
+ *
+ * Promise.allSettled rejection is only possible here when the service
+ * constructor itself threw (e.g. missing API key) — ping() never throws.
+ */
+export function pingSettledToServiceStatus(
+  settled: PromiseSettledResult<PingResult>,
+  timestamp: string,
+): ServiceStatus {
+  if (settled.status === "rejected") {
+    const reason = settled.reason;
+    return {
+      status: "unhealthy",
+      error:
+        reason instanceof Error
+          ? reason.message
+          : typeof reason === "string"
+            ? reason
+            : "Service construction failed",
+      last_check: timestamp,
+    };
+  }
+  const result = settled.value;
+  if (result.status === "healthy") {
+    return {
+      status: "healthy",
+      response_time: result.latencyMs,
+      last_check: timestamp,
+    };
+  }
+  return {
+    status: result.status,
+    response_time: result.latencyMs,
+    error: result.error,
+    last_check: timestamp,
+  };
 }
 
 class HealthChecker {
@@ -184,7 +232,10 @@ class HealthChecker {
   }
 
   /**
-   * Check external API connectivity
+   * Check external API connectivity by delegating to each service's ping().
+   * Per Wave 2.3: routes never call `fetch` directly — services own the
+   * upstream wrapper. Promise.allSettled keeps one slow vendor from blocking
+   * the others; per-call 5s budget * 3 = 15s, under the Vercel 30s cap.
    */
   private async checkExternalApis(): Promise<{
     shipengine: ServiceStatus;
@@ -192,160 +243,50 @@ class HealthChecker {
     twilio: ServiceStatus;
   }> {
     const timestamp = new Date().toISOString();
+    const carrier = this.tryConstructCarrier();
+    const email = this.tryConstructEmail();
+    const sms = this.tryConstructSms();
 
-    const [shipengine, sendgrid, twilio] = await Promise.allSettled([
-      this.checkShipEngine(),
-      this.checkSendGrid(),
-      this.checkTwilio(),
-    ]);
+    const [shipenginePing, sendgridPing, twilioPing] = await Promise.allSettled(
+      [
+        carrier instanceof Error ? Promise.reject(carrier) : carrier.ping(),
+        email instanceof Error ? Promise.reject(email) : email.ping(),
+        sms instanceof Error ? Promise.reject(sms) : sms.ping(),
+      ],
+    );
 
     return {
-      shipengine:
-        shipengine.status === "fulfilled"
-          ? shipengine.value
-          : {
-              status: "unhealthy",
-              error: shipengine.reason?.message,
-              last_check: timestamp,
-            },
-      sendgrid:
-        sendgrid.status === "fulfilled"
-          ? sendgrid.value
-          : {
-              status: "unhealthy",
-              error: sendgrid.reason?.message,
-              last_check: timestamp,
-            },
-      twilio:
-        twilio.status === "fulfilled"
-          ? twilio.value
-          : {
-              status: "unhealthy",
-              error: twilio.reason?.message,
-              last_check: timestamp,
-            },
+      shipengine: pingSettledToServiceStatus(shipenginePing, timestamp),
+      sendgrid: pingSettledToServiceStatus(sendgridPing, timestamp),
+      twilio: pingSettledToServiceStatus(twilioPing, timestamp),
     };
   }
 
-  private async checkShipEngine(): Promise<ServiceStatus> {
-    const startTime = Date.now();
-    const timestamp = new Date().toISOString();
-
+  private tryConstructCarrier(): CarrierService | Error {
     try {
-      const apiKey = envValidator.get("SHIPENGINE_API_KEY");
-      const response = await fetch(
-        "https://api.shipengine.com/v1/addresses/validate",
-        {
-          method: "POST",
-          headers: {
-            "API-Key": apiKey,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: "Test",
-            address_line1: "123 Test St",
-            city_locality: "Test City",
-            state_province: "TS",
-            postal_code: "12345",
-            country_code: "US",
-          }),
-        },
-      );
-
-      if (response.ok) {
-        return {
-          status: "healthy",
-          response_time: Date.now() - startTime,
-          last_check: timestamp,
-        };
-      } else {
-        return {
-          status: "degraded",
-          error: `HTTP ${response.status}: ${response.statusText}`,
-          last_check: timestamp,
-        };
-      }
+      return new CarrierService();
     } catch (error) {
-      return {
-        status: "unhealthy",
-        error:
-          error instanceof Error ? error.message : "Unknown ShipEngine error",
-        last_check: timestamp,
-      };
+      return error instanceof Error ? error : new Error(String(error));
     }
   }
 
-  private async checkSendGrid(): Promise<ServiceStatus> {
-    const startTime = Date.now();
-    const timestamp = new Date().toISOString();
-
+  private tryConstructEmail(): EmailService | Error {
     try {
-      const apiKey = envValidator.get("SENDGRID_API_KEY");
-      const response = await fetch("https://api.sendgrid.com/v3/user/profile", {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-        },
-      });
-
-      if (response.ok) {
-        return {
-          status: "healthy",
-          response_time: Date.now() - startTime,
-          last_check: timestamp,
-        };
-      } else {
-        return {
-          status: "degraded",
-          error: `HTTP ${response.status}: ${response.statusText}`,
-          last_check: timestamp,
-        };
-      }
+      return new EmailService(envValidator.get("SENDGRID_API_KEY"));
     } catch (error) {
-      return {
-        status: "unhealthy",
-        error:
-          error instanceof Error ? error.message : "Unknown SendGrid error",
-        last_check: timestamp,
-      };
+      return error instanceof Error ? error : new Error(String(error));
     }
   }
 
-  private async checkTwilio(): Promise<ServiceStatus> {
-    const startTime = Date.now();
-    const timestamp = new Date().toISOString();
-
+  private tryConstructSms(): SMSService | Error {
     try {
-      const accountSid = envValidator.get("TWILIO_ACCOUNT_SID");
-      const authToken = envValidator.get("TWILIO_AUTH_TOKEN");
-
-      const response = await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${accountSid}.json`,
-        {
-          headers: {
-            Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
-          },
-        },
+      return new SMSService(
+        envValidator.get("TWILIO_ACCOUNT_SID"),
+        envValidator.get("TWILIO_AUTH_TOKEN"),
+        envValidator.get("TWILIO_PHONE_NUMBER"),
       );
-
-      if (response.ok) {
-        return {
-          status: "healthy",
-          response_time: Date.now() - startTime,
-          last_check: timestamp,
-        };
-      } else {
-        return {
-          status: "degraded",
-          error: `HTTP ${response.status}: ${response.statusText}`,
-          last_check: timestamp,
-        };
-      }
     } catch (error) {
-      return {
-        status: "unhealthy",
-        error: error instanceof Error ? error.message : "Unknown Twilio error",
-        last_check: timestamp,
-      };
+      return error instanceof Error ? error : new Error(String(error));
     }
   }
 
