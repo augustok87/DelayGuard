@@ -2,12 +2,58 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 9, 2026 (v1.37 — audit Wave 1.3 shop-auth-service extraction)
+**Last Updated**: May 14, 2026 (v1.38 — audit Wave 2.1 merchant-api-service extraction)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.38 (2026-05-14): Audit Wave 2.1 — merchant-api-service extraction
+
+**Test Results**: 1,853 passing (+33), 25 skipped, 0 failing. New `src/services/merchant-api-service.test.ts` adds 33 sibling tests for the extracted service.
+**Status**: Service-layer compliance fix per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 2.1.
+
+**Problem**: [delayguard-app/src/routes/api.ts](delayguard-app/src/routes/api.ts) had 13 inline `query(...)` calls across 7 endpoints (`/alerts`, `/orders`, `/settings` GET+PUT, `/analytics`, `/shop`, `/merchant-settings` GET+PUT). Per [.claude/rules/backend.md](.claude/rules/backend.md), DB queries belong in services, not route handlers. The `SELECT id FROM shops WHERE shop_domain = $1` lookup was duplicated 5× across handlers, and the 404-vs-500 contract on shop-not-found was inconsistent (some endpoints returned 200-empty, some silent 200 no-op on writes, some 404). Phase 2 will add more endpoints; doing this now keeps the eventual cleanup cost linear.
+
+**What Changed**:
+
+**1. New service** ([delayguard-app/src/services/merchant-api-service.ts](delayguard-app/src/services/merchant-api-service.ts), 563 LOC):
+- `getAlerts`, `getOrders`, `getSettings`, `updateSettings`, `getAnalytics`, `getShop`, `getMerchantSettings`, `updateMerchantSettings` — one method per route handler. All take `shopDomain` first per the audit spec; route params (limit) and bodies (settings input) follow.
+- Private `resolveShopId(shopDomain)` helper centralises the previously-duplicated lookup. Every method that touches a non-`shops` table calls it once at the top.
+- **Error model**: `ShopNotFoundError` (typed, carries `shopDomain`) → routes map to **404 everywhere**, replacing today's inconsistent mix. `MerchantApiValidationError` (carries `code`) → routes map to 400 with the original `INVALID_THRESHOLD` / `INVALID_EMAIL` / `INVALID_PHONE` codes the frontend already knows. Other errors bubble to the route's 500 path.
+- **Boundary types exported**: `AlertRow`, `OrderRow`, `AppSettingsRow`, `AlertStats`, `OrderStats`, `AnalyticsSummary`, `ShopInfo`, `MerchantSettings`, `UpdateSettingsInput`, `UpdateMerchantSettingsInput`. Route stops doing untyped column plucking.
+- **Wire-shape contract preserved (snake_case at the boundary)** for the historical endpoints. Reasoning documented inline in the service: [useDashboardData.ts:106-114](delayguard-app/src/components/EnhancedDashboard/hooks/useDashboardData.ts#L106-L114) explicitly destructures `total_alerts` / `pending_alerts` / `sent_alerts` / `total_orders` from `/analytics`, and the route-level tests assert snake_case response bodies. A camelCase migration is a separate, frontend-coordinated change — out of scope for Wave 2.1. `/merchant-settings` was already camelCase on the wire when introduced in Phase 2.6 — preserved.
+
+**2. Route refactored** ([delayguard-app/src/routes/api.ts](delayguard-app/src/routes/api.ts), 626 → 198 LOC):
+- Every handler is now `parse → service → respond`, well under 20 lines each. Verified via `grep -n "query(" src/routes/api.ts` → zero matches.
+- Shared `respondWithServiceError(ctx, error, fallbackMessage)` helper translates `ShopNotFoundError` → 404 and `MerchantApiValidationError` → 400; everything else logs + 500.
+
+**3. Existing route tests updated** ([delayguard-app/src/tests/unit/routes/api-routes.test.ts](delayguard-app/src/tests/unit/routes/api-routes.test.ts)):
+- Added `mockResolveShopId()` helper to mirror the new `SELECT id FROM shops` call the service issues at the top of each handler.
+- Switched `jest.clearAllMocks()` to `mockQuery.mockReset()` in `beforeEach` so queued `mockResolvedValueOnce` entries don't bleed between tests (`clearAllMocks` keeps the queue alive — this surfaced as cross-test failures after the resolveShopId call shifted consumption counts).
+- `/api/orders` mock-call assertions updated from `[testShop, limit]` to `[mockShopData.id, limit]` — the multi-tenant guard now scopes on the resolved `shop_id`, not the shop domain.
+
+**TDD**: 33 sibling tests written first, observed RED (module-not-found), then implemented:
+- *resolveShopId* (implicit): single-param lookup shape, `ShopNotFoundError` carrying `shopDomain`, DB-failure propagation.
+- *getAlerts / getOrders / getAnalytics*: happy path with multi-tenant guard assertion (`WHERE o.shop_id = $1` filter present), empty-array, DB-failure propagation.
+- *getSettings*: existing-row path, default-seed path with explicit param-array assertion against the seed INSERT.
+- *updateSettings*: full + partial UPDATE shape with v1.19 every-column param assertion, threshold validation rejects (<1, >30, non-numeric), `ShopNotFoundError` before-UPDATE, DB failure.
+- *getShop*: snake_case ShopInfo, `ShopNotFoundError`, DB failure.
+- *getMerchantSettings*: camelCase boundary contract (asserts no `merchant_email` / `warehouse_delays_enabled` keys leak), default-TRUE toggles when app_settings missing, `ShopNotFoundError`.
+- *updateMerchantSettings*: v1.19 every-column param assertions for both the shops UPDATE and the app_settings UPDATE, INVALID_EMAIL / INVALID_PHONE validation before DB, shop-vs-toggles selective UPDATE branches, no-op when neither group provided, DB failure.
+
+**v1.19 field-population rule applied**: every UPDATE/INSERT method has an explicit `expect(params).toEqual([...everyColumn])` assertion against the SQL parameter array. Covers `updateSettings`, `updateMerchantSettings` (both branches), and the `getSettings` defaults INSERT.
+
+**Frontend consumer audit**: `rg "/api/(alerts|orders|settings|analytics|shop|merchant-settings)" src/components src/utils src/services` turned up two non-test files: [api-client.ts](delayguard-app/src/utils/api-client.ts) (pass-through wrapper) and [useDashboardData.ts](delayguard-app/src/components/EnhancedDashboard/hooks/useDashboardData.ts) (the analytics destructure). Wire-shape change avoided — see service header note above. **No frontend files updated.**
+
+**Out of scope (smallest blast radius — flagged for future waves)**:
+- 2 pre-existing lint errors carried over from Wave 1.1 (`tests/integration/database/tracking-events-schema.test.ts:2`, `tests/unit/components/HelpModal.test.tsx:162`) — untouched per the audit plan.
+- Husky pre-commit gate is still non-functional (deeper diagnosis recorded in audit plan Wave 1.1) — not bypassed.
+- Wave 2.2 (webhooks.ts persistence services), 2.3 (health-check `ping()` methods), Wave 3 (`any` cleanup including `optimized-database.ts` and `monitoring-service.ts`), Wave 7 (`analytics-service.ts` vs `AnalyticsService.ts` duplicate, tripped over while extracting `/analytics` but deliberately left). Each is gated on this finishing.
+- Boundary-wide camelCase migration. Latent: frontend types (`AppSettings`, `Order`, `DelayAlert`) are already camelCase but the API still returns snake_case — a real type-lie at the boundary. Worth its own cohesive PR that updates `useDashboardData.ts`, `api-client.ts` typing, the `api-routes.test.ts` body assertions, and any other consumers in lockstep.
+
+---
 
 ### v1.37 (2026-05-09): Audit Wave 1.3 — shop-auth-service extraction
 

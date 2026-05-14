@@ -31,9 +31,18 @@ describe('API Routes', () => {
     shop_name: 'Test Store',
   };
 
-  // Helper to mock authentication
+  // Helper: queue the SELECT id, access_token, scope, shop_name shape that
+  // requireAuth performs to validate the JWT-bearing request.
   const mockAuth = () => {
     mockQuery.mockResolvedValueOnce([mockShopData]);
+  };
+
+  // Helper: queue the SELECT id FROM shops WHERE shop_domain = $1 lookup
+  // that MerchantApiService.resolveShopId issues at the top of every
+  // /alerts, /orders, /settings, /analytics, /merchant-settings handler.
+  // (GET /api/shop does NOT use this — it queries shops directly.)
+  const mockResolveShopId = () => {
+    mockQuery.mockResolvedValueOnce([{ id: mockShopData.id }]);
   };
   
   beforeAll(() => {
@@ -65,8 +74,11 @@ describe('API Routes', () => {
       'test-secret',
     );
 
-    // Reset mocks
+    // Reset mocks. mockReset (not mockClear) is required so leftover
+    // mockResolvedValueOnce entries from a prior test don't bleed into
+    // the next — they otherwise survive jest.clearAllMocks().
     jest.clearAllMocks();
+    mockQuery.mockReset();
   });
 
   describe('GET /api/alerts', () => {
@@ -84,8 +96,9 @@ describe('API Routes', () => {
         },
       ];
 
-      mockAuth(); // Mock authentication
-      mockQuery.mockResolvedValueOnce(mockAlerts); // Mock alerts query
+      mockAuth(); // requireAuth middleware lookup
+      mockResolveShopId(); // service.resolveShopId
+      mockQuery.mockResolvedValueOnce(mockAlerts); // alerts query
 
       const response = await request(app.callback())
         .get('/api/alerts')
@@ -110,6 +123,7 @@ describe('API Routes', () => {
 
     it('should handle database errors gracefully', async() => {
       mockAuth();
+      mockResolveShopId();
       mockQuery.mockRejectedValueOnce(new Error('Database error'));
 
       const response = await request(app.callback())
@@ -124,6 +138,7 @@ describe('API Routes', () => {
 
     it('should return empty array when no alerts found', async() => {
       mockAuth();
+      mockResolveShopId();
       mockQuery.mockResolvedValueOnce([]);
 
       const response = await request(app.callback())
@@ -152,6 +167,7 @@ describe('API Routes', () => {
       ];
 
       mockAuth();
+      mockResolveShopId();
       mockQuery.mockResolvedValueOnce(mockOrders);
 
       const response = await request(app.callback())
@@ -168,6 +184,7 @@ describe('API Routes', () => {
 
     it('should respect limit query parameter', async() => {
       mockAuth();
+      mockResolveShopId();
       mockQuery.mockResolvedValueOnce([]);
 
       await request(app.callback())
@@ -175,14 +192,17 @@ describe('API Routes', () => {
         .set('Authorization', `Bearer ${testToken}`)
         .expect(200);
 
+      // Multi-tenant guard: the orders query is scoped by the resolved
+      // shop_id, not the shop domain (resolveShopId already translated).
       expect(mockQuery).toHaveBeenCalledWith(
         expect.any(String),
-        [testShop, 10],
+        [mockShopData.id, 10],
       );
     });
 
     it('should use default limit when not provided', async() => {
       mockAuth();
+      mockResolveShopId();
       mockQuery.mockResolvedValueOnce([]);
 
       await request(app.callback())
@@ -192,7 +212,7 @@ describe('API Routes', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.any(String),
-        [testShop, 50], // Default limit
+        [mockShopData.id, 50], // Default limit
       );
     });
   });
@@ -209,6 +229,7 @@ describe('API Routes', () => {
       };
 
       mockAuth();
+      mockResolveShopId();
       mockQuery.mockResolvedValueOnce([mockSettings]);
 
       const response = await request(app.callback())
@@ -224,9 +245,10 @@ describe('API Routes', () => {
 
     it('should create default settings if none exist', async() => {
       mockAuth();
-      // First query returns empty (no settings)
+      mockResolveShopId();
+      // Settings SELECT returns empty (no row yet)
       mockQuery.mockResolvedValueOnce([]);
-      // Second query creates default settings
+      // Seed INSERT (ON CONFLICT DO NOTHING)
       mockQuery.mockResolvedValueOnce([]);
 
       const response = await request(app.callback())
@@ -242,7 +264,8 @@ describe('API Routes', () => {
         custom_message: null,
       });
 
-      expect(mockQuery).toHaveBeenCalledTimes(3); // Auth + 2 settings queries
+      // Auth (1) + resolveShopId (2) + SELECT (3) + seed INSERT (4)
+      expect(mockQuery).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -256,6 +279,7 @@ describe('API Routes', () => {
       };
 
       mockAuth();
+      mockResolveShopId();
       mockQuery.mockResolvedValueOnce([]);
 
       const response = await request(app.callback())
@@ -276,6 +300,7 @@ describe('API Routes', () => {
       };
 
       mockAuth();
+      mockResolveShopId();
       mockQuery.mockResolvedValueOnce([]);
 
       const response = await request(app.callback())
@@ -327,6 +352,7 @@ describe('API Routes', () => {
       };
 
       mockAuth();
+      mockResolveShopId();
       mockQuery
         .mockResolvedValueOnce([mockAlertStats])
         .mockResolvedValueOnce([mockOrderStats]);
@@ -347,6 +373,7 @@ describe('API Routes', () => {
 
     it('should handle missing data gracefully', async() => {
       mockAuth();
+      mockResolveShopId();
       mockQuery
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([]);

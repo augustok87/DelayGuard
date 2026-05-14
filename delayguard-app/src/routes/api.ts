@@ -1,612 +1,184 @@
 import Router from "koa-router";
 import { Context } from "koa";
 import { logger } from "../utils/logger";
-import { query } from "../database/connection";
 import { requireAuth, getShopDomain } from "../middleware/shopify-session";
+import {
+  MerchantApiService,
+  ShopNotFoundError,
+  MerchantApiValidationError,
+} from "../services/merchant-api-service";
 
 const router = new Router({ prefix: "/api" });
+const merchantApi = new MerchantApiService();
+
+/**
+ * Map a service-layer error onto the appropriate HTTP response.
+ * - ShopNotFoundError       → 404
+ * - MerchantApiValidationError → 400 with the original code
+ * - everything else         → 500 (caller logs at the route)
+ */
+function respondWithServiceError(
+  ctx: Context,
+  error: unknown,
+  fallbackMessage: string,
+): void {
+  if (error instanceof ShopNotFoundError) {
+    logger.warn("Shop not found in database", { shop: error.shopDomain });
+    ctx.status = 404;
+    ctx.body = { error: "Shop not found" };
+    return;
+  }
+  if (error instanceof MerchantApiValidationError) {
+    ctx.status = 400;
+    ctx.body = { error: error.message, code: error.code };
+    return;
+  }
+  logger.error(
+    fallbackMessage,
+    error instanceof Error ? error : new Error(String(error)),
+    { shop: ctx.state.shop },
+  );
+  ctx.status = 500;
+  ctx.body = { error: fallbackMessage };
+}
 
 /**
  * GET /api/alerts
  * Get all delay alerts for authenticated shop
- *
- * @returns Array of delay alerts with order information
  */
 router.get("/alerts", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-
-    logger.debug("Fetching alerts for shop", { shop: shopDomain });
-
-    // Query database for shop's alerts with order details
-    const alerts = await query(
-      `
-      SELECT 
-        da.id,
-        da.order_id,
-        da.status,
-        da.delay_reason,
-        da.estimated_delay_days,
-        da.notification_sent_at,
-        da.created_at,
-        da.updated_at,
-        o.order_number,
-        o.customer_email,
-        o.customer_name,
-        o.total_price,
-        o.created_at as order_created_at
-      FROM delay_alerts da
-      JOIN orders o ON da.order_id = o.id
-      JOIN shops s ON o.shop_id = s.id
-      WHERE s.shop_domain = $1
-      ORDER BY da.created_at DESC
-      LIMIT 100
-      `,
-      [shopDomain],
-    );
-
-    logger.debug("Fetched alerts", { shop: shopDomain, count: alerts.length });
-
+    const alerts = await merchantApi.getAlerts(shopDomain);
     ctx.status = 200;
-    ctx.body = {
-      success: true,
-      data: alerts,
-      count: alerts.length,
-    };
+    ctx.body = { success: true, data: alerts, count: alerts.length };
   } catch (error) {
-    logger.error("Error fetching alerts", error as Error, {
-      shop: ctx.state.shop,
-    });
-    ctx.status = 500;
-    ctx.body = { error: "Failed to fetch alerts" };
+    respondWithServiceError(ctx, error, "Failed to fetch alerts");
   }
 });
 
 /**
  * GET /api/orders
  * Get recent orders for authenticated shop
- *
  * @query limit - Number of orders to return (default: 50, max: 200)
- * @returns Array of orders with alert counts
  */
 router.get("/orders", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
     const limit = Math.min(parseInt(ctx.query.limit as string) || 50, 200);
-
-    logger.debug("Fetching orders for shop", {
-      shop: shopDomain,
-      limit,
-    });
-
-    const orders = await query(
-      `
-      SELECT 
-        o.id,
-        o.shopify_order_id,
-        o.order_number,
-        o.customer_email,
-        o.customer_name,
-        o.total_price,
-        o.financial_status,
-        o.fulfillment_status,
-        o.created_at,
-        o.updated_at,
-        COUNT(da.id) as alert_count,
-        MAX(da.created_at) as last_alert_at
-      FROM orders o
-      LEFT JOIN delay_alerts da ON da.order_id = o.id
-      JOIN shops s ON o.shop_id = s.id
-      WHERE s.shop_domain = $1
-      GROUP BY o.id
-      ORDER BY o.created_at DESC
-      LIMIT $2
-      `,
-      [shopDomain, limit],
-    );
-
-    logger.debug("Fetched orders", {
-      shop: shopDomain,
-      count: orders.length,
-    });
-
+    const orders = await merchantApi.getOrders(shopDomain, limit);
     ctx.status = 200;
-    ctx.body = {
-      success: true,
-      data: orders,
-      count: orders.length,
-    };
+    ctx.body = { success: true, data: orders, count: orders.length };
   } catch (error) {
-    logger.error("Error fetching orders", error as Error, {
-      shop: ctx.state.shop,
-    });
-    ctx.status = 500;
-    ctx.body = { error: "Failed to fetch orders" };
+    respondWithServiceError(ctx, error, "Failed to fetch orders");
   }
 });
 
 /**
  * GET /api/settings
- * Get app settings for authenticated shop
- * Creates default settings if none exist
- *
- * @returns Shop's app settings
+ * Get app settings for authenticated shop (seeds defaults on first read)
  */
 router.get("/settings", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-
-    logger.debug("Fetching settings for shop", { shop: shopDomain });
-
-    const settings = await query(
-      `
-      SELECT 
-        s.delay_threshold_days,
-        s.email_enabled,
-        s.sms_enabled,
-        s.notification_template,
-        s.custom_message,
-        s.created_at,
-        s.updated_at
-      FROM app_settings s
-      JOIN shops sh ON s.shop_id = sh.id
-      WHERE sh.shop_domain = $1
-      `,
-      [shopDomain],
-    );
-
-    // If no settings exist, create default settings
-    if (settings.length === 0) {
-      logger.info("Creating default settings for shop", { shop: shopDomain });
-
-      await query(
-        `
-        INSERT INTO app_settings (
-          shop_id, 
-          delay_threshold_days, 
-          email_enabled, 
-          sms_enabled,
-          notification_template
-        )
-        SELECT 
-          id, 
-          2, 
-          true, 
-          false,
-          'default'
-        FROM shops
-        WHERE shop_domain = $1
-        ON CONFLICT (shop_id) DO NOTHING
-        `,
-        [shopDomain],
-      );
-
-      // Return default settings
-      ctx.status = 200;
-      ctx.body = {
-        success: true,
-        data: {
-          delay_threshold_days: 2,
-          email_enabled: true,
-          sms_enabled: false,
-          notification_template: "default",
-          custom_message: null,
-        },
-      };
-      return;
-    }
-
-    logger.debug("Fetched settings", { shop: shopDomain });
-
+    const settings = await merchantApi.getSettings(shopDomain);
     ctx.status = 200;
-    ctx.body = {
-      success: true,
-      data: settings[0],
-    };
+    ctx.body = { success: true, data: settings };
   } catch (error) {
-    logger.error("Error fetching settings", error as Error, {
-      shop: ctx.state.shop,
-    });
-    ctx.status = 500;
-    ctx.body = { error: "Failed to fetch settings" };
+    respondWithServiceError(ctx, error, "Failed to fetch settings");
   }
 });
 
 /**
  * PUT /api/settings
- * Update app settings for authenticated shop
- * Supports partial updates (only provided fields are updated)
- *
- * @body delay_threshold_days - Number of days before sending delay alert
- * @body email_enabled - Enable email notifications
- * @body sms_enabled - Enable SMS notifications
- * @body notification_template - Template name for notifications
- * @body custom_message - Custom message for notifications
+ * Update app settings for authenticated shop (partial updates supported)
  */
 router.put("/settings", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-    const {
-      delay_threshold_days,
-      email_enabled,
-      sms_enabled,
-      notification_template,
-      custom_message,
-    } = ctx.request.body as Record<string, unknown>;
-
-    logger.debug("Updating settings for shop", {
-      shop: shopDomain,
-      settings: ctx.request.body,
+    const body = ctx.request.body as Record<string, unknown>;
+    await merchantApi.updateSettings(shopDomain, {
+      delay_threshold_days: body.delay_threshold_days as number | undefined,
+      email_enabled: body.email_enabled as boolean | undefined,
+      sms_enabled: body.sms_enabled as boolean | undefined,
+      notification_template: body.notification_template as string | undefined,
+      custom_message: body.custom_message as string | null | undefined,
     });
-
-    // Validate input
-    if (delay_threshold_days !== undefined) {
-      const threshold = Number(delay_threshold_days);
-      if (isNaN(threshold) || threshold < 1 || threshold > 30) {
-        ctx.status = 400;
-        ctx.body = {
-          error: "delay_threshold_days must be between 1 and 30",
-          code: "INVALID_THRESHOLD",
-        };
-        return;
-      }
-    }
-
-    // Update settings (COALESCE keeps existing value if new value is null)
-    await query(
-      `
-      UPDATE app_settings
-      SET 
-        delay_threshold_days = COALESCE($1, delay_threshold_days),
-        email_enabled = COALESCE($2, email_enabled),
-        sms_enabled = COALESCE($3, sms_enabled),
-        notification_template = COALESCE($4, notification_template),
-        custom_message = COALESCE($5, custom_message),
-        updated_at = CURRENT_TIMESTAMP
-      WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $6)
-      `,
-      [
-        delay_threshold_days,
-        email_enabled,
-        sms_enabled,
-        notification_template,
-        custom_message,
-        shopDomain,
-      ],
-    );
-
-    logger.info("Settings updated successfully", { shop: shopDomain });
-
     ctx.status = 200;
-    ctx.body = {
-      success: true,
-      message: "Settings updated successfully",
-    };
+    ctx.body = { success: true, message: "Settings updated successfully" };
   } catch (error) {
-    logger.error("Error updating settings", error as Error, {
-      shop: ctx.state.shop,
-    });
-    ctx.status = 500;
-    ctx.body = { error: "Failed to update settings" };
+    respondWithServiceError(ctx, error, "Failed to update settings");
   }
 });
 
 /**
  * GET /api/analytics
  * Get analytics and statistics for authenticated shop
- *
- * @returns Analytics data including alert stats and order stats
  */
 router.get("/analytics", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-
-    logger.debug("Fetching analytics for shop", { shop: shopDomain });
-
-    // Get alert statistics
-    const alertStats = await query(
-      `
-      SELECT 
-        COUNT(*) as total_alerts,
-        COUNT(CASE WHEN status = 'sent' THEN 1 END) as sent_alerts,
-        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_alerts,
-        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_alerts,
-        COUNT(CASE WHEN created_at >= NOW() - INTERVAL '30 days' THEN 1 END) as alerts_last_30_days,
-        COUNT(CASE WHEN created_at >= NOW() - INTERVAL '7 days' THEN 1 END) as alerts_last_7_days
-      FROM delay_alerts da
-      JOIN orders o ON da.order_id = o.id
-      JOIN shops s ON o.shop_id = s.id
-      WHERE s.shop_domain = $1
-      `,
-      [shopDomain],
-    );
-
-    // Get order statistics
-    const orderStats = await query(
-      `
-      SELECT 
-        COUNT(*) as total_orders,
-        COUNT(CASE WHEN created_at >= NOW() - INTERVAL '30 days' THEN 1 END) as orders_last_30_days,
-        COUNT(CASE WHEN created_at >= NOW() - INTERVAL '7 days' THEN 1 END) as orders_last_7_days,
-        AVG(total_price::numeric) as average_order_value
-      FROM orders o
-      JOIN shops s ON o.shop_id = s.id
-      WHERE s.shop_domain = $1
-      `,
-      [shopDomain],
-    );
-
-    logger.debug("Fetched analytics", { shop: shopDomain });
-
+    const data = await merchantApi.getAnalytics(shopDomain);
     ctx.status = 200;
-    ctx.body = {
-      success: true,
-      data: {
-        alerts: alertStats[0] || {},
-        orders: orderStats[0] || {},
-      },
-    };
+    ctx.body = { success: true, data };
   } catch (error) {
-    logger.error("Error fetching analytics", error as Error, {
-      shop: ctx.state.shop,
-    });
-    ctx.status = 500;
-    ctx.body = { error: "Failed to fetch analytics" };
+    respondWithServiceError(ctx, error, "Failed to fetch analytics");
   }
 });
 
 /**
  * GET /api/shop
  * Get current shop information
- *
- * @returns Shop details
  */
 router.get("/shop", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-
-    logger.debug("Fetching shop information", { shop: shopDomain });
-
-    const shop = await query(
-      `
-      SELECT 
-        shop_domain,
-        shopify_shop_id,
-        shop_name,
-        email,
-        plan_name,
-        created_at,
-        updated_at
-      FROM shops
-      WHERE shop_domain = $1
-      `,
-      [shopDomain],
-    );
-
-    if (shop.length === 0) {
-      logger.warn("Shop not found in database", { shop: shopDomain });
-      ctx.status = 404;
-      ctx.body = { error: "Shop not found" };
-      return;
-    }
-
-    logger.debug("Fetched shop information", { shop: shopDomain });
-
+    const shop = await merchantApi.getShop(shopDomain);
     ctx.status = 200;
-    ctx.body = {
-      success: true,
-      data: shop[0],
-    };
+    ctx.body = { success: true, data: shop };
   } catch (error) {
-    logger.error("Error fetching shop", error as Error, {
-      shop: ctx.state.shop,
-    });
-    ctx.status = 500;
-    ctx.body = { error: "Failed to fetch shop" };
+    respondWithServiceError(ctx, error, "Failed to fetch shop");
   }
 });
 
 /**
  * GET /api/merchant-settings
  * Get merchant contact information and delay type toggles (Phase 2.6)
- *
- * @returns Merchant contact fields and enable/disable toggles
  */
 router.get("/merchant-settings", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-
-    logger.debug("Fetching merchant settings for shop", { shop: shopDomain });
-
-    // Fetch merchant contact fields from shops table
-    const shopResult = await query(
-      `
-      SELECT
-        merchant_email,
-        merchant_phone,
-        merchant_name
-      FROM shops
-      WHERE shop_domain = $1
-      `,
-      [shopDomain],
-    );
-
-    if (shopResult.length === 0) {
-      logger.warn("Shop not found in database", { shop: shopDomain });
-      ctx.status = 404;
-      ctx.body = { error: "Shop not found" };
-      return;
-    }
-
-    const shop = shopResult[0] as {
-      merchant_email: string | null;
-      merchant_phone: string | null;
-      merchant_name: string | null;
-    };
-
-    // Fetch delay type toggles from app_settings table
-    const settingsResult = await query(
-      `
-      SELECT
-        warehouse_delays_enabled,
-        carrier_delays_enabled,
-        transit_delays_enabled
-      FROM app_settings
-      WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $1)
-      `,
-      [shopDomain],
-    );
-
-    // Default to TRUE if app_settings not initialized (matches schema DEFAULT values)
-    const settings = settingsResult.length > 0 ? (settingsResult[0] as {
-      warehouse_delays_enabled: boolean;
-      carrier_delays_enabled: boolean;
-      transit_delays_enabled: boolean;
-    }) : {
-      warehouse_delays_enabled: true,
-      carrier_delays_enabled: true,
-      transit_delays_enabled: true,
-    };
-
-    logger.debug("Fetched merchant settings", { shop: shopDomain });
-
+    const data = await merchantApi.getMerchantSettings(shopDomain);
     ctx.status = 200;
-    ctx.body = {
-      success: true,
-      data: {
-        merchantEmail: shop.merchant_email,
-        merchantPhone: shop.merchant_phone,
-        merchantName: shop.merchant_name,
-        warehouseDelaysEnabled: settings.warehouse_delays_enabled,
-        carrierDelaysEnabled: settings.carrier_delays_enabled,
-        transitDelaysEnabled: settings.transit_delays_enabled,
-      },
-    };
+    ctx.body = { success: true, data };
   } catch (error) {
-    logger.error("Error fetching merchant settings", error as Error, {
-      shop: ctx.state.shop,
-    });
-    ctx.status = 500;
-    ctx.body = { error: "Failed to fetch merchant settings" };
+    respondWithServiceError(ctx, error, "Failed to fetch merchant settings");
   }
 });
 
 /**
  * PUT /api/merchant-settings
  * Update merchant contact information and/or delay type toggles (Phase 2.6)
- *
- * @body merchantEmail - Merchant email address (optional)
- * @body merchantPhone - Merchant phone number (optional)
- * @body merchantName - Merchant name (optional)
- * @body warehouseDelaysEnabled - Enable/disable warehouse delay notifications (optional)
- * @body carrierDelaysEnabled - Enable/disable carrier delay notifications (optional)
- * @body transitDelaysEnabled - Enable/disable transit delay notifications (optional)
  */
 router.put("/merchant-settings", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
-    const {
-      merchantEmail,
-      merchantPhone,
-      merchantName,
-      warehouseDelaysEnabled,
-      carrierDelaysEnabled,
-      transitDelaysEnabled,
-    } = ctx.request.body as Record<string, unknown>;
-
-    logger.debug("Updating merchant settings for shop", {
-      shop: shopDomain,
-      settings: ctx.request.body,
+    const body = ctx.request.body as Record<string, unknown>;
+    await merchantApi.updateMerchantSettings(shopDomain, {
+      merchantEmail: body.merchantEmail as string | null | undefined,
+      merchantPhone: body.merchantPhone as string | null | undefined,
+      merchantName: body.merchantName as string | null | undefined,
+      warehouseDelaysEnabled: body.warehouseDelaysEnabled as boolean | undefined,
+      carrierDelaysEnabled: body.carrierDelaysEnabled as boolean | undefined,
+      transitDelaysEnabled: body.transitDelaysEnabled as boolean | undefined,
     });
-
-    // Verify shop exists
-    const shopResult = await query(
-      `SELECT id FROM shops WHERE shop_domain = $1`,
-      [shopDomain],
-    );
-
-    if (shopResult.length === 0) {
-      logger.warn("Shop not found in database", { shop: shopDomain });
-      ctx.status = 404;
-      ctx.body = { error: "Shop not found" };
-      return;
-    }
-
-    // Validate email format if provided
-    if (merchantEmail !== undefined && merchantEmail !== null && typeof merchantEmail === 'string') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(merchantEmail)) {
-        ctx.status = 400;
-        ctx.body = {
-          error: "Invalid email format",
-          code: "INVALID_EMAIL",
-        };
-        return;
-      }
-    }
-
-    // Validate phone format if provided (basic validation - at least 10 digits)
-    if (merchantPhone !== undefined && merchantPhone !== null && typeof merchantPhone === 'string') {
-      const phoneDigits = merchantPhone.replace(/\D/g, '');
-      if (phoneDigits.length < 10) {
-        ctx.status = 400;
-        ctx.body = {
-          error: "Invalid phone format - must contain at least 10 digits",
-          code: "INVALID_PHONE",
-        };
-        return;
-      }
-    }
-
-    // Update merchant contact fields in shops table (if any provided)
-    const hasMerchantContactUpdates = merchantEmail !== undefined || merchantPhone !== undefined || merchantName !== undefined;
-
-    if (hasMerchantContactUpdates) {
-      await query(
-        `
-        UPDATE shops
-        SET
-          merchant_email = COALESCE($1, merchant_email),
-          merchant_phone = COALESCE($2, merchant_phone),
-          merchant_name = COALESCE($3, merchant_name),
-          updated_at = CURRENT_TIMESTAMP
-        WHERE shop_domain = $4
-        `,
-        [merchantEmail, merchantPhone, merchantName, shopDomain],
-      );
-    }
-
-    // Update delay type toggles in app_settings table (if any provided)
-    const hasToggleUpdates = warehouseDelaysEnabled !== undefined || carrierDelaysEnabled !== undefined || transitDelaysEnabled !== undefined;
-
-    if (hasToggleUpdates) {
-      await query(
-        `
-        UPDATE app_settings
-        SET
-          warehouse_delays_enabled = COALESCE($1, warehouse_delays_enabled),
-          carrier_delays_enabled = COALESCE($2, carrier_delays_enabled),
-          transit_delays_enabled = COALESCE($3, transit_delays_enabled),
-          updated_at = CURRENT_TIMESTAMP
-        WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $4)
-        `,
-        [warehouseDelaysEnabled, carrierDelaysEnabled, transitDelaysEnabled, shopDomain],
-      );
-    }
-
-    logger.info("Merchant settings updated successfully", { shop: shopDomain });
-
     ctx.status = 200;
     ctx.body = {
       success: true,
       message: "Merchant settings updated successfully",
     };
   } catch (error) {
-    logger.error("Error updating merchant settings", error as Error, {
-      shop: ctx.state.shop,
-    });
-    ctx.status = 500;
-    ctx.body = { error: "Failed to update merchant settings" };
+    respondWithServiceError(ctx, error, "Failed to update merchant settings");
   }
 });
 
