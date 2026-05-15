@@ -2,12 +2,67 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 14, 2026 (v1.45 — audit Wave 3.2 + 3.3 typing hygiene, koa rawBody cast dropped + tracing.ts OTEL-shape types)
+**Last Updated**: May 15, 2026 (v1.46 — audit Wave 4.2 + 4.3 redis-connection + performance-monitor sibling tests, +40 tests, 1 latent reader/writer-schema bug surfaced)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.46 (2026-05-15): Audit Wave 4.2 + 4.3 — redis-connection + performance-monitor sibling tests
+
+**Test Results**: 1,965 passing (+40), 25 skipped, 0 failing. Two new sibling test files: `src/services/redis-connection.test.ts` (22 tests), `src/services/performance-monitor.test.ts` (18 tests).
+**Status**: Test-debt closure per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 4. **5 of 6 Wave 4 clusters now shipped — 1 remains** (`optimized-api.ts`, the Wave 4.4 target).
+
+**Problem**: Two real services were running unsibling-tested in production:
+
+1. **`src/services/redis-connection.ts`** (186 LOC) — owns the singleton Redis connection used by [src/routes/health.ts:216](delayguard-app/src/routes/health.ts) and [src/queue/processors/tracking-refresh.ts:38,53](delayguard-app/src/queue/processors/tracking-refresh.ts) (Wave 1.1's cron consumer). Manages URL parsing, status-gated reconnection, 5 event handlers, quit-on-shutdown. Zero direct test coverage.
+2. **`src/services/performance-monitor.ts`** (293 LOC) — invoked by [server.ts:51,215](delayguard-app/src/server.ts) on every request via the middleware at line 215. Tracks duration / success / context per operation; persists to Redis; exposes `getPerformanceMetrics` / `getRealTimeMetrics` / `clearMetrics` / `getMetricsHistory`. Zero direct test coverage.
+
+Both bundled into one wave because both share the same SDK-level-mock pattern (override the shared `__mocks__/ioredis.js` stub since it lacks `status` / `quit` / `hset` / `hgetall` / `expire`), and both are pure-Redis-consumer services that fall to the same per-file `jest.mock("ioredis", …)` factory.
+
+**What Changed**:
+
+**1. `delayguard-app/src/services/redis-connection.test.ts` — new sibling test, 22 cases.**
+
+Pattern: per-file `jest.mock("ioredis", () => mockRedisConstructor)` + `jest.mock("../config/environment", … { default: { get: mockEnvGet } })`. The shared manual mock at [delayguard-app/__mocks__/ioredis.js](delayguard-app/__mocks__/ioredis.js) lacks `status` (the source's `client.status === "ready"` gate uses this) and `quit()` (the source's shutdown path calls this), so a per-file override was necessary. Tests target `RedisConnectionManager` directly (the class export), not the module-level singleton, because the singleton is constructed at module-load time before tests can stub `envValidator.get`.
+
+Coverage:
+- **`parseRedisUrl` via constructor** (5): default localhost URL parsing, full URL with `redis://:password@host:port/db`, default port fallback, `Invalid Redis URL` wrapping, **canonical-timing-config regression guard** (pins all six retry/timeout values: `retryDelayOnFailover`, `maxRetriesPerRequest`, `lazyConnect`, `keepAlive`, `connectTimeout`, `commandTimeout`).
+- **`createConnection`** (4): no-op-on-ready, event-handler registration order assertion (connect / ready / error / close / reconnecting), `client.connect()` invocation, wrapped `Redis connection failed: <reason>` error on `connect()` rejection.
+- **`getConnection`** (3): reuse-on-ready, create-when-null, create-when-status-not-ready.
+- **`closeConnection`** (2): `quit()` + null-out + `isAvailable()` flips to false, no-op when client never created.
+- **`testConnection`** (3): `true` on `PONG`, `false` (never throws) on ping rejection, `false` when ping resolves to a non-`PONG` value.
+- **`getInfo`** (2): returns the raw `INFO` string, wrapped `Failed to get Redis info: <reason>` on info() rejection.
+- **`isAvailable`** (3): true when status === ready, false when no client, false when client exists but status is reconnecting.
+
+**2. `delayguard-app/src/services/performance-monitor.test.ts` — new sibling test, 18 cases.**
+
+Same SDK-level override pattern. The static `trackPerformance` decorator was intentionally left out — decorator wiring is exercised by its real consumers in server.ts:215, not by an isolated unit test (matches the Wave 4.1 boundary discipline of "mock at the service-method level, not the framework integration").
+
+Coverage:
+- **constructor** (1): `new Redis(config.redis.url)` regression guard.
+- **`trackRequest`** (5): v1.19-style every-field assertion on the `hset` payload (`duration`, `success`, `timestamp`, `context` — including timestamp-window check), empty-string context fallback when omitted, `success=false` propagation, `expire(key, 3600)` TTL regression guard (1-hour cache), Redis error propagation (does NOT swallow).
+- **`getPerformanceMetrics`** (6): documented return shape (8 fields including `Date`-typed timestamp), all-operations aggregation via `keys("metrics:*")`, `queueSize` sums `delay-check:waiting` + `delay-check:active` via `llen`, `processingRate` parses Redis-stored string and 0-falls-back when absent, `memoryUsage` is MB-converted from `process.memoryUsage().heapUsed` (plausible range check), **LATENT-BUG regression-lock** (see below).
+- **`getRealTimeMetrics`** (1): documented slice + `activeAlerts` parsed from Redis.
+- **`clearMetrics`** (3): single-key delete on operation argument, scan + bulk del on no-arg, no-op when scan returns zero keys.
+- **`getMetricsHistory`** (2): empty array for empty hash, empty array when entries fall outside the cutoff window (24h default).
+
+**Found-and-deferred** (smallest blast radius — flagged in CHANGELOG):
+
+- **LATENT BUG in PerformanceMonitor reader/writer schema mismatch.** `trackRequest` writes a 4-field hash (`duration` / `success` / `timestamp` / `context`), but `getOperationMetrics` and `getMetricsHistory` read **indexed** keys (`data["duration:${i}"]` / `data["success:${i}"]` / `data["timestamp:${i}"]`) that the writer never produces. Result: tracked operations never bubble through into `getPerformanceMetrics(operation)` — the reader always returns `{ averageResponseTime: 0, successRate: 100, errorRate: 0 }` regardless of what was tracked. The `LATENT BUG` test in `performance-monitor.test.ts` locks in the current observable zeros so a follow-up wave can fix the schema mismatch and the test will fail (signaling the fix is needed). Carry forward as Wave 4.x — separate from the test-coverage wave per smallest-blast-radius. (Same shape as the v1.42 v1.19 double-dispatch discovery, which was inside scope for that wave; this one is observation-only, no in-flight fix.)
+- 30 `any` warnings in `api-client.ts` remain — Wave 3.4 target.
+- 1 file-level `eslint-disable @typescript-eslint/no-explicit-any` at [performance-monitor.ts:1](delayguard-app/src/services/performance-monitor.ts) — 3 `any`s remain in the file (`context?: any` parameter on `trackRequest`, `target: any` + `this: any` on the static decorator). Would be cleaned in a Wave 3.x follow-up that types the decorator helper. Smallest blast radius — out of scope here.
+- 2 pre-existing lint errors carried since Wave 1.1 — untouched per the audit plan.
+
+**Verification**:
+- `npm run type-check` → clean.
+- `npm test` → 1,965 passing (+40), 25 skipped, 0 failing.
+- Targeted: `npx jest src/services/redis-connection.test.ts` → 22/22 passing. `npx jest src/services/performance-monitor.test.ts` → 18/18 passing.
+- `npx eslint --fix` on the two new test files only → clean (still NOT using `npm run lint:fix` — unsafe per Wave 2.3 finding).
+- `npm run build` → webpack compiled with the same 2 pre-existing warnings as main.
+
+---
 
 ### v1.45 (2026-05-14): Audit Wave 3.2 + 3.3 — koa rawBody + tracing OTEL-shape types
 
