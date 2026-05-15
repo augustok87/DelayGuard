@@ -2,12 +2,86 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 14, 2026 (v1.44 — audit Wave 6 Lucide icon swap in ToastContainer + SettingsCard)
+**Last Updated**: May 14, 2026 (v1.45 — audit Wave 3.2 + 3.3 typing hygiene, koa rawBody cast dropped + tracing.ts OTEL-shape types)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.45 (2026-05-14): Audit Wave 3.2 + 3.3 — koa rawBody + tracing OTEL-shape types
+
+**Test Results**: 1,925 passing (no delta), 25 skipped, 0 failing. Pure typing wave — no new tests, existing 45 tracing tests + 23 sendgrid-webhook tests cover the touched surfaces.
+**Status**: TypeScript hygiene fix per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 3. **4 of 5 Wave 3 clusters now shipped** — 1 remains (`utils/api-client.ts` public surface, the Wave 3.4 target). Bundled 3.2 + 3.3 because both are typing-only, single-file changes, and the project-`any`-count snapshot reads cleaner as one wave entry.
+
+**Problem**:
+
+1. **Wave 3.2 (koa rawBody)**: [delayguard-app/src/routes/sendgrid-webhook.ts:210-211](delayguard-app/src/routes/sendgrid-webhook.ts) cast `(ctx.request as any).rawBody` to read the raw body buffer. The audit-plan recipe assumed this needed a `koa.d.ts` module augmentation, but `@types/koa-bodyparser` already declares `rawBody: string` on `Request` (verified at `node_modules/@types/koa-bodyparser/index.d.ts:16`). Every other route reads `ctx.request.rawBody` without cast — only `sendgrid-webhook.ts` carried the legacy `as any`. No augmentation needed; the cast was dead weight.
+2. **Wave 3.3 (tracing observability)**: [delayguard-app/src/observability/tracing.ts](delayguard-app/src/observability/tracing.ts) declared 18 `any` usages (the audit table said 6; actual was 18 because every parameter and return type in the mock OTEL surface was annotated `Record<string, any>` or `any`). A file-level `/* eslint-disable @typescript-eslint/no-explicit-any */` masked them. The methods are all internal-mock pass-throughs that just log — narrowing was structural, not behavioral.
+
+**What Changed**:
+
+**1. `sendgrid-webhook.ts:210-211`** — dropped the `as any` cast:
+
+```ts
+// Before:
+const rawBody =
+  (ctx.request as any).rawBody || JSON.stringify(ctx.request.body);
+
+// After:
+const rawBody = ctx.request.rawBody || JSON.stringify(ctx.request.body);
+```
+
+`ctx.request.body` is `Record<string, unknown> | string` (from `@types/koa-bodyparser`), and `ctx.request.rawBody` is already `string` per the same `.d.ts`. The `||` fallback compiles cleanly. No new `koa.d.ts` file added — the existing `@types/koa-bodyparser` augmentation is the canonical source of `rawBody` typing and adding a second augmentation would create either redundancy or conflict.
+
+**2. `tracing.ts`** — hand-rolled minimal OTEL-shape types (no `@opentelemetry/api` dep add):
+
+```ts
+type Attributes = Record<string, unknown>;
+type SpanOptions = Record<string, unknown>;
+type InstrumentOptions = Record<string, unknown>;
+
+interface Counter   { add(value: number, attributes?: Attributes): void }
+interface Histogram { record(value: number, attributes?: Attributes): void }
+interface Span      { setStatus(...); setAttributes(attributes: Attributes); end() }
+interface Tracer    { startSpan(name: string, options?: SpanOptions): Span }
+interface Meter     { createCounter(name: string, options?: InstrumentOptions): Counter; createHistogram(...): Histogram }
+```
+
+Picked hand-rolled over `import { Counter, Histogram, Attributes } from '@opentelemetry/api'` after checking `node_modules/@opentelemetry/` was empty — the package isn't installed. Adding it for a mock-only module that just logs would be more dependency-blast-radius than typing hygiene warrants. The hand-rolled shapes mirror the OTEL `@opentelemetry/api` surface 1:1 so the mock can be swapped for a real OTEL implementation later without changing call sites (the leading comment in the file documents this intent).
+
+Eighteen `any` usages replaced:
+- 4 `Record<string, any>` attribute parameters in mock-class methods (`MockSpan.setAttributes`, `MockMeter.createCounter/createHistogram` returned counters/histograms' `add`/`record` callbacks) → `Attributes`.
+- 3 `Record<string, any>` options parameters in `Tracer.startSpan` / `Meter.createCounter` / `Meter.createHistogram` → `SpanOptions` / `InstrumentOptions`.
+- 2 bare `any` return types on `createCounter` / `createHistogram` → `Counter` / `Histogram`.
+- 1 `options?: any` parameter on `createSpan` helper → `SpanOptions`.
+- 1 `data?: Record<string, any>` parameter on `traceBusinessLogic` → `Attributes`.
+- 5 `attributes?: Record<string, any>` parameters on `delayGuardMetrics.{incrementCounter, recordHistogram, updateGauge, recordApiResponseTime, updateQueueSize}` → `Attributes`. (`recordApiResponseTime` was bare `attributes?: any` — same fix.)
+- 2 inner `attributes?: Record<string, any>` parameters on `Counter.add` / `Histogram.record` lambda returns in `MockMeter` → `Attributes`.
+
+Tightening side-effect: the 10 inline `attributes as Record<string, unknown>` / `options as Record<string, unknown>` casts that fed into `logger.info(...)` calls became no-ops once the parameter type narrowed, so each `logger.info(msg, attributes)` call now passes the parameter directly — `logger.info`'s second parameter is `Record<string, unknown> | undefined`, which matches `Attributes` exactly. The casts were artifacts of the `any` typing; removing them was the type-tightening's natural consequence, not a drive-by cleanup. (Verified by `npm run type-check` — would have erred immediately if a cast had been load-bearing.)
+
+The file-level `/* eslint-disable @typescript-eslint/no-explicit-any */` (line 1 of the prior file) was removed once the `any` count hit zero.
+
+**Verification**:
+- `npm run type-check` → clean (zero errors).
+- `npm test` → 1,925 passing, 25 skipped, 0 failing (no delta — typing-only wave).
+- Targeted: `npx jest tests/unit/observability/tracing.test.ts` → 45/45 passing.
+- `npx eslint --fix` on the two touched files only → clean (still NOT using `npm run lint:fix` — unsafe per Wave 2.3 finding).
+- `npm run build` → webpack compiled with the same 2 pre-existing warnings as main.
+- Project-wide `any` count outside test code: **99 → 80 (−19)** via `rg "\bany\b" src --type ts -g '!*.test.ts' -g '!*.test.tsx' -c | awk -F: '{s+=$NF} END {print s}'`. (Wave 7's analytics-scaffolding deletion alone accounts for some of the drop; the bulk is the tracing.ts narrowing.)
+- `grep -c "\bany\b" src/observability/tracing.ts` → 0.
+- `grep -c "eslint-disable" src/observability/tracing.ts` → 0.
+
+**Consumer surface unchanged**: [src/observability/monitoring.ts](delayguard-app/src/observability/monitoring.ts) is the only non-test consumer of tracing.ts. Its call sites (`getTracer("monitoring")`, `tracer.startSpan("health.X")`, `withSpan(span, async() => ...)`, `delayGuardMetrics.updateQueueSize("delay-check", N)`) never passed attribute records to the typed parameters — narrowing `Record<string, any>` to `Record<string, unknown>` was a safe widening from the consumer's perspective.
+
+**Out of scope (smallest blast radius — flagged for future waves)**:
+- **Wave 3.4 (`utils/api-client.ts`, 7 anys + 30 lint warnings)** — the lone remaining Wave 3 cluster. Public surface; needs `ClientApplication` typing from `@shopify/app-bridge` + response shapes from `src/types/`. Targets the Pass-2 budget; deliberately not bundled into this typing wave because the public-surface tradeoffs aren't structural like the mock-tracing fix.
+- **Wave 3.5 (`shopify-service.ts`, 3+ anys, GraphQL plumbing)** — the audit suggests Zod-parse vs codegen tradeoff. Out of scope until the user greenlights the approach.
+- 2 pre-existing lint errors carried since Wave 1.1 — untouched per the audit plan.
+- Husky pre-commit gate still non-functional per Wave 1.1 diagnosis — not bypassed, just doesn't fire.
+
+---
 
 ### v1.44 (2026-05-14): Audit Wave 6 — Lucide icon swap (ToastContainer + SettingsCard)
 

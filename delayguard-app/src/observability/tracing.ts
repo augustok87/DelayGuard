@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Observability tracing with dynamic span management
 import { logger } from "../utils/logger";
 import { Context, Next } from "koa";
@@ -7,6 +6,9 @@ import { Context, Next } from "koa";
  * Simplified Tracing Configuration
  * Provides basic tracing functionality for the DelayGuard application
  * Note: Full OpenTelemetry setup is complex and requires additional configuration
+ * The interfaces below mirror @opentelemetry/api's Counter / Histogram / Attributes
+ * surface so the mock can be swapped for a real OTEL implementation without
+ * changing call sites.
  */
 
 // Service configuration
@@ -14,20 +16,33 @@ const SERVICE_NAME = "delayguard-api";
 const SERVICE_VERSION = process.env.npm_package_version || "1.0.0";
 const ENVIRONMENT = process.env.NODE_ENV || "development";
 
+// Minimal OTEL-shaped types (no @opentelemetry/api dep — would be overkill for the mock).
+type Attributes = Record<string, unknown>;
+type SpanOptions = Record<string, unknown>;
+type InstrumentOptions = Record<string, unknown>;
+
+interface Counter {
+  add(value: number, attributes?: Attributes): void;
+}
+
+interface Histogram {
+  record(value: number, attributes?: Attributes): void;
+}
+
 // Simple tracing interface
 interface Span {
   setStatus(status: { code: number; message?: string }): void;
-  setAttributes(attributes: Record<string, any>): void;
+  setAttributes(attributes: Attributes): void;
   end(): void;
 }
 
 interface Tracer {
-  startSpan(name: string, options?: Record<string, any>): Span;
+  startSpan(name: string, options?: SpanOptions): Span;
 }
 
 interface Meter {
-  createCounter(name: string, options?: Record<string, any>): any;
-  createHistogram(name: string, options?: Record<string, any>): any;
+  createCounter(name: string, options?: InstrumentOptions): Counter;
+  createHistogram(name: string, options?: InstrumentOptions): Histogram;
 }
 
 // Mock implementations for development
@@ -36,7 +51,7 @@ class MockSpan implements Span {
     logger.info(`[TRACE] Span status: ${status.code} ${status.message || ""}`);
   }
 
-  setAttributes(attributes: Record<string, any>): void {
+  setAttributes(attributes: Attributes): void {
     logger.info(`[TRACE] Span attributes:`, attributes);
   }
 
@@ -46,42 +61,27 @@ class MockSpan implements Span {
 }
 
 class MockTracer implements Tracer {
-  startSpan(name: string, options?: Record<string, any>): Span {
-    logger.info(
-      `[TRACE] Starting span: ${name}`,
-      options as Record<string, unknown>,
-    );
+  startSpan(name: string, options?: SpanOptions): Span {
+    logger.info(`[TRACE] Starting span: ${name}`, options);
     return new MockSpan();
   }
 }
 
 class MockMeter implements Meter {
-  createCounter(name: string, options?: Record<string, any>): any {
-    logger.info(
-      `[METRICS] Creating counter: ${name}`,
-      options as Record<string, unknown>,
-    );
+  createCounter(name: string, options?: InstrumentOptions): Counter {
+    logger.info(`[METRICS] Creating counter: ${name}`, options);
     return {
-      add: (value: number, attributes?: Record<string, any>) => {
-        logger.info(
-          `[METRICS] Counter ${name}: +${value}`,
-          attributes as Record<string, unknown>,
-        );
+      add: (value: number, attributes?: Attributes) => {
+        logger.info(`[METRICS] Counter ${name}: +${value}`, attributes);
       },
     };
   }
 
-  createHistogram(name: string, options?: Record<string, any>): any {
-    logger.info(
-      `[METRICS] Creating histogram: ${name}`,
-      options as Record<string, unknown>,
-    );
+  createHistogram(name: string, options?: InstrumentOptions): Histogram {
+    logger.info(`[METRICS] Creating histogram: ${name}`, options);
     return {
-      record: (value: number, attributes?: Record<string, any>) => {
-        logger.info(
-          `[METRICS] Histogram ${name}: ${value}`,
-          attributes as Record<string, unknown>,
-        );
+      record: (value: number, attributes?: Attributes) => {
+        logger.info(`[METRICS] Histogram ${name}: ${value}`, attributes);
       },
     };
   }
@@ -101,7 +101,7 @@ export const getMeter = (name: string): Meter => {
 export const createSpan = (
   tracer: Tracer,
   name: string,
-  options?: any,
+  options?: SpanOptions,
 ): Span => {
   return tracer.startSpan(name, options);
 };
@@ -191,7 +191,7 @@ export function traceDatabaseQuery(query: string, params?: unknown[]): Span {
 // Business logic tracing
 export function traceBusinessLogic(
   operation: string,
-  data?: Record<string, any>,
+  data?: Attributes,
 ): Span {
   const tracer = getTracer("business");
   const span = tracer.startSpan(operation);
@@ -211,51 +211,39 @@ export const delayGuardMetrics = {
   incrementCounter: (
     name: string,
     value: number = 1,
-    attributes?: Record<string, any>,
+    attributes?: Attributes,
   ) => {
-    logger.info(
-      `[METRICS] Counter ${name}: +${value}`,
-      attributes as Record<string, unknown>,
-    );
+    logger.info(`[METRICS] Counter ${name}: +${value}`, attributes);
   },
   recordHistogram: (
     name: string,
     value: number,
-    attributes?: Record<string, any>,
+    attributes?: Attributes,
   ) => {
-    logger.info(
-      `[METRICS] Histogram ${name}: ${value}`,
-      attributes as Record<string, unknown>,
-    );
+    logger.info(`[METRICS] Histogram ${name}: ${value}`, attributes);
   },
   updateGauge: (
     name: string,
     value: number,
-    attributes?: Record<string, any>,
+    attributes?: Attributes,
   ) => {
-    logger.info(
-      `[METRICS] Gauge ${name}: ${value}`,
-      attributes as Record<string, unknown>,
-    );
+    logger.info(`[METRICS] Gauge ${name}: ${value}`, attributes);
   },
   recordApiResponseTime: (
     endpoint: string,
     responseTime: number,
-    attributes?: any,
+    attributes?: Attributes,
   ) => {
     logger.info(
       `[METRICS] API Response Time ${endpoint}: ${responseTime}ms`,
-      attributes as Record<string, unknown>,
+      attributes,
     );
   },
   updateQueueSize: (
     queueName: string,
     size: number,
-    attributes?: Record<string, any>,
+    attributes?: Attributes,
   ) => {
-    logger.info(
-      `[METRICS] Queue Size ${queueName}: ${size}`,
-      attributes as Record<string, unknown>,
-    );
+    logger.info(`[METRICS] Queue Size ${queueName}: ${size}`, attributes);
   },
 };

@@ -207,8 +207,7 @@ export async function handleSendGridWebhook(ctx: Context): Promise<void> {
     }
 
     // Get raw body for signature verification
-    const rawBody =
-      (ctx.request as any).rawBody || JSON.stringify(ctx.request.body);
+    const rawBody = ctx.request.rawBody || JSON.stringify(ctx.request.body);
 
     // Verify webhook signature
     if (!verifyWebhookSignature(rawBody, signature, timestamp)) {
