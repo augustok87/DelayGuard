@@ -328,6 +328,56 @@ export async function runMigrations(): Promise<void> {
       )
     `);
 
+    // Phase 2.1.b (Priority Score): order total feeds the orderValue axis
+    // of calculatePriorityScore. Additive + nullable so pre-Phase-2.1.b
+    // orders stay valid; OrderUpsertService now captures webhook.total_price
+    // on every UPSERT.
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='orders' AND column_name='total_amount'
+        ) THEN
+          ALTER TABLE orders ADD COLUMN total_amount NUMERIC(12, 2);
+        END IF;
+      END $$;
+    `);
+
+    // One-shot backfill: existing orders get total_amount from the sum of
+    // their order_line_items (price * quantity). Only updates rows where
+    // total_amount IS NULL AND at least one line item is persisted. Idempotent —
+    // re-runs match nothing on subsequent boots.
+    await client.query(`
+      UPDATE orders o
+      SET total_amount = li.subtotal
+      FROM (
+        SELECT order_id, SUM(price * quantity) AS subtotal
+        FROM order_line_items
+        GROUP BY order_id
+      ) li
+      WHERE o.id = li.order_id
+        AND o.total_amount IS NULL;
+    `);
+
+    // Phase 2.1.b (Priority Score): denormalized score + level on delay_alerts.
+    // Computed at alert creation time inside the delay-check processor (see
+    // PriorityScoreService.scoreAlert) — sortable index below makes dashboard
+    // ranking cheap. Both columns nullable: legacy alerts (pre-Phase-2.1.b)
+    // stay NULL until Phase 2.2.c re-score job populates them.
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='delay_alerts' AND column_name='priority_score'
+        ) THEN
+          ALTER TABLE delay_alerts ADD COLUMN priority_score INTEGER;
+          ALTER TABLE delay_alerts ADD COLUMN priority_level VARCHAR(20);
+        END IF;
+      END $$;
+    `);
+
     // Create indexes for performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_orders_shop_id ON orders(shop_id);
@@ -342,6 +392,7 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_orders_tracking_status ON orders(tracking_status);
       CREATE INDEX IF NOT EXISTS idx_orders_shopify_customer_id ON orders(shopify_customer_id);
       CREATE INDEX IF NOT EXISTS idx_customer_intelligence_shop_segment ON customer_intelligence(shop_id, segment);
+      CREATE INDEX IF NOT EXISTS idx_delay_alerts_priority_score ON delay_alerts(order_id, priority_score DESC);
     `);
 
     logInfo("Database migrations completed", { component: "database" });

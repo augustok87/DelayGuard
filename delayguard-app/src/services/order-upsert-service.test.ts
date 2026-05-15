@@ -53,6 +53,7 @@ const baseOrderPayload = {
     phone: "+15551234567",
   },
   fulfillment_status: "fulfilled",
+  total_price: "199.99",
 };
 
 describe("OrderUpsertService", () => {
@@ -114,6 +115,7 @@ describe("OrderUpsertService", () => {
         /shopify_customer_id\s*=\s*EXCLUDED\.shopify_customer_id/i,
       );
       expect(upsertSql).toMatch(/status\s*=\s*EXCLUDED\.status/i);
+      expect(upsertSql).toMatch(/total_amount\s*=\s*EXCLUDED\.total_amount/i);
       expect(upsertSql).toMatch(/updated_at\s*=\s*CURRENT_TIMESTAMP/i);
 
       // v1.19: every persisted column appears in the params array
@@ -126,6 +128,7 @@ describe("OrderUpsertService", () => {
         "+15551234567", // customer_phone
         "5550001", // shopify_customer_id as string (Phase 2.1.a)
         "fulfilled", // status
+        199.99, // total_amount (Phase 2.1.b) — parsed from webhook string total_price
       ]);
     });
 
@@ -199,6 +202,34 @@ describe("OrderUpsertService", () => {
 
       const [, upsertParams] = mockQuery.mock.calls[1];
       expect(upsertParams?.[6]).toBeNull();
+    });
+
+    it("captures webhook.total_price as a parsed number on total_amount (Phase 2.1.b)", async() => {
+      mockShopResolved();
+      mockQuery.mockResolvedValueOnce([]);
+      mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+      await service.upsertOrderFromWebhook(SHOP, {
+        ...baseOrderPayload,
+        total_price: "459.50",
+      });
+
+      const [, upsertParams] = mockQuery.mock.calls[1];
+      expect(upsertParams?.[8]).toBe(459.5);
+    });
+
+    it("persists total_amount as null when total_price is missing", async() => {
+      mockShopResolved();
+      mockQuery.mockResolvedValueOnce([]);
+      mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+      await service.upsertOrderFromWebhook(SHOP, {
+        ...baseOrderPayload,
+        total_price: undefined,
+      });
+
+      const [, upsertParams] = mockQuery.mock.calls[1];
+      expect(upsertParams?.[8]).toBeNull();
     });
 
     it("defaults status to 'unfulfilled' when fulfillment_status is missing", async() => {

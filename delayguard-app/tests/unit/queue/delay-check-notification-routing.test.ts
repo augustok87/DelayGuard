@@ -14,12 +14,14 @@ import { addNotificationJob } from '../../../src/queue/setup';
 import * as delayDetectionService from '../../../src/services/delay-detection-service';
 import { CarrierService } from '../../../src/services/carrier-service';
 import { DelayDetectionService } from '../../../src/services/delay-detection-service';
+import { PriorityScoreService } from '../../../src/services/priority-score-service';
 
 // Mock dependencies
 jest.mock('../../../src/database/connection');
 jest.mock('../../../src/queue/setup');
 jest.mock('../../../src/services/delay-detection-service');
 jest.mock('../../../src/services/carrier-service');
+jest.mock('../../../src/services/priority-score-service');
 
 const mockQuery = query as jest.MockedFunction<typeof query>;
 const mockAddNotificationJob = addNotificationJob as jest.MockedFunction<typeof addNotificationJob>;
@@ -29,6 +31,10 @@ const mockCheckTransitDelay = delayDetectionService.checkTransitDelay as jest.Mo
 // Mock CarrierService and DelayDetectionService class methods
 const mockGetTrackingInfo = jest.fn();
 const mockCheckForDelays = jest.fn();
+// Phase 2.1.b: PriorityScoreService.scoreAlert is mocked at module level
+// so delay-check tests don't have to walk through every alert/order/CI
+// JOIN. Scoring's own coverage lives in priority-score-service.test.ts.
+const mockScoreAlert = jest.fn();
 
 // Set up class mocks
 (CarrierService as jest.MockedClass<typeof CarrierService>).mockImplementation(() => ({
@@ -39,6 +45,10 @@ const mockCheckForDelays = jest.fn();
 
 (DelayDetectionService as jest.MockedClass<typeof DelayDetectionService>).mockImplementation(() => ({
   checkForDelays: mockCheckForDelays,
+} as any));
+
+(PriorityScoreService as jest.MockedClass<typeof PriorityScoreService>).mockImplementation(() => ({
+  scoreAlert: mockScoreAlert,
 } as any));
 
 describe('Delay Check Processor - Notification Routing', () => {
@@ -56,6 +66,7 @@ describe('Delay Check Processor - Notification Routing', () => {
     });
 
     mockCheckForDelays.mockResolvedValue({ isDelayed: false });
+    mockScoreAlert.mockResolvedValue(undefined);
   });
 
   describe('Database Query - Merchant Contact Fields', () => {
@@ -241,7 +252,7 @@ describe('Delay Check Processor - Notification Routing', () => {
         delayReason: 'WAREHOUSE_DELAY',
       });
 
-      mockQuery.mockResolvedValueOnce([]); // INSERT delay_alert
+      mockQuery.mockResolvedValueOnce([{ id: 999 }]); // INSERT delay_alert RETURNING id (Phase 2.1.b)
       mockQuery.mockResolvedValueOnce([]); // UPDATE orders
 
       // Act
@@ -372,7 +383,7 @@ describe('Delay Check Processor - Notification Routing', () => {
         delayReason: 'WAREHOUSE_DELAY',
       });
 
-      mockQuery.mockResolvedValueOnce([]); // INSERT delay_alert
+      mockQuery.mockResolvedValueOnce([{ id: 999 }]); // INSERT delay_alert RETURNING id (Phase 2.1.b)
       mockQuery.mockResolvedValueOnce([]); // UPDATE orders
 
       // Act
@@ -431,7 +442,7 @@ describe('Delay Check Processor - Notification Routing', () => {
         delayReason: 'STUCK_IN_TRANSIT',
       });
 
-      mockQuery.mockResolvedValueOnce([]); // INSERT delay_alert
+      mockQuery.mockResolvedValueOnce([{ id: 999 }]); // INSERT delay_alert RETURNING id (Phase 2.1.b)
       mockQuery.mockResolvedValueOnce([]); // UPDATE orders
 
       // Act
@@ -482,7 +493,7 @@ describe('Delay Check Processor - Notification Routing', () => {
         delayReason: 'WAREHOUSE_DELAY',
       });
 
-      mockQuery.mockResolvedValueOnce([]); // INSERT delay_alert
+      mockQuery.mockResolvedValueOnce([{ id: 999 }]); // INSERT delay_alert RETURNING id (Phase 2.1.b)
       mockQuery.mockResolvedValueOnce([]); // UPDATE orders
 
       // Act
@@ -541,7 +552,7 @@ describe('Delay Check Processor - Notification Routing', () => {
         delayReason: 'STUCK_IN_TRANSIT',
       });
 
-      mockQuery.mockResolvedValueOnce([]); // INSERT delay_alert
+      mockQuery.mockResolvedValueOnce([{ id: 999 }]); // INSERT delay_alert RETURNING id (Phase 2.1.b)
       mockQuery.mockResolvedValueOnce([]); // UPDATE orders
 
       // Act
@@ -596,7 +607,7 @@ describe('Delay Check Processor - Notification Routing', () => {
         delayReason: 'WAREHOUSE_DELAY',
       });
 
-      mockQuery.mockResolvedValueOnce([]); // INSERT delay_alert
+      mockQuery.mockResolvedValueOnce([{ id: 999 }]); // INSERT delay_alert RETURNING id (Phase 2.1.b)
       mockQuery.mockResolvedValueOnce([]); // UPDATE orders
 
       // Act
@@ -648,6 +659,137 @@ describe('Delay Check Processor - Notification Routing', () => {
       expect(mockCheckWarehouseDelay).not.toHaveBeenCalled();
       expect(mockCheckTransitDelay).not.toHaveBeenCalled();
       expect(mockAddNotificationJob).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Priority Scoring Wiring (Phase 2.1.b)', () => {
+    it('calls PriorityScoreService.scoreAlert with the new alert id returned by the INSERT', async() => {
+      const mockJob = {
+        data: {
+          orderId: 1,
+          trackingNumber: '',
+          carrierCode: '',
+          shopDomain: 'test-shop.myshopify.com',
+        },
+      } as Job;
+
+      mockQuery.mockResolvedValueOnce([
+        {
+          id: '1',
+          order_number: '#1001',
+          customer_name: 'John Doe',
+          customer_email: 'john@example.com',
+          status: 'unfulfilled',
+          created_at: new Date('2025-10-25'),
+          warehouse_delay_days: 2,
+          warehouse_delays_enabled: true,
+          carrier_delays_enabled: false,
+          transit_delays_enabled: false,
+          email_enabled: true,
+        },
+      ] as any);
+
+      mockCheckWarehouseDelay.mockResolvedValue({
+        isDelayed: true,
+        delayDays: 4,
+        delayReason: 'WAREHOUSE_DELAY',
+      });
+
+      mockQuery.mockResolvedValueOnce([{ id: 4242 }]); // INSERT delay_alert RETURNING id
+      mockQuery.mockResolvedValueOnce([]); // UPDATE orders
+
+      await processDelayCheck(mockJob);
+
+      expect(mockScoreAlert).toHaveBeenCalledTimes(1);
+      expect(mockScoreAlert).toHaveBeenCalledWith(4242);
+    });
+
+    it('swallows scoring failures so notification dispatch still fires (best-effort)', async() => {
+      // If scoring threw to BullMQ, retry would re-INSERT the alert
+      // (delay_alerts has no unique constraint matching ON CONFLICT). Scoring
+      // failures MUST be best-effort; Phase 2.2.c re-score heals unscored rows.
+      const mockJob = {
+        data: {
+          orderId: 1,
+          trackingNumber: '',
+          carrierCode: '',
+          shopDomain: 'test-shop.myshopify.com',
+        },
+      } as Job;
+
+      mockQuery.mockResolvedValueOnce([
+        {
+          id: '1',
+          order_number: '#1001',
+          customer_name: 'John Doe',
+          customer_email: 'john@example.com',
+          status: 'unfulfilled',
+          created_at: new Date('2025-10-25'),
+          warehouse_delay_days: 2,
+          warehouse_delays_enabled: true,
+          carrier_delays_enabled: false,
+          transit_delays_enabled: false,
+          email_enabled: true,
+        },
+      ] as any);
+
+      mockCheckWarehouseDelay.mockResolvedValue({
+        isDelayed: true,
+        delayDays: 4,
+        delayReason: 'WAREHOUSE_DELAY',
+      });
+
+      mockQuery.mockResolvedValueOnce([{ id: 5555 }]); // INSERT delay_alert RETURNING id
+      mockQuery.mockResolvedValueOnce([]); // UPDATE orders
+      mockScoreAlert.mockRejectedValueOnce(new Error('scoring DB hiccup'));
+
+      // Must not throw — scoring failure does NOT propagate to BullMQ retry chain
+      await expect(processDelayCheck(mockJob)).resolves.toBeUndefined();
+      // Notification dispatch still fired even though scoring failed
+      expect(mockAddNotificationJob).toHaveBeenCalled();
+    });
+
+    it('skips scoring when storeDelayAlert returns no id (ON CONFLICT branch)', async() => {
+      // Defensive: if the INSERT ever finds an ON CONFLICT match (no
+      // matching unique constraint exists today, but future migrations may
+      // add one), RETURNING returns no rows. Scoring is skipped.
+      const mockJob = {
+        data: {
+          orderId: 1,
+          trackingNumber: '',
+          carrierCode: '',
+          shopDomain: 'test-shop.myshopify.com',
+        },
+      } as Job;
+
+      mockQuery.mockResolvedValueOnce([
+        {
+          id: '1',
+          order_number: '#1001',
+          customer_name: 'John Doe',
+          customer_email: 'john@example.com',
+          status: 'unfulfilled',
+          created_at: new Date('2025-10-25'),
+          warehouse_delay_days: 2,
+          warehouse_delays_enabled: true,
+          carrier_delays_enabled: false,
+          transit_delays_enabled: false,
+          email_enabled: true,
+        },
+      ] as any);
+
+      mockCheckWarehouseDelay.mockResolvedValue({
+        isDelayed: true,
+        delayDays: 4,
+        delayReason: 'WAREHOUSE_DELAY',
+      });
+
+      mockQuery.mockResolvedValueOnce([]); // INSERT delay_alert — ON CONFLICT (no row)
+      mockQuery.mockResolvedValueOnce([]); // UPDATE orders
+
+      await processDelayCheck(mockJob);
+
+      expect(mockScoreAlert).not.toHaveBeenCalled();
     });
   });
 });

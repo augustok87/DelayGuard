@@ -32,6 +32,9 @@ export interface OrderWebhookPayload {
   name: string;
   customer?: ShopifyCustomer;
   fulfillment_status?: string;
+  /** Shopify webhook serialises money as a string (e.g. "199.99"). Phase
+   * 2.1.b parses to a number for `orders.total_amount`; null on absent. */
+  total_price?: string;
 }
 
 export interface OrderUpsertResult {
@@ -44,6 +47,12 @@ function buildCustomerName(customer: ShopifyCustomer | undefined): string {
     return `${customer.first_name} ${customer.last_name}`;
   }
   return customer?.first_name || "Unknown";
+}
+
+function parseTotalPrice(value: string | undefined): number | null {
+  if (value === undefined || value === null) return null;
+  const parsed = parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 export class OrderUpsertService {
@@ -95,8 +104,9 @@ export class OrderUpsertService {
            customer_email,
            customer_phone,
            shopify_customer_id,
-           status
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           status,
+           total_amount
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          ON CONFLICT (shop_id, shopify_order_id)
          DO UPDATE SET
            order_number = EXCLUDED.order_number,
@@ -105,6 +115,7 @@ export class OrderUpsertService {
            customer_phone = EXCLUDED.customer_phone,
            shopify_customer_id = EXCLUDED.shopify_customer_id,
            status = EXCLUDED.status,
+           total_amount = EXCLUDED.total_amount,
            updated_at = CURRENT_TIMESTAMP`,
         [
           shop.id,
@@ -115,6 +126,7 @@ export class OrderUpsertService {
           orderData.customer?.phone,
           shopifyCustomerId,
           orderData.fulfillment_status || "unfulfilled",
+          parseTotalPrice(orderData.total_price),
         ],
       );
 

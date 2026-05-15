@@ -4,6 +4,7 @@ import { CarrierService } from '../../services/carrier-service';
 import { DelayDetectionService, checkWarehouseDelay, checkTransitDelay } from '../../services/delay-detection-service';
 import { query } from '../../database/connection';
 import { addNotificationJob } from '../setup';
+import { PriorityScoreService } from '../../services/priority-score-service';
 
 interface DelayCheckJobData {
   orderId: number;
@@ -196,10 +197,18 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
 
 /**
  * Store delay alert in database
- * Helper function to avoid code duplication
+ *
+ * Phase 2.1.b: also computes + persists the priority score for the new
+ * alert via PriorityScoreService.scoreAlert. Scoring is best-effort —
+ * failures are logged and swallowed so the alert still exists and the
+ * downstream notification still fires. If scoring failures propagated to
+ * BullMQ, the retry would re-INSERT a duplicate alert (delay_alerts has
+ * no unique constraint that ON CONFLICT could match — known limitation
+ * outside this slice's scope). Phase 2.2.c will introduce a re-score job
+ * triggered at the end of customer-sync.ts to heal unscored alerts.
  */
 async function storeDelayAlert(orderId: number, delayResult: { delayDays?: number; delayReason?: string; originalDelivery?: string; estimatedDelivery?: string }): Promise<void> {
-  await query(
+  const rows = await query<{ id: number }>(
     `INSERT INTO delay_alerts (
       order_id,
       delay_days,
@@ -207,7 +216,8 @@ async function storeDelayAlert(orderId: number, delayResult: { delayDays?: numbe
       original_delivery_date,
       estimated_delivery_date
     ) VALUES ($1, $2, $3, $4, $5)
-    ON CONFLICT DO NOTHING`,
+    ON CONFLICT DO NOTHING
+    RETURNING id`,
     [
       orderId,
       delayResult.delayDays || 0,
@@ -216,4 +226,20 @@ async function storeDelayAlert(orderId: number, delayResult: { delayDays?: numbe
       delayResult.estimatedDelivery,
     ],
   );
+
+  const newAlertId = rows[0]?.id;
+  if (newAlertId === undefined) return;
+
+  try {
+    const priorityScoreService = new PriorityScoreService();
+    await priorityScoreService.scoreAlert(newAlertId);
+  } catch (scoringError) {
+    logger.warn(
+      'Priority scoring failed (alert remains unscored, Phase 2.2.c re-score will heal)',
+      {
+        alertId: newAlertId,
+        error: scoringError instanceof Error ? scoringError.message : String(scoringError),
+      },
+    );
+  }
 }

@@ -2,12 +2,104 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 15, 2026 (v1.48 — Phase 2.1.a ingestion slice: customer_intelligence table + CustomerSyncService + customer-sync BullMQ processor)
+**Last Updated**: May 15, 2026 (v1.49 — Phase 2.1.b priority-score slice: 4-axis scoring at alert creation + orders.total_amount capture + delay_alerts.priority_score/level columns)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.49 (2026-05-15): Phase 2.1.b — Priority Score (second slice)
+
+**Test Results**: 2,044 passing (+45), 25 skipped, 0 failing. New coverage: 28 boundary tests in `src/services/priority-score.test.ts` (every axis cutoff inclusive, plus Q3-fallback + level-band boundaries), 12 service tests in `src/services/priority-score-service.test.ts` (lookup SQL shape, churn count SQL shape, guest-checkout shortcut, v1.19 UPDATE param assertion, Q3 fallback, null total_amount, DB-failure propagation at each step, NUMERIC string parsing), 3 wiring tests appended to `tests/unit/queue/delay-check-notification-routing.test.ts` (scoreAlert call, best-effort failure swallow, ON-CONFLICT no-id branch), +2 cases for `total_amount` capture on `services/order-upsert-service.test.ts` (now 21 cases / was 19).
+**Status**: Phase 2.1 second sub-slice (2.1.b) **SHIPPED**. Sub-slices remaining (2.1.c–2.1.f): financial breakdown, shipping address, test-alert endpoint, customer-intelligence UI surfacing.
+
+**Problem**: Phase 2.1.a shipped customer intelligence ingestion but every delay alert still ranked the same on the dashboard — no signal for "VIP customer with a high-value order who's been burned by a prior delay" versus "first-time guest checkout, small order, 1-day delay." Phase 2.1.b ships the 4-axis priority score per [IMPLEMENTATION_PLAN.md §2.2](IMPLEMENTATION_PLAN.md#L2200-L2280): orderValue (0-30) + customerValue (0-40) + churnRisk (0-20) + urgency (0-10) = 0-100 score, mapped to Critical/High/Medium/Low. Score is **written** this slice — UI surfacing (rendering / sorting / filtering by priority) is explicitly out of scope and ships in Phase 2.1.f.
+
+**Six gating decisions reverse-prompted before any code was written**:
+
+1. **Storage shape** → denormalized columns on `delay_alerts` (`priority_score INTEGER`, `priority_level VARCHAR(20)`). Computed once at alert-creation time, indexed `(order_id, priority_score DESC)` for cheap dashboard sort. The "customer's segment changes after the alert fires" scenario lands in Phase 2.2.c re-score follow-up — not a per-render JOIN cost we'd accept on every dashboard load.
+2. **Score factors** → keep the plan's 4 axes verbatim (orderValue / customerValue / churnRisk / urgency). The v1.45 delay-type split (WAREHOUSE / CARRIER / TRANSIT) signals routing, not severity — urgency-by-delay-days already captures customer-impact axis. Phase 2.2.c could add a delay_type multiplier later if telemetry justifies.
+3. **Missing-customer fallback (Q3)** → neutral 20 for customerValue when `customer_intelligence` row is missing (guest checkout OR identified-customer sync race). Reverse-prompt #1 surfaced that the prompt's assumed "Promise.all → sequential await" cannot make `notification.ts` wait on customer-sync — they run on independent BullMQ workers on independent queues. Decision: accept the race for this slice, score with neutral fallback, add Phase 2.2.c re-score job at the end of customer-sync.ts to heal stale scores async.
+4. **Backfill** → migration adds columns + an `orders.total_amount` backfill from `SUM(price * quantity) FROM order_line_items`, but **no SQL backfill of `delay_alerts.priority_score`**. Legacy alert rows stay NULL until Phase 2.2.c re-score populates them — a 40-line CASE-WHEN that duplicates the pure-fn in SQL is not worth the maintenance burden. Score quality for legacy rows would have been low anyway (Q3 fallback applies universally — pre-Phase-2.1.a orders predate `customer_intelligence`).
+5. **Gift-Buyer customerValue band** → 25 (same as Repeat). Plan predates the segment (added v1.48). Locked at 25 to acknowledge mid-range order value (≥$200) without overweighting retention upside (Gift-Buyer = `!acceptsMarketing` by derivation rule).
+6. **`orders.total_amount` doesn't exist** (plan-vs-reality gap surfaced before any code was written). The plan's `orderValue` axis reads `order.total`, but the orders table has no total column and [order-upsert-service.ts](delayguard-app/src/services/order-upsert-service.ts) discards `webhook.total_price`. Decision: pull the additive `orders.total_amount NUMERIC(12, 2)` column + webhook-capture into this slice. Phase 2.1.c "financial breakdown" becomes pure-display (tax/shipping/discount split) rather than total-capture.
+
+**Two additional gating clarifications** (criterion (a) — divergence between prompt and plan):
+
+7. **customerValue band table** → Plan as written (`VIP=40, New=30 "first-impression bonus", Repeat=25, Gift-Buyer=25, At-Risk=15, null/Q3=20`). The prompt's listed numbers ("VIP=40, Repeat=20, New=10, At-Risk=30") referenced a non-existent line and disagreed with the actual plan code; locked to the plan as the SSOT.
+8. **churnRisk source** → previousDelays count per plan (DB COUNT(*) of prior alerts for same `(shop_id, shopify_customer_id)`, excluding self). The prompt's "segment + acceptsMarketing" phrase was misspoken shorthand; concrete signal in the plan is `previousDelays`. Multi-tenant correctness: scope on `o.shop_id` from the alert's own order, not on caller-supplied value.
+
+**What Changed**:
+
+**1. SQL migration** (in [src/database/connection.ts](delayguard-app/src/database/connection.ts), idempotent additive blocks before the index creation):
+
+- `ALTER TABLE orders ADD COLUMN total_amount NUMERIC(12, 2)` (nullable; populated by webhook + optional one-shot backfill below).
+- One-shot backfill: `UPDATE orders SET total_amount = SUM(price * quantity) FROM order_line_items WHERE total_amount IS NULL`. Idempotent — re-runs match nothing.
+- `ALTER TABLE delay_alerts ADD COLUMN priority_score INTEGER, ADD COLUMN priority_level VARCHAR(20)` (both nullable; populated at alert creation by `PriorityScoreService.scoreAlert`).
+- New index `idx_delay_alerts_priority_score` on `(order_id, priority_score DESC)` — the eventual dashboard sort key for Phase 2.1.f.
+- No `.sql` file (migration runner doesn't load them — same v1.48 finding).
+- Legacy `delay_alerts` rows stay `NULL` until Phase 2.2.c re-score job populates them.
+
+**2. `src/services/priority-score.ts` + sibling test** (new, 28 tests):
+
+Pure function `calculatePriorityScore({ orderTotal, segment, previousDelays, delayDays })` returns `{ score, level, factors }`. No I/O — caller hydrates inputs.
+
+```
+orderValue:    >=500=30, >=300=25, >=200=20, >=100=15, >=50=10, else=5, null=5
+customerValue: VIP=40, New=30, Repeat=25, Gift-Buyer=25, At-Risk=15, null=20 (Q3)
+churnRisk:     prev>=2=20, prev==1=15, else=5
+urgency:       >=7d=10, >=5d=8, >=3d=5, else=2
+level:         >=80=Critical, >=60=High, >=40=Medium, else=Low
+```
+
+Every band cutoff has an inclusive-threshold boundary test (e.g. `orderTotal=500` scores 30, not 25). One exhaustive segment-coverage test pins all six customerValue bands in a single loop.
+
+**3. `src/services/priority-score-service.ts` + sibling test** (new, 12 tests):
+
+`PriorityScoreService.scoreAlert(alertId)` performs:
+1. Single JOIN lookup — `delay_alerts da JOIN orders o ON o.id = da.order_id LEFT JOIN customer_intelligence ci ON ci.shop_id = o.shop_id AND ci.shopify_customer_id = o.shopify_customer_id WHERE da.id = $1`. LEFT JOIN preserves null segment for guests and pre-sync races (Q3 fallback territory).
+2. Conditional churn count — skipped entirely when `shopify_customer_id IS NULL` (guest checkout — saves a roundtrip). Otherwise `SELECT COUNT(*) FROM delay_alerts da JOIN orders o ON o.id = da.order_id WHERE o.shop_id = $1 AND o.shopify_customer_id = $2 AND da.id <> $3` (multi-tenant scoped on alert's own order, excludes self).
+3. v1.19 every-column param-array assertion on the UPDATE: `UPDATE delay_alerts SET priority_score = $1, priority_level = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3`. Params asserted exactly `[score, level, alertId]`.
+4. Silent-skip on missing alert (defensive — delay-check flow guarantees existence, but the prompt asked for the defend).
+5. NUMERIC parsing: pg returns `NUMERIC(12, 2)` as a string; `parseFloat` coerces before passing to the pure-fn.
+
+DB failures at each step propagate (BullMQ retry chain — though the wiring caller swallows them; see point 4 below).
+
+**4. Wiring in [src/queue/processors/delay-check.ts](delayguard-app/src/queue/processors/delay-check.ts)** (`storeDelayAlert` only):
+
+- INSERT extended with `RETURNING id`.
+- After successful INSERT, instantiates `PriorityScoreService` and calls `scoreAlert(newAlertId)` — wrapped in **best-effort try/catch**. Scoring failures log + swallow. **Critical reason for best-effort**: if scoring exceptions propagated to BullMQ, the retry chain would re-INSERT a duplicate `delay_alerts` row (the existing `ON CONFLICT DO NOTHING` clause has no matching unique constraint — known latent issue outside this slice's scope). Phase 2.2.c re-score job is the durable cleanup for failed-scoring alerts.
+- Wiring lives inside `storeDelayAlert` so the 3 rule branches (warehouse / carrier / transit) get scoring "for free" — no changes to the rule-match blocks at lines 99 / 121 / 141. Caller signature unchanged (still `Promise<void>`).
+
+**5. `src/services/order-upsert-service.ts`** — captures `webhook.total_price` (additive, Phase 2.1.b):
+
+- `OrderWebhookPayload.total_price?: string` added (Shopify wire format is string).
+- `parseTotalPrice` helper: `parseFloat` + `Number.isFinite` guard → `number | null`.
+- UPSERT SQL extended: `total_amount` column added to INSERT list and `DO UPDATE SET ...EXCLUDED.total_amount`. Param list goes 8 → 9 cols.
+- Sibling test: v1.19 every-column param-array assertion updated to 9 elements; 2 new cases (`total_price="459.50"` → `459.5`; `total_price=undefined` → `null`).
+
+**v1.19 field-population rule applied**: explicit `expect(params).toEqual([...everyColumn])` on every UPDATE/INSERT — `delay_alerts.priority_score` UPDATE (3 cols: score, level, id), `orders` UPSERT (9 cols including total_amount).
+
+**Carry-forward context for Phase 2.1.c–2.1.f**:
+
+- Customer-sync race window: a non-guest customer whose first delay alert lands before customer-sync completes scores at the Q3-fallback band (customerValue=20). Phase 2.2.c re-score job at the end of `customer-sync.ts` heals stale scores. Stale-score window is small (~<1s typical sync time) but real.
+- Legacy `delay_alerts` rows have `priority_score = NULL`. Dashboard sort in Phase 2.1.f must use `NULLS LAST` until the re-score backfill completes.
+- `delay_alerts.ON CONFLICT DO NOTHING` has no matching unique constraint and is dead clause. If a future migration adds one (e.g. `UNIQUE(order_id, delay_reason, created_at::date)`), revisit the `storeDelayAlert` best-effort semantics — the duplicate-on-retry risk goes away and scoring could propagate.
+- `getQueueStats` schema extension for customer-sync queue is still deferred from v1.48; bundle with Phase 2.1.f UI surfacing.
+
+**Found-and-deferred (smallest blast radius — DO NOT attack mid-session)**:
+
+- EnhancedDashboard subtree (Wave 7.3 target).
+- PerformanceMonitor reader/writer schema mismatch (regression-test pending).
+- ToastContainer.tsx:27 ℹ️ emoji (Wave 6 follow-up).
+- Route-layer integration gaps: webhooks.ts, monitoring.ts, billing.ts (Wave 4.6).
+- optimized-api.ts sibling test (Wave 4.4).
+- `003_create_subscriptions_table.sql` UUID-vs-SERIAL mismatch + migration-runner not loading .sql files (surfaced 2026-05-15).
+- `npm run lint:fix` still unsafe (Wave 2.3 finding); used `npx eslint --fix` on touched files only for this slice.
+- Husky pre-commit gate still non-functional; no change this slice.
+
+---
 
 ### v1.48 (2026-05-15): Phase 2.1.a — Customer Intelligence Ingestion (smallest first slice)
 
