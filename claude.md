@@ -5,8 +5,8 @@ Shopify app (not a theme): React 18 + TS frontend, Koa + PostgreSQL + BullMQ/Red
 
 ## Status
 
-- **Phase**: 1 complete (95/100 readiness for Shopify App Store submission — see [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)). **Phase 2.1.b shipped 2026-05-15** (priority score: 4-axis pure-fn + `PriorityScoreService.scoreAlert` + denormalized `delay_alerts.priority_score/level` columns + `orders.total_amount` capture; score is written, not yet rendered). Phase 2.1.a shipped same day (customer-intelligence ingestion). Remaining Phase 2.1 sub-slices: financial breakdown, shipping address, test-alert endpoint, customer-intelligence UI.
-- **Tests**: 2,044 passing, 25 skipped, 0 failing. Local CI gate: `npm test && npm run lint && npm run type-check && npm run build` (run from `delayguard-app/`).
+- **Phase**: 1 complete (95/100 readiness for Shopify App Store submission — see [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)). **Phase 2.1.c shipped 2026-05-15** (financial breakdown: 4 additive nullable order-level columns — `subtotal_price` / `total_tax` / `total_discounts` / `total_shipping_price` — captured via extended UPSERT 9→13 cols + new `parseMoneySet` helper for `total_shipping_price_set.shop_money.amount`; written, not yet rendered). Phase 2.1.a (customer-intelligence ingestion) and 2.1.b (priority score) shipped same day. Remaining Phase 2.1 sub-slices: shipping address, test-alert endpoint, customer-intelligence UI.
+- **Tests**: 2,056 passing, 25 skipped, 0 failing. Local CI gate: `npm test && npm run lint && npm run type-check && npm run build` (run from `delayguard-app/`).
 - **Husky**: pre-commit runs `node scripts/quality-gates.js` automatically. Don't bypass with `--no-verify`.
 
 ## Canonical docs (point at these instead of re-explaining)
