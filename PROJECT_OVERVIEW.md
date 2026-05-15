@@ -1,8 +1,8 @@
 # DelayGuard - Project Overview & Roadmap
 
-**Last Updated**: May 7, 2026
-**Current Phase**: ✅ **Phase 2.7 Complete** - UI/UX Refactoring + Pre-Launch Infrastructure (audit Wave 1.1 + 1.2 shipped 2026-05-06/07)
-**Latest Update**: v1.36.1 - Audit Wave 1.2 (placeholder-test cleanup + CI guardrail) and Wave 1.1 polish (cron rolled back to daily for Hobby tier; test count refresh)
+**Last Updated**: May 15, 2026
+**Current Phase**: ✅ Phase 1 + Audit Waves 1-7 (largely closed) — **Phase 2.1.a ingestion shipped 2026-05-15**; Phase 2.1.b–2.1.f (priority score / financial breakdown / shipping address / test alert / customer-intelligence UI) pending
+**Latest Update**: v1.48 — Phase 2.1.a customer-intelligence ingestion pipeline (customer_intelligence table + deriveSegment + fetchCustomerById + CustomerSyncService + BullMQ customer-sync processor; +34 tests)
 **Document Purpose**: Single consolidated view of current state, readiness, and future roadmap
 
 ---
@@ -13,9 +13,9 @@
 
 | Metric | Status | Details |
 |--------|--------|---------|
-| **Phase Completion** | ✅ **Phase 2.7 Complete** | Accordion UI + CI/CD infrastructure + pre-launch checklist |
+| **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a ingestion shipped 2026-05-15 (v1.48); Phase 2.1.b–2.1.f pending |
 | **Readiness Score** | **95/100 (A)** | Ready for Shopify submission (assets pending) |
-| **Test Success** | **100%** | 1,965 passing, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run |
+| **Test Success** | **100%** | 1,999 passing, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run |
 | **Test Suites** | **All passing** | 96 of 98 suites pass; 2 suites skipped (require PostgreSQL) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
@@ -684,7 +684,8 @@ Phone: (406) 555-0123
 **Where We Are:**
 - ✅ Phase 1 Complete (Oct 28, 2025)
 - ✅ Ready for Shopify submission (95/100 readiness)
-- ✅ 1,965 passing tests, production-ready code
+- ✅ Phase 2.1.a ingestion pipeline shipped (2026-05-15, v1.48)
+- ✅ 1,999 passing tests, production-ready code
 - ⚠️ 2-3 days from submission (assets creation remaining)
 
 **Where We're Going:**
