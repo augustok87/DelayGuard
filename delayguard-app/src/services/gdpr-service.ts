@@ -112,12 +112,19 @@ export class GDPRService {
       const anonymizedEmail = `redacted-customer-${webhook.customer.id}@privacy.invalid`;
       const anonymizedName = `redacted-customer-${webhook.customer.id}`;
 
-      // Anonymize customer data in orders
+      // Anonymize customer data in orders. Phase 2.1.d adds two shipping PII
+      // columns to the same UPDATE — shipping_phone (recipient delivery
+      // contact, direct identifier) and shipping_address1 (street-level
+      // identifier, PII per GDPR Art.4(1)). The remaining shipping_* columns
+      // (city / province_code / country_code / zip) are aggregate location
+      // and retained as transactional record (legitimate-interest basis).
       const ordersResult = await query<{ count: number }>(
-        `UPDATE orders 
+        `UPDATE orders
          SET customer_email = $1,
              customer_name = $2,
              customer_phone = $3,
+             shipping_address1 = NULL,
+             shipping_phone = NULL,
              updated_at = CURRENT_TIMESTAMP
          WHERE shop_id = (SELECT id FROM shops WHERE shop_id = $4)
            AND customer_email = $5`,

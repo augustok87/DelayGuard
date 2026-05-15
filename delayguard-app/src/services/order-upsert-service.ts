@@ -40,6 +40,29 @@ interface ShopifyMoneySet {
   presentment_money?: { amount?: string; currency_code?: string };
 }
 
+/**
+ * Shopify shipping_address shape (Phase 2.1.d). Order webhooks ship a 13-field
+ * nested address block; we capture only the 6 the §2.1.f alert-card UI needs:
+ * address1 / city / province_code / country_code / zip / phone. All optional —
+ * Shopify omits keys for unset fields on some payloads and serializes "" on
+ * others, so each is independently narrowed by `parseAddressField`. The entire
+ * block is also optional: digital / pickup / non-shippable orders ship without
+ * one.
+ *
+ * `phone` here is the RECIPIENT's delivery contact, distinct from
+ * `customer.phone` (the BUYER's account phone — used for our SendGrid/Twilio
+ * notification routing). Both are stored on `orders`; on Gift-Buyer orders
+ * (Phase 2.1.a segment) the two values legitimately differ.
+ */
+interface ShopifyShippingAddress {
+  address1?: string;
+  city?: string;
+  province_code?: string;
+  country_code?: string;
+  zip?: string;
+  phone?: string;
+}
+
 export interface OrderWebhookPayload {
   id: number;
   name: string;
@@ -54,6 +77,8 @@ export interface OrderWebhookPayload {
   total_tax?: string;
   total_discounts?: string;
   total_shipping_price_set?: ShopifyMoneySet;
+  /** Phase 2.1.d — recipient delivery address (6-field subset). */
+  shipping_address?: ShopifyShippingAddress;
 }
 
 export interface OrderUpsertResult {
@@ -79,6 +104,17 @@ function parseMoneySet(value: ShopifyMoneySet | undefined): number | null {
   // money-set, the shop_money branch, and the amount string may each be
   // absent. parseTotalPrice handles the final non-finite check.
   return parseTotalPrice(value?.shop_money?.amount);
+}
+
+function parseAddressField(value: unknown): string | null {
+  // Phase 2.1.d defensive narrowing. Webhook payloads are user-controlled, so
+  // each field may be absent, "" (Shopify's serialization for unset), null, or
+  // (in degenerate publishers) the wrong type entirely. Whitespace-only values
+  // collapse to null — semantically "no data captured" — so the UI's missing-
+  // data path is a single null check rather than a string-trim at read time.
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 export class OrderUpsertService {
@@ -135,8 +171,14 @@ export class OrderUpsertService {
            subtotal_price,
            total_tax,
            total_discounts,
-           total_shipping_price
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+           total_shipping_price,
+           shipping_address1,
+           shipping_city,
+           shipping_province_code,
+           shipping_country_code,
+           shipping_zip,
+           shipping_phone
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
          ON CONFLICT (shop_id, shopify_order_id)
          DO UPDATE SET
            order_number = EXCLUDED.order_number,
@@ -150,6 +192,12 @@ export class OrderUpsertService {
            total_tax = EXCLUDED.total_tax,
            total_discounts = EXCLUDED.total_discounts,
            total_shipping_price = EXCLUDED.total_shipping_price,
+           shipping_address1 = EXCLUDED.shipping_address1,
+           shipping_city = EXCLUDED.shipping_city,
+           shipping_province_code = EXCLUDED.shipping_province_code,
+           shipping_country_code = EXCLUDED.shipping_country_code,
+           shipping_zip = EXCLUDED.shipping_zip,
+           shipping_phone = EXCLUDED.shipping_phone,
            updated_at = CURRENT_TIMESTAMP`,
         [
           shop.id,
@@ -165,6 +213,12 @@ export class OrderUpsertService {
           parseTotalPrice(orderData.total_tax),
           parseTotalPrice(orderData.total_discounts),
           parseMoneySet(orderData.total_shipping_price_set),
+          parseAddressField(orderData.shipping_address?.address1),
+          parseAddressField(orderData.shipping_address?.city),
+          parseAddressField(orderData.shipping_address?.province_code),
+          parseAddressField(orderData.shipping_address?.country_code),
+          parseAddressField(orderData.shipping_address?.zip),
+          parseAddressField(orderData.shipping_address?.phone),
         ],
       );
 

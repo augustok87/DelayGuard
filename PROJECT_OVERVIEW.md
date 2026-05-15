@@ -13,9 +13,9 @@
 
 | Metric | Status | Details |
 |--------|--------|---------|
-| **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a ingestion + 2.1.b priority score + 2.1.c financial breakdown shipped 2026-05-15 (v1.48–v1.50); Phase 2.1.d–2.1.f pending |
+| **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a ingestion + 2.1.b priority score + 2.1.c financial breakdown + 2.1.d shipping address shipped 2026-05-15 (v1.48–v1.51); Phase 2.1.e–2.1.f pending |
 | **Readiness Score** | **95/100 (A)** | Ready for Shopify submission (assets pending) |
-| **Test Success** | **100%** | 2,056 passing, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run |
+| **Test Success** | **100%** | 2,070 passing, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run |
 | **Test Suites** | **All passing** | 96 of 98 suites pass; 2 suites skipped (require PostgreSQL) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
@@ -684,8 +684,8 @@ Phone: (406) 555-0123
 **Where We Are:**
 - ✅ Phase 1 Complete (Oct 28, 2025)
 - ✅ Ready for Shopify submission (95/100 readiness)
-- ✅ Phase 2.1.a ingestion pipeline shipped (2026-05-15, v1.48)
-- ✅ 2,056 passing tests, production-ready code
+- ✅ Phase 2.1.a–d shipped (2026-05-15, v1.48–v1.51): ingestion + priority score + financial breakdown + shipping address
+- ✅ 2,070 passing tests, production-ready code
 - ⚠️ 2-3 days from submission (assets creation remaining)
 
 **Where We're Going:**

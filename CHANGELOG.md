@@ -2,12 +2,94 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 15, 2026 (v1.50 — Phase 2.1.c financial-breakdown slice: 4 additive nullable order-level columns + parseMoneySet helper for shipping money-set + v1.19 every-column assertion extended to 13 params)
+**Last Updated**: May 15, 2026 (v1.51 — Phase 2.1.d shipping-address slice: 6 additive nullable order-level columns + parseAddressField helper + GDPR redact extended to anonymize 2 PII columns + v1.19 every-column assertion extended to 19 params)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.51 (2026-05-15): Phase 2.1.d — Shipping Address Context (fourth slice)
+
+**Test Results**: 2,070 passing (+14), 25 skipped, 0 failing. New coverage in `src/services/order-upsert-service.test.ts`: v1.19 every-column assertion extended 13 → 19 params (6 EXCLUDED-mirror SQL-shape assertions on the UPSERT) plus a new `Phase 2.1.d — shipping address capture` block with 13 cases — present for each of the 6 fields, all-null when the block is missing, individual-field-omission, empty-string normalization (Shopify "" passthrough), whitespace-only normalization, non-string defensive narrowing, whitespace trimming, and the Gift-Buyer scenario asserting buyer's `customer_phone` and recipient's `shipping_phone` are stored independently. Plus 1 case appended to `src/tests/unit/services/gdpr-service.test.ts` asserting the customer-redact `UPDATE orders` SQL nulls `shipping_phone` + `shipping_address1` and explicitly does **not** anonymize the 4 non-PII shipping fields (now 46 cases / was 33).
+**Status**: Phase 2.1 fourth sub-slice (2.1.d) **SHIPPED**. Sub-slices remaining (2.1.e–2.1.f): test-alert endpoint, customer-intelligence UI surfacing. Phase 2.1.d completes the data layer behind the eventual UI — priority badge (2.1.b) tells *who* matters, financial breakdown (2.1.c) tells *why* the bill is $X, shipping address tells *where* the delayed package is going.
+
+**Problem**: Phase 2.1.c shipped the financial breakdown but alert cards in §2.1.f could still only show order number + customer name + total — no way to render "delayed package to Toronto, ON" or surface destination-clustering insights. Phase 2.1.d persists the recipient delivery address on every order webhook so the eventual UI has the data to render. Capture **only** — UI render, geographic classification (Rural / Urban / PO Box flagging), address validation, and geocoding are all explicitly out of scope (ship in Phase 2.1.f or later).
+
+**Four gating decisions reverse-prompted before any code was written**:
+
+1. **Field selection** → 6 fields: `address1` / `city` / `province_code` / `country_code` / `zip` / `phone`. Drops Shopify's `latitude`/`longitude` (PII surveillance, no UI use), shipping `first_name`/`last_name`/`name` (redundant with `orders.customer_name` from 2.1.a), long-form `province`/`country` strings (codes are display-sufficient + sortable; round-trip via static map at render time), `company` (rare on consumer orders), and `address2` (deferred until UI plans full mailing-format address). Minimum useful set for the §2.1.f alert-card narrative.
+2. **Storage shape** → 6 nullable additive columns on `orders` (precedent-consistent — direct 2.1.b/2.1.c rhythm). Sibling `order_addresses` table rejected — billing-address and multi-shipment aren't in Phase 2.1, and the extra JOIN-per-read cost on every dashboard render in §2.1.f isn't worth pre-building for hypothetical futures (YAGNI). JSONB column rejected — `v1.19 every-column` assertion gets weird with one-param-complex-object, and typed-column safety net would be lost. Mild column-count bloat (orders 13 → 19) is the right trade.
+3. **GDPR redact** → extend [gdpr-service.ts handleCustomerRedact](delayguard-app/src/services/gdpr-service.ts) `UPDATE orders` to `SET shipping_phone = NULL, shipping_address1 = NULL`. Both are PII per GDPR Art.4(1): phone is a direct identifier; `address1` is street-level. The remaining 4 columns (`city` / `province_code` / `country_code` / `zip`) are aggregate location and retained as transactional record (legitimate-interest basis — Shopify itself preserves these in historical order data even after customer redact). Single SQL UPDATE means the 30-day GDPR deadline is met without a separate redact path.
+4. **Backfill** → null-stays-null for legacy orders; webhook fills new orders forward. Direct 2.1.b/2.1.c precedent. ~1 GraphQL call per legacy order at install time is unjustified cost-points budget for a pure-display feature. UI fallback for null = render "—" (no behavior change pre-Phase-2.1.d).
+
+**One schema concern uncovered during the gating read** (criterion c — semantic conflicts the user hadn't anticipated):
+
+5. **Phone semantics**: `orders.customer_phone` (from Phase 2.1.a — `orderData.customer?.phone`) is the BUYER's account phone — the number our SendGrid/Twilio routing sends notifications to. `orders.shipping_phone` (this slice — `orderData.shipping_address?.phone`) is the RECIPIENT's delivery contact — the number couriers call for delivery handoff. On Gift-Buyer orders (segment recognized by Phase 2.1.a's `deriveSegment` from `!acceptsMarketing` + ≥$200 spend), these are legitimately different people. **Decision: store both, do not dedupe** — they serve different purposes and the field overlap is incidental. A dedicated sibling test (`captures buyer's customer_phone and recipient's shipping_phone independently (Gift-Buyer scenario)`) verifies the columns persist independent values at indices `[5]` and `[18]` of the v1.19 param array.
+
+**One GDPR-redact gap uncovered during the gating read** (criterion c — anything the user hadn't flagged):
+
+6. `gdpr-service.ts` customer-redact handler is **field-level UPDATE, not row-level DELETE**. The `ON DELETE CASCADE` from `shops → orders` only fires on `shop/redact`, not on `customers/redact`. So every new PII column we add must be added to the `UPDATE orders SET …` clause explicitly — there's no automatic anonymization for `customers/redact`. Surfaced this gap mid-gating; carried it into Q3 as a required slice deliverable. (Reminder for future PII-adjacent slices: extending PII columns means extending this same SQL — see [gdpr-service.ts:122](delayguard-app/src/services/gdpr-service.ts#L122).)
+
+**One plan-vs-reality flag** (criterion b — IMPLEMENTATION_PLAN.md was written before the slice was renamed):
+
+7. The plan calls shipping address **§2.4** ([IMPLEMENTATION_PLAN.md:2474](IMPLEMENTATION_PLAN.md#L2474)), not §2.1.d. The §2.4 spec was written in Prisma+Remix style with 9 fields including order-level `customerNote` (a different column entirely — order metadata, not shipping address) plus a `classifyShippingAddress` geography service for Rural/Urban/PO-Box flagging. Geography classification is intentionally **out of scope** this slice — capture only. The §2.1.d "what shipped" block is now backfilled into the §2.1 section of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) alongside §2.1.a–§2.1.c for future-audit discoverability.
+
+**What Changed**:
+
+**1. SQL migration** (in [src/database/connection.ts](delayguard-app/src/database/connection.ts), idempotent additive block after the 2.1.c financial-breakdown block, before the index creation):
+
+- `ALTER TABLE orders ADD COLUMN shipping_address1 VARCHAR(255)` (nullable).
+- `ALTER TABLE orders ADD COLUMN shipping_city VARCHAR(255)` (nullable).
+- `ALTER TABLE orders ADD COLUMN shipping_province_code VARCHAR(10)` (nullable — ISO 3166-2 subdivision codes are 1–3 chars; VARCHAR(10) is generous).
+- `ALTER TABLE orders ADD COLUMN shipping_country_code VARCHAR(10)` (nullable — ISO 3166-1 alpha-2 is 2 chars; VARCHAR(10) is generous).
+- `ALTER TABLE orders ADD COLUMN shipping_zip VARCHAR(20)` (nullable — UK/Canadian postal codes can be ~7 chars with spaces; VARCHAR(20) is generous).
+- `ALTER TABLE orders ADD COLUMN shipping_phone VARCHAR(255)` (nullable — matches existing `customer_phone VARCHAR(255)` convention).
+- All six columns guarded by the same `IF NOT EXISTS … shipping_address1` check (single anchor — re-runs match nothing on subsequent boots).
+- No new index — these columns are pure-display, not sortable or filterable (yet). Add an index if/when Phase 2.1.f surfaces "top destinations" analytics.
+- No backfill — legacy orders stay NULL (display path falls back to "—").
+- No `.sql` file (migration runner doesn't load them — same v1.48/v1.49/v1.50 finding).
+
+**2. `src/services/order-upsert-service.ts`** — captures all 6 shipping fields (additive, Phase 2.1.d):
+
+- New `ShopifyShippingAddress` interface — 6 optional string fields. Documents (in code) the recipient-vs-buyer phone semantics and the per-field/whole-block optionality on the wire.
+- `OrderWebhookPayload` extended with `shipping_address?: ShopifyShippingAddress`.
+- New `parseAddressField(value: unknown)` helper: defensive narrowing for the entire spectrum of degenerate inputs — absent / null / "" / whitespace-only / wrong-type-entirely all collapse to a single `null` semantic. Whitespace-trimmed when valid.
+- UPSERT SQL extended: 6 columns added to INSERT list (13 → 19), 6 `… = EXCLUDED.…` lines added to `DO UPDATE SET`. Param list goes 13 → 19.
+- Sibling test: v1.19 every-column param-array assertion extended to 19 elements; +13 new cases in the `Phase 2.1.d — shipping address capture` describe block.
+
+**3. `src/services/gdpr-service.ts`** — customer-redact extended for the two PII columns (Phase 2.1.d):
+
+- `handleCustomerRedact` `UPDATE orders` clause extended: `SET … shipping_address1 = NULL, shipping_phone = NULL …`.
+- `shipping_city`/`shipping_province_code`/`shipping_country_code`/`shipping_zip` intentionally **not** anonymized — aggregate location, retained as transactional record.
+- Sibling test added in [src/tests/unit/services/gdpr-service.test.ts](delayguard-app/src/tests/unit/services/gdpr-service.test.ts) — positive assertions (`shipping_phone = NULL`, `shipping_address1 = NULL`) plus four negative assertions (non-PII columns NOT in the SET clause).
+
+**v1.19 field-population rule applied**: explicit `expect(params).toEqual([...everyColumn])` on the UPSERT — now 19 cols including the 6 new `shipping_*` fields.
+
+**Carry-forward context for Phase 2.1.e–2.1.f**:
+
+- Legacy orders persisted before v1.51 have NULL for all 6 shipping columns. Phase 2.1.f dashboard render must treat any null value as "not captured" and fall back to "—". Distinction from empty-string-in-payload (also captured as NULL — see `parseAddressField` empty/whitespace branch) is **not** preserved; both render the same way.
+- `shipping_province_code` and `shipping_country_code` are stored as raw ISO codes ("ON", "CA"). The §2.1.f UI is expected to maintain a static code → name map at render time (e.g. "ON" → "Ontario", "CA" → "Canada") to avoid storing the redundant long-form. Phase 2.1.f should bundle this map with the alert-card component, not the data layer.
+- Geographic classification (Rural / Urban / PO Box flagging from plan §2.4 `classifyShippingAddress`) is **out of scope** this slice. If §2.1.f or a future Phase 2 / 3 slice wants this, implement it as a pure-fn over the captured columns at render time — no schema change needed.
+- Address validation (Smarty / Loqate / Shopify's own) and geocoding (lat/long re-derivation) are out of scope. Shopify already validates addresses on order creation; we trust their payload.
+- Billing address and multi-shipment / split-fulfillment addresses are out of scope. Each fulfillment can have its own shipping address — we capture only the order-level one (Shopify's `shipping_address`, not `fulfillments[].destination`). If Phase 2.2+ wants per-fulfillment addresses, the precedent shifts to a sibling `fulfillment_addresses` table.
+- GDPR audit: if a future regulator argues the 4 non-PII shipping fields (city/province/country/zip) also require redact, extend the same SQL UPDATE — single-anchor change. Current call relies on the "transactional record / legitimate interest" basis (Shopify's own customer-data-export retains these in historical orders).
+- DATA_AVAILABILITY_ANALYSIS.md catch-up entry for all v1.49/v1.50/v1.51 columns (`orders.total_amount`, `orders.subtotal_price`, `orders.total_tax`, `orders.total_discounts`, `orders.total_shipping_price`, `delay_alerts.priority_score`, `delay_alerts.priority_level`, plus this slice's 6 shipping_* columns) is still deferred (doc-only, no behavior change).
+
+**Found-and-deferred (smallest blast radius — DO NOT attack mid-session)**:
+
+- Phase 2.2.c re-score follow-up at end of `customer-sync.ts` (born from 2.1.b race-condition Q3 fallback).
+- EnhancedDashboard subtree (Wave 7.3 target).
+- PerformanceMonitor reader/writer schema mismatch (regression-test pending).
+- ToastContainer.tsx:27 ℹ️ emoji (Wave 6 follow-up).
+- Route-layer integration gaps: webhooks.ts, monitoring.ts, billing.ts (Wave 4.6).
+- optimized-api.ts sibling test (Wave 4.4).
+- `003_create_subscriptions_table.sql` UUID-vs-SERIAL mismatch + migration-runner not loading .sql files (surfaced 2026-05-15).
+- `getQueueStats` schema extension for customer-sync queue is still deferred from v1.48–v1.50; bundle with Phase 2.1.f UI surfacing.
+- `npm run lint:fix` still unsafe (Wave 2.3 finding); used `npx eslint --fix` on touched files only for this slice.
+- Husky pre-commit gate still non-functional; no change this slice.
+
+---
 
 ### v1.50 (2026-05-15): Phase 2.1.c — Financial Breakdown (third slice)
 

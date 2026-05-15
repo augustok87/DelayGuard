@@ -64,6 +64,22 @@ const baseOrderPayload = {
     shop_money: { amount: "9.49", currency_code: "USD" },
     presentment_money: { amount: "9.49", currency_code: "USD" },
   },
+  // Phase 2.1.d (Shipping Address): 6-field subset of Shopify's nested
+  // `shipping_address` block — minimum useful set for the §2.1.f alert-card
+  // narrative ("delayed package to Toronto, ON"). Drops lat/long (no UI use),
+  // shipping name (redundant with orders.customer_name), province/country
+  // long-form names (codes are display-sufficient + sortable), company (rare
+  // on consumer orders), address2 (deferred until UI plans full mailing-format
+  // address). `phone` here is the RECIPIENT's delivery contact — different
+  // person than customer.phone on Gift-Buyer orders; stored independently.
+  shipping_address: {
+    address1: "123 Main St",
+    city: "Toronto",
+    province_code: "ON",
+    country_code: "CA",
+    zip: "M5V 3A8",
+    phone: "+14165551212",
+  },
 };
 
 describe("OrderUpsertService", () => {
@@ -135,6 +151,19 @@ describe("OrderUpsertService", () => {
       expect(upsertSql).toMatch(
         /total_shipping_price\s*=\s*EXCLUDED\.total_shipping_price/i,
       );
+      // Phase 2.1.d: 6 shipping_address columns also EXCLUDED-mirrored on UPSERT
+      expect(upsertSql).toMatch(
+        /shipping_address1\s*=\s*EXCLUDED\.shipping_address1/i,
+      );
+      expect(upsertSql).toMatch(/shipping_city\s*=\s*EXCLUDED\.shipping_city/i);
+      expect(upsertSql).toMatch(
+        /shipping_province_code\s*=\s*EXCLUDED\.shipping_province_code/i,
+      );
+      expect(upsertSql).toMatch(
+        /shipping_country_code\s*=\s*EXCLUDED\.shipping_country_code/i,
+      );
+      expect(upsertSql).toMatch(/shipping_zip\s*=\s*EXCLUDED\.shipping_zip/i);
+      expect(upsertSql).toMatch(/shipping_phone\s*=\s*EXCLUDED\.shipping_phone/i);
       expect(upsertSql).toMatch(/updated_at\s*=\s*CURRENT_TIMESTAMP/i);
 
       // v1.19: every persisted column appears in the params array
@@ -144,7 +173,7 @@ describe("OrderUpsertService", () => {
         "#1001", // order_number
         "Ada Lovelace", // customer_name
         "ada@example.com", // customer_email
-        "+15551234567", // customer_phone
+        "+15551234567", // customer_phone (BUYER — account contact for our SendGrid/Twilio notifications)
         "5550001", // shopify_customer_id as string (Phase 2.1.a)
         "fulfilled", // status
         199.99, // total_amount (Phase 2.1.b) — parsed from webhook string total_price
@@ -152,6 +181,12 @@ describe("OrderUpsertService", () => {
         15.5, // total_tax (Phase 2.1.c) — parsed flat string
         5, // total_discounts (Phase 2.1.c) — parsed flat string
         9.49, // total_shipping_price (Phase 2.1.c) — from total_shipping_price_set.shop_money.amount
+        "123 Main St", // shipping_address1 (Phase 2.1.d) — from shipping_address.address1
+        "Toronto", // shipping_city (Phase 2.1.d)
+        "ON", // shipping_province_code (Phase 2.1.d) — ISO 3166-2 subdivision code
+        "CA", // shipping_country_code (Phase 2.1.d) — ISO 3166-1 alpha-2
+        "M5V 3A8", // shipping_zip (Phase 2.1.d)
+        "+14165551212", // shipping_phone (Phase 2.1.d) — RECIPIENT's delivery contact, distinct from customer_phone
       ]);
     });
 
@@ -459,6 +494,267 @@ describe("OrderUpsertService", () => {
         expect(upsertParams?.[10]).toBeNull();
         expect(upsertParams?.[11]).toBeNull();
         expect(upsertParams?.[12]).toBeNull();
+      });
+    });
+
+    // Phase 2.1.d — Shipping Address (6-field subset).
+    //
+    // Shopify Order webhook sends `shipping_address` as a nested object with
+    // ~13 fields; we capture only the 6 that the §2.1.f UI narrative needs:
+    // address1 / city / province_code / country_code / zip / phone. Each
+    // field is independently optional on the wire (Shopify sometimes sends
+    // "" for unset fields, sometimes omits the key entirely), and the entire
+    // block can be absent for digital / pickup / non-shippable orders.
+    // `parseAddressField` normalizes both shapes to null at write-time so
+    // the UI can rely on a single "missing" semantic.
+    describe("Phase 2.1.d — shipping address capture", () => {
+      it("captures shipping_address1 from shipping_address.address1", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, baseOrderPayload);
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[13]).toBe("123 Main St");
+      });
+
+      it("captures shipping_city from shipping_address.city", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, baseOrderPayload);
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[14]).toBe("Toronto");
+      });
+
+      it("captures shipping_province_code from shipping_address.province_code (ISO 3166-2 subdivision)", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, baseOrderPayload);
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        // Codes (ON, CA, NY) are display-sufficient + sortable. Long-form
+        // names (Ontario, California) are intentionally NOT captured —
+        // round-trip via static map at render time.
+        expect(upsertParams?.[15]).toBe("ON");
+      });
+
+      it("captures shipping_country_code from shipping_address.country_code (ISO 3166-1 alpha-2)", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, baseOrderPayload);
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[16]).toBe("CA");
+      });
+
+      it("captures shipping_zip from shipping_address.zip (international format preserved)", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, baseOrderPayload);
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        // "M5V 3A8" is a Canadian postal code — the embedded space and
+        // mixed alphanumeric are part of the canonical format. No
+        // normalization applied (Shopify already canonicalizes on entry).
+        expect(upsertParams?.[17]).toBe("M5V 3A8");
+      });
+
+      it("captures shipping_phone from shipping_address.phone (recipient delivery contact)", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, baseOrderPayload);
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[18]).toBe("+14165551212");
+      });
+
+      it("persists all 6 shipping fields as null when shipping_address block is missing (digital/pickup order)", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          shipping_address: undefined,
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[13]).toBeNull();
+        expect(upsertParams?.[14]).toBeNull();
+        expect(upsertParams?.[15]).toBeNull();
+        expect(upsertParams?.[16]).toBeNull();
+        expect(upsertParams?.[17]).toBeNull();
+        expect(upsertParams?.[18]).toBeNull();
+      });
+
+      it("persists individual fields as null when omitted from the address block", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          shipping_address: {
+            address1: "456 Rural Route",
+            city: "Bozeman",
+            // province_code, country_code, zip, phone all absent
+          },
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[13]).toBe("456 Rural Route");
+        expect(upsertParams?.[14]).toBe("Bozeman");
+        expect(upsertParams?.[15]).toBeNull();
+        expect(upsertParams?.[16]).toBeNull();
+        expect(upsertParams?.[17]).toBeNull();
+        expect(upsertParams?.[18]).toBeNull();
+      });
+
+      it("normalizes empty-string fields to null (Shopify '' passthrough)", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          shipping_address: {
+            address1: "",
+            city: "",
+            province_code: "",
+            country_code: "",
+            zip: "",
+            phone: "",
+          },
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        // Shopify sometimes serializes unset fields as "" rather than
+        // omitting the key. The UI's "missing data" path must match a
+        // single null semantic — collapsing "" → null at write time keeps
+        // the read path simple.
+        expect(upsertParams?.[13]).toBeNull();
+        expect(upsertParams?.[14]).toBeNull();
+        expect(upsertParams?.[15]).toBeNull();
+        expect(upsertParams?.[16]).toBeNull();
+        expect(upsertParams?.[17]).toBeNull();
+        expect(upsertParams?.[18]).toBeNull();
+      });
+
+      it("normalizes whitespace-only fields to null", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          shipping_address: {
+            address1: "   ",
+            city: "\t\n",
+            province_code: " ",
+            country_code: "",
+            zip: "  ",
+            phone: " ",
+          },
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[13]).toBeNull();
+        expect(upsertParams?.[14]).toBeNull();
+        expect(upsertParams?.[15]).toBeNull();
+        expect(upsertParams?.[16]).toBeNull();
+        expect(upsertParams?.[17]).toBeNull();
+        expect(upsertParams?.[18]).toBeNull();
+      });
+
+      it("defensively narrows non-string field values to null (malformed payload)", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          shipping_address: {
+            // Webhook payloads are user-controlled — a malformed publisher
+            // could send numerics or nulls in string slots. Each field
+            // narrows independently via parseAddressField.
+            address1: 12345 as unknown as string,
+            city: null as unknown as string,
+            province_code: undefined as unknown as string,
+            country_code: { code: "CA" } as unknown as string,
+            zip: ["M5V"] as unknown as string,
+            phone: true as unknown as string,
+          },
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[13]).toBeNull();
+        expect(upsertParams?.[14]).toBeNull();
+        expect(upsertParams?.[15]).toBeNull();
+        expect(upsertParams?.[16]).toBeNull();
+        expect(upsertParams?.[17]).toBeNull();
+        expect(upsertParams?.[18]).toBeNull();
+      });
+
+      it("trims leading/trailing whitespace from captured values", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          shipping_address: {
+            address1: "  789 Elm Ave  ",
+            city: " Vancouver ",
+            province_code: "BC",
+            country_code: "CA",
+            zip: " V6B 1A1 ",
+            phone: "+16045551212",
+          },
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[13]).toBe("789 Elm Ave");
+        expect(upsertParams?.[14]).toBe("Vancouver");
+        expect(upsertParams?.[17]).toBe("V6B 1A1");
+      });
+
+      it("captures buyer's customer_phone and recipient's shipping_phone independently (Gift-Buyer scenario)", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          // Buyer (account holder) — orders.customer_phone routes our
+          // SendGrid/Twilio notifications here.
+          customer: {
+            ...baseOrderPayload.customer,
+            phone: "+15551234567",
+          },
+          // Recipient (delivery contact) — orders.shipping_phone is the
+          // courier handoff. Distinct from buyer on Gift-Buyer orders
+          // (segment recognized by Phase 2.1.a deriveSegment rules).
+          shipping_address: {
+            ...baseOrderPayload.shipping_address,
+            phone: "+19998887777",
+          },
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[5]).toBe("+15551234567"); // customer_phone (buyer)
+        expect(upsertParams?.[18]).toBe("+19998887777"); // shipping_phone (recipient)
       });
     });
 

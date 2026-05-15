@@ -199,6 +199,48 @@ describe('GDPRService', () => {
       );
     });
 
+    // Phase 2.1.d — shipping-address PII redact. Phase 2.1.d adds 6 nullable
+    // shipping_* columns to orders. Two of them are PII per GDPR Art.4(1):
+    // `shipping_phone` (direct identifier) and `shipping_address1` (street-
+    // level identifier). The remaining 4 (city / province_code / country_code
+    // / zip) are aggregate location and retained as "transactional record".
+    // Customer-redact must NULL both PII columns on the same UPDATE so the
+    // 30-day GDPR deadline is met without a separate redact path.
+    it('should null shipping_phone and shipping_address1 on customer redact (Phase 2.1.d PII)', async() => {
+      const webhook: GDPRCustomerRedactWebhook = {
+        shop_id: 123,
+        shop_domain: 'test-shop.myshopify.com',
+        customer: {
+          id: 456,
+          email: 'customer@example.com',
+          phone: '+1234567890',
+        },
+        orders_to_redact: [1001],
+      };
+
+      mockQuery
+        .mockResolvedValueOnce([{ count: 1 }])
+        .mockResolvedValueOnce([{ count: 1 }])
+        .mockResolvedValueOnce([{ count: 0 }]);
+
+      await gdprService.handleCustomerRedact(webhook);
+
+      // SQL shape: orders UPDATE must SET both PII shipping columns to NULL.
+      // City / province_code / country_code / zip are intentionally NOT
+      // anonymized — aggregate location only, retained for "delivery-record"
+      // legitimate-interest basis (Shopify itself preserves these in
+      // historical order data even after customer redact).
+      const ordersUpdate = mockQuery.mock.calls[0];
+      expect(ordersUpdate[0]).toMatch(/UPDATE\s+orders/i);
+      expect(ordersUpdate[0]).toMatch(/shipping_phone\s*=\s*NULL/i);
+      expect(ordersUpdate[0]).toMatch(/shipping_address1\s*=\s*NULL/i);
+      // Negative assertions — non-PII columns must NOT be anonymized.
+      expect(ordersUpdate[0]).not.toMatch(/shipping_city\s*=\s*NULL/i);
+      expect(ordersUpdate[0]).not.toMatch(/shipping_zip\s*=\s*NULL/i);
+      expect(ordersUpdate[0]).not.toMatch(/shipping_country_code\s*=\s*NULL/i);
+      expect(ordersUpdate[0]).not.toMatch(/shipping_province_code\s*=\s*NULL/i);
+    });
+
     it('should handle redaction with no orders', async() => {
       const webhook: GDPRCustomerRedactWebhook = {
         shop_id: 123,

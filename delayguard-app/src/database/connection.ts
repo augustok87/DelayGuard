@@ -401,6 +401,40 @@ export async function runMigrations(): Promise<void> {
       END $$;
     `);
 
+    // Phase 2.1.d (Shipping Address Context): 6-field subset of Shopify's
+    // nested `shipping_address` block on the Order webhook. The minimum
+    // useful set for the §2.1.f alert-card narrative ("delayed package to
+    // Toronto, ON") — drops lat/long (no UI use), shipping name (redundant
+    // with orders.customer_name), province/country long-form names (codes
+    // are display-sufficient + sortable), company (rare on consumer
+    // orders), and address2 (deferred). All additive + nullable; legacy
+    // orders stay valid and render "—". No backfill — pulling addresses
+    // from the Shopify Admin API at install time is ~1 GraphQL call per
+    // legacy order, an unjustified cost-points budget for a pure-display
+    // feature (mirrors 2.1.c precedent).
+    //
+    // PII note: shipping_phone + shipping_address1 are anonymized to NULL
+    // on customer-redact (see gdpr-service.ts handleCustomerRedact). The
+    // remaining 4 columns (city / province_code / country_code / zip) are
+    // aggregate location, retained under transactional-record legitimate
+    // interest.
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='orders' AND column_name='shipping_address1'
+        ) THEN
+          ALTER TABLE orders ADD COLUMN shipping_address1 VARCHAR(255);
+          ALTER TABLE orders ADD COLUMN shipping_city VARCHAR(255);
+          ALTER TABLE orders ADD COLUMN shipping_province_code VARCHAR(10);
+          ALTER TABLE orders ADD COLUMN shipping_country_code VARCHAR(10);
+          ALTER TABLE orders ADD COLUMN shipping_zip VARCHAR(20);
+          ALTER TABLE orders ADD COLUMN shipping_phone VARCHAR(255);
+        END IF;
+      END $$;
+    `);
+
     // Create indexes for performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_orders_shop_id ON orders(shop_id);

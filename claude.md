@@ -5,8 +5,8 @@ Shopify app (not a theme): React 18 + TS frontend, Koa + PostgreSQL + BullMQ/Red
 
 ## Status
 
-- **Phase**: 1 complete (95/100 readiness for Shopify App Store submission — see [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)). **Phase 2.1.c shipped 2026-05-15** (financial breakdown: 4 additive nullable order-level columns — `subtotal_price` / `total_tax` / `total_discounts` / `total_shipping_price` — captured via extended UPSERT 9→13 cols + new `parseMoneySet` helper for `total_shipping_price_set.shop_money.amount`; written, not yet rendered). Phase 2.1.a (customer-intelligence ingestion) and 2.1.b (priority score) shipped same day. Remaining Phase 2.1 sub-slices: shipping address, test-alert endpoint, customer-intelligence UI.
-- **Tests**: 2,056 passing, 25 skipped, 0 failing. Local CI gate: `npm test && npm run lint && npm run type-check && npm run build` (run from `delayguard-app/`).
+- **Phase**: 1 complete (95/100 readiness for Shopify App Store submission — see [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)). **Phase 2.1.d shipped 2026-05-15** (shipping address: 6 additive nullable order-level columns — `shipping_address1` / `shipping_city` / `shipping_province_code` / `shipping_country_code` / `shipping_zip` / `shipping_phone` — captured via extended UPSERT 13→19 cols + new `parseAddressField` helper; GDPR `customers/redact` extended to NULL the two PII columns (`shipping_phone` + `shipping_address1`), aggregate-location fields retained as transactional record; written, not yet rendered). Phase 2.1.a–c (customer-intelligence ingestion, priority score, financial breakdown) shipped same day. Remaining Phase 2.1 sub-slices: test-alert endpoint, customer-intelligence UI.
+- **Tests**: 2,070 passing, 25 skipped, 0 failing. Local CI gate: `npm test && npm run lint && npm run type-check && npm run build` (run from `delayguard-app/`).
 - **Husky**: pre-commit runs `node scripts/quality-gates.js` automatically. Don't bypass with `--no-verify`.
 
 ## Canonical docs (point at these instead of re-explaining)
