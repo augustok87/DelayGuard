@@ -73,35 +73,44 @@ export const useDashboardData = ({
         api.getAnalytics(),
       ]);
 
-      // Handle alerts
+      // v1.38 known type-lie at the API boundary: wire returns snake_case
+      // AlertRow / OrderRow / AppSettingsRow but UI types are camelCase. Casts
+      // below preserve current runtime behavior pending the camelCase migration.
+      // api-client.ts intentionally returns `unknown` (Wave 3.4) so this surface
+      // is the visible narrowing point.
       if (alertsResponse.success && alertsResponse.data) {
-        setAlerts(alertsResponse.data);
-        logger.debug('Alerts loaded', { count: alertsResponse.data.length });
+        const alertsData = alertsResponse.data as DelayAlert[];
+        setAlerts(alertsData);
+        logger.debug('Alerts loaded', { count: alertsData.length });
       } else {
         logger.warn('Failed to load alerts', { error: alertsResponse.error });
       }
 
-      // Handle orders
       if (ordersResponse.success && ordersResponse.data) {
-        setOrders(ordersResponse.data);
-        logger.debug('Orders loaded', { count: ordersResponse.data.length });
+        const ordersData = ordersResponse.data as Order[];
+        setOrders(ordersData);
+        logger.debug('Orders loaded', { count: ordersData.length });
       } else {
         logger.warn('Failed to load orders', { error: ordersResponse.error });
       }
 
-      // Handle settings
       if (settingsResponse.success && settingsResponse.data) {
-        setSettings(settingsResponse.data);
+        setSettings(settingsResponse.data as AppSettings);
         logger.debug('Settings loaded');
       } else {
         logger.warn('Failed to load settings', { error: settingsResponse.error });
         // Keep using fallback settings
       }
 
-      // Handle analytics
       if (analyticsResponse.success && analyticsResponse.data) {
-        const { alerts: alertStats, orders: orderStats } = analyticsResponse.data;
-        
+        // Wire shape from MerchantApiService.getAnalytics — snake_case stats keys.
+        const analytics = analyticsResponse.data as {
+          alerts: { total_alerts?: number; pending_alerts?: number; sent_alerts?: number };
+          orders: { total_orders?: number };
+        };
+        const alertStats = analytics.alerts;
+        const orderStats = analytics.orders;
+
         setStats({
           totalAlerts: alertStats.total_alerts || 0,
           activeAlerts: alertStats.pending_alerts || 0,
@@ -149,7 +158,10 @@ export const useDashboardData = ({
     try {
       logger.debug('Saving settings', { settings });
 
-      const response = await api.updateSettings(settings);
+      // v1.38 type-lie surface: AppSettings (camelCase, interface) flows to
+      // the snake_case UpdateSettingsInput at the boundary. Cast to satisfy
+      // the post-Wave-3.4 Record<string, unknown> param type.
+      const response = await api.updateSettings(settings as unknown as Record<string, unknown>);
 
       if (response.success) {
       setToastMessage('Settings saved successfully!');

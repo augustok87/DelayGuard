@@ -1,4 +1,5 @@
 import { getSessionToken } from "@shopify/app-bridge/utilities";
+import type { ClientApplication } from "@shopify/app-bridge";
 import { logger } from "./logger";
 
 /**
@@ -8,14 +9,17 @@ import { logger } from "./logger";
  * 1. Retrieves session tokens from App Bridge
  * 2. Includes the token in Authorization headers
  * 3. Handles token refresh automatically
- * 4. Provides type-safe API methods
+ * 4. Returns each response body inside ApiResponse<T> with `data: unknown` —
+ *    callers must narrow (`isAlertRow(r.data)`, Zod parse, etc.) per Wave 3.4
+ *    typing-hygiene rule. Wire shape is the snake_case MerchantApiService
+ *    output; v1.38 camelCase migration is the separate-PR fix.
  *
  * @see https://shopify.dev/docs/apps/auth/oauth/session-tokens
  */
 
 interface ApiClientConfig {
   baseUrl?: string;
-  app?: any; // App Bridge app instance
+  app?: ClientApplication;
 }
 
 interface ApiResponse<T> {
@@ -29,7 +33,7 @@ interface ApiResponse<T> {
 
 class ApiClient {
   private baseUrl: string;
-  private app: any; // App Bridge app instance
+  private app: ClientApplication | undefined;
 
   constructor(config: ApiClientConfig = {}) {
     this.baseUrl = config.baseUrl || "/api";
@@ -40,7 +44,7 @@ class ApiClient {
    * Set the App Bridge instance
    * This must be called before making any authenticated requests
    */
-  setApp(app: any) {
+  setApp(app: ClientApplication) {
     this.app = app;
     logger.debug("App Bridge instance set for API client");
   }
@@ -133,35 +137,38 @@ class ApiClient {
 
   /**
    * GET /api/alerts
-   * Fetch all delay alerts for the authenticated shop
+   * Fetch all delay alerts for the authenticated shop.
+   * Wire shape: snake_case `AlertRow[]` from MerchantApiService — caller narrows.
    */
   async getAlerts() {
-    return this.request<any[]>("/alerts");
+    return this.request<unknown[]>("/alerts");
   }
 
   /**
    * GET /api/orders
-   * Fetch orders with optional limit
+   * Fetch orders with optional limit.
+   * Wire shape: snake_case `OrderRow[]` from MerchantApiService — caller narrows.
    */
   async getOrders(limit?: number) {
     const query = limit ? `?limit=${limit}` : "";
-    return this.request<any[]>(`/orders${query}`);
+    return this.request<unknown[]>(`/orders${query}`);
   }
 
   /**
    * GET /api/settings
-   * Fetch app settings for the authenticated shop
+   * Fetch app settings for the authenticated shop.
+   * Wire shape: snake_case `AppSettingsRow` from MerchantApiService — caller narrows.
    */
   async getSettings() {
-    return this.request<any>("/settings");
+    return this.request<unknown>("/settings");
   }
 
   /**
    * PUT /api/settings
-   * Update app settings
+   * Update app settings. Body shape: `UpdateSettingsInput` (caller's responsibility).
    */
-  async updateSettings(settings: Record<string, any>) {
-    return this.request<any>("/settings", {
+  async updateSettings(settings: Record<string, unknown>) {
+    return this.request<unknown>("/settings", {
       method: "PUT",
       body: JSON.stringify(settings),
     });
@@ -169,26 +176,28 @@ class ApiClient {
 
   /**
    * GET /api/analytics
-   * Fetch analytics data
+   * Fetch analytics summary.
+   * Wire shape: `AnalyticsSummary` from MerchantApiService — caller narrows.
    */
   async getAnalytics() {
     return this.request<{
-      alerts: any;
-      orders: any;
+      alerts: unknown;
+      orders: unknown;
     }>("/analytics");
   }
 
   /**
    * GET /api/shop
-   * Fetch shop information
+   * Fetch shop information.
+   * Wire shape: snake_case `ShopInfo` from MerchantApiService — caller narrows.
    */
   async getShop() {
-    return this.request<any>("/shop");
+    return this.request<unknown>("/shop");
   }
 
   /**
    * GET /api/health
-   * Check API health (no authentication required)
+   * Check API health (no authentication required).
    */
   async health() {
     return this.request<{ status: string; timestamp: string }>("/health");

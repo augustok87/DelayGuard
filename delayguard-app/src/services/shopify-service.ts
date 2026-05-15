@@ -39,10 +39,27 @@ export interface OrderLineItem {
 }
 
 /**
- * Shopify GraphQL client interface
+ * Shopify GraphQL client interface.
+ *
+ * `query` is generic over the expected response shape — callers declare an
+ * inline type for what their specific GraphQL query returns. Defaults to
+ * `unknown` so a caller that forgets to type the response is forced to narrow
+ * before accessing fields. Wave 3.5 typing rule.
  */
+interface ShopifyGraphQLError {
+  message: string;
+}
+
+interface ShopifyGraphQLResponse<T = unknown> {
+  data?: T;
+  errors?: ShopifyGraphQLError[];
+}
+
 interface ShopifyGraphQLClient {
-  query: (queryString: string, variables: Record<string, any>) => Promise<any>;
+  query: <T = unknown>(
+    queryString: string,
+    variables?: Record<string, unknown>,
+  ) => Promise<ShopifyGraphQLResponse<T>>;
 }
 
 /**
@@ -75,7 +92,10 @@ export async function createGraphQLClient(
   });
 
   return {
-    query: async(queryString: string, variables: Record<string, any> = {}) => {
+    query: async<T = unknown>(
+      queryString: string,
+      variables: Record<string, unknown> = {},
+    ): Promise<ShopifyGraphQLResponse<T>> => {
       const url = `https://${normalizedDomain}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`;
 
       const response = await fetch(url, {
@@ -108,11 +128,13 @@ export async function createGraphQLClient(
         );
       }
 
-      const json = await response.json();
+      const json = (await response.json()) as ShopifyGraphQLResponse<T>;
 
       // Handle GraphQL errors
       if (json.errors && json.errors.length > 0) {
-        const errorMessages = json.errors.map((e: any) => e.message).join(", ");
+        const errorMessages = json.errors
+          .map((e: ShopifyGraphQLError) => e.message)
+          .join(", ");
         throw new Error(`GraphQL error: ${errorMessages}`);
       }
 
@@ -187,7 +209,28 @@ export async function fetchOrderLineItems(
       }
     `;
 
-    const response = await client.query(query, { orderId: orderGid });
+    // Inline response shape matches the `GetOrderWithProducts` query above —
+    // Wave 3.5 typing rule (consumers declare what each query returns).
+    interface OrderLineItemNode {
+      id: string;
+      title: string;
+      variantTitle: string | null;
+      quantity: number;
+      originalUnitPrice: string;
+      image: { url: string; altText: string | null } | null;
+      product: { id: string; productType: string | null; vendor: string | null } | null;
+      sku: string | null;
+    }
+    interface OrderLineItemsQueryResponse {
+      order: {
+        id: string;
+        lineItems: { edges: Array<{ node: OrderLineItemNode }> };
+      } | null;
+    }
+
+    const response = await client.query<OrderLineItemsQueryResponse>(query, {
+      orderId: orderGid,
+    });
 
     // Handle case where order is not found
     if (!response.data || !response.data.order) {
@@ -214,23 +257,21 @@ export async function fetchOrderLineItems(
     }
 
     // Transform Shopify format to internal format
-    const lineItems: OrderLineItem[] = order.lineItems.edges.map(
-      (edge: any) => {
-        const node = edge.node;
-        return {
-          shopifyLineItemId: node.id,
-          productId: node.product?.id || "",
-          title: node.title,
-          variantTitle: node.variantTitle || null,
-          sku: node.sku || null,
-          quantity: node.quantity,
-          price: parseFloat(node.originalUnitPrice),
-          productType: node.product?.productType || null,
-          vendor: node.product?.vendor || null,
-          imageUrl: node.image?.url || null,
-        };
-      },
-    );
+    const lineItems: OrderLineItem[] = order.lineItems.edges.map((edge) => {
+      const node = edge.node;
+      return {
+        shopifyLineItemId: node.id,
+        productId: node.product?.id || "",
+        title: node.title,
+        variantTitle: node.variantTitle || null,
+        sku: node.sku || null,
+        quantity: node.quantity,
+        price: parseFloat(node.originalUnitPrice),
+        productType: node.product?.productType || null,
+        vendor: node.product?.vendor || null,
+        imageUrl: node.image?.url || null,
+      };
+    });
 
     logger.info(`Fetched ${lineItems.length} line items from Shopify`, {
       shop: shopDomain,

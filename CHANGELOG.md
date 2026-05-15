@@ -2,12 +2,82 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 15, 2026 (v1.46 — audit Wave 4.2 + 4.3 redis-connection + performance-monitor sibling tests, +40 tests, 1 latent reader/writer-schema bug surfaced)
+**Last Updated**: May 15, 2026 (v1.47 — audit Wave 3.4 + 3.5 closes Wave 3, api-client.ts + shopify-service.ts typed, EnhancedDashboard found unshipped)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.47 (2026-05-15): Audit Wave 3.4 + 3.5 — Wave 3 CLOSED (api-client.ts + shopify-service.ts)
+
+**Test Results**: 1,965 passing (no delta), 25 skipped, 0 failing. Pure typing wave, no new test files.
+**Status**: **Wave 3 CLOSED — 5 of 5 clusters shipped.** Project-wide `any` count outside test code: 80 → **65 (−15 from this wave alone, −34 cumulative since the audit started)**.
+
+**Problem**: Two clusters remained after Wave 3.3 — both touched public-surface boundaries with real-tradeoff typing decisions:
+
+1. **Wave 3.4 (api-client.ts, 10 anys)**: the frontend's Shopify-authenticated fetch wrapper. `app: any` for the App Bridge instance + 8 `request<any>` / `Record<string, any>` parameter and return types. Public to every UI consumer.
+2. **Wave 3.5 (shopify-service.ts, 4 anys)**: the GraphQL plumbing. `query: (qs, vars: Record<string, any>) => Promise<any>` interface + matching implementation + `(e: any) => e.message` error-iteration + `(edge: any) => …` line-item-mapping.
+
+Both required user reverse-prompts (the session prompt explicitly listed `shopify-service.ts` as a reverse-prompt trigger; api-client.ts hit the same tradeoff space via the v1.38 type-lie).
+
+**User decisions** (reverse-prompted in-session, both options chosen with the same rationale):
+
+- **Wave 3.4 → option A: `unknown` + force narrowing at consumers.** Picked over option B (camelCase frontend types — perpetuates v1.38 type-lie inside api-client.ts) and option C (backend wire types — breaks every existing UI consumer). Honest about the snake_case-vs-camelCase boundary; surfaces every consumer that was secretly relying on the `any`-typed shape.
+- **Wave 3.5 → option A: `unknown` + per-call typed response shapes.** Picked over option B (Zod runtime parse — overkill for one query type) and option C (GraphQL codegen — 4-5 new devDeps for one file with one query) and option D (defer). Matches the Wave 3.4 unknown-at-boundary pattern.
+
+**What Changed**:
+
+**1. `delayguard-app/src/utils/api-client.ts`** — Wave 3.4 typing:
+- Added `import type { ClientApplication } from "@shopify/app-bridge";`. Verified the import path: `@shopify/app-bridge/index.d.ts` → `export * from './client'` → `client/index.d.ts` → `export * from './types'` → re-exports `ClientApplication` from `@shopify/app-bridge-core/client/types`.
+- `ApiClientConfig.app: any` → `app?: ClientApplication`.
+- `private app: any` → `private app: ClientApplication | undefined`.
+- `setApp(app: any)` → `setApp(app: ClientApplication)`.
+- 6 `request<any>` / `request<any[]>` → `request<unknown>` / `request<unknown[]>`.
+- 1 `Record<string, any>` (updateSettings parameter) → `Record<string, unknown>`.
+- 1 `{ alerts: any; orders: any }` (getAnalytics return) → `{ alerts: unknown; orders: unknown }`.
+- Added inline doc comments at every public method documenting the wire shape (`snake_case AlertRow[]` etc.) the caller should narrow toward.
+
+**2. `delayguard-app/src/components/EnhancedDashboard/hooks/useDashboardData.ts`** — Wave 3.4 consumer narrowing:
+The `unknown` typing at the boundary forced 10 compile errors at this consumer — the only consumer of `api.getAlerts/getOrders/getSettings/getAnalytics/updateSettings`. Cast each `unknown` payload to the camelCase frontend type with an explicit `// v1.38 known type-lie:` comment block at the top. Casts narrow:
+- `alertsResponse.data as DelayAlert[]`
+- `ordersResponse.data as Order[]`
+- `settingsResponse.data as AppSettings`
+- `analyticsResponse.data as { alerts: { total_alerts?: number; pending_alerts?: number; sent_alerts?: number }; orders: { total_orders?: number } }` (precise inline shape rather than the heavier `AnalyticsSummary` from `merchant-api-service.ts`).
+- `settings as unknown as Record<string, unknown>` at the `updateSettings(settings)` call.
+
+**Found-and-flagged while writing the consumer narrowing**: `EnhancedDashboard/` subtree is **unshipped scaffolding** — `rg "useDashboardData|EnhancedDashboard" src/ tests/ -g '*.ts' -g '*.tsx'` showed zero callers outside the folder itself. Same shape as the Wave 7 `AnalyticsDashboard` finding. Eleven files: 8 components + 1 hook + mockData + constants, all interconnected but not wired to any router or top-level component. **NOT deleted in this wave** (smallest blast radius — outside Wave 3.4's scope). Flag for a future Wave-7-style cleanup PR. Acceptable to keep `unknown`-narrowing casts in unshipped code since they never execute at runtime.
+
+**3. `delayguard-app/src/services/shopify-service.ts`** — Wave 3.5 typing:
+- Added two new boundary interfaces:
+  ```ts
+  interface ShopifyGraphQLError { message: string }
+  interface ShopifyGraphQLResponse<T = unknown> {
+    data?: T;
+    errors?: ShopifyGraphQLError[];
+  }
+  ```
+- `ShopifyGraphQLClient.query` made generic: `<T = unknown>(qs, vars?: Record<string, unknown>) => Promise<ShopifyGraphQLResponse<T>>`. The default `T = unknown` forces forgetful callers to narrow.
+- The `createGraphQLClient` implementation mirrors the generic signature (note: the runtime `await response.json()` is cast `as ShopifyGraphQLResponse<T>` — this is the inevitable type-assertion at any external-API boundary; Zod was the alternative the user explicitly rejected as overkill).
+- `json.errors.map((e: any) => ...)` → `json.errors.map((e: ShopifyGraphQLError) => ...)`.
+- `fetchOrderLineItems` declares an inline `OrderLineItemsQueryResponse` interface matching the `GetOrderWithProducts` query above it (the only GraphQL query in the service): `{ order: { id, lineItems: { edges: Array<{ node: OrderLineItemNode }> } } | null }`. The `(edge: any) => ...` mapping is now `(edge) => ...` with full type inference from `OrderLineItemsQueryResponse`.
+
+**Verification**:
+- `npm run type-check` → clean.
+- `npm test` → 1,965 passing, 25 skipped, 0 failing (no delta — pure typing wave).
+- Targeted: `npx jest src/tests/unit/utils/api-client.test.ts` → 15/15 passing.
+- `npx eslint --fix` on the three touched files → 1 PRE-EXISTING warning at [useDashboardData.ts:139](delayguard-app/src/components/EnhancedDashboard/hooks/useDashboardData.ts#L139) (`react-hooks/exhaustive-deps` for `settings.delayThreshold` — predates this wave, not introduced here). Zero errors.
+- `npm run build` → webpack compiled with the same 2 pre-existing warnings as main.
+- `grep -c "\bany\b" src/services/shopify-service.ts src/utils/api-client.ts` → `shopify-service.ts: 0`, `api-client.ts: 1` (matches the word "any" in the doc comment "before making any authenticated requests", not a TS `any` type).
+- Project-wide non-test `any` count: **80 → 65 (−15)** via the same `rg` command the prior waves used.
+
+**Out of scope (smallest blast radius — flagged for future waves)**:
+- **`EnhancedDashboard/` unshipped subtree (11 files)**: `useDashboardData.ts`, `mockData.ts`, `constants.ts`, plus 8 components under `components/` and another barrel `components/index.ts`. No router, no top-level component imports the subtree. Mirrors the Wave 7 `AnalyticsDashboard` finding precisely. Track as Wave 7.3 (dead-code cleanup, deferred-PR territory) — too big to bundle into this typing wave.
+- **65 remaining `any`s outside test code**: scattered across services not in the original Wave 3 audit table (e.g. `security-monitor.ts`, `optimized-database.ts`, `performance-monitor.ts`'s static decorator with `target: any` / `this: any`, several middleware files). Future cleanup territory; the canonical Wave 3 audit is closed.
+- 2 pre-existing lint errors carried since Wave 1.1 — untouched per the audit plan.
+- Husky pre-commit gate still non-functional per Wave 1.1 — not bypassed, just doesn't fire.
+
+---
 
 ### v1.46 (2026-05-15): Audit Wave 4.2 + 4.3 — redis-connection + performance-monitor sibling tests
 
