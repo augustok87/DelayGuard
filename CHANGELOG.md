@@ -2,12 +2,128 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 15, 2026 (v1.47 — audit Wave 3.4 + 3.5 closes Wave 3, api-client.ts + shopify-service.ts typed, EnhancedDashboard found unshipped)
+**Last Updated**: May 15, 2026 (v1.48 — Phase 2.1.a ingestion slice: customer_intelligence table + CustomerSyncService + customer-sync BullMQ processor)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.48 (2026-05-15): Phase 2.1.a — Customer Intelligence Ingestion (smallest first slice)
+
+**Test Results**: 1,999 passing (+34), 25 skipped, 0 failing. Five new sibling tests (`customer-segment.test.ts` 8 cases, `customer-sync-service.test.ts` 12, `tests/unit/queue/customer-sync.test.ts` 5, +7 cases for `fetchCustomerById` appended to `tests/unit/services/shopify-service.test.ts`, +2 cases for `shopify_customer_id` appended to `services/order-upsert-service.test.ts`).
+**Status**: Phase 2.1 first sub-slice (2.1.a) **SHIPPED**. Sub-slices remaining (2.1.b–2.1.f): priority score (Phase 2.2), financial breakdown, shipping address, test-alert endpoint, customer-intelligence UI surfacing. None of these are in this slice.
+
+**Problem**: Phase 1 shipped without customer context — every delay alert was treated equally regardless of customer LTV / repeat-buyer status. Phase 2.1 (per [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#L2012-L2190)) introduces customer intelligence: lifetime stats + computed segment, stored per shop, fed from each fulfilled-order webhook. This first slice builds **only** the ingestion pipeline — the table, the segmentation rules, the Shopify Customer fetch, and the BullMQ wiring. UI / priority-score / financial breakdown / shipping address / test-alert are explicitly out of scope.
+
+**Four gating decisions reverse-prompted before any code was written**:
+
+1. **Scope batching** → just `read_customers`. `read_products` is already in [app-config.ts:44-50](delayguard-app/src/config/app-config.ts), shipping addresses ride on `read_orders`, and none of the other Phase 2 sub-features need a new scope. There is nothing to batch — adding `read_customers` is the whole Phase 2 re-auth cohort.
+2. **Sync trigger** → webhook-only via BullMQ post-upsert. Backfill cron deferred (separate operational slice with its own GraphQL cost-points budget). Smallest blast radius; the pipeline is proven on live `orders/updated` events.
+3. **Guests** → skip rows; compute "guest" inline at alert-display time. Rejected the email-hash + partial-unique alternative — smaller schema (no PII hashing, no graduated-guest-merge problem), forward-compatible if guest analytics earns its keep later.
+4. **Test strategy** → mock GraphQL responses per Wave 3.5 patterns (consistent with `fetchOrderLineItems` sibling tests). Dev-store integration is the post-merge smoke check, not the unit suite.
+
+**Two additional gating issues surfaced during context-gathering** (reverse-prompt criterion (b)):
+
+5. **`orders.shopify_customer_id` not captured today**. [OrderUpsertService.upsertOrderFromWebhook](delayguard-app/src/services/order-upsert-service.ts) wrote `customer_name/email/phone` but discarded `webhook.customer.id`. Without that column, customer_intelligence rows have no stable FK for Phase 2.2's priority-score query. **User chose**: additive column on orders (Phase 2.2 gets the join key for free).
+6. **Migration runner does not execute `.sql` files**. [migrate.ts](delayguard-app/src/database/migrate.ts) only calls `runMigrations()` in [connection.ts](delayguard-app/src/database/connection.ts) — the lone `003_create_subscriptions_table.sql` file is unreachable from the runner (and has its own latent `shop_id UUID REFERENCES shops(id)` vs `shops.id SERIAL` type-mismatch). **User chose**: extend `connection.ts:runMigrations()` (matches every shipped table). Fixing the broken `003_*.sql` file deferred to its own PR.
+
+**What Changed**:
+
+**1. SQL migration** (in [src/database/connection.ts](delayguard-app/src/database/connection.ts), idempotent block before the index creation):
+
+- Additive `ALTER TABLE orders ADD COLUMN shopify_customer_id VARCHAR(255)` (nullable — guest checkouts store null, the sync layer keys off this null to skip).
+- `CREATE TABLE customer_intelligence` with columns: `id SERIAL PRIMARY KEY, shop_id INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE, shopify_customer_id VARCHAR(255) NOT NULL, orders_count INTEGER NOT NULL, total_spent NUMERIC(12, 2) NOT NULL, customer_since TIMESTAMP, last_order_at TIMESTAMP, segment VARCHAR(20) NOT NULL, accepts_marketing BOOLEAN NOT NULL DEFAULT FALSE, created_at, updated_at`. `UNIQUE(shop_id, shopify_customer_id)` is the UPSERT key.
+- Two new indexes: `idx_orders_shopify_customer_id` (for Phase 2.2 alert→customer join) and `idx_customer_intelligence_shop_segment` (for VIP/segment filtering in Phase 2.2 + dashboard).
+- **No `email_hash` column** (rejected guest-tracking option). **No `.sql` file** (migration runner doesn't load them — see #6 above).
+
+**2. `src/services/customer-segment.ts` + sibling test** (new, 8 tests):
+
+Pure function `deriveSegment(input)` returns `'VIP' | 'Repeat' | 'New' | 'At-Risk' | 'Gift-Buyer'`. Precedence highest-first:
+
+```
+1. VIP        — ordersCount >= 5 OR totalSpent >= 1000   (plan line 2108)
+2. At-Risk    — ordersCount >= 2 AND daysSinceLastOrder >= 90
+3. Gift-Buyer — ordersCount === 1 AND totalSpent >= 200 AND !acceptsMarketing
+4. Repeat     — ordersCount >= 2
+5. New        — fallback
+```
+
+Tests cover both 5-orders / $1000-LTV boundaries explicitly + one boundary per derived rule. Plan only defined VIP/Repeat/New rules; At-Risk and Gift-Buyer thresholds were committed to with concrete rationale (90-day Shopify "Returning"-segment alignment; $200 single-purchase non-subscriber as a gift-buyer heuristic). Pure-fn — easy to retune without touching the sync pipeline.
+
+**3. `src/services/shopify-service.ts`** — Phase 2.1.a additions (no breaking change to the Wave 3.5 generic):
+
+- Exported `CustomerIntelligenceData` interface (camelCase + parsed types: `totalSpent: number`, `customerSince: Date`, `lastOrderAt: Date | null`).
+- Exported `fetchCustomerById(shopDomain, accessToken, shopifyCustomerId)` — uses existing `createGraphQLClient` + the `query<CustomerQueryResponse>` generic. Inline `CustomerNode` + `CustomerQueryResponse` interfaces document the GetCustomerById query response shape (Wave 3.5 typing rule — callers declare what each query returns).
+- New `normalizeCustomerId` helper (sibling to `normalizeOrderId`) for GID format conversion.
+- Returns `null` when `data.customer === null` (Shopify reports the customer no longer exists). Propagates 401/429/5xx from `createGraphQLClient` unchanged. Did NOT require any change to the `ShopifyGraphQLClient` interface — Wave 3.5's deliberate ergonomic kept extension cheap.
+
+**4. `src/services/order-upsert-service.ts`** — captures shopify_customer_id on every UPSERT:
+
+- `ShopifyCustomer.id?: number` was already in the interface; previously discarded. Now stringified and persisted as `shopify_customer_id` (null when absent — guest checkout).
+- UPSERT SQL extended: added column to `INSERT INTO orders (...)` and the `DO UPDATE SET ...EXCLUDED.shopify_customer_id` clause.
+- Sibling test updated for v1.19 every-column param assertion (8 params now instead of 7), plus 2 new cases: shopify_customer_id present (happy path) + null when `customer.id` is absent.
+
+**5. `src/services/customer-sync-service.ts` + sibling test** (new, 12 tests):
+
+- `CustomerSyncService.syncCustomerForOrder(shopDomain, shopifyOrderId)` — the pipeline:
+  1. Resolve shop (id + access_token).
+  2. Look up `orders.shopify_customer_id` by `(shop_id, shopify_order_id)` — multi-tenant guard scopes on resolved shop_id, not raw shop_domain.
+  3. Silent-skip on: shop-not-found / order-not-found / guest checkout (`shopify_customer_id IS NULL`) / Shopify reports customer 404.
+  4. Otherwise call `fetchCustomerById`, compute `daysSinceLastOrder`, run `deriveSegment`, UPSERT into `customer_intelligence`.
+- `DAYS_SINCE_LAST_ORDER_FALLBACK = 9999` for first-time customers with no `lastOrderAt` — picked well above the 90-day At-Risk cutoff so a new customer is never misclassified.
+- v1.19 every-column param-array assertion on the UPSERT (8 params), with `jest.useFakeTimers()` pinning "now" so `daysSinceLastOrder` is deterministic.
+- DB failures and Shopify 401/5xx **DO** propagate — BullMQ's attempts:3 retry chain runs.
+
+**6. `src/queue/processors/customer-sync.ts` + sibling test** (new, 5 tests):
+
+- Thin BullMQ processor: hands `(shopDomain, shopifyOrderId)` to `CustomerSyncService`, lets exceptions propagate.
+- Idempotency tested: running the same job twice issues two service calls — but the UPSERT guarantees the same end state.
+- Service mocked at the class level per `.claude/rules/tests.md` (the vendor-SDK-level mocking lives in `shopify-service.test.ts`).
+
+**7. `src/queue/setup.ts`** — Phase 2.1.a queue + worker:
+
+- New `customerSyncQueue` and `customerSyncWorker` next to existing delay-check + notifications.
+- Canonical defaults: `attempts: 3`, `backoff: { type: "exponential", delay: 2000 }`, `removeOnComplete: 100`, `removeOnFail: 50` (matches `.claude/rules/backend.md` BullMQ retry pattern — no diverging config).
+- Worker `concurrency: 5`, rate-limited `200 jobs/minute` (each job = 1 Shopify GraphQL Customer call; Shopify's 1000-cost-points/sec limit on standard plans leaves ample headroom).
+- New `addCustomerSyncJob({shopDomain, shopifyOrderId})` producer. JobId includes `Date.now()` so re-runs are deliberate (not deduped). Event handlers added (`completed`/`failed`/`error`).
+- `closeQueues` and module exports updated. `getQueueStats` left untouched — its return shape feeds external monitors; surfacing customer-sync stats is a Phase 2.x UI slice.
+
+**8. `src/routes/webhooks.ts`** — best-effort enqueue inside the `orders/updated` handler:
+
+After `orderUpsertService.upsertOrderFromWebhook` succeeds, the route enqueues `addCustomerSyncJob`. Wrapped in inner try/catch like `saveOrderLineItems` — a queue hiccup must NOT fail the webhook ACK. Guest checkouts also enqueue (the service silently skips on the null `shopify_customer_id` signal — cleaner than complicating the webhook with guest-detection logic).
+
+**9. `src/config/app-config.ts`** — OAuth scope:
+
+`read_customers` appended to the default scopes array (alongside `read_orders`, `write_orders`, `read_fulfillments`, `write_fulfillments`, `read_products`). Existing merchants will need to re-authorize via the partner-console flow — that's the entire Phase 2 re-auth cohort (no batching needed since no later Phase 2 sub-feature requires another scope addition).
+
+**Verification**:
+
+- `npm run type-check` → clean.
+- `npm test` → 1,999 passing (+34), 25 skipped, 0 failing.
+- Targeted: `npx jest src/services/customer-segment.test.ts` 8/8. `npx jest src/services/customer-sync-service.test.ts` 12/12. `npx jest src/tests/unit/queue/customer-sync.test.ts` 5/5. `npx jest src/tests/unit/services/shopify-service.test.ts` 32/32 (was 25, +7 customer cases). `npx jest src/services/order-upsert-service.test.ts` 19/19 (was 17, +2 customer-id cases).
+- `npx eslint` on all 14 touched files → clean.
+- `npm run lint` → same 2 pre-existing errors carried since Wave 1.1 ([tests/integration/database/tracking-events-schema.test.ts:2](delayguard-app/src/tests/integration/database/tracking-events-schema.test.ts) unused import, [tests/unit/components/HelpModal.test.tsx:162](delayguard-app/tests/unit/components/HelpModal.test.tsx) a11y href). 13 warnings — all carried, none introduced by this slice.
+- `npm run build` → webpack compiled with the same 2 pre-existing warnings as main.
+- Husky pre-commit gate still non-functional per Wave 1.1 — not bypassed, just doesn't fire.
+
+**Out of scope for this slice (do NOT attack mid-slice)**:
+
+- **Phase 2.1.b–2.1.f** (the remaining Phase 2.1 sub-slices): priority score (Phase 2.2), financial breakdown, shipping address surfacing, test-alert endpoint, customer-intelligence UI dashboard. Each is its own focused PR — same per-wave discipline as the audit.
+- **One-time backfill cron** for existing orders' customers (deferred per Q2). Requires Shopify GraphQL cost-points budget tracking + paginated cron in its own slice.
+- **`getQueueStats` schema extension** for customer-sync. External monitor wire-shape change; not blocking the ingestion pipeline.
+- **Latent bug `003_create_subscriptions_table.sql`** (`shop_id UUID REFERENCES shops(id)` vs `shops.id SERIAL`) — verified during this slice's migration audit. The file is unreachable from `migrate.ts` so it has never run. Track as a separate cleanup PR; doesn't block this slice.
+
+**Carry-forwards from prior audit waves (untouched, still flagged)**:
+
+- EnhancedDashboard subtree (11 files) is unshipped scaffolding — Wave 7.3 target.
+- PerformanceMonitor reader/writer schema mismatch has a regression-lock test; fixing it should make that test fail.
+- ToastContainer.tsx:27 ℹ️ emoji (Wave 6 follow-up).
+- 3 route-layer integration gaps: webhooks.ts, monitoring.ts, billing.ts (Wave 4.6).
+- optimized-api.ts sibling test (Wave 4.4).
+- `npm run lint:fix` remains unsafe (Wave 2.3 finding).
+
+---
 
 ### v1.47 (2026-05-15): Audit Wave 3.4 + 3.5 — Wave 3 CLOSED (api-client.ts + shopify-service.ts)
 

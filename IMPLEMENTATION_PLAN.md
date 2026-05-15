@@ -2011,9 +2011,15 @@ Merchant Contact Information section
 
 ## PHASE 2: CUSTOMER INTELLIGENCE (3-4 weeks)
 **Goal**: Differentiate with smart prioritization and customer context
-**Status**: PRE-SUBMISSION REQUIREMENT
+**Status**: IN PROGRESS — Phase 2.1.a (ingestion pipeline) shipped 2026-05-15 (v1.48). Remaining: 2.1.b–2.1.f (priority score, financial breakdown, shipping address, test-alert, customer-intelligence UI). See [CHANGELOG.md v1.48](CHANGELOG.md) for the slice-by-slice breakdown.
 
 ### 2.1 Customer Value Scoring
+
+**Status**: 2.1.a (ingestion) ✅ SHIPPED 2026-05-15 (v1.48). Sub-slices 2.1.b–2.1.f pending.
+
+**Sub-slice 2.1.a what shipped**: `customer_intelligence` table + `orders.shopify_customer_id` additive column ([connection.ts](delayguard-app/src/database/connection.ts)); pure-fn `deriveSegment` at [customer-segment.ts](delayguard-app/src/services/customer-segment.ts) with 5-segment VIP/Repeat/New/At-Risk/Gift-Buyer rules; `fetchCustomerById` exported from [shopify-service.ts](delayguard-app/src/services/shopify-service.ts); [CustomerSyncService.syncCustomerForOrder](delayguard-app/src/services/customer-sync-service.ts); BullMQ [processCustomerSync](delayguard-app/src/queue/processors/customer-sync.ts) + canonical attempts:3 queue config; `addCustomerSyncJob` producer; webhook-route enqueue wired post-upsert; `read_customers` scope added to [app-config.ts](delayguard-app/src/config/app-config.ts). +34 sibling tests, all green.
+
+**Sub-slice 2.1.a key decisions** (preserved here for future audit-pass discoverability): (1) webhook-only trigger, no backfill cron (deferred); (2) guests skipped at sync layer, "guest" derived inline from `order.shopify_customer_id IS NULL` at alert-display time; (3) migration lives in `runMigrations()` (the `.sql` file path is unreachable — see audit-plan follow-up); (4) `orders.shopify_customer_id` added now so 2.2's priority-score join key is stable; (5) Shopify Admin API 2024-01 fields used (`ordersCount` / `totalSpent` / `acceptsMarketing` / `lastOrder.createdAt`). Implementation differs from the original Remix-style snippet below (raw `pg` + Koa, not Prisma + Remix).
 
 #### Current State
 - All customers treated equally

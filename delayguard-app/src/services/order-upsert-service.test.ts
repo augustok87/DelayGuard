@@ -46,6 +46,7 @@ const baseOrderPayload = {
   id: 1001,
   name: "#1001",
   customer: {
+    id: 5550001,
     first_name: "Ada",
     last_name: "Lovelace",
     email: "ada@example.com",
@@ -109,6 +110,9 @@ describe("OrderUpsertService", () => {
       expect(upsertSql).toMatch(/customer_name\s*=\s*EXCLUDED\.customer_name/i);
       expect(upsertSql).toMatch(/customer_email\s*=\s*EXCLUDED\.customer_email/i);
       expect(upsertSql).toMatch(/customer_phone\s*=\s*EXCLUDED\.customer_phone/i);
+      expect(upsertSql).toMatch(
+        /shopify_customer_id\s*=\s*EXCLUDED\.shopify_customer_id/i,
+      );
       expect(upsertSql).toMatch(/status\s*=\s*EXCLUDED\.status/i);
       expect(upsertSql).toMatch(/updated_at\s*=\s*CURRENT_TIMESTAMP/i);
 
@@ -120,6 +124,7 @@ describe("OrderUpsertService", () => {
         "Ada Lovelace", // customer_name
         "ada@example.com", // customer_email
         "+15551234567", // customer_phone
+        "5550001", // shopify_customer_id as string (Phase 2.1.a)
         "fulfilled", // status
       ]);
     });
@@ -149,7 +154,7 @@ describe("OrderUpsertService", () => {
       expect(upsertParams?.[3]).toBe("Ada");
     });
 
-    it("falls back to 'Unknown' when the customer block is absent", async() => {
+    it("falls back to 'Unknown' when the customer block is absent (guest checkout)", async() => {
       mockShopResolved();
       mockQuery.mockResolvedValueOnce([]);
       mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
@@ -163,6 +168,37 @@ describe("OrderUpsertService", () => {
       expect(upsertParams?.[3]).toBe("Unknown");
       expect(upsertParams?.[4]).toBeUndefined();
       expect(upsertParams?.[5]).toBeUndefined();
+      // Phase 2.1.a: shopify_customer_id is null for guest checkouts —
+      // CustomerSyncService skips guests on this null signal.
+      expect(upsertParams?.[6]).toBeNull();
+    });
+
+    it("persists shopify_customer_id as a string when present (Phase 2.1.a guest signal)", async() => {
+      mockShopResolved();
+      mockQuery.mockResolvedValueOnce([]);
+      mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+      await service.upsertOrderFromWebhook(SHOP, baseOrderPayload);
+
+      const [, upsertParams] = mockQuery.mock.calls[1];
+      expect(upsertParams?.[6]).toBe("5550001");
+    });
+
+    it("persists shopify_customer_id as null when customer.id is missing but customer block exists", async() => {
+      mockShopResolved();
+      mockQuery.mockResolvedValueOnce([]);
+      mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+      await service.upsertOrderFromWebhook(SHOP, {
+        ...baseOrderPayload,
+        customer: {
+          first_name: "Anonymous",
+          email: "anon@example.com",
+        },
+      });
+
+      const [, upsertParams] = mockQuery.mock.calls[1];
+      expect(upsertParams?.[6]).toBeNull();
     });
 
     it("defaults status to 'unfulfilled' when fulfillment_status is missing", async() => {
@@ -176,7 +212,7 @@ describe("OrderUpsertService", () => {
       });
 
       const [, upsertParams] = mockQuery.mock.calls[1];
-      expect(upsertParams?.[6]).toBe("unfulfilled");
+      expect(upsertParams?.[7]).toBe("unfulfilled");
     });
 
     it("re-reads the persisted orderId with the multi-tenant guard scoping on shop_id", async() => {

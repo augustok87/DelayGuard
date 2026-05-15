@@ -78,6 +78,14 @@ export class OrderUpsertService {
         return null;
       }
 
+      // Phase 2.1.a: shopify_customer_id stays null when customer.id is
+      // absent (guest checkout). CustomerSyncService keys off this null to
+      // skip the sync — see services/customer-sync-service.ts.
+      const shopifyCustomerId =
+        typeof orderData.customer?.id === "number"
+          ? orderData.customer.id.toString()
+          : null;
+
       await query(
         `INSERT INTO orders (
            shop_id,
@@ -86,14 +94,16 @@ export class OrderUpsertService {
            customer_name,
            customer_email,
            customer_phone,
+           shopify_customer_id,
            status
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (shop_id, shopify_order_id)
          DO UPDATE SET
            order_number = EXCLUDED.order_number,
            customer_name = EXCLUDED.customer_name,
            customer_email = EXCLUDED.customer_email,
            customer_phone = EXCLUDED.customer_phone,
+           shopify_customer_id = EXCLUDED.shopify_customer_id,
            status = EXCLUDED.status,
            updated_at = CURRENT_TIMESTAMP`,
         [
@@ -103,6 +113,7 @@ export class OrderUpsertService {
           buildCustomerName(orderData.customer),
           orderData.customer?.email,
           orderData.customer?.phone,
+          shopifyCustomerId,
           orderData.fulfillment_status || "unfulfilled",
         ],
       );

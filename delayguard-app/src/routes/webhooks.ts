@@ -18,7 +18,7 @@
 import Router from "koa-router";
 import crypto from "crypto";
 import { logger } from "../utils/logger";
-import { addDelayCheckJob } from "../queue/setup";
+import { addDelayCheckJob, addCustomerSyncJob } from "../queue/setup";
 import { saveOrderLineItems } from "../services/shopify-service";
 import { handleSendGridWebhook } from "./sendgrid-webhook";
 import {
@@ -140,6 +140,25 @@ router.post("/orders/updated", async(ctx) => {
         logger.error(
           "Failed to fetch/save line items",
           lineItemError as Error,
+          { orderId, shopifyOrderId: orderData.id },
+        );
+      }
+
+      // Phase 2.1.a: enqueue customer-sync. Best-effort — if the queue
+      // enqueue fails (e.g. Redis hiccup), we don't fail the webhook
+      // ACK. CustomerSyncService is idempotent (UPSERT) so a future
+      // webhook from the same customer will close the gap. Guest
+      // checkouts also enqueue here; the service silently skips them
+      // on the null shopify_customer_id signal.
+      try {
+        await addCustomerSyncJob({
+          shopDomain: shop,
+          shopifyOrderId: orderData.id.toString(),
+        });
+      } catch (enqueueError) {
+        logger.error(
+          "Failed to enqueue customer-sync job",
+          enqueueError as Error,
           { orderId, shopifyOrderId: orderData.id },
         );
       }

@@ -698,4 +698,168 @@ describe('ShopifyService - Phase 1.2 Product Information Integration', () => {
       expect(insertCall).toBeDefined();
     });
   });
+
+  // ==========================================
+  // Test Group 4: Fetch Customer By ID (Phase 2.1.a — Customer Intelligence)
+  // ==========================================
+
+  describe('Fetch Customer By ID', () => {
+    const mockCustomerResponse = {
+      data: {
+        customer: {
+          id: 'gid://shopify/Customer/5550001',
+          firstName: 'Ada',
+          lastName: 'Lovelace',
+          email: 'ada@example.com',
+          ordersCount: 7,
+          totalSpent: '1250.50',
+          acceptsMarketing: true,
+          createdAt: '2024-01-15T10:30:00.000Z',
+          lastOrder: { createdAt: '2026-05-10T08:00:00.000Z' },
+        },
+      },
+    };
+
+    beforeEach(() => {
+      (mockFetch as any).mockResolvedValue({
+        ok: true,
+        json: async() => mockCustomerResponse,
+      });
+    });
+
+    it('returns the normalized customer intelligence shape on the happy path', async() => {
+      const result = await ShopifyService.fetchCustomerById(
+        'test-shop.myshopify.com',
+        'test-token',
+        '5550001',
+      );
+
+      expect(result).toMatchObject({
+        shopifyCustomerId: 'gid://shopify/Customer/5550001',
+        email: 'ada@example.com',
+        ordersCount: 7,
+        totalSpent: 1250.5,
+        acceptsMarketing: true,
+      });
+      expect(result.customerSince).toBeInstanceOf(Date);
+      expect(result.customerSince.toISOString()).toBe('2024-01-15T10:30:00.000Z');
+      expect(result.lastOrderAt).toBeInstanceOf(Date);
+      expect(result.lastOrderAt?.toISOString()).toBe('2026-05-10T08:00:00.000Z');
+    });
+
+    it('issues the customer GraphQL query with the GID-normalized variable', async() => {
+      await ShopifyService.fetchCustomerById(
+        'test-shop.myshopify.com',
+        'test-token',
+        '5550001',
+      );
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0] as [string, any];
+      expect(url).toContain('test-shop.myshopify.com');
+      expect(url).toContain('/admin/api/');
+      expect(url).toContain('/graphql.json');
+      expect(options.method).toBe('POST');
+      expect(options.headers['X-Shopify-Access-Token']).toBe('test-token');
+
+      const body = JSON.parse(options.body);
+      // Documents the query shape so a future Customer schema change
+      // forces a deliberate edit instead of silent breakage.
+      expect(body.query).toContain('query GetCustomerById');
+      expect(body.query).toContain('customer(id: $customerId)');
+      expect(body.query).toContain('ordersCount');
+      expect(body.query).toContain('totalSpent');
+      expect(body.query).toContain('acceptsMarketing');
+      expect(body.query).toContain('createdAt');
+      expect(body.query).toContain('lastOrder');
+      expect(body.variables.customerId).toBe('gid://shopify/Customer/5550001');
+    });
+
+    it('accepts a pre-GID-formatted customer ID without re-normalizing', async() => {
+      await ShopifyService.fetchCustomerById(
+        'test-shop.myshopify.com',
+        'test-token',
+        'gid://shopify/Customer/5550001',
+      );
+
+      const [, options] = mockFetch.mock.calls[0] as [string, any];
+      const body = JSON.parse(options.body);
+      expect(body.variables.customerId).toBe('gid://shopify/Customer/5550001');
+    });
+
+    it('parses totalSpent (string in the GraphQL response) into a JS number', async() => {
+      (mockFetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({
+          data: {
+            customer: {
+              ...mockCustomerResponse.data.customer,
+              totalSpent: '42.99',
+            },
+          },
+        }),
+      });
+
+      const result = await ShopifyService.fetchCustomerById(
+        'test-shop.myshopify.com',
+        'test-token',
+        '5550001',
+      );
+      expect(result.totalSpent).toBe(42.99);
+    });
+
+    it('returns null lastOrderAt when the customer has no orders yet', async() => {
+      (mockFetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({
+          data: {
+            customer: {
+              ...mockCustomerResponse.data.customer,
+              ordersCount: 0,
+              lastOrder: null,
+            },
+          },
+        }),
+      });
+
+      const result = await ShopifyService.fetchCustomerById(
+        'test-shop.myshopify.com',
+        'test-token',
+        '5550001',
+      );
+      expect(result.lastOrderAt).toBeNull();
+      expect(result.ordersCount).toBe(0);
+    });
+
+    it('returns null when Shopify reports the customer does not exist (data.customer === null)', async() => {
+      (mockFetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({ data: { customer: null } }),
+      });
+
+      const result = await ShopifyService.fetchCustomerById(
+        'test-shop.myshopify.com',
+        'test-token',
+        '9999999',
+      );
+      expect(result).toBeNull();
+    });
+
+    it('propagates the existing 401 / 429 / 5xx rejection semantics from createGraphQLClient', async() => {
+      (mockFetch as any).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: { get: () => null },
+      });
+
+      await expect(
+        ShopifyService.fetchCustomerById(
+          'test-shop.myshopify.com',
+          'bad-token',
+          '5550001',
+        ),
+      ).rejects.toThrow(/Unauthorized/);
+    });
+  });
 });

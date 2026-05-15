@@ -290,6 +290,44 @@ export async function runMigrations(): Promise<void> {
       END $$;
     `);
 
+    // Phase 2.1.a (Customer Intelligence): track Shopify customer ID on each
+    // order so customer_intelligence rows have a stable join key. Additive
+    // and nullable — pre-Phase-2 orders stay valid; guest checkouts (no
+    // customer.id from Shopify) also store null and are filtered at sync.
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='orders' AND column_name='shopify_customer_id'
+        ) THEN
+          ALTER TABLE orders ADD COLUMN shopify_customer_id VARCHAR(255);
+        END IF;
+      END $$;
+    `);
+
+    // Phase 2.1.a (Customer Intelligence): per-shop snapshot of customer
+    // lifetime stats + computed segment. Guests are skipped at the sync
+    // layer (the "guest" label is derived inline from orders.shopify_customer_id
+    // IS NULL at alert-display time), so shopify_customer_id is NOT NULL
+    // here and the table only holds identified customers.
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS customer_intelligence (
+        id SERIAL PRIMARY KEY,
+        shop_id INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+        shopify_customer_id VARCHAR(255) NOT NULL,
+        orders_count INTEGER NOT NULL,
+        total_spent NUMERIC(12, 2) NOT NULL,
+        customer_since TIMESTAMP,
+        last_order_at TIMESTAMP,
+        segment VARCHAR(20) NOT NULL,
+        accepts_marketing BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(shop_id, shopify_customer_id)
+      )
+    `);
+
     // Create indexes for performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_orders_shop_id ON orders(shop_id);
@@ -302,6 +340,8 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_tracking_events_order_id ON tracking_events(order_id);
       CREATE INDEX IF NOT EXISTS idx_tracking_events_timestamp ON tracking_events(timestamp);
       CREATE INDEX IF NOT EXISTS idx_orders_tracking_status ON orders(tracking_status);
+      CREATE INDEX IF NOT EXISTS idx_orders_shopify_customer_id ON orders(shopify_customer_id);
+      CREATE INDEX IF NOT EXISTS idx_customer_intelligence_shop_segment ON customer_intelligence(shop_id, segment);
     `);
 
     logInfo("Database migrations completed", { component: "database" });

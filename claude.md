@@ -5,8 +5,8 @@ Shopify app (not a theme): React 18 + TS frontend, Koa + PostgreSQL + BullMQ/Red
 
 ## Status
 
-- **Phase**: 1 complete (95/100 readiness for Shopify App Store submission — see [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)). Phase 2 (customer intelligence & priority scoring) is next.
-- **Tests**: 1,965 passing, 25 skipped, 0 failing. Local CI gate: `npm test && npm run lint && npm run type-check && npm run build` (run from `delayguard-app/`).
+- **Phase**: 1 complete (95/100 readiness for Shopify App Store submission — see [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)). **Phase 2.1.a shipped 2026-05-15** (customer-intelligence ingestion: table + segment rules + Shopify Customer fetch + BullMQ pipeline). Remaining Phase 2.1 sub-slices: priority score (2.2), financial breakdown, shipping address, test-alert endpoint, customer-intelligence UI.
+- **Tests**: 1,999 passing, 25 skipped, 0 failing. Local CI gate: `npm test && npm run lint && npm run type-check && npm run build` (run from `delayguard-app/`).
 - **Husky**: pre-commit runs `node scripts/quality-gates.js` automatically. Don't bypass with `--no-verify`.
 
 ## Canonical docs (point at these instead of re-explaining)

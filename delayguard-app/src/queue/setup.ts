@@ -36,12 +36,15 @@ import IORedis from "ioredis";
 // import { AppConfig } from '../types'; // Available for future use
 import { processDelayCheck } from "./processors/delay-check";
 import { processNotification } from "./processors/notification";
+import { processCustomerSync } from "./processors/customer-sync";
 
 let redis: IORedis;
 let delayCheckQueue: Queue;
 let notificationQueue: Queue;
+let customerSyncQueue: Queue;
 let delayCheckWorker: Worker;
 let notificationWorker: Worker;
+let customerSyncWorker: Worker;
 
 export async function setupQueues(): Promise<void> {
   try {
@@ -86,6 +89,22 @@ export async function setupQueues(): Promise<void> {
       },
     });
 
+    // Phase 2.1.a: customer-sync queue. Uses the canonical defaults
+    // (attempts:3 exponential 2s backoff) per .claude/rules/backend.md
+    // — no diverging config.
+    customerSyncQueue = new Queue("customer-sync", {
+      connection: redis,
+      defaultJobOptions: {
+        removeOnComplete: 100,
+        removeOnFail: 50,
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 2000,
+        },
+      },
+    });
+
     // Create workers
     delayCheckWorker = new Worker("delay-check", processDelayCheck, {
       connection: redis,
@@ -102,6 +121,21 @@ export async function setupQueues(): Promise<void> {
       limiter: {
         max: 200,
         duration: 60000, // 200 jobs per minute
+      },
+    });
+
+    // Phase 2.1.a: customer-sync worker. Conservative concurrency + rate
+    // limit — every job makes one Shopify GraphQL call. ShipEngine
+    // rate-limit territory is documented at audit Wave 1.1; the Shopify
+    // GraphQL cost-points limit is 1000/sec on standard plans, and one
+    // Customer query is a couple of points, so 200/min leaves ample
+    // headroom. Concurrency 5 mirrors the delay-check worker.
+    customerSyncWorker = new Worker("customer-sync", processCustomerSync, {
+      connection: redis,
+      concurrency: 5,
+      limiter: {
+        max: 200,
+        duration: 60000,
       },
     });
 
@@ -142,6 +176,19 @@ function setupQueueEvents(): void {
   notificationWorker.on("error", (err) => {
     logger.error("❌ Notification worker error:", err);
   });
+
+  // Phase 2.1.a: customer-sync queue events
+  customerSyncWorker.on("completed", (job) => {
+    logger.info(`✅ Customer sync completed for job ${job.id}`);
+  });
+
+  customerSyncWorker.on("failed", (job, err) => {
+    logger.error(`❌ Customer sync failed for job ${job?.id}:`, err as Error);
+  });
+
+  customerSyncWorker.on("error", (err) => {
+    logger.error("❌ Customer sync worker error:", err);
+  });
 }
 
 export async function addDelayCheckJob(data: {
@@ -178,6 +225,25 @@ export async function addNotificationJob(data: {
 
   await notificationQueue.add("send-notification", data, {
     jobId: `notification-${data.orderId}-${Date.now()}`,
+  });
+}
+
+/**
+ * Phase 2.1.a — enqueue a customer-sync job after an order is upserted.
+ * Idempotent: re-running for the same (shopDomain, shopifyOrderId) just
+ * re-UPSERTs customer_intelligence with the latest stats. The jobId
+ * includes Date.now() so re-runs are deliberate (not deduped by BullMQ).
+ */
+export async function addCustomerSyncJob(data: {
+  shopDomain: string;
+  shopifyOrderId: string;
+}): Promise<void> {
+  if (!customerSyncQueue) {
+    throw new Error("Customer sync queue not initialized");
+  }
+
+  await customerSyncQueue.add("sync-customer", data, {
+    jobId: `customer-sync-${data.shopifyOrderId}-${Date.now()}`,
   });
 }
 
@@ -225,9 +291,12 @@ export async function closeQueues(): Promise<void> {
   if (notificationWorker) {
     await notificationWorker.close();
   }
+  if (customerSyncWorker) {
+    await customerSyncWorker.close();
+  }
   if (redis) {
     await redis.quit();
   }
 }
 
-export { delayCheckQueue, notificationQueue, redis };
+export { delayCheckQueue, notificationQueue, customerSyncQueue, redis };

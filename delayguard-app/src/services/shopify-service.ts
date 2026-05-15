@@ -157,6 +157,36 @@ function normalizeOrderId(orderId: string): string {
 }
 
 /**
+ * Convert customer ID to Shopify GID format if needed.
+ *
+ * @param customerId - Numeric customer ID or GID format
+ * @returns GID format (e.g., "gid://shopify/Customer/123456789")
+ */
+function normalizeCustomerId(customerId: string): string {
+  if (customerId.startsWith("gid://")) {
+    return customerId;
+  }
+  return `gid://shopify/Customer/${customerId}`;
+}
+
+/**
+ * Customer intelligence data fetched from Shopify — Phase 2.1.a.
+ *
+ * Wire field names normalized to camelCase + parsed types (totalSpent is
+ * a string in the GraphQL response, Date for timestamps). The downstream
+ * deriveSegment() pure function takes a subset of this shape.
+ */
+export interface CustomerIntelligenceData {
+  shopifyCustomerId: string;
+  email: string | null;
+  ordersCount: number;
+  totalSpent: number;
+  customerSince: Date;
+  lastOrderAt: Date | null;
+  acceptsMarketing: boolean;
+}
+
+/**
  * Fetch order line items from Shopify GraphQL API
  *
  * @param shopDomain - The shop's domain
@@ -291,6 +321,98 @@ export async function fetchOrderLineItems(
     );
     throw error;
   }
+}
+
+/**
+ * Fetch a Shopify customer's lifetime stats via the Customer GraphQL query.
+ *
+ * Phase 2.1.a — Customer Intelligence. Sibling to fetchOrderLineItems
+ * above: reuses createGraphQLClient + the Wave 3.5 generic query<T> so
+ * the response shape is typed at the call site, not the client.
+ *
+ * Field semantics (Admin API 2024-01):
+ *   - ordersCount: lifetime order count (Int)
+ *   - totalSpent: lifetime spend in shop currency, returned as a String
+ *     in the deprecated `totalSpent` field — parsed to a number here
+ *   - acceptsMarketing: opt-in flag (Boolean)
+ *   - createdAt: customer creation timestamp → customerSince
+ *   - lastOrder.createdAt: most recent order timestamp → lastOrderAt
+ *
+ * @returns The normalized intelligence record, or null when Shopify
+ *   reports the customer no longer exists (data.customer === null).
+ * @throws Error on 401 / 429 / 5xx — same propagation pattern as
+ *   fetchOrderLineItems (createGraphQLClient handles it once).
+ */
+export async function fetchCustomerById(
+  shopDomain: string,
+  accessToken: string,
+  shopifyCustomerId: string,
+): Promise<CustomerIntelligenceData | null> {
+  logger.debug("Fetching customer intelligence from Shopify", {
+    shop: shopDomain,
+    customerId: shopifyCustomerId,
+  });
+
+  const client = await createGraphQLClient(shopDomain, accessToken);
+  const customerGid = normalizeCustomerId(shopifyCustomerId);
+
+  const queryString = `
+    query GetCustomerById($customerId: ID!) {
+      customer(id: $customerId) {
+        id
+        firstName
+        lastName
+        email
+        ordersCount
+        totalSpent
+        acceptsMarketing
+        createdAt
+        lastOrder {
+          createdAt
+        }
+      }
+    }
+  `;
+
+  // Inline response shape for the GetCustomerById query — Wave 3.5
+  // typing rule (callers declare what each query returns).
+  interface CustomerNode {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    ordersCount: number;
+    totalSpent: string;
+    acceptsMarketing: boolean;
+    createdAt: string;
+    lastOrder: { createdAt: string } | null;
+  }
+  interface CustomerQueryResponse {
+    customer: CustomerNode | null;
+  }
+
+  const response = await client.query<CustomerQueryResponse>(queryString, {
+    customerId: customerGid,
+  });
+
+  if (!response.data || !response.data.customer) {
+    logger.info("Customer not found in Shopify", {
+      shop: shopDomain,
+      customerId: shopifyCustomerId,
+    });
+    return null;
+  }
+
+  const c = response.data.customer;
+  return {
+    shopifyCustomerId: c.id,
+    email: c.email,
+    ordersCount: c.ordersCount,
+    totalSpent: parseFloat(c.totalSpent),
+    customerSince: new Date(c.createdAt),
+    lastOrderAt: c.lastOrder ? new Date(c.lastOrder.createdAt) : null,
+    acceptsMarketing: c.acceptsMarketing,
+  };
 }
 
 /**
