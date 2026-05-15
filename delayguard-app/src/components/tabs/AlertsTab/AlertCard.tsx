@@ -29,7 +29,7 @@ import {
 import { Button } from '../../ui/Button';
 import { Accordion } from '../../ui/Accordion';
 import { InfoTooltip } from '../../ui/InfoTooltip'; // Phase A: UX clarity
-import { DelayAlert, TrackingEvent } from '../../../types';
+import { DelayAlert, PersistedTrackingEvent } from '../../../types';
 import styles from './AlertCard.module.css';
 
 interface AlertCardProps {
@@ -325,7 +325,7 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
       >
         <div className={styles.timelineSection}>
           <div className={styles.timeline}>
-            {displayEvents.map((event: TrackingEvent, index: number) => (
+            {displayEvents.map((event: PersistedTrackingEvent, index: number) => (
               <div key={event.id} className={styles.timelineEvent}>
                 <div className={styles.timelineDot}></div>
                 {index < displayEvents.length - 1 && <div className={styles.timelineLine}></div>}

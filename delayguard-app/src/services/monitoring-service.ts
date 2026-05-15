@@ -86,7 +86,7 @@ export interface Alert {
 }
 
 export class MonitoringService {
-  private redis: unknown;
+  private redis: Redis;
   private db: Pool;
   private alerts: Map<string, Alert> = new Map();
   private metrics: SystemMetrics[] = [];
@@ -160,7 +160,7 @@ export class MonitoringService {
         queryTime: dbQueryTime,
       },
       redis: {
-        connected: (this.redis as any).status === "ready",
+        connected: this.redis.status === "ready",
         memory: redisStats.memory,
         operations: redisStats.operations,
       },
@@ -179,7 +179,7 @@ export class MonitoringService {
 
     // Store in Redis for persistence
     try {
-      await (this.redis as any).setex(
+      await this.redis.setex(
         `metrics:system:${timestamp.getTime()}`,
         3600, // 1 hour TTL
         JSON.stringify(metrics),
@@ -285,7 +285,7 @@ export class MonitoringService {
     const start = Date.now();
 
     try {
-      await (this.redis as any).ping();
+      await this.redis.ping();
       const responseTime = Date.now() - start;
 
       return {
@@ -293,7 +293,7 @@ export class MonitoringService {
         status: responseTime < 100 ? "healthy" : "degraded",
         responseTime,
         lastChecked: new Date(),
-        details: { status: (this.redis as any).status },
+        details: { status: this.redis.status },
       };
     } catch (error) {
       return {
@@ -415,11 +415,11 @@ export class MonitoringService {
     operations: { commands: number; keyspace: number };
   }> {
     try {
-      const info = await (this.redis as any).info("memory");
+      const info = await this.redis.info("memory");
       const used = info.match(/used_memory:(\d+)/)?.[1] || "0";
       const peak = info.match(/used_memory_peak:(\d+)/)?.[1] || "0";
 
-      const keyspace = await (this.redis as any).dbsize();
+      const keyspace = await this.redis.dbsize();
 
       return {
         memory: {
@@ -539,7 +539,7 @@ export class MonitoringService {
 
   async close(): Promise<void> {
     try {
-      await Promise.all([(this.redis as any).quit(), this.db.end()]);
+      await Promise.all([this.redis.quit(), this.db.end()]);
     } catch (error) {
       // Log error but don't throw
       logger.error("Monitoring service warning", error as Error);

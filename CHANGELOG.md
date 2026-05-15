@@ -2,12 +2,68 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 14, 2026 (v1.40 — audit Wave 2.3 health-check ping() methods)
+**Last Updated**: May 14, 2026 (v1.41 — audit Wave 3.1 TS `any` cleanup, 2 of 5 clusters)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.41 (2026-05-14): Audit Wave 3.1 — TS `any` cleanup, 2 of 5 clusters
+
+**Test Results**: 1,911 passing (+0), 25 skipped, 0 failing. Pure typing changes — no new test files, no count delta. Two existing tests had spurious mock fields removed (real type-lies the new types surfaced — see "What Changed" §3).
+**Status**: TypeScript hygiene fix per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 3. **2 of 5 clusters shipped — 3 remain** (`api-client.ts` public surface, GraphQL plumbing in `shopify-service.ts`, OTEL `Counter`/`Histogram` types in `observability/tracing.ts`, Koa `rawBody` augmentation in `sendgrid-webhook.ts`). Wave 3 is NOT closed.
+
+**Problem**: Two clusters with the highest carry-forward cost in the [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) any-cleanup table:
+
+1. **`TrackingEvent` interface declared twice** in [delayguard-app/src/types/index.ts:22,148](delayguard-app/src/types/index.ts) with conflicting shapes. The line-148 shape required `id: string`; `CarrierService.getTrackingInfo` produced events without one. TypeScript's last-wins behavior silently elected line-148 for every consumer, including `TrackingIngestService` — which then masked a real type-lie. Surfaced AND deferred in Waves 2.2 and 2.3 (the longest-running carry-forward in the project).
+2. **`MonitoringService.redis` typed as `unknown`** in [delayguard-app/src/services/monitoring-service.ts](delayguard-app/src/services/monitoring-service.ts) with 7 `(this.redis as any).method()` casts gating every Redis call. The audit table called this 9 casts; an actual count showed 7 `this.redis as any` + 1 unrelated `(value as any)[part]` at line 485 in a nested-key resolver (left alone per smallest-blast-radius). Casts violated [.claude/rules/typescript-patterns.md](.claude/rules/typescript-patterns.md) ("no `any` — use `unknown` + narrowing") and CLAUDE.md's TypeScript-strict rule.
+
+Both clusters live in the services/types surface area — bundling them avoided two near-identical commits and kept the wave focused.
+
+**What Changed**:
+
+**1. `TrackingEvent` split into distinct named interfaces** ([delayguard-app/src/types/index.ts](delayguard-app/src/types/index.ts)):
+
+- **`CarrierTrackingEvent`** (the line-22 shape) — wire shape returned by ShipEngine: `{ timestamp, status, location?, description }`. No DB-assigned `id`. Now used by `TrackingInfo.events` and `TrackingIngestService`.
+- **`PersistedTrackingEvent`** (the line-148 shape) — `tracking_events`-row shape surfaced via `/api/alerts`: `{ id, timestamp, status, description, location?, carrierStatus? }`. Now used by `DelayAlert.trackingEvents` and the `AlertCard` component.
+
+Naming decision: chose **distinct names with no inheritance** over an `extends`-based design after a reverse-prompt on the consumer-count split (carrier: 2 refs — `TrackingInfo.events`, `TrackingIngestService`; persisted: 12 refs — `DelayAlert.trackingEvents`, `AlertCard.tsx`, 9 mocks in `AlertCard.test.tsx`). The line-148 shape IS a clean superset of line 22 (adds exactly `id` PK + optional `carrierStatus`), so `PersistedTrackingEvent extends CarrierTrackingEvent` was viable and would have meant less duplication. Distinct names were chosen because the shapes are likely to diverge further (DB-derived columns are a different surface than carrier-API fields), and the extension would have admitted `PersistedTrackingEvent` everywhere a `CarrierTrackingEvent` was accepted (Liskov) — undesirable for `TrackingIngestService`'s sort helper, which should refuse persisted events at the type boundary.
+
+Consumer renames (10 type references touched, no runtime shape change):
+- [src/services/tracking-ingest-service.ts:26,29](delayguard-app/src/services/tracking-ingest-service.ts) — import + `pickMostRecentEventTimestamp` parameter type.
+- [src/components/tabs/AlertsTab/AlertCard.tsx:32,328](delayguard-app/src/components/tabs/AlertsTab/AlertCard.tsx) — import + `displayEvents.map((event: PersistedTrackingEvent, …))` annotation.
+- [src/tests/unit/components/AlertCard.test.tsx](delayguard-app/src/tests/unit/components/AlertCard.test.tsx) — 11 mock references via `replace_all` (all already had `id` + `carrierStatus`, confirming they were always persisted-shape).
+
+**2. `MonitoringService.redis` typed as `Redis`** ([delayguard-app/src/services/monitoring-service.ts:89](delayguard-app/src/services/monitoring-service.ts)):
+
+- Field declaration changed from `private redis: unknown` to `private redis: Redis`. The `Redis` class is already imported at module top (`import Redis from "ioredis"`).
+- All 7 `(this.redis as any).method()` casts dropped: `.status` × 2 (health-check ready-state + details), `.setex` × 1 (metrics persistence), `.ping` × 1 (Redis health probe), `.info("memory")` × 1 + `.dbsize()` × 1 (Redis stats), `.quit()` × 1 (shutdown). Every method called is a standard ioredis `Redis` instance method — no module-augmentation needed, no narrowing helper required.
+- The file-level `/* eslint-disable @typescript-eslint/no-explicit-any */` comment at [monitoring-service.ts:1](delayguard-app/src/services/monitoring-service.ts) was **left in place** for the unrelated `(value as any)[part]` cast at line 485 (a nested-key resolver in a different code path). Removing the file-level disable + narrowing line 485 to `(value as Record<string, unknown>)[part]` is a clean follow-up touch but deliberately out of scope here — the prompt explicitly said "drop the casts, ensure type-check passes, move on."
+
+**3. Two latent test-mock type-lies surfaced + fixed**: The Wave 2.3 prompt warned "if a test breaks WITHOUT modification, the typing surfaced a real bug." It did. Two test files were mocking ShipEngine's `getTrackingInfo` return value with `events: [{ id: "evt-1", … }]` — fictional, because ShipEngine does not return event IDs (the `id` column is DB-assigned during the `tracking_events` UPSERT). Both fictions were silently accepted because the line-148 persisted shape was the last-wins winner for every TS consumer of `TrackingEvent`. After the rename, `TrackingInfo.events: CarrierTrackingEvent[]` rejects the excess `id` property and exposes both mocks:
+- [delayguard-app/src/services/tracking-ingest-service.test.ts:46,53](delayguard-app/src/services/tracking-ingest-service.test.ts) — dropped `id: "evt-1"` / `id: "evt-2"` from the 2-event `TRACKING_INFO_FIXTURE`.
+- [delayguard-app/tests/unit/delay-detection-service.test.ts:71](delayguard-app/tests/unit/delay-detection-service.test.ts) — dropped `id: "evt-1"` from the inline event in `should detect delay from event descriptions`.
+
+These fixes were not "silencing" — the mocks were claiming a property the wire shape does not carry. All 1,911 existing tests still pass; the assertions did not depend on `event.id` (the carrier-side service code path doesn't read it).
+
+**Verification**:
+- `npm run type-check` clean.
+- `npm test` → 1,911 passing, 25 skipped, 0 failing (count unchanged, as predicted for a pure typing wave).
+- `npm run build` → webpack compiled with the same 2 pre-existing warnings as main.
+- Project-wide `any` count outside test code: `rg "\bany\b" src --type ts -g '!*.test.ts' -g '!*.test.tsx' -c | awk -F: '{s+=$NF} END {print s}'` → **106 → 99 (−7)**. The audit table anticipated −9 from this cluster; the actual count was 7 (1 of the 9 was the unrelated nested-key cast at line 485, the rest were 7 Redis casts).
+- `grep -c "this\.redis as any" src/services/monitoring-service.ts` → 0.
+- `rg "^(export )?interface (TrackingEvent|CarrierTrackingEvent|PersistedTrackingEvent)\b" src/types/index.ts -c` → 2 (one `CarrierTrackingEvent`, one `PersistedTrackingEvent`, zero `TrackingEvent`).
+
+**Out of scope (deliberate, smallest-blast-radius)**:
+- 3 of 5 Wave 3 clusters remain: [`utils/api-client.ts`](delayguard-app/src/utils/api-client.ts) public surface (7 anys; needs `ClientApplication` typing from `@shopify/app-bridge`), GraphQL plumbing in [`services/shopify-service.ts`](delayguard-app/src/services/shopify-service.ts) (3+ anys; needs Zod parse or GraphQL codegen), OTEL types in [`observability/tracing.ts`](delayguard-app/src/observability/tracing.ts) (6 anys; needs `Counter` / `Histogram` from `@opentelemetry/api`), Koa `rawBody` augmentation in [`routes/sendgrid-webhook.ts`](delayguard-app/src/routes/sendgrid-webhook.ts) (1 any; module-augment `koa`'s `Request`). Wave 3 stays open in the audit plan.
+- 2 pre-existing lint errors carried since Wave 1.1 ([tests/integration/database/tracking-events-schema.test.ts:2](delayguard-app/src/tests/integration/database/tracking-events-schema.test.ts), [tests/unit/components/HelpModal.test.tsx:162](delayguard-app/tests/unit/components/HelpModal.test.tsx)) — untouched per the audit plan.
+- File-level `eslint-disable` at [monitoring-service.ts:1](delayguard-app/src/services/monitoring-service.ts) — left in place for the unrelated `as any` at line 485 (separate code path, out of scope). Removing it cleanly is a follow-up touch.
+- Husky pre-commit gate still non-functional (deeper diagnosis recorded in audit plan Wave 1.1) — not bypassed, just doesn't fire.
+- `npm run lint:fix` still unsafe (Wave 2.3 finding) — workaround applied for this wave: `npx eslint --fix <files>` directly on the touched files only.
+- Wave 4 sibling-test gap unchanged ([email-service.ts](delayguard-app/src/services/email-service.ts) / [sms-service.ts](delayguard-app/src/services/sms-service.ts) still lack tests for `sendDelayEmail` / `sendDelaySMS`).
+
+---
 
 ### v1.40 (2026-05-14): Audit Wave 2.3 — health-check `ping()` methods
 

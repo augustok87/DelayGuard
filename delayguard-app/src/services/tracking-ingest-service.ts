@@ -23,10 +23,10 @@
 import { CarrierService } from "./carrier-service";
 import { query } from "../database/connection";
 import { logger } from "../utils/logger";
-import type { TrackingInfo, TrackingEvent } from "../types";
+import type { TrackingInfo, CarrierTrackingEvent } from "../types";
 
 function pickMostRecentEventTimestamp(
-  events: TrackingEvent[] | undefined,
+  events: CarrierTrackingEvent[] | undefined,
 ): string | null {
   if (!events || events.length === 0) return null;
   // Sort descending by timestamp; events from ShipEngine are not guaranteed sorted.

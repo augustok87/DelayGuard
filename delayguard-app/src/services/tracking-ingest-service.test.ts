@@ -43,14 +43,12 @@ const sampleTrackingInfo: TrackingInfo = {
   originalEstimatedDeliveryDate: "2026-05-18T12:00:00Z",
   events: [
     {
-      id: "evt-1",
       timestamp: "2026-05-14T08:00:00Z",
       status: "IN_TRANSIT",
       description: "Departed facility",
       location: "Louisville, KY",
     },
     {
-      id: "evt-2",
       timestamp: "2026-05-15T14:00:00Z",
       status: "IN_TRANSIT",
       description: "Arrived at destination facility",

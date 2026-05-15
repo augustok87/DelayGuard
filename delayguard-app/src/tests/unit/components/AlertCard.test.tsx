@@ -10,7 +10,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AlertCard } from '../../../components/tabs/AlertsTab/AlertCard';
-import { DelayAlert, TrackingEvent } from '../../../types';
+import { DelayAlert, PersistedTrackingEvent } from '../../../types';
 
 describe('AlertCard', () => {
   const baseAlert: DelayAlert = {
@@ -566,7 +566,7 @@ describe('AlertCard', () => {
   });
 
   describe('Tracking Timeline Display', () => {
-    const mockTrackingEvents: TrackingEvent[] = [
+    const mockPersistedTrackingEvents: PersistedTrackingEvent[] = [
       {
         id: 'evt-1',
         timestamp: '2025-10-20T08:00:00Z',
@@ -588,7 +588,7 @@ describe('AlertCard', () => {
     it('should display tracking timeline when events provided', () => {
       const alertWithTracking = {
         ...baseAlert,
-        trackingEvents: mockTrackingEvents,
+        trackingEvents: mockPersistedTrackingEvents,
       };
 
       render(<AlertCard alert={alertWithTracking} onAction={mockOnAction} variant="active" />);
@@ -601,7 +601,7 @@ describe('AlertCard', () => {
     it('should display tracking events in chronological order', () => {
       const alertWithTracking = {
         ...baseAlert,
-        trackingEvents: mockTrackingEvents,
+        trackingEvents: mockPersistedTrackingEvents,
       };
 
       const { container } = render(<AlertCard alert={alertWithTracking} onAction={mockOnAction} variant="active" />);
@@ -613,7 +613,7 @@ describe('AlertCard', () => {
     it('should display location for tracking events', () => {
       const alertWithTracking = {
         ...baseAlert,
-        trackingEvents: mockTrackingEvents,
+        trackingEvents: mockPersistedTrackingEvents,
       };
 
       render(<AlertCard alert={alertWithTracking} onAction={mockOnAction} variant="active" />);
@@ -622,7 +622,7 @@ describe('AlertCard', () => {
     });
 
     it('should limit timeline to most recent events', () => {
-      const manyEvents: TrackingEvent[] = Array.from({ length: 10 }, (_, i) => ({
+      const manyEvents: PersistedTrackingEvent[] = Array.from({ length: 10 }, (_, i) => ({
         id: `evt-${i}`,
         timestamp: `2025-10-${20 - i}T08:00:00Z`,
         status: 'in_transit',
@@ -647,7 +647,7 @@ describe('AlertCard', () => {
     });
 
     it('should display "Show All Events" button when more than 5 events', () => {
-      const manyEvents: TrackingEvent[] = Array.from({ length: 10 }, (_, i) => ({
+      const manyEvents: PersistedTrackingEvent[] = Array.from({ length: 10 }, (_, i) => ({
         id: `evt-${i}`,
         timestamp: `2025-10-${20 - i}T08:00:00Z`,
         status: 'in_transit',
@@ -1698,7 +1698,7 @@ describe('AlertCard', () => {
               location: 'New York, NY',
               status: 'PICKED_UP',
             },
-          ] as TrackingEvent[],
+          ] as PersistedTrackingEvent[],
         };
         render(<AlertCard alert={alertWithEvents} onAction={mockOnAction} variant="active" />);
 
@@ -1734,7 +1734,7 @@ describe('AlertCard', () => {
               location: 'NYC',
               status: 'PICKED_UP',
             },
-          ] as TrackingEvent[],
+          ] as PersistedTrackingEvent[],
           notificationStatus: { emailSent: true },
         };
         render(<AlertCard alert={alertWithAll} onAction={mockOnAction} variant="active" />);
@@ -1764,7 +1764,7 @@ describe('AlertCard', () => {
               location: 'NYC',
               status: 'PICKED_UP',
             },
-          ] as TrackingEvent[],
+          ] as PersistedTrackingEvent[],
           notificationStatus: { emailSent: true },
         };
         const { container } = render(
@@ -1861,7 +1861,7 @@ describe('AlertCard', () => {
               location: 'New York, NY',
               status: 'PICKED_UP',
             },
-          ] as TrackingEvent[],
+          ] as PersistedTrackingEvent[],
         };
         const { container } = render(
           <AlertCard alert={alertWithEvents} onAction={mockOnAction} variant="active" />,
@@ -1884,7 +1884,7 @@ describe('AlertCard', () => {
               location: 'New York, NY',
               status: 'PICKED_UP',
             },
-          ] as TrackingEvent[],
+          ] as PersistedTrackingEvent[],
         };
         const { container } = render(
           <AlertCard alert={alertWithEvents} onAction={mockOnAction} variant="active" />,
@@ -1906,7 +1906,7 @@ describe('AlertCard', () => {
               location: 'New York, NY',
               status: 'PICKED_UP',
             },
-          ] as TrackingEvent[],
+          ] as PersistedTrackingEvent[],
         };
         const { container } = render(
           <AlertCard alert={alertWithEvents} onAction={mockOnAction} variant="active" />,
@@ -2051,7 +2051,7 @@ describe('AlertCard', () => {
               location: 'NYC',
               status: 'PICKED_UP',
             },
-          ] as TrackingEvent[],
+          ] as PersistedTrackingEvent[],
         };
         const { container } = render(
           <AlertCard alert={fullAlert} onAction={mockOnAction} variant="active" />,
@@ -2084,7 +2084,7 @@ describe('AlertCard', () => {
               location: 'NYC',
               status: 'PICKED_UP',
             },
-          ] as TrackingEvent[],
+          ] as PersistedTrackingEvent[],
         };
         const { container } = render(
           <AlertCard alert={fullAlert} onAction={mockOnAction} variant="active" />,
@@ -2123,7 +2123,7 @@ describe('AlertCard', () => {
               location: 'NYC',
               status: 'PICKED_UP',
             },
-          ] as TrackingEvent[],
+          ] as PersistedTrackingEvent[],
         };
         const { container } = render(
           <AlertCard alert={fullAlert} onAction={mockOnAction} variant="active" />,

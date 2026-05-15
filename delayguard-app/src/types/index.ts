@@ -15,11 +15,13 @@ export interface TrackingInfo {
   status: string;
   estimatedDeliveryDate?: string;
   originalEstimatedDeliveryDate?: string;
-  events: TrackingEvent[];
+  events: CarrierTrackingEvent[];
   trackingUrl?: string;
 }
 
-export interface TrackingEvent {
+// Wire shape returned by ShipEngine (no DB-assigned id yet).
+// Consumers: TrackingInfo.events, TrackingIngestService.ingestTracking.
+export interface CarrierTrackingEvent {
   timestamp: string;
   status: string;
   location?: string;
@@ -142,10 +144,12 @@ export interface DelayAlert {
     smsSentAt?: string;
   };
   suggestedActions?: string[]; // Actionable recommendations for merchant
-  trackingEvents?: TrackingEvent[]; // Timeline of tracking events
+  trackingEvents?: PersistedTrackingEvent[]; // Timeline of tracking events
 }
 
-export interface TrackingEvent {
+// Persisted shape (tracking_events table row, surfaced via /api/alerts).
+// Consumers: DelayAlert.trackingEvents, AlertCard component.
+export interface PersistedTrackingEvent {
   id: string;
   timestamp: string;
   status: string;
