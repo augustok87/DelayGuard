@@ -92,10 +92,6 @@ const mockAnalyticsAPI = {
   testDelayDetection: jest.fn(),
 };
 
-jest.mock('../../../src/services/analytics-service', () => ({
-  AnalyticsService: jest.fn().mockImplementation(() => mockAnalyticsAPI),
-}));
-
 describe('MinimalApp', () => {
   // Mock setTimeout to make tests faster
   beforeEach(() => {

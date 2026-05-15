@@ -29,6 +29,3 @@ export {
   AlertsTabWithSuspense,
   OrdersTabWithSuspense,
 } from "./tabs/LazyTabs";
-
-// Analytics
-export { default as AnalyticsDashboard } from "./AnalyticsDashboard";

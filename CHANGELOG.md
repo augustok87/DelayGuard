@@ -2,12 +2,59 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 14, 2026 (v1.42 — audit Wave 4.1 customer-notification-path test debt, 3 of 6 clusters + v1.19 double-dispatch bug fix)
+**Last Updated**: May 14, 2026 (v1.43 — audit Wave 7 dead-code island deletion, 4 unshipped source files + 2 dependent tests removed)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.43 (2026-05-14): Audit Wave 7 — analytics dead-code island deleted
+
+**Test Results**: 1,925 passing (−21), 25 skipped, 0 failing. Twenty-one tests removed alongside the source files they covered — all of them exercised either throw-not-implemented stubs or `jest.mock`-injected methods that didn't exist on the real module. No production behavior changed.
+**Status**: Dead-code cleanup per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 7. **Wave 7 closed** — 7.1 deleted, 7.2 verified-not-dead and left alone.
+
+**Problem**: The audit table flagged two duplicate-file pairs as Wave 7 dead-code candidates. The import-graph sweep showed the audit assumptions were partly wrong:
+
+1. **Analytics pair (7.1) — both files load-bearing in conflicting ways**:
+   - `src/services/analytics-service.ts` (39 LOC stub) was imported by `src/components/AnalyticsDashboard.tsx` — but the stub only declared `getMetrics` / `exportData` (both `throw "not implemented"`), while the dashboard called `getAlerts`, `getOrders`, `updateSettings`, `testDelayDetection`, `resolveAlert`, `dismissAlert`, `exportAlerts`, `getAnalyticsMetrics`. Production rendering of the dashboard would throw immediately on the first method call. The `AnalyticsDashboard.test.tsx` suite was green only because it `jest.mock`'d the stub module and injected fake implementations of the missing methods.
+   - `src/services/AnalyticsService.ts` (452 LOC real impl) was imported only by `src/routes/analytics.ts`, which exported `analyticsRoutes` but was never `router.use(...)`'d in [src/server.ts:104-109](delayguard-app/src/server.ts#L104-L109). The live `/api/analytics` endpoint is the Wave 2.1 `MerchantApiService.getAnalytics()` extraction, which routes via `apiRoutes` — completely separate from `routes/analytics.ts`.
+   - `AnalyticsDashboard.tsx` itself was only re-exported through `components/index.ts`; no component, router, or test (other than its own) imported it.
+   - Net: the entire analytics subgraph (stub + real impl + broken component + unmounted route + 2 dependent test files) was an unshipped scaffolding island. Tests passed only because every consumer was either a mocked-out stub or never invoked at runtime.
+
+2. **Delay-detection pair (7.2) — not dead**: `src/services/delay-detection.ts` (65 LOC pure `checkForDelays` fn) is consumed by [src/services/delay-detection-service.ts:6](delayguard-app/src/services/delay-detection-service.ts#L6) (the 365-LOC class delegates to the pure fn) AND by `tests/unit/delay-detection.test.ts` (direct unit test). It's a legitimate pure-fn seam reused by a higher-level class. Folding would be a no-op refactor; smallest blast radius said leave it alone.
+
+**Reverse-prompt outcome (criterion (b) from the session prompt — "a Wave 7 dead file turns out to be load-bearing")**: surfaced the conflicting-load-bearing finding to the user with three resolution options for the analytics pair: (1) rewire dashboard to AnalyticsService.ts + delete the stub, (2) delete the entire scaffolding island, (3) defer Pair 1 to its own PR. User chose option 2 after confirmation that `AnalyticsDashboard` had no router/component consumer and `routes/analytics.ts` had no `router.use` mount. The Wave 2.1 `/api/analytics` surface is unaffected — it lives entirely in `MerchantApiService` + `apiRoutes`, with integration coverage at `tests/integration/analytics-integration.test.ts` and e2e coverage at `tests/e2e/analytics-dashboard-flow.test.ts` (both untouched, both still green — they target the live `/api/*` routes).
+
+**What Changed**:
+
+**1. Six file deletions**:
+- `delayguard-app/src/services/analytics-service.ts` — throw-not-implemented stub.
+- `delayguard-app/src/services/AnalyticsService.ts` — 452 LOC real impl whose only consumer was the unmounted route.
+- `delayguard-app/src/components/AnalyticsDashboard.tsx` — 628 LOC component that would throw on first method call in production.
+- `delayguard-app/src/routes/analytics.ts` — 279 LOC route never mounted in `server.ts`.
+- `delayguard-app/tests/unit/analytics-service.test.ts` — 3 tests, all of which asserted the stub methods threw "not implemented". Meaningless coverage.
+- `delayguard-app/tests/unit/components/AnalyticsDashboard.test.tsx` — 18 tests, all of which `jest.mock`'d the broken stub and injected the missing methods. Tested mocks, not code.
+
+**2. Two edits**:
+- [delayguard-app/src/components/index.ts](delayguard-app/src/components/index.ts) — removed the `export { default as AnalyticsDashboard } from "./AnalyticsDashboard"` re-export (lines 33-34).
+- [delayguard-app/tests/unit/components/MinimalApp.test.tsx](delayguard-app/tests/unit/components/MinimalApp.test.tsx) — removed the obsolete `jest.mock('../../../src/services/analytics-service', …)` block (lines 95-97). The `mockAnalyticsAPI` factory + `(window as any).mockAnalyticsAPI = mockAnalyticsAPI` assignment **stay** — that's the actual test-backdoor seam MinimalApp.tsx uses at runtime (`if (window.mockAnalyticsAPI) { … }` guards at [MinimalApp.tsx:105-108,194,303-306,418,489,1081-1082](delayguard-app/src/components/MinimalApp.tsx)). The `jest.mock` was a vestigial leftover from when MinimalApp may have imported the analytics-service module directly; the runtime path now lives on `window`, so the module-level mock had no effect on test outcomes (verified by running `npx jest tests/unit/components/MinimalApp.test.tsx` post-deletion — all 25 of its tests still green).
+
+**Type / lint / build status**:
+- `npm run type-check` clean (zero errors).
+- `npm test` → 1,925 passing (−21 from 1,946), 25 skipped, 0 failing.
+- `npm run lint` → only the same 2 pre-existing errors carried since Wave 1.1 ([tests/integration/database/tracking-events-schema.test.ts:2](delayguard-app/src/tests/integration/database/tracking-events-schema.test.ts) unused `query` import, [tests/unit/components/HelpModal.test.tsx:162](delayguard-app/src/tests/unit/components/HelpModal.test.tsx) a11y `href`). 30 `any` warnings localized to `src/utils/api-client.ts` — the Wave 3.4 target.
+- `npm run build` → webpack compiled with the same 2 pre-existing warnings as main.
+
+**Lint exception**: did not run `npm run lint:fix` (still unsafe per Waves 2.3 / 3.1 / 4.1 — the project-local `scripts/lint-fix.js` reformats ~40 files via Prettier and introduces ~190 new lint errors). No touched-file lint was needed: all changes were deletions + one re-export removal + one obsolete-mock removal.
+
+**Found-and-deferred** (smallest blast radius):
+- `MinimalApp.tsx` retains test-only `if (window.mockAnalyticsAPI) { … }` guards at 9 call sites — a design smell that ties production code to a test-backdoor, but a refactor target for a separate frontend PR, not a dead-code wave.
+- 30 `any` warnings in `api-client.ts` remain — Wave 3.4 target.
+- 2 pre-existing lint errors carried over from Wave 1.1 — untouched per the audit plan.
+- Husky pre-commit gate still non-functional per Wave 1.1 diagnosis — not bypassed, just doesn't fire.
+
+---
 
 ### v1.42 (2026-05-14): Audit Wave 4.1 — customer-notification-path test debt + v1.19 double-dispatch bug fix
 
