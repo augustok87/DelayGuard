@@ -1,4 +1,5 @@
 import React from 'react';
+import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { Toast } from '../../../types/ui';
 import styles from './ToastContainer.module.css';
 
@@ -21,9 +22,9 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onHide }
         >
           <div className={styles.toastContent}>
             <div className={styles.toastIcon}>
-              {toast.type === 'success' && '✅'}
-              {toast.type === 'error' && '❌'}
-              {toast.type === 'warning' && '⚠️'}
+              {toast.type === 'success' && <CheckCircle size={20} aria-hidden={true} strokeWidth={2} />}
+              {toast.type === 'error' && <XCircle size={20} aria-hidden={true} strokeWidth={2} />}
+              {toast.type === 'warning' && <AlertTriangle size={20} aria-hidden={true} strokeWidth={2} />}
               {toast.type === 'info' && 'ℹ️'}
             </div>
             <div className={styles.toastMessage}>{toast.message}</div>

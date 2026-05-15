@@ -2,12 +2,45 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 14, 2026 (v1.43 — audit Wave 7 dead-code island deletion, 4 unshipped source files + 2 dependent tests removed)
+**Last Updated**: May 14, 2026 (v1.44 — audit Wave 6 Lucide icon swap in ToastContainer + SettingsCard)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.44 (2026-05-14): Audit Wave 6 — Lucide icon swap (ToastContainer + SettingsCard)
+
+**Test Results**: 1,925 passing (no delta), 25 skipped, 0 failing. No new tests — pure swap, existing 491 component-test surface validates the change.
+**Status**: Frontend icon-rule compliance per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 6 + [.claude/rules/frontend.md](.claude/rules/frontend.md) ("Don't reintroduce emoji or PNG icons for UI signaling — use Lucide").
+
+**Problem**: Two regression sites where emoji icons crept back in after the v1.31–v1.35 Lucide migration:
+
+1. [delayguard-app/src/components/common/ToastProvider/ToastContainer.tsx:24-26](delayguard-app/src/components/common/ToastProvider/ToastContainer.tsx) — `✅` / `❌` / `⚠️` rendered inside `<div className={styles.toastIcon}>` blocks for the success / error / warning Toast variants. Emoji rendering differs across OSes (notably Linux servers and older Android), defeating the deterministic icon-style requirement.
+2. [delayguard-app/src/components/tabs/DashboardTab/SettingsCard.tsx:398,429,456](delayguard-app/src/components/tabs/DashboardTab/SettingsCard.tsx) — `<h3>✅ Why it matters:</h3>` repeated three times inside the Warehouse / Carrier / Transit HelpModal bodies.
+
+**What Changed**:
+
+**1. `ToastContainer.tsx`** (3 swaps):
+- Added `import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';` at the top of the file (matches the existing pattern used in [layout/AppHeader/index.tsx](delayguard-app/src/components/layout/AppHeader/index.tsx) and [tabs/AlertsTab/index.tsx](delayguard-app/src/components/tabs/AlertsTab/index.tsx)).
+- Replaced the three emoji string literals at lines 24-26 with `<CheckCircle … />` / `<XCircle … />` / `<AlertTriangle … />`. Each icon uses `size={20} aria-hidden={true} strokeWidth={2}` — the canonical attribute trio established by the existing Lucide call sites in [SettingsCard.tsx:128](delayguard-app/src/components/tabs/DashboardTab/SettingsCard.tsx#L128) (`<AlertTriangle size={20} aria-hidden={true} strokeWidth={2} />`).
+
+**2. `SettingsCard.tsx`** (3 swaps via `replace_all`):
+- Added `CheckCircle` to the existing `lucide-react` import at line 15.
+- Replaced all three `<h3>✅ Why it matters:</h3>` instances (lines 398 / 429 / 456) with `<h3><CheckCircle size={18} aria-hidden={true} strokeWidth={2} /> Why it matters:</h3>`. Used `size={18}` (slightly smaller than the toast's 20) because the icon is inline with `<h3>` text — matches the existing `<BarChart3 size={16} … /> {label}` pattern at line 109 of the same file.
+
+**Found-and-deferred** (smallest blast radius):
+
+- [ToastContainer.tsx:27](delayguard-app/src/components/common/ToastProvider/ToastContainer.tsx#L27) still renders `ℹ️` for the `'info'` toast variant. The audit prompt explicitly listed only lines 24-26; the `'info'` emoji is the same class of icon-rule violation but was not in scope for this wave. The Lucide equivalent is `<Info />` (already imported elsewhere in the codebase). Carry-forward as a 1-line follow-up touch.
+- 17 other decorative emojis in [SettingsCard.tsx](delayguard-app/src/components/tabs/DashboardTab/SettingsCard.tsx) HelpModal prose (`💼` real-world examples, `📌` what-this-detects, `🔍` how-it-works, `🌨️` `📦` `🚫` `✈️` `🚛` weather/carrier exception flavor copy, `💡` tip indicator). These read as marketing-prose emoji (content inside `<p>` / `<li>` body), not UI signaling per the frontend rule — left as-is.
+
+**Verification** (project local CI gate):
+- `npm run type-check` clean (zero errors).
+- `npm test` → 1,925 passing, 25 skipped, 0 failing (no delta, no new tests required — existing 491 component tests at [src/tests/unit/components/](delayguard-app/src/tests/unit/components/) cover the touched components; no test asserted on the emoji strings themselves; the 4 negative `not.toContain('✅')` / `not.toContain('⚠️')` assertions at [OrdersTab.test.tsx:632](delayguard-app/src/tests/unit/components/OrdersTab.test.tsx#L632), [AlertsTab.test.tsx:555](delayguard-app/src/tests/unit/components/AlertsTab.test.tsx#L555), [AlertCard.test.tsx:1527,2095](delayguard-app/src/tests/unit/components/AlertCard.test.tsx) target unrelated components and were unaffected).
+- `npx eslint --fix` on the two touched files only → clean (did NOT run `npm run lint:fix` — still unsafe per Wave 2.3 / 3.1 / 4.1 findings).
+- `npm run build` → webpack compiled with the same 2 pre-existing warnings as main.
+
+---
 
 ### v1.43 (2026-05-14): Audit Wave 7 — analytics dead-code island deleted
 

@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Package, AlertTriangle, Clock, BarChart3, Info, Lightbulb } from 'lucide-react';
+import { Package, AlertTriangle, Clock, BarChart3, Info, Lightbulb, CheckCircle } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { HelpModal } from '../../ui/HelpModal';
@@ -395,7 +395,7 @@ export function SettingsCard({
           Customer orders on Monday → By Wednesday (2 days later), order still shows &quot;unfulfilled&quot; → You get an alert: &quot;Order #12345 is stuck in your warehouse!&quot; You can investigate (out of stock? picking error? staffing issue?) and fix it before the customer complains.
         </p>
 
-        <h3>✅ Why it matters:</h3>
+        <h3><CheckCircle size={18} aria-hidden={true} strokeWidth={2} /> Why it matters:</h3>
         <p>
           Most customer complaints happen when orders don&apos;t ship on time. This rule catches internal bottlenecks early, giving you time to fix problems BEFORE customers get frustrated. Critical for high-value orders!
         </p>
@@ -426,7 +426,7 @@ export function SettingsCard({
           <li>🚛 &quot;Accident - delivery delayed 2-3 days&quot;</li>
         </ul>
 
-        <h3>✅ Why it matters:</h3>
+        <h3><CheckCircle size={18} aria-hidden={true} strokeWidth={2} /> Why it matters:</h3>
         <p>
           Customers will contact YOU (not the carrier) when there&apos;s a problem. Being proactive and reaching out first shows excellent customer service. You can explain the situation, offer a discount, or arrange a replacement before they demand a refund.
         </p>
@@ -453,7 +453,7 @@ export function SettingsCard({
           Order ships on Monday → Package shows &quot;in transit&quot; all week → By the following Monday (7+ days), still no delivery scan → No carrier exception reported → Likely lost or stuck somewhere. You get an alert to investigate and contact the carrier before the customer gets angry.
         </p>
 
-        <h3>✅ Why it matters:</h3>
+        <h3><CheckCircle size={18} aria-hidden={true} strokeWidth={2} /> Why it matters:</h3>
         <p>
           Catches the &quot;ghost packages&quot; that fall through the cracks. The longer a package is in transit without updates, the more likely it&apos;s lost forever. Early detection lets you file a claim with the carrier and send a replacement to keep your customer happy. Waiting too long means guaranteed negative review.
         </p>
