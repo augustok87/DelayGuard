@@ -1,8 +1,8 @@
 # DelayGuard - Project Overview & Roadmap
 
 **Last Updated**: May 15, 2026
-**Current Phase**: ✅ Phase 1 + Audit Waves 1-7 (largely closed) — **Phase 2.1.a ingestion + Phase 2.1.b priority score shipped 2026-05-15**; Phase 2.1.c–2.1.f (financial breakdown / shipping address / test alert / customer-intelligence UI) pending
-**Latest Update**: v1.49 — Phase 2.1.b priority-score slice (pure-fn 4-axis calculator + PriorityScoreService.scoreAlert + denormalized priority_score/level columns + orders.total_amount capture; +45 tests, written-not-rendered)
+**Current Phase**: ✅ Phase 1 + Audit Waves 1-7 (largely closed) — **Phase 2.1.a ingestion + 2.1.b priority score + 2.1.c financial breakdown shipped 2026-05-15**; Phase 2.1.d–2.1.f (shipping address / test alert / customer-intelligence UI) pending
+**Latest Update**: v1.50 — Phase 2.1.c financial-breakdown slice (4 additive nullable columns on orders + parseMoneySet helper for nested `total_shipping_price_set.shop_money.amount` + UPSERT 9→13 cols + v1.19 every-column assertion extended; +12 tests, written-not-rendered)
 **Document Purpose**: Single consolidated view of current state, readiness, and future roadmap
 
 ---
@@ -13,9 +13,9 @@
 
 | Metric | Status | Details |
 |--------|--------|---------|
-| **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a ingestion + 2.1.b priority score shipped 2026-05-15 (v1.48, v1.49); Phase 2.1.c–2.1.f pending |
+| **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a ingestion + 2.1.b priority score + 2.1.c financial breakdown shipped 2026-05-15 (v1.48–v1.50); Phase 2.1.d–2.1.f pending |
 | **Readiness Score** | **95/100 (A)** | Ready for Shopify submission (assets pending) |
-| **Test Success** | **100%** | 2,044 passing, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run |
+| **Test Success** | **100%** | 2,056 passing, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run |
 | **Test Suites** | **All passing** | 96 of 98 suites pass; 2 suites skipped (require PostgreSQL) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
@@ -685,7 +685,7 @@ Phone: (406) 555-0123
 - ✅ Phase 1 Complete (Oct 28, 2025)
 - ✅ Ready for Shopify submission (95/100 readiness)
 - ✅ Phase 2.1.a ingestion pipeline shipped (2026-05-15, v1.48)
-- ✅ 2,044 passing tests, production-ready code
+- ✅ 2,056 passing tests, production-ready code
 - ⚠️ 2-3 days from submission (assets creation remaining)
 
 **Where We're Going:**

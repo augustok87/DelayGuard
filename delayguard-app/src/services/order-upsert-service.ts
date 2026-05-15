@@ -27,6 +27,19 @@ interface ShopifyCustomer {
   phone?: string;
 }
 
+/**
+ * Shopify money-set shape (Phase 2.1.c). Order webhooks send shipping as a
+ * nested `total_shipping_price_set: { shop_money, presentment_money }` rather
+ * than a flat string. We persist `shop_money` (merchant settlement currency),
+ * matching the 2.1.b precedent that `total_price` (flat string) is also shop
+ * currency. `presentment_money` is intentionally unused — buyer-display
+ * currency conversion is out of scope until Phase 2.2+ if it earns its keep.
+ */
+interface ShopifyMoneySet {
+  shop_money?: { amount?: string; currency_code?: string };
+  presentment_money?: { amount?: string; currency_code?: string };
+}
+
 export interface OrderWebhookPayload {
   id: number;
   name: string;
@@ -35,6 +48,12 @@ export interface OrderWebhookPayload {
   /** Shopify webhook serialises money as a string (e.g. "199.99"). Phase
    * 2.1.b parses to a number for `orders.total_amount`; null on absent. */
   total_price?: string;
+  /** Phase 2.1.c — order-level financial breakdown. Three flat strings + one
+   * nested money-set for shipping. All parsed to `number | null`. */
+  subtotal_price?: string;
+  total_tax?: string;
+  total_discounts?: string;
+  total_shipping_price_set?: ShopifyMoneySet;
 }
 
 export interface OrderUpsertResult {
@@ -53,6 +72,13 @@ function parseTotalPrice(value: string | undefined): number | null {
   if (value === undefined || value === null) return null;
   const parsed = parseFloat(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseMoneySet(value: ShopifyMoneySet | undefined): number | null {
+  // Defensive narrowing: webhook payloads are user-controlled, so the entire
+  // money-set, the shop_money branch, and the amount string may each be
+  // absent. parseTotalPrice handles the final non-finite check.
+  return parseTotalPrice(value?.shop_money?.amount);
 }
 
 export class OrderUpsertService {
@@ -105,8 +131,12 @@ export class OrderUpsertService {
            customer_phone,
            shopify_customer_id,
            status,
-           total_amount
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           total_amount,
+           subtotal_price,
+           total_tax,
+           total_discounts,
+           total_shipping_price
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          ON CONFLICT (shop_id, shopify_order_id)
          DO UPDATE SET
            order_number = EXCLUDED.order_number,
@@ -116,6 +146,10 @@ export class OrderUpsertService {
            shopify_customer_id = EXCLUDED.shopify_customer_id,
            status = EXCLUDED.status,
            total_amount = EXCLUDED.total_amount,
+           subtotal_price = EXCLUDED.subtotal_price,
+           total_tax = EXCLUDED.total_tax,
+           total_discounts = EXCLUDED.total_discounts,
+           total_shipping_price = EXCLUDED.total_shipping_price,
            updated_at = CURRENT_TIMESTAMP`,
         [
           shop.id,
@@ -127,6 +161,10 @@ export class OrderUpsertService {
           shopifyCustomerId,
           orderData.fulfillment_status || "unfulfilled",
           parseTotalPrice(orderData.total_price),
+          parseTotalPrice(orderData.subtotal_price),
+          parseTotalPrice(orderData.total_tax),
+          parseTotalPrice(orderData.total_discounts),
+          parseMoneySet(orderData.total_shipping_price_set),
         ],
       );
 

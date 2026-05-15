@@ -2,12 +2,79 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 15, 2026 (v1.49 — Phase 2.1.b priority-score slice: 4-axis scoring at alert creation + orders.total_amount capture + delay_alerts.priority_score/level columns)
+**Last Updated**: May 15, 2026 (v1.50 — Phase 2.1.c financial-breakdown slice: 4 additive nullable order-level columns + parseMoneySet helper for shipping money-set + v1.19 every-column assertion extended to 13 params)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.50 (2026-05-15): Phase 2.1.c — Financial Breakdown (third slice)
+
+**Test Results**: 2,056 passing (+12), 25 skipped, 0 failing. New coverage in `src/services/order-upsert-service.test.ts`: v1.19 every-column assertion extended 9 → 13 params (subtotal_price/total_tax/total_discounts/total_shipping_price + 4 EXCLUDED-mirror SQL-shape assertions on the UPSERT), plus a new `Phase 2.1.c — financial breakdown capture` block with 12 cases — present + missing for each of the 3 flat fields, non-finite-string fallback covering all 3 in one shot, present + 3 missing-axis cases for the nested shipping money-set (whole set absent / `shop_money` absent / `shop_money.amount` non-finite), and the all-null digital-good edge case (now 33 cases / was 21).
+**Status**: Phase 2.1 third sub-slice (2.1.c) **SHIPPED**. Sub-slices remaining (2.1.d–2.1.f): shipping address capture, test-alert endpoint, customer-intelligence UI surfacing.
+
+**Problem**: Phase 2.1.b shipped order-level `total_amount` as the orderValue axis input for the priority score, but the merchant-facing narrative ("**why** is this customer's bill $199?") needs the breakdown — subtotal + tax + shipping − discounts. Without it, the priority badge from 2.1.b stands alone with no financial context, and any UI surfacing in Phase 2.1.f can only show the total. Phase 2.1.c persists the 4 order-level breakdown components on every order webhook so the eventual UI has the data to render. Capture **only** — UI render is explicitly out of scope (ships in Phase 2.1.f).
+
+**Three gating decisions reverse-prompted before any code was written**:
+
+1. **Scope of "breakdown"** → order-level only (4 fields). Plan §2.3 + DEEP_DIVE_UX_UI_RESEARCH.md line 207 + DATA_AVAILABILITY_ANALYSIS.md line 969 all describe a 4-field order-level breakdown. Line-item data is already captured in `order_line_items` (price/quantity); pulling it into the UI is a join-query for §2.1.f, not a schema gap. Pure-display tax/shipping/discount narrative doesn't need per-line decomposition.
+2. **Storage shape** → 4 nullable additive columns on `orders` (`NUMERIC(12, 2)`). Direct 2.1.b precedent (`total_amount`). Sibling `order_financials` table rejected — refunds/presentment-currency aren't in Phase 2.1 (YAGNI; don't pre-build for hypothetical futures). Plan §2.3:2401 also models these as scalars on `Order`. Mild column-count bloat (orders 9 → 13) is the right trade vs. JOIN-per-read on every dashboard render in §2.1.f.
+3. **Backfill strategy** → null-stays-null for legacy orders; webhook fills new orders forward. Direct 2.1.b precedent (legacy `delay_alerts.priority_score` stays NULL). ~1 GraphQL call per order at install time is unjustified cost-points budget for a pure-display narrative. UI fallback for null = render the total only (no behavior change pre-Phase-2.1.c).
+
+**One additional gating clarification** (criterion c — Shopify webhook payload shape):
+
+4. **Shipping field is the outlier**. Three of four target fields are flat strings on the Order webhook payload (`subtotal_price` / `total_tax` / `total_discounts` — same shape as 2.1.b's `total_price`). Shipping is **not** a flat field: Shopify exposes it as `total_shipping_price_set.shop_money.amount` (nested money-set). **Chose `shop_money.amount`** (merchant settlement currency, pre-computed by Shopify with partial-ship handling baked in) over summing `shipping_lines[].price` (loses Shopify's own rounding semantics). Consistent with 2.1.b precedent — flat `total_price` is also shop-currency. `presentment_money` is intentionally unused; buyer-display currency conversion is out of scope until Phase 2.2+ if it ever earns its keep.
+
+**One plan-vs-reality flag** (criterion b — IMPLEMENTATION_PLAN.md was written before the slice was renamed):
+
+5. The plan calls financial breakdown **§2.3** ([IMPLEMENTATION_PLAN.md:2393](IMPLEMENTATION_PLAN.md#L2393)), not §2.1.c. The Phase 2.1.b changelog (v1.49) reframed it as part of the §2.1 sub-slice sequence. The §2.3 spec was written in Prisma+Remix style from the original Phase 2 numbering; this slice's actual implementation is raw `pg` + Koa (same divergence noted in v1.48 for §2.1.a). The §2.1.c "what shipped" block is now backfilled into the §2.1 section of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) alongside §2.1.a and §2.1.b for future-audit discoverability.
+
+**What Changed**:
+
+**1. SQL migration** (in [src/database/connection.ts](delayguard-app/src/database/connection.ts), idempotent additive block after the 2.1.b priority-score block, before the index creation):
+
+- `ALTER TABLE orders ADD COLUMN subtotal_price NUMERIC(12, 2)` (nullable).
+- `ALTER TABLE orders ADD COLUMN total_tax NUMERIC(12, 2)` (nullable).
+- `ALTER TABLE orders ADD COLUMN total_discounts NUMERIC(12, 2)` (nullable).
+- `ALTER TABLE orders ADD COLUMN total_shipping_price NUMERIC(12, 2)` (nullable).
+- All four columns guarded by the same `IF NOT EXISTS … subtotal_price` check (single anchor — re-runs match nothing on subsequent boots).
+- No new index — these columns are pure-display, not sortable or filterable. Add an index if/when Phase 2.1.f surfaces "sort by tax %" or similar.
+- No backfill — legacy orders stay NULL (display path falls back to "—" or just shows total).
+- No `.sql` file (migration runner doesn't load them — same v1.48/v1.49 finding).
+
+**2. `src/services/order-upsert-service.ts`** — captures all 4 breakdown components (additive, Phase 2.1.c):
+
+- New `ShopifyMoneySet` interface — `shop_money?.amount?` + `presentment_money?` for forward-compat. Documents (in code) why we persist `shop_money` (merchant settlement currency) and ignore `presentment_money`.
+- `OrderWebhookPayload` extended: `subtotal_price?: string`, `total_tax?: string`, `total_discounts?: string`, `total_shipping_price_set?: ShopifyMoneySet` (Shopify wire format — 3 flat strings + 1 nested money-set).
+- New `parseMoneySet(value)` helper: defensive narrowing through `value?.shop_money?.amount` → delegates to `parseTotalPrice`. Single failure mode (null) regardless of which level is absent.
+- UPSERT SQL extended: 4 columns added to INSERT list (9 → 13), 4 `… = EXCLUDED.…` lines added to `DO UPDATE SET`. Param list goes 9 → 13.
+- Sibling test: v1.19 every-column param-array assertion extended to 13 elements; +12 new cases covering present / missing / non-finite for each of the 3 flat fields, all 4 missing-axis cases for the nested shipping money-set, and the all-null digital-good edge case.
+
+**v1.19 field-population rule applied**: explicit `expect(params).toEqual([...everyColumn])` on the UPSERT — now 13 cols including subtotal_price/total_tax/total_discounts/total_shipping_price.
+
+**Carry-forward context for Phase 2.1.d–2.1.f**:
+
+- Legacy orders persisted before v1.50 have NULL for all 4 breakdown columns. Phase 2.1.f dashboard render must treat any null value as "not captured" and fall back to showing the total only. Distinction from `0.00` (captured as zero — e.g. discounts on a non-discounted order) is preserved by the parser's `Number.isFinite(0)` → 0 vs `parseFloat(undefined)` → null branch.
+- `presentment_money` is unused this slice. If Phase 2.2+ adds multi-currency support, the `ShopifyMoneySet` interface is already shaped to expose it — extend `parseMoneySet` to take a `currency` parameter (`'shop' | 'presentment'`) at that point.
+- Shopify multi-store merchants on Shopify Plus may have `currency_code` divergence between shop_money and presentment_money. Currently we capture shop_money only, so multi-currency reporting needs Phase 2.2+ work; not a Phase 2.1 blocker.
+- No new BullMQ job introduced — capture rides the existing webhook UPSERT path. If Phase 2.2 introduces refund webhooks (`orders/refund/create`), the refund handler will need its own UPSERT-or-UPDATE to adjust the 4 columns (subtotal_price minus refunded line price, total_tax minus refunded tax, etc.); separate slice, separate plan section.
+- DATA_AVAILABILITY_ANALYSIS.md catch-up entry for the 7 v1.49+v1.50 columns (`orders.total_amount`, `orders.subtotal_price`, `orders.total_tax`, `orders.total_discounts`, `orders.total_shipping_price`, `delay_alerts.priority_score`, `delay_alerts.priority_level`) is still deferred (doc-only, no behavior change).
+
+**Found-and-deferred (smallest blast radius — DO NOT attack mid-session)**:
+
+- Phase 2.2.c re-score follow-up at end of `customer-sync.ts` (born from 2.1.b race-condition Q3 fallback).
+- EnhancedDashboard subtree (Wave 7.3 target).
+- PerformanceMonitor reader/writer schema mismatch (regression-test pending).
+- ToastContainer.tsx:27 ℹ️ emoji (Wave 6 follow-up).
+- Route-layer integration gaps: webhooks.ts, monitoring.ts, billing.ts (Wave 4.6).
+- optimized-api.ts sibling test (Wave 4.4).
+- `003_create_subscriptions_table.sql` UUID-vs-SERIAL mismatch + migration-runner not loading .sql files (surfaced 2026-05-15).
+- `getQueueStats` schema extension for customer-sync queue is still deferred from v1.48–v1.49; bundle with Phase 2.1.f UI surfacing.
+- `npm run lint:fix` still unsafe (Wave 2.3 finding); used `npx eslint --fix` on touched files only for this slice.
+- Husky pre-commit gate still non-functional; no change this slice.
+
+---
 
 ### v1.49 (2026-05-15): Phase 2.1.b — Priority Score (second slice)
 

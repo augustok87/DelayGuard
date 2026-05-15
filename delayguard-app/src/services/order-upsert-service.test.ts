@@ -54,6 +54,16 @@ const baseOrderPayload = {
   },
   fulfillment_status: "fulfilled",
   total_price: "199.99",
+  // Phase 2.1.c (Financial Breakdown): 3 flat-string fields + 1 nested money-set.
+  // Shopify webhook payload always sends shipping as `total_shipping_price_set`;
+  // the flat top-level `total_shipping_price` does not exist on order webhooks.
+  subtotal_price: "180.00",
+  total_tax: "15.50",
+  total_discounts: "5.00",
+  total_shipping_price_set: {
+    shop_money: { amount: "9.49", currency_code: "USD" },
+    presentment_money: { amount: "9.49", currency_code: "USD" },
+  },
 };
 
 describe("OrderUpsertService", () => {
@@ -116,6 +126,15 @@ describe("OrderUpsertService", () => {
       );
       expect(upsertSql).toMatch(/status\s*=\s*EXCLUDED\.status/i);
       expect(upsertSql).toMatch(/total_amount\s*=\s*EXCLUDED\.total_amount/i);
+      // Phase 2.1.c: 4 financial-breakdown columns also EXCLUDED-mirrored on UPSERT
+      expect(upsertSql).toMatch(/subtotal_price\s*=\s*EXCLUDED\.subtotal_price/i);
+      expect(upsertSql).toMatch(/total_tax\s*=\s*EXCLUDED\.total_tax/i);
+      expect(upsertSql).toMatch(
+        /total_discounts\s*=\s*EXCLUDED\.total_discounts/i,
+      );
+      expect(upsertSql).toMatch(
+        /total_shipping_price\s*=\s*EXCLUDED\.total_shipping_price/i,
+      );
       expect(upsertSql).toMatch(/updated_at\s*=\s*CURRENT_TIMESTAMP/i);
 
       // v1.19: every persisted column appears in the params array
@@ -129,6 +148,10 @@ describe("OrderUpsertService", () => {
         "5550001", // shopify_customer_id as string (Phase 2.1.a)
         "fulfilled", // status
         199.99, // total_amount (Phase 2.1.b) — parsed from webhook string total_price
+        180, // subtotal_price (Phase 2.1.c) — parsed flat string
+        15.5, // total_tax (Phase 2.1.c) — parsed flat string
+        5, // total_discounts (Phase 2.1.c) — parsed flat string
+        9.49, // total_shipping_price (Phase 2.1.c) — from total_shipping_price_set.shop_money.amount
       ]);
     });
 
@@ -230,6 +253,213 @@ describe("OrderUpsertService", () => {
 
       const [, upsertParams] = mockQuery.mock.calls[1];
       expect(upsertParams?.[8]).toBeNull();
+    });
+
+    // Phase 2.1.c — Financial Breakdown (4 order-level columns).
+    //
+    // Three of four target fields are flat strings on the Shopify Order
+    // webhook payload (`subtotal_price` / `total_tax` / `total_discounts`).
+    // The fourth — shipping — is NOT a flat field: Shopify exposes it as
+    // `total_shipping_price_set.shop_money.amount` (nested money-set,
+    // shop_money is the merchant's settlement currency). Each axis needs
+    // a present / missing / non-finite case; shipping also needs a
+    // missing-money-set case and a missing-shop_money case.
+    describe("Phase 2.1.c — financial breakdown capture", () => {
+      it("captures subtotal_price as a parsed number when present", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          subtotal_price: "180.00",
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[9]).toBe(180);
+      });
+
+      it("persists subtotal_price as null when missing", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          subtotal_price: undefined,
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[9]).toBeNull();
+      });
+
+      it("captures total_tax as a parsed number when present", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          total_tax: "15.50",
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[10]).toBe(15.5);
+      });
+
+      it("persists total_tax as null when missing", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          total_tax: undefined,
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[10]).toBeNull();
+      });
+
+      it("captures total_discounts as a parsed number when present (including 0.00)", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          total_discounts: "0.00",
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        // Discounts of 0 must persist as 0, NOT null — narrative is "no
+        // discount applied" rather than "discount unknown". Verifies the
+        // parseTotalPrice 0-vs-null distinction holds.
+        expect(upsertParams?.[11]).toBe(0);
+      });
+
+      it("persists total_discounts as null when missing", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          total_discounts: undefined,
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[11]).toBeNull();
+      });
+
+      it("persists any of the 3 flat financial fields as null when non-finite", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          subtotal_price: "not-a-number",
+          total_tax: "NaN",
+          total_discounts: "",
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[9]).toBeNull();
+        expect(upsertParams?.[10]).toBeNull();
+        expect(upsertParams?.[11]).toBeNull();
+      });
+
+      it("captures total_shipping_price from total_shipping_price_set.shop_money.amount", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          total_shipping_price_set: {
+            shop_money: { amount: "12.34", currency_code: "USD" },
+            presentment_money: { amount: "99.99", currency_code: "EUR" },
+          },
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        // Persists shop_money (merchant settlement currency), NOT presentment_money.
+        // Consistent with 2.1.b precedent — flat `total_price` is shop currency.
+        expect(upsertParams?.[12]).toBe(12.34);
+      });
+
+      it("persists total_shipping_price as null when the money-set is missing", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          total_shipping_price_set: undefined,
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[12]).toBeNull();
+      });
+
+      it("persists total_shipping_price as null when shop_money is missing from the money-set", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          total_shipping_price_set: {
+            // Only presentment_money — shop_money absent (degenerate payload
+            // shape; defensive narrowing required since money-set is
+            // user-controlled webhook input).
+            presentment_money: { amount: "9.49", currency_code: "USD" },
+          } as unknown as typeof baseOrderPayload.total_shipping_price_set,
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[12]).toBeNull();
+      });
+
+      it("persists total_shipping_price as null when shop_money.amount is non-finite", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          total_shipping_price_set: {
+            shop_money: { amount: "garbage", currency_code: "USD" },
+          },
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        expect(upsertParams?.[12]).toBeNull();
+      });
+
+      it("captures all 4 financial fields as null when none are populated (digital-good edge case)", async() => {
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([{ id: ORDER_ID }]);
+
+        await service.upsertOrderFromWebhook(SHOP, {
+          ...baseOrderPayload,
+          subtotal_price: undefined,
+          total_tax: undefined,
+          total_discounts: undefined,
+          total_shipping_price_set: undefined,
+        });
+
+        const [, upsertParams] = mockQuery.mock.calls[1];
+        // Digital-good / free-order shape: total_amount may also be null,
+        // but the financial breakdown columns must all be null (not 0) so
+        // the UI can distinguish "no data captured" from "captured as zero".
+        expect(upsertParams?.[9]).toBeNull();
+        expect(upsertParams?.[10]).toBeNull();
+        expect(upsertParams?.[11]).toBeNull();
+        expect(upsertParams?.[12]).toBeNull();
+      });
     });
 
     it("defaults status to 'unfulfilled' when fulfillment_status is missing", async() => {

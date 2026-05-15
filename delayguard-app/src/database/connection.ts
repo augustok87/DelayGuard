@@ -378,6 +378,29 @@ export async function runMigrations(): Promise<void> {
       END $$;
     `);
 
+    // Phase 2.1.c (Financial Breakdown): order-level subtotal / tax / discount /
+    // shipping captured at webhook time for pure-display narrative ("$199 =
+    // $180 subtotal + $15 tax + $4 shipping − $0 discounts"). All four columns
+    // additive + nullable; pre-Phase-2.1.c orders stay valid and render the
+    // total only. No backfill — pulling breakdowns from the Shopify Admin API
+    // at install time is ~1 GraphQL call per legacy order, an unjustified
+    // cost-points budget for what is a pure-display feature. Mirrors the
+    // 2.1.b additive-columns precedent (orders.total_amount).
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='orders' AND column_name='subtotal_price'
+        ) THEN
+          ALTER TABLE orders ADD COLUMN subtotal_price NUMERIC(12, 2);
+          ALTER TABLE orders ADD COLUMN total_tax NUMERIC(12, 2);
+          ALTER TABLE orders ADD COLUMN total_discounts NUMERIC(12, 2);
+          ALTER TABLE orders ADD COLUMN total_shipping_price NUMERIC(12, 2);
+        END IF;
+      END $$;
+    `);
+
     // Create indexes for performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_orders_shop_id ON orders(shop_id);
