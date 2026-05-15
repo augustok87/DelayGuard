@@ -2,12 +2,53 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 14, 2026 (v1.41 — audit Wave 3.1 TS `any` cleanup, 2 of 5 clusters)
+**Last Updated**: May 14, 2026 (v1.42 — audit Wave 4.1 customer-notification-path test debt, 3 of 6 clusters + v1.19 double-dispatch bug fix)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.42 (2026-05-14): Audit Wave 4.1 — customer-notification-path test debt + v1.19 double-dispatch bug fix
+
+**Test Results**: 1,946 passing (+35), 25 skipped, 0 failing. Three test surfaces closed: `EmailService.sendDelayEmail` (+8), `SMSService.sendDelaySMS` (+10), and `processNotification` BullMQ processor (+17, brand-new sibling test).
+**Status**: Test-debt closure per [.claude/plans/rules-audit-plan.md](.claude/plans/rules-audit-plan.md) Wave 4. **3 of 6 clusters shipped — 3 remain** (`optimized-api.ts`, `redis-connection.ts`, `performance-monitor.ts` — plus the 6-routes-without-sibling-tests sub-bullet). Wave 4 is NOT closed.
+
+**Problem**:
+
+1. `email-service.test.ts` and `sms-service.test.ts` covered only `ping()` (Wave 2.3) — `sendDelayEmail` / `sendDelaySMS` had no sibling tests. The flag was carry-forwarded in Waves 2.3 and 3.1.
+2. `delayguard-app/src/queue/processors/notification.ts` (the BullMQ orchestrator) had **no sibling test at all** — the customer-notification dispatch path was unguarded against the v1.19 routing-rule pattern.
+3. **Real bug found while writing the bug-shaped negative test** (v1.19 routing-rule violation): the processor called `NotificationService.sendDelayNotification(orderInfo, delayDetails)` **once per channel branch** — but that method internally routes to BOTH email AND SMS whenever both recipient fields are populated. With `email_enabled=true, sms_enabled=true` and both `customer_email` + `customer_phone` present, customers received **2 emails AND 2 SMS messages per delay alert** instead of 1 each. Worse, an SMS-only or email-only flag combination still fired the OTHER channel as long as the contact field was non-empty — the per-channel `email_enabled` / `sms_enabled` toggles were silently bypassed.
+
+**What Changed**:
+
+**1. `delayguard-app/src/queue/processors/notification.ts:78-130` — bug fix.** Replaced the two `notificationService.sendDelayNotification(...)` calls with direct `emailService.sendDelayEmail(...)` (inside the email-enabled branch) and `smsService.sendDelaySMS(...)` (inside the sms-enabled branch). Per the v1.19 notification-routing rule, dispatch now lives INSIDE each rule-matched branch and respects the per-channel toggle gate. Smallest-blast-radius: `NotificationService` itself is left alone — it remains the canonical multi-channel-fanout primitive for callers that DO want the both-channels-if-recipient-present behavior. Only the BullMQ processor was using it incorrectly. Removed the unused `NotificationService` import.
+
+**2. `delayguard-app/src/services/email-service.test.ts` — extended with 8 new `sendDelayEmail` cases.** Existing 7 `ping()` cases untouched. Coverage: v1.19 field-population assertion on every `dynamicTemplateData` key (`customerName`, `orderNumber`, `newDeliveryDate`, `trackingNumber`, `trackingUrl`, `delayDays`, `delayReason`), recipient-override regression guard, three error-propagation paths (Error / 401 / non-Error rejection), `delayDays=0` zero-value regression guard, empty-string `delayReason` regression guard, and a single-call idempotency assertion. Mocks `@sendgrid/mail` at the SDK level (matching the existing Wave 2.3 pattern — the service is a thin wrapper around `sgMail.send` with no finer-grained seam).
+
+**3. `delayguard-app/src/services/sms-service.test.ts` — extended with 10 new `sendDelaySMS` cases.** Existing 6 `ping()` cases untouched. Coverage: v1.19 envelope assertion on `{to, from, body}`, one regression test per interpolated body field (`customerName`, `orderNumber`, `estimatedDelivery`, `trackingUrl`), recipient-override guard, three error-propagation paths (Twilio code 21211 / 20003 auth / non-Error rejection), single-call idempotency. Mocks `twilio` at the SDK level.
+
+**4. `delayguard-app/src/tests/unit/queue/notification.test.ts` — new file, 17 tests.** Three describe blocks:
+- **Settings-flag routing (v1.19 rule, 8 tests)**: email-only branch, SMS-only branch, both-enabled, neither-enabled (silent-skip negative), per-recipient guards for missing `customer_email` / `customer_phone`, already-sent gates for `email_sent` / `sms_sent`. The `both-enabled` and `email-only`/`SMS-only` tests are the bug-shaped tests that caught the v1.19 double-dispatch.
+- **Error propagation (6 tests)**: order-not-found, alert-not-found, email-dispatch-fails, SMS-dispatch-fails, missing `SENDGRID_API_KEY`, missing `TWILIO_ACCOUNT_SID`. All assert the error propagates (BullMQ `attempts: 3` retry must see it).
+- **DB write side-effects (v1.19 field-population rule, 3 tests)**: `UPDATE delay_alerts SET email_sent = TRUE` on success, `UPDATE delay_alerts SET sms_sent = TRUE` on success, full delay-details envelope passthrough to `sendDelayEmail`.
+
+Mocks `EmailService` and `SMSService` at the class level (per tests.md "mock at the service-method level" — the processor test isolates to its own dispatch logic and does NOT reach into vendor SDKs).
+
+**Test placement decision**: placed at `src/tests/unit/queue/notification.test.ts` to match the existing `src/tests/unit/queue/tracking-refresh.test.ts` pattern. The other discovered pattern (`tests/unit/queue/delay-check-notification-routing.test.ts`) is a co-tenant under the same `tests/unit/queue/` namespace — both directories are picked up by Jest's `roots: ['<rootDir>/src', '<rootDir>/tests']` config. Chose the `src/tests` pattern because the file under test (`src/queue/processors/notification.ts`) lives under `src/`, and `src/tests/unit/queue/` colocates the test tree with the source tree.
+
+**Behavior surprises found while writing tests** (none required code changes beyond the v1.19 fix):
+- `EmailService.sendDelayEmail` wraps **any** rejected value (including non-Error strings) into `new Error('Failed to send email: <toString>')`. Tested as-is — the wrapping is sensible (BullMQ retry sees a real Error).
+- `SMSService.sendDelaySMS` mirrors that wrapping pattern.
+- `processNotification` resolves the SendGrid / Twilio credentials from `process.env` at call time (not at module load), so missing-key behavior is a per-job error rather than a startup error.
+
+**Found-and-deferred**:
+- Two pre-existing `NotificationService.sendDelayNotification` test files (`tests/unit/notification-service.test.ts`, `tests/unit/services/notification-service.test.ts`) duplicate coverage. Not touched (out of scope, no v1.19 bug).
+- `NotificationService.sendDelayNotification` itself remains a "fanout-to-both-channels" primitive that ignores per-channel toggles. That's intentional given its public API contract; the processor was the wrong caller. Left as-is per smallest-blast-radius.
+
+**Lint exception**: ran `npx eslint --fix` only on the 4 touched files. Did NOT run `npm run lint:fix` (still unsafe — reformats ~40 source files per the Wave 2.3 / 3.1 diagnosis).
+
+---
 
 ### v1.41 (2026-05-14): Audit Wave 3.1 — TS `any` cleanup, 2 of 5 clusters
 

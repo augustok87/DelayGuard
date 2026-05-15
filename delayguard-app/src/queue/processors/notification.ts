@@ -1,6 +1,5 @@
 import { Job } from 'bullmq';
 import { logger } from '../../utils/logger';
-import { NotificationService } from '../../services/notification-service';
 import { EmailService } from '../../services/email-service';
 import { SMSService } from '../../services/sms-service';
 import { query } from '../../database/connection';
@@ -77,7 +76,6 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
 
     const emailService = new EmailService(sendgridKey);
     const smsService = new SMSService(twilioSid, twilioToken, twilioPhone);
-    const notificationService = new NotificationService(emailService, smsService);
 
     // Prepare order info
     const orderInfo = {
@@ -90,12 +88,20 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       createdAt: new Date(order.created_at),
     };
 
-    // Send notifications based on settings and what hasn't been sent
+    // Send notifications based on settings and what hasn't been sent.
+    //
+    // v1.19 notification-routing rule: dispatch lives INSIDE each rule-matched
+    // branch. We deliberately call EmailService / SMSService directly rather
+    // than NotificationService.sendDelayNotification — the orchestrator routes
+    // to BOTH channels whenever both recipient fields are populated, which
+    // would bypass the per-channel email_enabled / sms_enabled toggles and
+    // double-dispatch when both flags are true (Wave 4.1, 2026-05-14).
     const promises: Promise<void>[] = [];
 
     if (order.email_enabled && order.customer_email && !alert.email_sent) {
       promises.push(
-        notificationService.sendDelayNotification(orderInfo, delayDetails)
+        emailService
+          .sendDelayEmail(order.customer_email, orderInfo, delayDetails)
           .then(async() => {
             // Mark email as sent
             await query(
@@ -113,7 +119,8 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
 
     if (order.sms_enabled && order.customer_phone && !alert.sms_sent) {
       promises.push(
-        notificationService.sendDelayNotification(orderInfo, delayDetails)
+        smsService
+          .sendDelaySMS(order.customer_phone, orderInfo, delayDetails)
           .then(async() => {
             // Mark SMS as sent
             await query(

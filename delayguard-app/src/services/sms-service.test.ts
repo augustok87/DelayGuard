@@ -1,12 +1,40 @@
 /**
- * SMSService.ping() — sibling tests for the health-probe entrypoint.
+ * SMSService — sibling tests for ping() (Wave 2.3) and sendDelaySMS (Wave 4.1).
  *
- * Scope is intentionally limited to ping() per Wave 2.3. The broader Wave 4
- * sibling-test gap for sendDelaySMS is tracked separately and not closed here.
+ * Mocking convention: twilio is mocked at the SDK level. The service is a thin
+ * wrapper around `client.messages.create` — there is no finer-grained seam.
+ * tests.md "mock at service-method level" applies to callers OF SMSService.
  */
+
+import type { OrderInfo, DelayDetails } from "../types";
 
 const twilioMock = jest.fn();
 jest.mock("twilio", () => twilioMock);
+
+function makeOrderInfo(overrides: Partial<OrderInfo> = {}): OrderInfo {
+  return {
+    id: "order-shopify-001",
+    orderNumber: "1001",
+    customerName: "Jane Doe",
+    customerPhone: "+15558675309",
+    shopDomain: "test-shop.myshopify.com",
+    createdAt: new Date("2026-05-01T00:00:00Z"),
+    ...overrides,
+  };
+}
+
+function makeDelayDetails(
+  overrides: Partial<DelayDetails> = {},
+): DelayDetails {
+  return {
+    estimatedDelivery: "2026-05-12",
+    trackingNumber: "1Z999AA1234567890",
+    trackingUrl: "https://tracking.example.com/1Z999AA1234567890",
+    delayDays: 3,
+    delayReason: "Weather delay",
+    ...overrides,
+  };
+}
 
 describe("SMSService.ping", () => {
   let SMSService: typeof import("./sms-service").SMSService;
@@ -100,5 +128,161 @@ describe("SMSService.ping", () => {
     await expect(smsService.ping()).resolves.toBeDefined();
     const result = await smsService.ping();
     expect(result.status).toBe("unhealthy");
+  });
+});
+
+describe("SMSService.sendDelaySMS", () => {
+  let SMSService: typeof import("./sms-service").SMSService;
+  let smsService: import("./sms-service").SMSService;
+  let messagesCreateMock: jest.Mock;
+
+  beforeEach(() => {
+    jest.resetModules();
+    messagesCreateMock = jest.fn();
+    twilioMock.mockReturnValue({
+      messages: { create: messagesCreateMock },
+      api: { v2010: { accounts: jest.fn() } },
+    });
+    SMSService = require("./sms-service").SMSService;
+    smsService = new SMSService("AC_TEST_SID", "auth-token", "+15551234567");
+  });
+
+  it("calls client.messages.create with the canonical envelope (v1.19 field-population rule)", async() => {
+    messagesCreateMock.mockResolvedValue({ sid: "SM_TEST", status: "queued" });
+
+    await smsService.sendDelaySMS(
+      "+15558675309",
+      makeOrderInfo(),
+      makeDelayDetails(),
+    );
+
+    expect(messagesCreateMock).toHaveBeenCalledTimes(1);
+    expect(messagesCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "+15558675309",
+        from: "+15551234567",
+        body: expect.any(String),
+      }),
+    );
+  });
+
+  it("interpolates customerName into the body (regression guard — one assertion per field)", async() => {
+    messagesCreateMock.mockResolvedValue({ sid: "SM_TEST" });
+
+    await smsService.sendDelaySMS(
+      "+15558675309",
+      makeOrderInfo({ customerName: "Carlos Vega" }),
+      makeDelayDetails(),
+    );
+
+    expect(messagesCreateMock.mock.calls[0][0].body).toContain("Carlos Vega");
+  });
+
+  it("interpolates orderNumber into the body", async() => {
+    messagesCreateMock.mockResolvedValue({ sid: "SM_TEST" });
+
+    await smsService.sendDelaySMS(
+      "+15558675309",
+      makeOrderInfo({ orderNumber: "9042" }),
+      makeDelayDetails(),
+    );
+
+    expect(messagesCreateMock.mock.calls[0][0].body).toContain("#9042");
+  });
+
+  it("interpolates estimatedDelivery into the body", async() => {
+    messagesCreateMock.mockResolvedValue({ sid: "SM_TEST" });
+
+    await smsService.sendDelaySMS(
+      "+15558675309",
+      makeOrderInfo(),
+      makeDelayDetails({ estimatedDelivery: "2026-06-30" }),
+    );
+
+    expect(messagesCreateMock.mock.calls[0][0].body).toContain("2026-06-30");
+  });
+
+  it("interpolates trackingUrl into the body", async() => {
+    messagesCreateMock.mockResolvedValue({ sid: "SM_TEST" });
+
+    await smsService.sendDelaySMS(
+      "+15558675309",
+      makeOrderInfo(),
+      makeDelayDetails({
+        trackingUrl: "https://track.example.com/abc123",
+      }),
+    );
+
+    expect(messagesCreateMock.mock.calls[0][0].body).toContain(
+      "https://track.example.com/abc123",
+    );
+  });
+
+  it("routes the recipient phone from the phone argument (not from orderInfo.customerPhone) — override regression guard", async() => {
+    messagesCreateMock.mockResolvedValue({ sid: "SM_TEST" });
+    const orderInfo = makeOrderInfo({ customerPhone: "+15550000000" });
+
+    await smsService.sendDelaySMS(
+      "+15558675309",
+      orderInfo,
+      makeDelayDetails(),
+    );
+
+    expect(messagesCreateMock.mock.calls[0][0].to).toBe("+15558675309");
+  });
+
+  it("propagates a wrapped Error when client.messages.create rejects (BullMQ retry must see the failure)", async() => {
+    messagesCreateMock.mockRejectedValue(
+      Object.assign(new Error("Invalid 'To' Phone Number"), { code: 21211 }),
+    );
+
+    await expect(
+      smsService.sendDelaySMS(
+        "+15558675309",
+        makeOrderInfo(),
+        makeDelayDetails(),
+      ),
+    ).rejects.toThrow(/Failed to send SMS/);
+  });
+
+  it("propagates a wrapped Error on Twilio auth failure (must not be swallowed)", async() => {
+    messagesCreateMock.mockRejectedValue(
+      Object.assign(new Error("Authentication Error"), {
+        status: 401,
+        code: 20003,
+      }),
+    );
+
+    await expect(
+      smsService.sendDelaySMS(
+        "+15558675309",
+        makeOrderInfo(),
+        makeDelayDetails(),
+      ),
+    ).rejects.toThrow(/Failed to send SMS/);
+  });
+
+  it("propagates a wrapped Error even when client.messages.create rejects with a non-Error value", async() => {
+    messagesCreateMock.mockRejectedValue("plain-string-rejection");
+
+    await expect(
+      smsService.sendDelaySMS(
+        "+15558675309",
+        makeOrderInfo(),
+        makeDelayDetails(),
+      ),
+    ).rejects.toThrow(/Failed to send SMS/);
+  });
+
+  it("does not call client.messages.create more than once per invocation (idempotency / no-retry-inside-service)", async() => {
+    messagesCreateMock.mockResolvedValue({ sid: "SM_TEST" });
+
+    await smsService.sendDelaySMS(
+      "+15558675309",
+      makeOrderInfo(),
+      makeDelayDetails(),
+    );
+
+    expect(messagesCreateMock).toHaveBeenCalledTimes(1);
   });
 });
