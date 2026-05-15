@@ -2,12 +2,88 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 15, 2026 (v1.51 — Phase 2.1.d shipping-address slice: 6 additive nullable order-level columns + parseAddressField helper + GDPR redact extended to anonymize 2 PII columns + v1.19 every-column assertion extended to 19 params)
+**Last Updated**: May 15, 2026 (v1.52 — Phase 2.1.e test-alert endpoint: dashboard-only POST `/api/test-alert` + new `TestAlertService` thin wrapper around EmailService/SMSService + per-channel app_settings flag honoring + per-request channel-picker + per-request recipient-override + dry-run dispatch (no DB write))
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.52 (2026-05-15): Phase 2.1.e — Test-Alert Endpoint (fifth slice)
+
+**Test Results**: 2,091 passing (+21), 25 skipped, 0 failing (1 known-flake in `tests/unit/middleware/input-sanitization.test.ts:405` performance-budget assertion intermittently exceeds 120ms threshold under coverage instrumentation; passes in isolation, unrelated to this slice). New coverage: `src/services/test-alert-service.test.ts` with 15 cases (both-channels happy path + per-channel `email_enabled`/`sms_enabled` flag honoring (×3 — email-off, sms-off, both-off) + per-request `channels: [...]` picker (×2 — email-only, sms-only) + per-request `recipientEmail`/`recipientPhone` override (×2) + null-merchant-contact skip (×2) + ShopNotFoundError + invalid `delayType` validation + invalid `channels: []` validation + per-`delayType` distinct `delayReason` synthesis + LEFT JOIN null-defaults match schema (`email_enabled` DEFAULT TRUE, `sms_enabled` DEFAULT FALSE)) and `src/tests/unit/routes/test-alert-route.test.ts` with 6 cases (200 happy path + 401 no-token + 404 ShopNotFoundError + 400 INVALID_DELAY_TYPE + 200 channels+recipient body forwarding + 500 underlying-throw). 100% coverage on the new service.
+**Status**: Phase 2.1 fifth sub-slice (2.1.e) **SHIPPED**. Sub-slice remaining (2.1.f): customer-intelligence UI surfacing (priority badge + financial breakdown + shipping address + customer segment on alert cards). Phase 2.1.e gives merchants the in-app way to verify their SendGrid/Twilio routing + template rendering + `shops.merchant_email`/`merchant_phone` config without waiting for a real delay — the last missing piece before §2.1.f finally renders the four data layers shipped in 2.1.a–2.1.d on real alert cards.
+
+**Problem**: Phase 2.1.a–2.1.d landed the data layer (customer intelligence, priority score, financial breakdown, shipping address) but merchants had no in-app way to confirm their notification routing actually works before a real delay alert fires. Without this, a merchant could ship a misconfigured `merchant_email` (typo) or a `sms_enabled = true` with no Twilio creds and not discover the gap until the first real outage. The "Send Test Alert" button has existed in the dashboard since v1.20.3 (UI-only stub); this slice wires its backend so pressing it actually fires email + SMS to the merchant's own contact via the existing SendGrid/Twilio path.
+
+**Four gating decisions reverse-prompted before any code was written** (the originally-asked questions, all five-rec answers accepted):
+
+1. **Auth surface** → POST `/api/test-alert` with the existing `requireAuth` middleware ([shopify-session.ts](delayguard-app/src/middleware/shopify-session.ts)) — same App Bridge session-token JWT gate as `/api/alerts`, `/api/orders`, `/api/settings`, `/api/merchant-settings`. No CSRF layer added: the JWT is short-lived + signature-bound to the shop, which is the canonical Shopify embedded-app CSRF defense (a token-cookie pair on top would reinvent it). Closest precedent: the existing `PUT /api/merchant-settings` ([api.ts:163](delayguard-app/src/routes/api.ts#L163)), also a dashboard-only POST that touches the merchant's own contact fields.
+2. **Pipeline depth** → render-only / dry-run. POST receives `delayType`, the service synthesizes a fake `OrderInfo` (`TEST-001` order, `Sample Customer`) + per-`delayType` `DelayDetails`, dispatches via `EmailService.sendDelayEmail` / `SMSService.sendDelaySMS` directly, returns `{ channelsAttempted, recipientEmail, recipientPhone }`. **No `delay_alerts` row inserted, no BullMQ enqueue, no `is_test` column added**. EmailService/SMSService both return `Promise<void>` today (they `await` the SendGrid/Twilio SDK and discard `x-message-id` / `MessageInstance.sid`); chasing real delivery proof would require modifying both services + NotificationService + delay-check.ts callers (~6 files), so we accepted no-throw + `channelsAttempted` as the success signal. Real delivery proof is correlated post-hoc via the existing SendGrid Event Webhook ([sendgrid-webhook.ts](delayguard-app/src/routes/sendgrid-webhook.ts)) when a UI in §2.1.f wants it.
+3. **Channel selection** → per-request `channels: ('email' | 'sms')[]` picker, default = both-if-set. Honored against per-channel `app_settings.email_enabled` / `sms_enabled` flags (a stricter behavior than the production delay-check.ts dispatch path, which only gates on `(email_enabled || sms_enabled)` then routes by contact-presence — see [delay-check.ts:156](delayguard-app/src/queue/processors/delay-check.ts#L156)). Test-alert intentionally diverges to surface misconfig: if `sms_enabled = false` but the merchant has a phone, test-alert won't send SMS, exposing the flag/contact mismatch the production path silently masks. Future-proofs the picker UI for §2.1.f without locking it in.
+4. **Recipient** → `shops.merchant_email` / `shops.merchant_phone` by default, with optional `recipientEmail` / `recipientPhone` request-body override. Override is for support-troubleshooting (merchant pastes their gmail to confirm template render without changing `merchant_email`). Same field-level read as `getMerchantSettings`. Bypasses NotificationService entirely (the route calls EmailService + SMSService directly through a thin TestAlertService wrapper) so the merchant's `merchant_email` doesn't have to be stuffed into a field literally named `customerEmail` on `OrderInfo` — clean separation of "this is the customer's notification" (NotificationService) from "this is a test to the merchant" (TestAlertService).
+
+**Two flags surfaced during the gating read** (criterion b — plan-vs-reality + criterion c — anything the user hadn't anticipated):
+
+5. **Plan-vs-reality**: IMPLEMENTATION_PLAN.md had **no §2.1.e section** before this slice — the original Phase 2 numbering didn't separate test-alert as its own slice. PROJECT_OVERVIEW.md `§2.5 Test Alert Implementation` ([PROJECT_OVERVIEW.md:506](PROJECT_OVERVIEW.md#L506)) has the closest spec, including a "Flag alert as 'TEST' in database" line that this slice intentionally **rejects** (per Q2 dry-run choice). The §2.1.e "what shipped" + "key decisions" blocks are now backfilled into the §2.1 section of [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) alongside §2.1.a–§2.1.d for future-audit discoverability (mirrors the v1.51 backfill pattern).
+6. **NotificationService dispatch wart** (carry-forward, NOT fixed this slice): production [delay-check.ts:156](delayguard-app/src/queue/processors/delay-check.ts#L156) gates on `(email_enabled || sms_enabled)` then [NotificationService.sendDelayNotification](delayguard-app/src/services/notification-service.ts#L92) routes by `customerEmail` / `customerPhone` presence — meaning if `sms_enabled = false` but `customer.phone` exists, SMS still fires for real alerts. Test-alert is per-channel-flag-strict (Q3); this divergence is intentional but the production-side wart is a separate carry-forward.
+
+**What Changed**:
+
+**1. New service** — [src/services/test-alert-service.ts](delayguard-app/src/services/test-alert-service.ts):
+
+- `TestAlertChannel` type alias (`'email' | 'sms'`) and `TestAlertDelayType` type alias (`'warehouse' | 'carrier' | 'transit'`).
+- `TestAlertRequest` interface (`delayType` required; `channels`, `recipientEmail`, `recipientPhone` optional).
+- `TestAlertResult` interface (`channelsAttempted`, `recipientEmail`, `recipientPhone`).
+- `SAMPLE_DELAY_DETAILS` constant: per-`delayType` synthesized `DelayDetails` (warehouse → `WAREHOUSE_DELAY` / 3 days, carrier → `DELAYED_STATUS` / 2 days, transit → `STUCK_IN_TRANSIT` / 7 days). Tracking numbers / URLs are obvious test placeholders.
+- `buildSampleOrderInfo(shopDomain)` helper: synthesizes `OrderInfo` for the dispatch (orderNumber `TEST-001`, customerName `Sample Customer`).
+- `isValidDelayType` + `isValidChannelArray` type-guards for input narrowing — short-circuit before the DB read so invalid input doesn't waste a query.
+- `TestAlertService` class with `dispatchTestAlert(shopDomain, req)` method:
+  - Validates `delayType` and `channels` first (throws `MerchantApiValidationError` with codes `INVALID_DELAY_TYPE` / `INVALID_CHANNELS`).
+  - Single LEFT JOIN query against `shops` + `app_settings` (returns `merchant_email` / `merchant_phone` / `email_enabled` / `sms_enabled` in one round-trip).
+  - LEFT JOIN nulls for missing `app_settings` row coerce to schema defaults (`email_enabled ?? true`, `sms_enabled ?? false`).
+  - Per-channel gating: dispatch only if `requested.includes(channel) && channelEnabled && recipient`.
+  - `Promise.all` parallel dispatch.
+  - Logs the attempted channel set on success.
+
+**2. Wired POST route** — [src/routes/api.ts](delayguard-app/src/routes/api.ts):
+
+- New imports: `TestAlertService`, `TestAlertChannel`, `TestAlertDelayType`, `EmailService`, `SMSService`.
+- Lazy-singleton `getTestAlertService()` factory: instantiates one `TestAlertService` per process (so SendGrid/Twilio SDK clients aren't re-constructed per request) and reads env vars at call time (Vercel cold start has them; tests mock the underlying service modules).
+- `router.post("/test-alert", requireAuth, ...)` handler: parses body, calls service, returns `{ success: true, data: TestAlertResult }`. Reuses the existing `respondWithServiceError` helper for `ShopNotFoundError → 404`, `MerchantApiValidationError → 400`, fallback 500.
+
+**3. Sibling tests** — 21 new cases:
+
+- [src/services/test-alert-service.test.ts](delayguard-app/src/services/test-alert-service.test.ts) — 15 cases. Mocks `query` from `database/connection`; constructs `TestAlertService` with `jest.Mocked<EmailService>` + `jest.Mocked<SMSService>` directly via DI.
+- [src/tests/unit/routes/test-alert-route.test.ts](delayguard-app/src/tests/unit/routes/test-alert-route.test.ts) — 6 cases. New file (separate from `api-routes.test.ts`) so the `EmailService` / `SMSService` module mocks don't bleed into unrelated route suites. Walks the real `apiRoutes` router with supertest + a JWT-signed bearer.
+
+**Carry-forward context for Phase 2.1.f and beyond**:
+
+- The dashboard "Send Test Alert" button (existing UI stub since v1.20.3 — see `useSettingsActions.ts`) needs frontend wiring to POST `/api/test-alert` with `{ delayType: 'warehouse' }` (or whichever picker the §2.1.f UI surfaces). Backend response shape is `{ success: true, data: { channelsAttempted: ('email'|'sms')[], recipientEmail: string|null, recipientPhone: string|null } }`. Toast copy can be data-driven: e.g. "Test alert sent via {channelsAttempted.join(' + ') || 'no channels — check your notification flags'}".
+- The `recipientEmail` / `recipientPhone` body params are reserved for a future "Send to a different address (troubleshooting)" expander in the §2.1.f UI — wire the basic happy path first, expander later.
+- The `channels` body param is reserved for a future "Test only email" / "Test only SMS" picker in the §2.1.f UI — same expander pattern, wire later.
+- No `last_test_alert_at` column added (deliberate — UI-state belongs with the UI slice). If §2.1.f wants "you last tested 5 minutes ago" copy, add `shops.last_test_alert_at TIMESTAMPTZ` then.
+- Production NotificationService dispatch wart (item 6 above) is a separate carry-forward — not fixed here. If a future audit pass tightens `delay-check.ts` to per-channel flag-honoring, test-alert and real-alert behavior would converge.
+
+**Found-and-deferred (smallest blast radius — DO NOT attack mid-session)**:
+
+- Phase 2.1.f customer-intelligence UI surfacing (priority badge + financial breakdown + shipping address + customer segment on alert cards) — last Phase 2.1 sub-slice.
+- Phase 2.2.c re-score follow-up at end of `customer-sync.ts` (born from 2.1.b race-condition Q3 fallback).
+- EnhancedDashboard subtree (Wave 7.3 target).
+- PerformanceMonitor reader/writer schema mismatch (regression-test pending).
+- ToastContainer.tsx:27 ℹ️ emoji (Wave 6 follow-up).
+- Route-layer integration gaps: webhooks.ts, monitoring.ts, billing.ts (Wave 4.6).
+- optimized-api.ts sibling test (Wave 4.4).
+- `003_create_subscriptions_table.sql` UUID-vs-SERIAL mismatch + migration-runner not loading .sql files (surfaced 2026-05-15).
+- `getQueueStats` schema extension for customer-sync queue is still deferred from v1.48–v1.51; bundle with Phase 2.1.f UI surfacing.
+- `npm run lint:fix` still unsafe (Wave 2.3 finding); used `npx eslint --fix` on touched files only for this slice.
+- Husky pre-commit gate still non-functional; no change this slice.
+- `tests/unit/middleware/input-sanitization.test.ts:405` performance-budget assertion is a known flake under coverage instrumentation (passes in isolation); separate test-infra fix.
+- Pre-existing lint errors in `src/tests/integration/database/tracking-events-schema.test.ts:2` (unused `query` import) and `tests/unit/components/HelpModal.test.tsx:162` (`jsx-a11y/anchor-is-valid`) — unrelated to this slice.
+- DATA_AVAILABILITY_ANALYSIS.md catch-up entry for all v1.49/v1.50/v1.51 columns is still deferred (doc-only, no behavior change). Test-alert adds no columns so no catch-up entry needed for v1.52.
+- Production NotificationService dispatch wart (item 6 above): per-channel `email_enabled` / `sms_enabled` flags are not honored on real-alert dispatch — bundle with a future audit pass.
+
+---
 
 ### v1.51 (2026-05-15): Phase 2.1.d — Shipping Address Context (fourth slice)
 

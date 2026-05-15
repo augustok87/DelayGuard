@@ -1,8 +1,8 @@
 # DelayGuard - Project Overview & Roadmap
 
 **Last Updated**: May 15, 2026
-**Current Phase**: ✅ Phase 1 + Audit Waves 1-7 (largely closed) — **Phase 2.1.a ingestion + 2.1.b priority score + 2.1.c financial breakdown shipped 2026-05-15**; Phase 2.1.d–2.1.f (shipping address / test alert / customer-intelligence UI) pending
-**Latest Update**: v1.50 — Phase 2.1.c financial-breakdown slice (4 additive nullable columns on orders + parseMoneySet helper for nested `total_shipping_price_set.shop_money.amount` + UPSERT 9→13 cols + v1.19 every-column assertion extended; +12 tests, written-not-rendered)
+**Current Phase**: ✅ Phase 1 + Audit Waves 1-7 (largely closed) — **Phase 2.1.a–e shipped 2026-05-15** (ingestion + priority score + financial breakdown + shipping address + test-alert endpoint); Phase 2.1.f (customer-intelligence UI) pending
+**Latest Update**: v1.52 — Phase 2.1.e test-alert endpoint (dashboard-only POST `/api/test-alert` + new `TestAlertService` thin wrapper around EmailService/SMSService + per-channel `app_settings` flag honoring + per-request channel-picker + per-request recipient-override + dry-run dispatch — no DB write, no BullMQ enqueue; +21 sibling tests, backend complete, frontend wiring deferred to 2.1.f)
 **Document Purpose**: Single consolidated view of current state, readiness, and future roadmap
 
 ---
@@ -13,9 +13,9 @@
 
 | Metric | Status | Details |
 |--------|--------|---------|
-| **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a ingestion + 2.1.b priority score + 2.1.c financial breakdown + 2.1.d shipping address shipped 2026-05-15 (v1.48–v1.51); Phase 2.1.e–2.1.f pending |
+| **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
 | **Readiness Score** | **95/100 (A)** | Ready for Shopify submission (assets pending) |
-| **Test Success** | **100%** | 2,070 passing, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run |
+| **Test Success** | **100%** | 2,091 passing, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run (1 known-flake in `input-sanitization.test.ts:405` performance assertion intermittent under coverage instrumentation) |
 | **Test Suites** | **All passing** | 96 of 98 suites pass; 2 suites skipped (require PostgreSQL) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
@@ -503,41 +503,37 @@ Phone: (406) 555-0123
 
 ---
 
-### 2.5 Test Alert Implementation (1-2 days)
+### 2.5 Test Alert Implementation (renumbered Phase 2.1.e — shipped 2026-05-15 v1.52)
 
 **Goal**: Allow merchants to test their notification system end-to-end
 
 **Current Status**:
-- ✅ UI button exists with help text
-- ❌ Backend implementation incomplete (shows demo toast notifications only)
+- ✅ UI button exists with help text (since v1.20.3)
+- ✅ Backend implementation **SHIPPED** (Phase 2.1.e, v1.52 — see [CHANGELOG.md v1.52](CHANGELOG.md))
+- ⏳ Frontend wiring deferred to Phase 2.1.f (UI surfacing slice — same slice that renders priority badge + financial breakdown + shipping address + customer segment on alert cards)
 
-**What Needs Implementation:**
+**What Shipped (Backend)**:
 
-**Backend Endpoint** (`/api/test-alert`):
-```typescript
-// POST /api/test-alert
-- Create test delay alert with fake order data
-- Send actual email to merchant's email (not customer)
-- Send actual SMS to merchant's phone (if configured)
-- Flag alert as "TEST" in database
-- Return success/failure status
-```
+**POST `/api/test-alert`** ([api.ts](delayguard-app/src/routes/api.ts)) — `requireAuth`-gated dashboard-only endpoint:
+- Body: `{ delayType: 'warehouse'|'carrier'|'transit', channels?: ('email'|'sms')[], recipientEmail?: string|null, recipientPhone?: string|null }`.
+- Synthesizes fake `OrderInfo` (`TEST-001` / `Sample Customer`) + per-`delayType` `DelayDetails`.
+- Reads `shops.merchant_email` / `merchant_phone` + `app_settings.email_enabled` / `sms_enabled` in a single LEFT JOIN.
+- Dispatches via `EmailService.sendDelayEmail` / `SMSService.sendDelaySMS` directly through new `TestAlertService` ([test-alert-service.ts](delayguard-app/src/services/test-alert-service.ts)) — NotificationService bypassed to avoid stuffing the merchant's email into a field literally named `customerEmail`.
+- **Dry-run** with respect to the alert pipeline: no `delay_alerts` row inserted, no BullMQ enqueue, no `is_test` column added (intentional rejection of the original spec's "Flag alert as 'TEST' in database" line — UI-state belongs with the UI slice).
+- Per-channel flag honoring is **stricter** than production `delay-check.ts` dispatch (which only gates on `(email_enabled || sms_enabled)` then routes by contact-presence) — surfaces misconfig the production path silently masks.
+- Per-request `channels` picker + `recipientEmail` / `recipientPhone` overrides are reserved for future "Test only email" / "Send to a different address" UI expanders.
+- Returns `{ success: true, data: { channelsAttempted, recipientEmail, recipientPhone } }`.
 
-**Frontend Updates**:
-```typescript
-// Update useSettingsActions.ts
-- Replace demo toast logic with real API call
-- Show success message: "✓ Test alert sent via email/SMS! Check your inbox."
-- Handle error states (SendGrid/Twilio failures)
-- Display which notification methods were triggered
-```
+**Frontend Updates Pending (Phase 2.1.f)**:
+- Wire [`useSettingsActions.ts`](delayguard-app/src/components/EnhancedDashboard/hooks/) to POST `/api/test-alert` with `{ delayType: 'warehouse' }` (or whichever picker §2.1.f surfaces).
+- Replace demo toast logic with data-driven copy: e.g. "Test alert sent via {channelsAttempted.join(' + ') || 'no channels — check your notification flags'}".
+- Optional expander: "Send to a different address (troubleshooting)" → posts `recipientEmail` / `recipientPhone` overrides.
+- Optional expander: per-channel test picker → posts `channels: ['email']` or `['sms']`.
 
-**Testing:**
-- Test with SendGrid sandbox mode
-- Test with Twilio test credentials
-- Verify email template renders correctly
-- Verify SMS character limits
-- Test error handling (invalid email, SMS disabled)
+**Testing (already in place)**:
+- 21 sibling tests (15 service + 6 route) — see [v1.52 CHANGELOG entry](CHANGELOG.md#v152-2026-05-15-phase-21e--test-alert-endpoint-fifth-slice).
+- 100% coverage on the new service.
+- Production-mode SendGrid sandbox / Twilio test credentials still recommended for QA before Shopify App Store submission.
 
 **Business Value:**
 - Merchants can verify notifications work before going live
@@ -684,8 +680,8 @@ Phone: (406) 555-0123
 **Where We Are:**
 - ✅ Phase 1 Complete (Oct 28, 2025)
 - ✅ Ready for Shopify submission (95/100 readiness)
-- ✅ Phase 2.1.a–d shipped (2026-05-15, v1.48–v1.51): ingestion + priority score + financial breakdown + shipping address
-- ✅ 2,070 passing tests, production-ready code
+- ✅ Phase 2.1.a–e shipped (2026-05-15, v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint
+- ✅ 2,091 passing tests, production-ready code
 - ⚠️ 2-3 days from submission (assets creation remaining)
 
 **Where We're Going:**

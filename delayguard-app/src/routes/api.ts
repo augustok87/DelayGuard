@@ -7,9 +7,35 @@ import {
   ShopNotFoundError,
   MerchantApiValidationError,
 } from "../services/merchant-api-service";
+import {
+  TestAlertService,
+  TestAlertChannel,
+  TestAlertDelayType,
+} from "../services/test-alert-service";
+import { EmailService } from "../services/email-service";
+import { SMSService } from "../services/sms-service";
 
 const router = new Router({ prefix: "/api" });
 const merchantApi = new MerchantApiService();
+
+// Lazy singleton — env vars must be present at call time (Vercel cold
+// start has them; tests mock the underlying services). Constructed once
+// per process so SendGrid/Twilio clients aren't re-instantiated per
+// request.
+let testAlertServiceInstance: TestAlertService | undefined;
+function getTestAlertService(): TestAlertService {
+  if (!testAlertServiceInstance) {
+    const sgKey = process.env.SENDGRID_API_KEY ?? "";
+    const twSid = process.env.TWILIO_ACCOUNT_SID ?? "";
+    const twToken = process.env.TWILIO_AUTH_TOKEN ?? "";
+    const twPhone = process.env.TWILIO_PHONE_NUMBER ?? "";
+    testAlertServiceInstance = new TestAlertService(
+      new EmailService(sgKey),
+      new SMSService(twSid, twToken, twPhone),
+    );
+  }
+  return testAlertServiceInstance;
+}
 
 /**
  * Map a service-layer error onto the appropriate HTTP response.
@@ -179,6 +205,36 @@ router.put("/merchant-settings", requireAuth, async(ctx: Context) => {
     };
   } catch (error) {
     respondWithServiceError(ctx, error, "Failed to update merchant settings");
+  }
+});
+
+/**
+ * POST /api/test-alert
+ * Dispatch a sample delay alert to the merchant's configured contact
+ * (or per-request override) so the merchant can verify their
+ * SendGrid/Twilio routing + template rendering without waiting for a
+ * real delay (Phase 2.1.e). Dry-run with respect to the alert pipeline:
+ * no delay_alerts row inserted, no BullMQ enqueue.
+ *
+ * Body: { delayType: 'warehouse'|'carrier'|'transit',
+ *         channels?: ('email'|'sms')[],
+ *         recipientEmail?: string|null,
+ *         recipientPhone?: string|null }
+ */
+router.post("/test-alert", requireAuth, async(ctx: Context) => {
+  try {
+    const shopDomain = getShopDomain(ctx);
+    const body = ctx.request.body as Record<string, unknown>;
+    const result = await getTestAlertService().dispatchTestAlert(shopDomain, {
+      delayType: body.delayType as TestAlertDelayType,
+      channels: body.channels as TestAlertChannel[] | undefined,
+      recipientEmail: body.recipientEmail as string | null | undefined,
+      recipientPhone: body.recipientPhone as string | null | undefined,
+    });
+    ctx.status = 200;
+    ctx.body = { success: true, data: result };
+  } catch (error) {
+    respondWithServiceError(ctx, error, "Failed to dispatch test alert");
   }
 });
 
