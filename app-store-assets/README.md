@@ -2,16 +2,18 @@
 
 This directory contains all assets required for Shopify App Store submission.
 
+> **Listing-copy rules (applies to every asset and caption here):** no testimonials in images or text (reqs 4.3.6/4.3.7), no statistics of any kind — verifiable or unverifiable (req 4.3.3), no "first/best/only" superlatives, no stats in the app-card subtitle (req 4.4.1). Pricing everywhere follows LAUNCH_PLAN decision D1: **Free + $7/mo Pro + $25/mo Enterprise** — dollar amounts appear only in the Pricing section below.
+
 ## Directory Structure
 
 ```
 app-store-assets/
-├── icons/                 # App icons (various sizes)
-├── screenshots/           # App screenshot templates
-├── videos/               # Demo videos (optional)
-├── generate-screenshots.html  # Screenshot generator
-├── generate-screenshots.js    # Screenshot automation
-└── README.md             # This file
+├── icons/                        # App icons (various sizes)
+├── screenshots/                  # App screenshots
+├── feature-image-1600x900.svg    # Feature media source (see Feature Media)
+├── generate-screenshots.html     # Screenshot generator
+├── generate-screenshots.js       # Screenshot automation
+└── README.md                     # This file
 ```
 
 ## App Icons ⚠️ ACTION REQUIRED
@@ -19,114 +21,77 @@ app-store-assets/
 ### Current Status:
 - ✅ `app-icon-1024x1024.png` - Good design
 - ✅ `app-icon-512x512.png` - Medium size
-- ✅ `app-icon-256x256.png` - Small size  
+- ✅ `app-icon-256x256.png` - Small size
 - ✅ `app-icon-128x128.png` - Thumbnail
 
-### ⚠️ REQUIRED UPDATE (2025):
-**Shopify now requires**: **1200x1200 pixels** for main app icon
+### ⚠️ REQUIRED UPDATE:
+**Shopify now requires**: **1200x1200 pixels** for the main app icon
 
 **Action needed**: Resize the 1024x1024 icon to 1200x1200 pixels
 
 ```bash
 # Using ImageMagick (install with: brew install imagemagick)
 convert app-icon-1024x1024.png -resize 1200x1200 app-icon-1200x1200.png
-
-# Or use any image editor to resize to 1200x1200px
 ```
 
-### Icon Design
-- **Primary Color**: Blue (#4F46E5)
-- **Symbol**: Shield with checkmark (representing delay protection)
-- **Style**: Modern, flat design
-- **Background**: Gradient blue
+## Screenshots 📸 ⚠️ RE-CAPTURE REQUIRED
 
-## Screenshots 📸 ✅ COMPLETED
+### Current Status: NOT submission-ready
 
-### Current Status: READY FOR SUBMISSION
+Five screenshots exist from an earlier build, but they display **fabricated performance metrics** (satisfaction scores, resolution times, ticket-reduction figures) rendered from mock data. Req 4.3.6 bans statistics and testimonials inside listing images, so these must be **re-captured after the dashboard renders real data** (LAUNCH_PLAN WS-G) with no invented metric tiles visible.
 
-We have **5 professional screenshots** taken from the actual running app:
-
-1. ✅ **Dashboard Overview.png** (1.1MB) - Main dashboard with metrics and settings
-2. ✅ **Active Alerts.png** (883KB) - Delay alerts with priority scoring
-3. ✅ **Orders.png** (911KB) - Order tracking with carrier integration
-4. ✅ **Delivered Order.png** (574KB) - Completed delivery tracking
-5. ✅ **Performance Metrics.png** (234KB) - Analytics dashboard with KPIs
-
-### Screenshot Details
-
-**Resolution**: High-quality PNG screenshots  
-**Source**: Actual app running at http://localhost:3000  
-**Content**: Real UI with professional mock data  
-**Quality**: ✅ Sharp, clear, professional  
-**Size**: All under 5MB (Shopify requirement)  
-
-### Screenshots Showcase:
-
-- **Dashboard Overview**: Shows settings configuration, Shopify connection status, delay thresholds, notification preferences, and performance metrics (94% satisfaction, 2.3 days avg resolution)
-- **Active Alerts**: Displays 2 active alerts with red borders, customer details, tracking info, and action buttons (Mark Resolved, Dismiss)
-- **Orders**: Shows order lifecycle with color-coded status (orange=processing, blue=shipped, green=delivered)
-- **Delivered Order**: Highlights successful delivery with tracking, customer info, and "Track Package" CTA
-- **Performance Metrics**: Analytics card with 4 key metrics and resolved alerts count
-
-### Screenshot Requirements (Updated 2025)
-
-✅ **Resolution**: **1600x1200 pixels** (Shopify standard 2024-2025)  
-✅ **Format**: PNG or JPEG  
-✅ **Size**: Less than 5MB per image  
-✅ **Quality**: High resolution, no blurriness  
-✅ **Content**: Show actual app interface (not mockups)  
-✅ **Text**: Readable at all sizes  
-✅ **Branding**: Consistent colors and style  
-✅ **Layout**: Uncluttered, clear feature demonstration
-
-### Files in screenshots/ Directory
+### Files in screenshots/ Directory (pending re-capture)
 
 ```
-Active Alerts.png          (883KB)
-Dashboard Overview.png     (1.1MB)
-Delivered Order.png        (574KB)
-Orders.png                 (911KB)
-Performance Metrics.png    (234KB)
+Active Alerts.png
+Dashboard Overview.png
+Delivered Order.png
+Orders.png
+Performance Metrics.png
 ```
 
-**Note**: HTML mockup templates have been removed. We're using real app screenshots instead for authenticity.
+### Screenshot Requirements
 
-## Feature Media ⭐ REQUIRED (NEW for 2025)
+- **Resolution**: 1600x1200 pixels
+- **Format**: PNG or JPEG, less than 5MB per image
+- **Content**: actual app interface (not mockups), no fabricated data, no stats, no testimonials
+- **Quality**: sharp and readable at all sizes, uncluttered layout, consistent branding
 
-### ⚠️ MANDATORY REQUIREMENT
+### What each screenshot should show
 
-Shopify now **requires** Feature Media for the listing header. Choose ONE:
+- **Dashboard Overview**: settings configuration, connection status, delay thresholds, and notification preferences
+- **Active Alerts**: delay alerts with priority indicators, customer details, tracking info, and action buttons (Mark Resolved, Dismiss)
+- **Orders**: order lifecycle with color-coded status (processing / shipped / delivered)
+- **Delivered Order**: successful delivery view with tracking and customer info
+- **Alert History**: resolved alerts and carrier trends (avoid any invented metric values)
 
-**Option A: Feature Image** (Recommended for faster submission)
-- **Dimensions**: **1600x900 pixels**
-- **Format**: PNG or JPEG
-- **Content**: Eye-catching image showing app's core benefit
-- **Text overlay**: Brief value proposition (e.g., "Stop Shipping Delays Before Customers Complain")
-- **Design**: Professional, brand-aligned, clear messaging
+## Feature Media ⭐ REQUIRED
 
-**Option B: Promotional Video** (More engaging but takes longer)
-- **Length**: **2-3 minutes** (promotional, not instructional)
-- **Format**: MP4, MOV, or AVI
-- **Resolution**: 1920x1080 (Full HD)
-- **Size**: Less than 100MB
-- **Content**: Show VALUE and BENEFITS, not just features
-- **Style**: Professional, engaging, fast-paced
+### Current Status: ✅ Feature image authored
 
-### Tools for Creation
+`feature-image-1600x900.svg` in this directory is the feature-image source: a dashboard-composite design in the app's navy + gold visual language (see UI_UX_REDESIGN_ANCHOUR_INSPIRED.md) with the app name and a benefits-focused tagline — no fabricated data, stats, or testimonials.
 
-**For Feature Image**:
-- Canva (free, easy templates)
-- Figma (professional design)
-- Photoshop (advanced)
+**Requirements (Option A: Feature Image):**
+- **Dimensions**: 1600x900 pixels exactly
+- **Format**: PNG or JPEG for upload (render the SVG to PNG)
+- **Content**: eye-catching image showing the app's core benefit; brief value proposition; no stats
 
-**For Promotional Video**:
-- **Loom** - https://www.loom.com (Free, easy to use)
-- **OBS Studio** - https://obsproject.com (Free, professional)
-- **QuickTime** (Mac) - Built-in screen recording
-- **Windows Game Bar** (Windows) - Built-in screen recording
-- **DaVinci Resolve** (Free, professional editing)
+**Render the PNG:**
+
+```bash
+# Any one of these works:
+rsvg-convert -w 1600 -h 900 feature-image-1600x900.svg -o feature-image-1600x900.png
+npx --yes sharp-cli -i feature-image-1600x900.svg -o feature-image-1600x900.png resize 1600 900
+qlmanage -t -s 1600 -o . feature-image-1600x900.svg   # macOS quick-look fallback
+```
+
+**Option B: Promotional Video** (alternative, more effort)
+- 2-3 minutes, MP4/MOV/AVI, 1920x1080, under 100MB
+- Show value and benefits, not just features — no stats or testimonials
 
 ## App Listing Copy
+
+> The canonical listing copy lives in `SHOPIFY_APP_STORE_LISTING.md` (repo root). The short-form fields below must stay in sync with it.
 
 ### App Name
 **DelayGuard** - Proactive Shipping Delay Alerts
@@ -135,35 +100,34 @@ Shopify now **requires** Feature Media for the listing header. Choose ONE:
 Prevent customer complaints with automated delay notifications
 
 ### Short Description (max 140 characters)
-Automatically detect shipping delays and notify customers before they complain. Reduce support tickets by up to 40%.
+Automatically detect shipping delays and notify customers before they complain. Keep every order's status ahead of the question.
 
 ### Full Description (max 5000 characters)
 
 ```markdown
 # Stop Losing Customers to Shipping Delays
 
-DelayGuard automatically monitors your shipments across 50+ carriers, detects delays before your customers notice, and sends professional notifications to keep them informed.
+DelayGuard automatically monitors your shipments across major carriers, detects delays before your customers notice, and sends professional notifications to keep them informed.
 
 ## Why DelayGuard?
 
-**40% Reduction in Support Tickets**
-Stop fielding "Where is my order?" questions. DelayGuard proactively notifies customers about delays, reducing your support burden.
+**Fewer "Where is my order?" conversations**
+DelayGuard proactively notifies customers about delays, so they hear it from you first instead of writing to your support inbox.
 
 **Multi-Carrier Tracking**
-Supports 50+ carriers including USPS, UPS, FedEx, DHL, and more through ShipEngine API integration.
+Supports major carriers including USPS, UPS, FedEx, and DHL through the ShipEngine API integration.
 
 **Smart Delay Detection**
-Advanced algorithms detect delays based on:
+Detects delays based on:
 - Carrier tracking status
 - Expected delivery dates
 - Shipping exceptions
-- Historical delivery patterns
 
 ## Key Features
 
 ✅ **Automated Delay Detection**
 - Real-time monitoring of all orders
-- Configurable delay thresholds (1-7 days)
+- Configurable delay thresholds
 - Intelligent alert prioritization
 
 ✅ **Multi-Channel Notifications**
@@ -174,7 +138,7 @@ Advanced algorithms detect delays based on:
 ✅ **Analytics Dashboard**
 - Track delay trends by carrier
 - Monitor notification performance
-- Measure customer satisfaction impact
+- Follow every order from processing to delivery
 
 ✅ **Easy Setup**
 - One-click installation
@@ -200,21 +164,14 @@ Advanced algorithms detect delays based on:
 - Everything in Pro
 - White-label notifications
 - API access
-- Dedicated account manager
+- Dedicated support
 - 14-day free trial
-
-## What Merchants Are Saying
-
-"DelayGuard has been a game-changer for our customer service team. Support tickets are down 35% since we started using it!" - Sarah J., Fashion Retailer
-
-"The automated notifications have completely transformed how we handle shipping delays. Our customers appreciate the proactive communication." - Mike T., Electronics Store
 
 ## Technical Details
 
-- **Security**: Enterprise-grade encryption, GDPR compliant
-- **Performance**: 99.9% uptime, real-time processing
-- **Integration**: Works with all Shopify plans
-- **Support**: Email and phone support available
+- **Security**: encrypted data, GDPR-aligned practices
+- **Integration**: works with all Shopify plans
+- **Support**: email support on every plan
 
 ## Get Started in Minutes
 
@@ -245,37 +202,28 @@ shipping automation
 
 ## Shopify App Store Submission Checklist
 
-### Required Assets ✅
+### Required Assets
 
-- [x] App icon (1024x1024) ✓ Ready
-- [x] 5-10 screenshots ✓ 5 professional screenshots ready
-- [x] App name and tagline ✓ See SHOPIFY_SUBMISSION_FORM.md
-- [x] Short description ✓ See SHOPIFY_SUBMISSION_FORM.md
-- [x] Full description ✓ See SHOPIFY_SUBMISSION_FORM.md
+- [x] App icon (1024x1024) ✓ Ready (resize to 1200x1200 before upload)
+- [ ] 5-10 screenshots ⏳ Re-capture on real data, no fabricated metrics
+- [x] Feature image (1600x900) ✓ SVG authored — render PNG before upload
+- [x] App name and tagline ✓ See SHOPIFY_APP_STORE_LISTING.md
+- [x] Short description ✓ See above
+- [x] Full description ✓ See above
 - [x] Category selection ✓ Shipping & Fulfillment + Customer Service
 - [x] Keywords/tags ✓ 10 SEO-optimized keywords ready
 - [x] Support email ✓ support@delayguard.app
-- [ ] Privacy policy URL ⏳ Needs public hosting
-- [ ] Terms of service URL ⏳ Needs public hosting
+- [ ] Privacy policy URL ⏳ Served at /legal/privacy-policy once backend deploys
+- [ ] Terms of service URL ⏳ Served at /legal/terms-of-service once backend deploys
 
 ### Optional but Recommended
 
-- [ ] Demo video (30-60 seconds) - Optional for v1
+- [ ] Demo video / screencast (human task H8 in LAUNCH_PLAN)
 - [x] Feature highlights list ✓ In app store listing
-- [x] Customer testimonials ✓ 3 testimonials in listing
-- [x] Pricing comparison table ✓ 3 tiers defined
-
-## Next Steps
-
-1. ✅ **Generate Screenshots** - Use provided HTML templates
-2. ✅ **Review Copy** - Ensure all text is accurate and compelling
-3. ✅ **Create Video** - Optional but highly recommended
-4. ✅ **Test Assets** - Verify all images display correctly
-5. ✅ **Submit to Shopify** - Upload all assets to Partner Dashboard
+- [x] Pricing tiers ✓ Free / Pro / Enterprise per decision D1
 
 ## Support
 
 For questions about app store assets:
 - Email: augustok87@gmail.com
 - Documentation: See /legal/ directory for policies
-
