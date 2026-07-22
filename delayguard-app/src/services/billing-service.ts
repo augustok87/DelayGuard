@@ -1,21 +1,56 @@
 /**
- * Billing Service
- * Handles Shopify Billing API integration and subscription management
+ * Billing Service — Shopify App Pricing plan gate (LAUNCH_PLAN WS-F F1)
  *
- * Supports:
- * - Free tier (50 alerts/month)
- * - Pro tier ($7/month, unlimited alerts, 14-day trial)
- * - Enterprise tier ($25/month, white-label + API, 14-day trial)
+ * DelayGuard uses Shopify App Pricing (rebranded Managed Pricing, 2026-05):
+ * plans are configured in the Partner Dashboard, Shopify hosts the plan
+ * selection page and runs the entire charge lifecycle. The app therefore
+ * contains ZERO charge-creation code. This service is a thin read-only gate:
+ *
+ *   - `getCurrentPlan(shopDomain)` resolves the shop's tier from the Admin
+ *     GraphQL API (`currentAppInstallation.activeSubscriptions`).
+ *   - `meetsPlan` / `isSmsAllowed` gate paid features (SMS is Pro+).
+ *
+ * FAIL-CLOSED CONTRACT: any failure (shop missing, DB error, Shopify API
+ * error, unrecognized plan name) resolves to the free tier. Never throw a
+ * merchant into a paid tier on ambiguity.
+ *
+ * Tiers (LAUNCH_PLAN decision D1): Free $0 / Pro $7 / Enterprise $25.
  */
 
 import { query } from "../database/connection";
 import { logger } from "../utils/logger";
-import type {
-  AppSubscription,
-  BillingConfig,
-  RecurringCharge,
-  ShopifySubscriptionPlan,
-} from "../types";
+import { createGraphQLClient } from "./shopify-service";
+import type { BillingConfig, ShopifySubscriptionPlan } from "../types";
+
+export type PlanTier = "free" | "pro" | "enterprise";
+
+const PLAN_RANK: Record<PlanTier, number> = {
+  free: 0,
+  pro: 1,
+  enterprise: 2,
+};
+
+/**
+ * Admin GraphQL query for the shop's active App Pricing subscriptions.
+ * `name` matches the plan name configured in the Partner Dashboard;
+ * `status` is an AppSubscriptionStatus (only ACTIVE counts here).
+ */
+const ACTIVE_SUBSCRIPTIONS_QUERY = `
+  query CurrentPlan {
+    currentAppInstallation {
+      activeSubscriptions {
+        name
+        status
+      }
+    }
+  }
+`;
+
+interface ActiveSubscriptionsResponse {
+  currentAppInstallation?: {
+    activeSubscriptions?: Array<{ name: string; status: string }>;
+  };
+}
 
 export class BillingService {
   private readonly billingConfig: BillingConfig = {
@@ -63,11 +98,9 @@ export class BillingService {
   };
 
   /**
-   * Get plan configuration by name
+   * Get plan configuration by tier.
    */
-  getPlanConfig(
-    planName: "free" | "pro" | "enterprise",
-  ): ShopifySubscriptionPlan {
+  getPlanConfig(planName: PlanTier): ShopifySubscriptionPlan {
     const plan = this.billingConfig.plans[planName];
     if (!plan) {
       throw new Error(`Invalid plan name: ${planName}`);
@@ -76,345 +109,88 @@ export class BillingService {
   }
 
   /**
-   * Get current subscription for a shop
+   * Resolve the shop's current plan tier from Shopify.
+   *
+   * Fails closed: any error path (missing shop, DB failure, GraphQL failure,
+   * unrecognized plan name, non-ACTIVE subscription) returns "free".
    */
-  async getSubscription(shopId: string): Promise<AppSubscription | null> {
+  async getCurrentPlan(shopDomain: string): Promise<PlanTier> {
     try {
-      const result = await query<AppSubscription>(
-        "SELECT * FROM subscriptions WHERE shop_id = $1 AND status != $2",
-        [shopId, "cancelled"],
+      const shopRows = await query<{ access_token: string }>(
+        "SELECT access_token FROM shops WHERE shop_domain = $1",
+        [shopDomain],
       );
 
-      return result.length > 0 ? result[0] : null;
-    } catch (error) {
-      logger.error("Error fetching subscription", error as Error);
-      throw error;
-    }
-  }
-
-  /**
-   * Create a new subscription
-   */
-  async createSubscription(
-    shopId: string,
-    planName: "free" | "pro" | "enterprise",
-    shopifyChargeId?: string,
-  ): Promise<AppSubscription> {
-    try {
-      const plan = this.getPlanConfig(planName);
-      const now = new Date();
-      const periodEnd = new Date(now);
-      periodEnd.setMonth(periodEnd.getMonth() + 1);
-
-      let trialEndsAt: Date | undefined;
-      if (plan.trial_days > 0) {
-        trialEndsAt = new Date(now);
-        trialEndsAt.setDate(trialEndsAt.getDate() + plan.trial_days);
+      if (shopRows.length === 0 || !shopRows[0].access_token) {
+        logger.warn("Plan lookup: shop not found — failing closed to free", {
+          shop: shopDomain,
+        });
+        return "free";
       }
 
-      const result = await query<AppSubscription>(
-        `INSERT INTO subscriptions (
-          shop_id,
-          plan_name,
-          status,
-          current_period_start,
-          current_period_end,
-          trial_ends_at,
-          shopify_charge_id,
-          monthly_alert_count
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING *`,
-        [
-          shopId,
-          planName,
-          "active",
-          now,
-          periodEnd,
-          trialEndsAt || null,
-          shopifyChargeId || null,
-          0,
-        ],
+      const client = await createGraphQLClient(
+        shopDomain,
+        shopRows[0].access_token,
+      );
+      const response = await client.query<ActiveSubscriptionsResponse>(
+        ACTIVE_SUBSCRIPTIONS_QUERY,
       );
 
-      logger.info("Subscription created successfully", {
-        shop_id: shopId,
-        plan_name: planName,
-        trial_ends_at: trialEndsAt,
-      });
+      const subscriptions =
+        response.data?.currentAppInstallation?.activeSubscriptions ?? [];
 
-      return result[0];
-    } catch (error) {
-      logger.error("Error creating subscription", error as Error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update subscription
-   */
-  async updateSubscription(
-    subscriptionId: string,
-    updates: Partial<AppSubscription>,
-  ): Promise<AppSubscription> {
-    try {
-      const updateFields: string[] = [];
-      const updateValues: unknown[] = [];
-      let paramIndex = 1;
-
-      Object.entries(updates).forEach(([key, value]) => {
-        if (key !== "id" && key !== "shop_id" && key !== "created_at") {
-          updateFields.push(`${key} = $${paramIndex}`);
-          updateValues.push(value);
-          paramIndex++;
+      let tier: PlanTier = "free";
+      for (const subscription of subscriptions) {
+        if (subscription.status !== "ACTIVE") continue;
+        const mapped = mapSubscriptionNameToTier(subscription.name);
+        if (mapped === null) {
+          logger.warn(
+            "Plan lookup: unrecognized active subscription name — ignoring",
+            { shop: shopDomain, subscriptionName: subscription.name },
+          );
+          continue;
         }
+        if (PLAN_RANK[mapped] > PLAN_RANK[tier]) {
+          tier = mapped;
+        }
+      }
+
+      return tier;
+    } catch (error) {
+      logger.warn("Plan lookup failed — failing closed to free tier", {
+        shop: shopDomain,
+        error: error instanceof Error ? error.message : String(error),
       });
-
-      updateFields.push("updated_at = CURRENT_TIMESTAMP");
-      updateValues.push(subscriptionId);
-
-      const result = await query<AppSubscription>(
-        `UPDATE subscriptions 
-         SET ${updateFields.join(", ")}
-         WHERE id = $${paramIndex}
-         RETURNING *`,
-        updateValues,
-      );
-
-      logger.info("Subscription updated successfully", {
-        subscription_id: subscriptionId,
-        updates: Object.keys(updates),
-      });
-
-      return result[0];
-    } catch (error) {
-      logger.error("Error updating subscription", error as Error);
-      throw error;
+      return "free";
     }
   }
 
   /**
-   * Increment monthly alert count
+   * True when `tier` is at least `required` (free < pro < enterprise).
    */
-  async incrementAlertCount(subscriptionId: string): Promise<void> {
-    try {
-      await query(
-        `UPDATE subscriptions 
-         SET monthly_alert_count = monthly_alert_count + 1,
-             updated_at = CURRENT_TIMESTAMP
-         WHERE id = $1`,
-        [subscriptionId],
-      );
-    } catch (error) {
-      logger.error("Error incrementing alert count", error as Error);
-      throw error;
-    }
+  meetsPlan(tier: PlanTier, required: PlanTier): boolean {
+    return PLAN_RANK[tier] >= PLAN_RANK[required];
   }
 
   /**
-   * Check if shop has reached alert limit
+   * SMS notifications are a paid feature (Pro and above).
    */
-  async checkAlertLimit(shopId: string): Promise<{
-    allowed: boolean;
-    current_count: number;
-    limit?: number;
-    plan_name: string;
-    upgrade_required?: boolean;
-    error?: string;
-  }> {
-    try {
-      const subscription = await this.getSubscription(shopId);
-
-      if (!subscription) {
-        return {
-          allowed: false,
-          current_count: 0,
-          limit: 0,
-          plan_name: "none",
-          error: "No active subscription found",
-        };
-      }
-
-      const plan = this.getPlanConfig(subscription.plan_name);
-      const limit = plan.monthly_alert_limit;
-
-      // Unlimited plans (pro, enterprise)
-      if (!limit) {
-        return {
-          allowed: true,
-          current_count: subscription.monthly_alert_count,
-          limit: undefined,
-          plan_name: subscription.plan_name,
-        };
-      }
-
-      // Free plan with limit
-      const allowed = subscription.monthly_alert_count < limit;
-      const upgradeRequired = !allowed;
-
-      return {
-        allowed,
-        current_count: subscription.monthly_alert_count,
-        limit,
-        plan_name: subscription.plan_name,
-        upgrade_required: upgradeRequired,
-      };
-    } catch (error) {
-      logger.error("Error checking alert limit", error as Error);
-      throw error;
-    }
+  isSmsAllowed(tier: PlanTier): boolean {
+    return this.meetsPlan(tier, "pro");
   }
+}
 
-  /**
-   * Generate Shopify recurring charge object
-   */
-  generateRecurringCharge(
-    planName: "free" | "pro" | "enterprise",
-    returnUrl: string,
-    test: boolean = false,
-  ): RecurringCharge {
-    const plan = this.getPlanConfig(planName);
-
-    if (plan.price === 0) {
-      throw new Error("Cannot create charge for free plan");
-    }
-
-    return {
-      name: plan.name,
-      price: plan.price.toFixed(2),
-      return_url: returnUrl,
-      trial_days: plan.trial_days,
-      test,
-    };
-  }
-
-  /**
-   * Cancel subscription
-   */
-  async cancelSubscription(shopId: string): Promise<AppSubscription> {
-    try {
-      const result = await query<AppSubscription>(
-        `UPDATE subscriptions 
-         SET status = $1,
-             cancelled_at = CURRENT_TIMESTAMP,
-             updated_at = CURRENT_TIMESTAMP
-         WHERE shop_id = $2 AND status = $3
-         RETURNING *`,
-        ["cancelled", shopId, "active"],
-      );
-
-      logger.info("Subscription cancelled successfully", {
-        shop_id: shopId,
-      });
-
-      return result[0];
-    } catch (error) {
-      logger.error("Error cancelling subscription", error as Error);
-      throw error;
-    }
-  }
-
-  /**
-   * Reset monthly alert counter (called at billing period start)
-   */
-  async resetMonthlyAlertCount(subscriptionId: string): Promise<void> {
-    try {
-      await query(
-        `UPDATE subscriptions 
-         SET monthly_alert_count = 0,
-             current_period_start = CURRENT_TIMESTAMP,
-             current_period_end = CURRENT_TIMESTAMP + INTERVAL '1 month',
-             updated_at = CURRENT_TIMESTAMP
-         WHERE id = $1`,
-        [subscriptionId],
-      );
-
-      logger.info("Monthly alert count reset", {
-        subscription_id: subscriptionId,
-      });
-    } catch (error) {
-      logger.error("Error resetting monthly alert count", error as Error);
-      throw error;
-    }
-  }
-
-  /**
-   * Check if subscription is in trial period
-   */
-  isInTrial(subscription: AppSubscription): boolean {
-    if (!subscription.trial_ends_at) {
-      return false;
-    }
-
-    return new Date() < new Date(subscription.trial_ends_at);
-  }
-
-  /**
-   * Get billing summary for shop
-   */
-  async getBillingSummary(shopId: string): Promise<{
-    subscription: AppSubscription | null;
-    plan_config: ShopifySubscriptionPlan | null;
-    in_trial: boolean;
-    usage: {
-      current_count: number;
-      limit?: number;
-      percentage?: number;
-    };
-    billing_status: "active" | "trial" | "cancelled" | "none";
-  }> {
-    try {
-      const subscription = await this.getSubscription(shopId);
-
-      if (!subscription) {
-        return {
-          subscription: null,
-          plan_config: null,
-          in_trial: false,
-          usage: {
-            current_count: 0,
-            limit: 0,
-          },
-          billing_status: "none",
-        };
-      }
-
-      const planConfig = this.getPlanConfig(subscription.plan_name);
-      const inTrial = this.isInTrial(subscription);
-
-      let billingStatus: "active" | "trial" | "cancelled" | "none" = "active";
-      if (subscription.status === "cancelled") {
-        billingStatus = "cancelled";
-      } else if (inTrial) {
-        billingStatus = "trial";
-      }
-
-      const usage: {
-        current_count: number;
-        limit?: number;
-        percentage?: number;
-      } = {
-        current_count: subscription.monthly_alert_count,
-        limit: planConfig.monthly_alert_limit,
-      };
-
-      if (usage.limit) {
-        usage.percentage = Math.round(
-          (usage.current_count / usage.limit) * 100,
-        );
-      }
-
-      return {
-        subscription,
-        plan_config: planConfig,
-        in_trial: inTrial,
-        usage,
-        billing_status: billingStatus,
-      };
-    } catch (error) {
-      logger.error("Error getting billing summary", error as Error);
-      throw error;
-    }
-  }
+/**
+ * Map a Partner-Dashboard plan name to a tier. Matching is substring +
+ * case-insensitive ("Pro Plan", "DelayGuard PRO", …). Unrecognized names
+ * return null so the caller can fail closed.
+ */
+function mapSubscriptionNameToTier(name: string): PlanTier | null {
+  const normalized = name.toLowerCase();
+  if (normalized.includes("enterprise")) return "enterprise";
+  if (normalized.includes("pro")) return "pro";
+  if (normalized.includes("free")) return "free";
+  return null;
 }
 
 // Export singleton instance

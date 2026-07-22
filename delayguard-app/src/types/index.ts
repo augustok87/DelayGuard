@@ -448,7 +448,10 @@ export interface GDPRCustomerData {
   }>;
 }
 
-// Billing Types
+// Billing Types — Shopify App Pricing (LAUNCH_PLAN WS-F F1).
+// Plans are configured in the Partner Dashboard; the app only reads the
+// current subscription (see services/billing-service.ts). The old local
+// AppSubscription / RecurringCharge types died with the stub charge flow.
 export interface ShopifySubscriptionPlan {
   name: string;
   price: number;
@@ -457,33 +460,10 @@ export interface ShopifySubscriptionPlan {
   monthly_alert_limit?: number;
 }
 
-export interface AppSubscription {
-  id: string;
-  shop_id: string;
-  plan_name: "free" | "pro" | "enterprise";
-  status: "active" | "cancelled" | "frozen" | "pending";
-  current_period_start: Date;
-  current_period_end: Date;
-  trial_ends_at?: Date;
-  cancelled_at?: Date;
-  shopify_charge_id?: string;
-  monthly_alert_count: number;
-  created_at: Date;
-  updated_at: Date;
-}
-
 export interface BillingConfig {
   plans: {
     free: ShopifySubscriptionPlan;
     pro: ShopifySubscriptionPlan;
     enterprise: ShopifySubscriptionPlan;
   };
-}
-
-export interface RecurringCharge {
-  name: string;
-  price: string;
-  return_url: string;
-  trial_days?: number;
-  test?: boolean;
 }

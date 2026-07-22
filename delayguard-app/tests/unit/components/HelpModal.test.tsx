@@ -159,7 +159,7 @@ describe('HelpModal Component', () => {
     it('should trap focus within modal when open', () => {
       render(
         <HelpModal isOpen={true} onClose={mockOnClose} title="Test">
-          <p>Content with <a href="#">link</a></p>
+          <p>Content with <a href="https://example.com/help">link</a></p>
         </HelpModal>,
       );
 

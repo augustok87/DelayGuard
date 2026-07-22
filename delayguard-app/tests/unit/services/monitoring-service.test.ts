@@ -113,53 +113,23 @@ describe('MonitoringService', () => {
   });
 
   describe('checkAlerts', () => {
-    it('should check alert rules and generate alerts', async() => {
-      // Mock alert rules in database
-      mockPoolInstance.query = jest.fn().mockResolvedValue({
-        rows: [{
-          id: 'high_memory_usage',
-          name: 'High Memory Usage',
-          metric: 'memory.percentage',
-          operator: 'gt',
-          threshold: 80,
-          duration: 60,
-          severity: 'high',
-          enabled: true,
-          channels: ['email', 'sms'],
-        }],
-      });
-
-      // Mock high memory usage - heapUsed should be > 80% of total memory
-      const originalProcess = process.memoryUsage;
-      process.memoryUsage = jest.fn().mockReturnValue({
-        rss: 1024 * 1024 * 100, // 100MB
-        heapTotal: 1024 * 1024 * 50,
-        heapUsed: 1024 * 1024 * 45, // 45MB heap used
-        external: 1024 * 1024 * 10,
-        arrayBuffers: 1024 * 1024 * 5,
-      }) as any;
-
-      // Mock os.totalmem to return a smaller value to trigger high memory alert
-      const originalOs = require('os');
-      jest.doMock('os', () => ({
-        ...originalOs,
-        totalmem: () => 1024 * 1024 * 50, // 50MB total memory (45/50 = 90% > 80%)
-      }));
-
-      // Add some metrics to trigger the alert
+    // LAUNCH_PLAN.md decision D2: internal alerts/alert_rules persistence is
+    // cut from launch scope. checkAlerts must not read alert_rules from the
+    // database nor INSERT INTO alerts — the tables are not in runMigrations().
+    it('does not read alert_rules or persist alerts to the database (D2)', async() => {
+      // Even with metrics collected there are no DB-backed rules to evaluate.
       await monitoringService.collectSystemMetrics();
 
       const alerts = await monitoringService.checkAlerts();
 
-      expect(alerts).toHaveLength(1);
-      expect(alerts[0]).toMatchObject({
-        ruleId: 'high_memory_usage',
-        severity: 'high',
-        message: expect.stringContaining('High Memory Usage'),
-      });
-
-      // Restore original function
-      process.memoryUsage = originalProcess;
+      expect(alerts).toEqual([]);
+      const sqlCalls = (mockPoolInstance.query as jest.Mock).mock.calls.map(
+        (call) => String(call[0]),
+      );
+      for (const sql of sqlCalls) {
+        expect(sql).not.toMatch(/alert_rules/i);
+        expect(sql).not.toMatch(/INSERT\s+INTO\s+alerts/i);
+      }
     });
 
     it('should not generate alerts when metrics are within thresholds', async() => {

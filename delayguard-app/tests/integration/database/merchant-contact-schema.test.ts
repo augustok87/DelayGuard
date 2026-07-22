@@ -24,11 +24,15 @@ describe('Merchant Contact Schema', () => {
     // Initialize database connection and run migrations
     await setupDatabase();
     await runMigrations();
+    // Idempotent: clear leftovers from previously aborted runs. The pattern
+    // covers every domain this suite creates (test-merchant-contact%,
+    // test-merchant-email-length%, test-merchant-phone-length%, …).
+    await query(`DELETE FROM shops WHERE shop_domain LIKE 'test-merchant-%'`);
   });
 
   afterAll(async() => {
-    // Clean up test data
-    await query(`DELETE FROM shops WHERE shop_domain LIKE 'test-merchant-contact%'`);
+    // Clean up test data (same broad pattern as beforeAll)
+    await query(`DELETE FROM shops WHERE shop_domain LIKE 'test-merchant-%'`);
     await pool.end();
   });
 
@@ -93,8 +97,8 @@ describe('Merchant Contact Schema', () => {
       const testDomain = 'test-merchant-contact-insert.myshopify.com';
 
       await query(`
-        INSERT INTO shops (shop_domain, access_token, merchant_email, merchant_phone, merchant_name)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO shops (shop_domain, access_token, scope, merchant_email, merchant_phone, merchant_name)
+        VALUES ($1, $2, '{read_orders}', $3, $4, $5)
       `, [testDomain, 'test-token', 'merchant@example.com', '+1-555-0100', 'Test Merchant']);
 
       const result = await query(
@@ -113,8 +117,8 @@ describe('Merchant Contact Schema', () => {
 
       // Insert initial record
       await query(`
-        INSERT INTO shops (shop_domain, access_token)
-        VALUES ($1, $2)
+        INSERT INTO shops (shop_domain, access_token, scope)
+        VALUES ($1, $2, '{read_orders}')
       `, [testDomain, 'test-token']);
 
       // Update merchant fields
@@ -139,8 +143,8 @@ describe('Merchant Contact Schema', () => {
 
       // Insert shop with merchant info
       const shopResult = await query(`
-        INSERT INTO shops (shop_domain, access_token, merchant_email, merchant_phone, merchant_name)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO shops (shop_domain, access_token, scope, merchant_email, merchant_phone, merchant_name)
+        VALUES ($1, $2, '{read_orders}', $3, $4, $5)
         RETURNING id
       `, [testDomain, 'test-token', 'join@example.com', '+1-555-0300', 'Join Test']);
 
@@ -170,8 +174,8 @@ describe('Merchant Contact Schema', () => {
       const testDomain = 'test-merchant-contact-null.myshopify.com';
 
       await query(`
-        INSERT INTO shops (shop_domain, access_token)
-        VALUES ($1, $2)
+        INSERT INTO shops (shop_domain, access_token, scope)
+        VALUES ($1, $2, '{read_orders}')
       `, [testDomain, 'test-token']);
 
       const result = await query(
@@ -196,8 +200,8 @@ describe('Merchant Contact Schema', () => {
 
       for (const email of validEmails) {
         await query(`
-          INSERT INTO shops (shop_domain, access_token, merchant_email)
-          VALUES ($1, $2, $3)
+          INSERT INTO shops (shop_domain, access_token, scope, merchant_email)
+          VALUES ($1, $2, '{read_orders}', $3)
           ON CONFLICT (shop_domain) DO UPDATE SET merchant_email = $3
         `, [testDomain, 'test-token', email]);
 
@@ -221,8 +225,8 @@ describe('Merchant Contact Schema', () => {
 
       for (const phone of validPhones) {
         await query(`
-          INSERT INTO shops (shop_domain, access_token, merchant_phone)
-          VALUES ($1, $2, $3)
+          INSERT INTO shops (shop_domain, access_token, scope, merchant_phone)
+          VALUES ($1, $2, '{read_orders}', $3)
           ON CONFLICT (shop_domain) DO UPDATE SET merchant_phone = $3
         `, [testDomain, 'test-token', phone]);
 
@@ -246,8 +250,8 @@ describe('Merchant Contact Schema', () => {
 
       for (const name of names) {
         await query(`
-          INSERT INTO shops (shop_domain, access_token, merchant_name)
-          VALUES ($1, $2, $3)
+          INSERT INTO shops (shop_domain, access_token, scope, merchant_name)
+          VALUES ($1, $2, '{read_orders}', $3)
           ON CONFLICT (shop_domain) DO UPDATE SET merchant_name = $3
         `, [testDomain, 'test-token', name]);
 
@@ -265,8 +269,8 @@ describe('Merchant Contact Schema', () => {
       const longEmail = `${'a'.repeat(240)}@example.com`; // 252 characters, under limit
 
       await query(`
-        INSERT INTO shops (shop_domain, access_token, merchant_email)
-        VALUES ($1, $2, $3)
+        INSERT INTO shops (shop_domain, access_token, scope, merchant_email)
+        VALUES ($1, $2, '{read_orders}', $3)
       `, [testDomain, 'test-token', longEmail]);
 
       const result = await query(
@@ -283,8 +287,8 @@ describe('Merchant Contact Schema', () => {
       const longPhone = `+1-${'5'.repeat(250)}`; // 253 characters, under limit
 
       await query(`
-        INSERT INTO shops (shop_domain, access_token, merchant_phone)
-        VALUES ($1, $2, $3)
+        INSERT INTO shops (shop_domain, access_token, scope, merchant_phone)
+        VALUES ($1, $2, '{read_orders}', $3)
       `, [testDomain, 'test-token', longPhone]);
 
       const result = await query(
@@ -301,8 +305,8 @@ describe('Merchant Contact Schema', () => {
       const longName = 'A'.repeat(255);
 
       await query(`
-        INSERT INTO shops (shop_domain, access_token, merchant_name)
-        VALUES ($1, $2, $3)
+        INSERT INTO shops (shop_domain, access_token, scope, merchant_name)
+        VALUES ($1, $2, '{read_orders}', $3)
       `, [testDomain, 'test-token', longName]);
 
       const result = await query(
