@@ -43,6 +43,23 @@ class MockRedis {
     return 'OK';
   }
 
+  async hset(key, ...args) {
+    // Supports both hset(key, obj) and hset(key, field, value, ...) forms
+    // (PerformanceMonitor.trackRequest uses the object form).
+    const hash = this.data.get(key) instanceof Map ? this.data.get(key) : new Map();
+    if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
+      for (const [field, value] of Object.entries(args[0])) {
+        hash.set(field, value);
+      }
+    } else {
+      for (let i = 0; i + 1 < args.length; i += 2) {
+        hash.set(args[i], args[i + 1]);
+      }
+    }
+    this.data.set(key, hash);
+    return hash.size;
+  }
+
   async del(key) {
     return this.data.delete(key) ? 1 : 0;
   }
