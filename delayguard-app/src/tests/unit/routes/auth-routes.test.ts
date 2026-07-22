@@ -263,7 +263,7 @@ describe("OAuth routes", () => {
     });
 
     it("400s when code or state is missing", async() => {
-      await request(app.callback()).get("/auth/callback?shop=" + SHOP).expect(400);
+      await request(app.callback()).get(`/auth/callback?shop=${SHOP}`).expect(400);
     });
 
     it("502s when the token exchange fails upstream", async() => {
