@@ -1,0 +1,65 @@
+# DelayGuard — Shopify app configuration (WS-C C4).
+#
+# Pushed to Shopify with `shopify app deploy` (integration session — needs a
+# human-run `shopify auth login` first, launch-plan H6).
+# Schema: https://shopify.dev/docs/apps/build/cli-for-apps/app-configuration
+#
+# Webhook URIs are relative to application_url. Regular topics target the
+# canonical /webhooks/* mounts; compliance topics target the A3 GDPR routes.
+
+# ⚠️ PLACEHOLDER — replace with the real client ID from the Partner Dashboard
+# (Apps → DelayGuard → Client credentials) before `shopify app deploy`.
+# Must equal SHOPIFY_API_KEY in Vercel env.
+client_id = "REPLACE_WITH_PARTNER_DASHBOARD_CLIENT_ID"
+
+name = "DelayGuard"
+handle = "delayguard"
+application_url = "https://delayguard-api.vercel.app"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = false
+
+[access_scopes]
+# Keep in sync with SHOPIFY_SCOPES (env.example) and the code defaults in
+# src/config/app-config.ts (WS-C C2).
+scopes = "read_orders,write_orders,read_fulfillments,write_fulfillments,read_products,read_customers"
+# The app implements the authorization-code OAuth grant (src/routes/auth.ts).
+# Shopify-managed installation (the default, use_legacy_install_flow = false)
+# would bypass that flow; flip this only after migrating install to token
+# exchange.
+use_legacy_install_flow = true
+
+[auth]
+redirect_urls = [
+  "https://delayguard-api.vercel.app/auth/callback",
+]
+
+[webhooks]
+api_version = "2026-07"
+
+[[webhooks.subscriptions]]
+topics = ["orders/updated"]
+uri = "/webhooks/orders/updated"
+
+[[webhooks.subscriptions]]
+topics = ["fulfillments/updated"]
+uri = "/webhooks/fulfillments/updated"
+
+[[webhooks.subscriptions]]
+topics = ["orders/paid"]
+uri = "/webhooks/orders/paid"
+
+# Mandatory privacy-compliance topics (GDPR) — one subscription block per
+# topic so each routes to its own canonical endpoint.
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request"]
+uri = "/webhooks/customers/data_request"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/redact"]
+uri = "/webhooks/customers/redact"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["shop/redact"]
+uri = "/webhooks/shop/redact"
