@@ -9,7 +9,9 @@ import { billingService } from "../services/billing-service";
 import { query } from "../database/connection";
 import type { Context } from "koa";
 
-const router = new Router({ prefix: "/billing" });
+// No router-level prefix (LAUNCH_PLAN A3): server.ts mounts this router
+// at /billing. A prefix here double-prefixed every route to /billing/billing/*.
+const router = new Router();
 
 /**
  * GET /billing/plans

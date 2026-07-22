@@ -1,5 +1,6 @@
 import request from 'supertest';
 import Koa from 'koa';
+import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import jwt from 'jsonwebtoken';
 import { apiRoutes } from '../../../routes/api';
@@ -55,8 +56,12 @@ describe('API Routes', () => {
     // Create fresh app for each test
     app = new Koa();
     app.use(bodyParser());
-    app.use(apiRoutes.routes());
-    app.use(apiRoutes.allowedMethods());
+    // Mirror server.ts: routers carry no prefix (LAUNCH_PLAN A3);
+    // the mount point provides it.
+    const root = new Router();
+    root.use('/api', apiRoutes.routes());
+    app.use(root.routes());
+    app.use(root.allowedMethods());
 
     // Create valid test token (Shopify session token format)
     testToken = jwt.sign(

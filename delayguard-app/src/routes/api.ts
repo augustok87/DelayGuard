@@ -15,7 +15,9 @@ import {
 import { EmailService } from "../services/email-service";
 import { SMSService } from "../services/sms-service";
 
-const router = new Router({ prefix: "/api" });
+// No router-level prefix (LAUNCH_PLAN A3): server.ts mounts this router
+// at /api. A prefix here double-prefixed every route to /api/api/*.
+const router = new Router();
 const merchantApi = new MerchantApiService();
 
 // Lazy singleton — env vars must be present at call time (Vercel cold

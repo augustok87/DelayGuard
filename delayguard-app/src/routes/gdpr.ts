@@ -15,7 +15,11 @@ import type {
 } from "../types";
 import crypto from "crypto";
 
-const router = new Router({ prefix: "/gdpr" });
+// No router-level prefix (LAUNCH_PLAN A3): server.ts mounts this router at
+// /webhooks, so the mandatory compliance topics live at the canonical
+// /webhooks/customers/data_request, /webhooks/customers/redact,
+// /webhooks/shop/redact (must match shopify.app.toml).
+const router = new Router();
 
 /**
  * Verify GDPR webhook HMAC signature
