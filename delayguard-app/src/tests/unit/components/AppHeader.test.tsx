@@ -4,7 +4,9 @@
  * Test suite for the AppHeader component that displays:
  * - DelayGuard logo and branding
  * - Shopify connection status (new feature)
- * - Key metrics (total alerts, active, resolved, ticket reduction)
+ * - Key metrics (total alerts, active, resolved) — the fabricated
+ *   "Ticket Reduction" tile was deleted in G2 (listing req 4.3.3 bans
+ *   statistics claims; the value was never derived from real data)
  */
 
 import React from 'react';
@@ -18,7 +20,6 @@ describe('AppHeader', () => {
     activeAlerts: 15,
     resolvedAlerts: 27,
     avgResolutionTime: '3.5 days',
-    supportTicketReduction: '35%',
     customerSatisfaction: '4.8/5',
   };
 
@@ -39,13 +40,18 @@ describe('AppHeader', () => {
       expect(AppHeader.displayName).toBe('AppHeader');
     });
 
-    it('should render all metrics', () => {
+    it('should render all real metrics', () => {
       render(<AppHeader stats={mockStats} />);
 
       expect(screen.getByText('Total Alerts')).toBeInTheDocument();
       expect(screen.getByText('Active')).toBeInTheDocument();
       expect(screen.getByText('Resolved')).toBeInTheDocument();
-      expect(screen.getByText('Ticket Reduction')).toBeInTheDocument();
+    });
+
+    it('should NOT render the fabricated Ticket Reduction tile (G2)', () => {
+      render(<AppHeader stats={mockStats} />);
+
+      expect(screen.queryByText(/Ticket Reduction/i)).not.toBeInTheDocument();
     });
 
     it('should display correct metric values', () => {
@@ -54,7 +60,6 @@ describe('AppHeader', () => {
       expect(screen.getByText('42')).toBeInTheDocument();
       expect(screen.getByText('15')).toBeInTheDocument();
       expect(screen.getByText('27')).toBeInTheDocument();
-      expect(screen.getByText('35%')).toBeInTheDocument();
     });
   });
 
@@ -63,7 +68,7 @@ describe('AppHeader', () => {
       render(<AppHeader stats={mockStats} loading={true} />);
 
       const loadingElements = screen.getAllByText('...');
-      expect(loadingElements).toHaveLength(4); // 4 metrics
+      expect(loadingElements).toHaveLength(3); // 3 real metrics
     });
 
     it('should not display loading state when loading is false', () => {
@@ -182,7 +187,7 @@ describe('AppHeader', () => {
 
       // Should truncate .myshopify.com suffix
       expect(screen.getByText(/Connected to my-store$/)).toBeInTheDocument();
-      expect(screen.getAllByText('...')).toHaveLength(4);
+      expect(screen.getAllByText('...')).toHaveLength(3);
     });
   });
 
@@ -328,32 +333,18 @@ describe('AppHeader', () => {
       expect(resolvedMetric?.className).toContain('statGreen');
     });
 
-    it('should NOT apply color class to Ticket Reduction metric', () => {
-      const { container } = render(<AppHeader stats={mockStats} />);
-
-      const statsContainer = container.querySelector('.stats');
-      const ticketReductionMetric = statsContainer?.children[3];
-
-      expect(ticketReductionMetric?.className).toContain('stat');
-      expect(ticketReductionMetric?.className).not.toContain('statAmber');
-      expect(ticketReductionMetric?.className).not.toContain('statBlue');
-      expect(ticketReductionMetric?.className).not.toContain('statGreen');
-    });
-
-    it('should maintain all 4 metrics with correct order', () => {
+    it('should render exactly 3 metrics with correct order (G2: fabricated tile deleted)', () => {
       const { container } = render(<AppHeader stats={mockStats} />);
 
       const statsContainer = container.querySelector('.stats');
       const metrics = statsContainer?.children;
 
-      expect(metrics).toHaveLength(4);
+      expect(metrics).toHaveLength(3);
 
-      // v1.35: Verify order - Total Alerts (amber), Active (gold), Resolved (green), Ticket Reduction (no color)
+      // Order: Total Alerts (amber), Active (gold), Resolved (green)
       expect(metrics?.[0].className).toContain('statAmber');
-      expect(metrics?.[1].className).toContain('statGold'); // v1.35: Changed from blue to gold
+      expect(metrics?.[1].className).toContain('statGold');
       expect(metrics?.[2].className).toContain('statGreen');
-      expect(metrics?.[3].className).toContain('stat');
-      expect(metrics?.[3].className).not.toContain('statAmber');
     });
 
     it('should apply color classes correctly even in loading state', () => {

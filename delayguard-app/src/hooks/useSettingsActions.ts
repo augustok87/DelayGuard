@@ -1,9 +1,13 @@
 import { useCallback } from "react";
 import { useSettings } from "./useSettings";
 import { useToasts } from "./useToasts";
+import { useAppDispatch } from "../store/hooks";
+import { testDelayDetection as testDelayDetectionThunk } from "../store/slices/settingsSlice";
+import { connectShopify as connectShopifyThunk } from "../store/slices/appSlice";
 import { AppSettings } from "../types";
 
 export const useSettingsActions = () => {
+  const dispatch = useAppDispatch();
   const {
     updateSettings,
     resetSettings,
@@ -74,51 +78,65 @@ export const useSettingsActions = () => {
     [applyPreset, showSuccessToast, showErrorToast],
   );
 
+  // Phase 2.1.f: the dashboard "test" button POSTs to /api/test-alert via
+  // the settingsSlice thunk — a real dry-run dispatch to the merchant's
+  // configured contact (no more simulated setTimeout/Math.random result).
   const testDelayDetection = useCallback(async() => {
     try {
-      showInfoToast("Testing delay detection system...");
+      showInfoToast("Sending test alert...");
 
-      // Simulate delay detection test
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const result = await dispatch(testDelayDetectionThunk());
 
-      // Simulate random success/failure for demo
-      const isSuccess = Math.random() > 0.3; // 70% success rate
-
-      if (isSuccess) {
+      if (testDelayDetectionThunk.fulfilled.match(result)) {
         showTestSuccessToast();
         return { success: true };
-      } else {
-        showTestErrorToast();
-        return { success: false, error: "Delay detection test failed" };
       }
+      showTestErrorToast();
+      return {
+        success: false,
+        error:
+          typeof result.payload === "string"
+            ? result.payload
+            : "Failed to send test alert",
+      };
     } catch (error) {
       showErrorToast("An unexpected error occurred during testing");
       return { success: false, error: "An unexpected error occurred" };
     }
-  }, [showInfoToast, showTestSuccessToast, showTestErrorToast, showErrorToast]);
+  }, [
+    dispatch,
+    showInfoToast,
+    showTestSuccessToast,
+    showTestErrorToast,
+    showErrorToast,
+  ]);
 
+  // G2: verifies the live embedded session by re-fetching the shop from
+  // the backend (the OAuth install already happened for an embedded app).
   const connectToShopify = useCallback(async() => {
     try {
       showInfoToast("Connecting to Shopify...");
 
-      // Simulate Shopify connection
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const result = await dispatch(connectShopifyThunk());
 
-      // Simulate random success/failure for demo
-      const isSuccess = Math.random() > 0.2; // 80% success rate
-
-      if (isSuccess) {
+      if (connectShopifyThunk.fulfilled.match(result)) {
         showConnectionSuccessToast();
         return { success: true };
-      } else {
-        showConnectionErrorToast();
-        return { success: false, error: "Failed to connect to Shopify" };
       }
+      showConnectionErrorToast();
+      return {
+        success: false,
+        error:
+          typeof result.payload === "string"
+            ? result.payload
+            : "Failed to connect to Shopify",
+      };
     } catch (error) {
       showErrorToast("An unexpected error occurred during connection");
       return { success: false, error: "An unexpected error occurred" };
     }
   }, [
+    dispatch,
     showInfoToast,
     showConnectionSuccessToast,
     showConnectionErrorToast,

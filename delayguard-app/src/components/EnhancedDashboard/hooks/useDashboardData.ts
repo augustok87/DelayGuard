@@ -111,16 +111,15 @@ export const useDashboardData = ({
         const alertStats = analytics.alerts;
         const orderStats = analytics.orders;
 
+        // G2: only real, derivable numbers — the fabricated
+        // avgResolutionTime/customerSatisfaction/supportTicketReduction/
+        // revenueImpact placeholders were deleted (listing req 4.3.3).
         setStats({
           totalAlerts: alertStats.total_alerts || 0,
           activeAlerts: alertStats.pending_alerts || 0,
           resolvedAlerts: alertStats.sent_alerts || 0,
-          avgResolutionTime: '2.5 days', // Can be calculated from actual data later
-          customerSatisfaction: '95%', // Can be fetched from separate endpoint
-          supportTicketReduction: '40%', // Can be calculated from historical data
           totalOrders: orderStats.total_orders || 0,
           delayedOrders: alertStats.total_alerts || 0,
-          revenueImpact: (alertStats.total_alerts || 0) * 50, // Estimate: $50 per delayed order
         });
         
         logger.debug('Analytics loaded');
@@ -197,15 +196,17 @@ export const useDashboardData = ({
 
     setLoading(true);
     try {
-      logger.debug('Testing delay detection');
-      
-      // In a real implementation, you'd call a test endpoint
-      // For now, we'll simulate a test
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setToastMessage('Test notification sent!');
+      logger.debug('Sending test alert');
+
+      // Phase 2.1.f: real dry-run dispatch via POST /api/test-alert.
+      const response = await api.testAlert({ delayType: 'warehouse' });
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to send test alert');
+      }
+
+      setToastMessage('Test alert sent!');
       setShowToast(true);
-      logger.info('Test completed successfully');
+      logger.info('Test alert dispatched successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Test failed';
       logger.error('Error running test', err as Error);
@@ -214,7 +215,7 @@ export const useDashboardData = ({
     } finally {
       setLoading(false);
     }
-  }, [propOnTest]);
+  }, [api, propOnTest]);
 
   /**
    * Handle Shopify connect button

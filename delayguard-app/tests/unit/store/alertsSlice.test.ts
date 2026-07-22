@@ -1,3 +1,4 @@
+import { configureStore } from '@reduxjs/toolkit';
 import alertsReducer, {
   setFilters,
   setPagination,
@@ -8,6 +9,15 @@ import alertsReducer, {
 } from '../../../src/store/slices/alertsSlice';
 import { AlertsState } from '../../../src/types/store';
 import { DelayAlert } from '../../../src/types';
+import { apiClient } from '../../../src/utils/api-client';
+
+// G2: thunks call the real authenticated API client — mock the singleton.
+jest.mock('../../../src/utils/api-client', () => ({
+  apiClient: {
+    getAlerts: jest.fn(),
+  },
+}));
+const mockedGetAlerts = apiClient.getAlerts as jest.Mock;
 
 const mockAlert: DelayAlert = {
   id: 'alert-1',
@@ -125,5 +135,110 @@ describe('alertsSlice', () => {
     expect(actual.items).toEqual([mockAlert]);
     expect(actual.loading).toBe(true);
     expect(actual.error).toBe('Some error');
+  });
+
+  describe('fetchAlerts thunk (real API — G2)', () => {
+    const wireAlert = {
+      id: 42,
+      order_id: '7',
+      status: 'pending',
+      delay_reason: 'CARRIER_DELAY',
+      estimated_delay_days: 3,
+      notification_sent_at: null,
+      created_at: '2026-07-01T10:00:00Z',
+      updated_at: '2026-07-01T10:00:00Z',
+      order_number: '1001',
+      customer_email: 'jane@example.com',
+      customer_name: 'Jane Doe',
+      total_price: '384.99',
+      order_created_at: '2026-06-28T09:00:00Z',
+    };
+
+    const createStore = (preloaded?: AlertsState) =>
+      configureStore({
+        reducer: { alerts: alertsReducer },
+        ...(preloaded ? { preloadedState: { alerts: preloaded } } : {}),
+      });
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('fetches alerts from /api/alerts and maps the wire rows', async() => {
+      mockedGetAlerts.mockResolvedValueOnce({
+        success: true,
+        data: [wireAlert],
+      });
+
+      const store = createStore();
+      await store.dispatch(fetchAlerts());
+
+      expect(mockedGetAlerts).toHaveBeenCalledTimes(1);
+      const state = store.getState().alerts;
+      expect(state.loading).toBe(false);
+      expect(state.error).toBeNull();
+      expect(state.items).toHaveLength(1);
+      expect(state.items[0]).toMatchObject({
+        id: '42',
+        orderId: '1001',
+        customerName: 'Jane Doe',
+        delayDays: 3,
+        status: 'active',
+        totalAmount: 384.99,
+      });
+    });
+
+    it('produces an empty list (designed empty state) for a fresh shop', async() => {
+      mockedGetAlerts.mockResolvedValueOnce({ success: true, data: [] });
+
+      const store = createStore();
+      await store.dispatch(fetchAlerts());
+
+      const state = store.getState().alerts;
+      expect(state.items).toEqual([]);
+      expect(state.error).toBeNull();
+    });
+
+    it('rejects with the API error message on failure', async() => {
+      mockedGetAlerts.mockResolvedValueOnce({
+        success: false,
+        error: 'Unauthorized',
+      });
+
+      const store = createStore();
+      await store.dispatch(fetchAlerts());
+
+      const state = store.getState().alerts;
+      expect(state.loading).toBe(false);
+      expect(state.error).toBe('Unauthorized');
+      expect(state.items).toEqual([]);
+    });
+
+    it('rejects gracefully when the client throws', async() => {
+      mockedGetAlerts.mockRejectedValueOnce(new Error('network down'));
+
+      const store = createStore();
+      await store.dispatch(fetchAlerts());
+
+      expect(store.getState().alerts.error).toBe('Failed to fetch alerts');
+    });
+
+    it('updateAlert updates local state without fake latency or RNG', async() => {
+      const store = createStore({ ...initialState, items: [mockAlert] });
+
+      await store.dispatch(
+        updateAlert({ id: 'alert-1', updates: { status: 'resolved' } }),
+      );
+
+      expect(store.getState().alerts.items[0].status).toBe('resolved');
+    });
+
+    it('deleteAlert removes the alert from local state', async() => {
+      const store = createStore({ ...initialState, items: [mockAlert] });
+
+      await store.dispatch(deleteAlert('alert-1'));
+
+      expect(store.getState().alerts.items).toHaveLength(0);
+    });
   });
 });

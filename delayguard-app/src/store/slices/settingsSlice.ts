@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { SettingsState } from '../../types/store';
 import { AppSettings } from '../../types';
+import { apiClient } from '../../utils/api-client';
+import { mapSettingsRow, settingsToWire } from '../../utils/api-mappers';
 
 // Default settings
 const defaultSettings: AppSettings = {
@@ -22,15 +24,20 @@ const initialState: SettingsState = {
   lastSaved: null,
 };
 
-// Async thunks
+// Async thunks — G2: real API calls through the session-token
+// authenticated apiClient.
 export const fetchSettings = createAsyncThunk(
   'settings/fetchSettings',
   async(_, { rejectWithValue }) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return defaultSettings;
-    } catch (error) {
+      const response = await apiClient.getSettings();
+      if (!response.success) {
+        return rejectWithValue(response.error || 'Failed to fetch settings');
+      }
+      // Overlay the persisted wire columns onto the defaults; local-only
+      // fields (theme, language, …) keep their defaults.
+      return mapSettingsRow(response.data, defaultSettings);
+    } catch {
       return rejectWithValue('Failed to fetch settings');
     }
   },
@@ -40,24 +47,43 @@ export const saveSettings = createAsyncThunk(
   'settings/saveSettings',
   async(settings: AppSettings, { rejectWithValue }) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await apiClient.updateSettings(settingsToWire(settings));
+      if (!response.success) {
+        return rejectWithValue(response.error || 'Failed to save settings');
+      }
       return settings;
-    } catch (error) {
+    } catch {
       return rejectWithValue('Failed to save settings');
     }
   },
 );
 
+/**
+ * Phase 2.1.f: the dashboard test button — POST /api/test-alert
+ * dispatches a synthesized sample alert to the merchant's configured
+ * contact (dry-run: no delay_alerts row, no queue enqueue).
+ */
 export const testDelayDetection = createAsyncThunk(
   'settings/testDelayDetection',
-  async(_, { rejectWithValue }) => {
+  async(
+    options: { delayType?: 'warehouse' | 'carrier' | 'transit' } | undefined,
+    { rejectWithValue },
+  ) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      return { success: true, message: 'Delay detection test completed successfully' };
-    } catch (error) {
-      return rejectWithValue('Failed to test delay detection');
+      const response = await apiClient.testAlert({
+        delayType: options?.delayType ?? 'warehouse',
+      });
+      if (!response.success) {
+        return rejectWithValue(response.error || 'Failed to send test alert');
+      }
+      const channels = response.data?.channelsAttempted ?? [];
+      const message =
+        channels.length > 0
+          ? `Test alert sent via ${channels.join(' + ')}`
+          : 'No channels attempted — enable email/SMS and set a merchant contact in Settings';
+      return { success: true, message };
+    } catch {
+      return rejectWithValue('Failed to send test alert');
     }
   },
 );

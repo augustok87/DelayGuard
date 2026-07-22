@@ -29,7 +29,7 @@ export function StatsCard({ stats }: StatsCardProps) {
           </div>
           <div className={styles.metric}>
             <div className={styles.metricValue} style={{ color: '#2563eb' }}>
-              {stats.avgResolutionTime}
+              {stats.avgResolutionTime ?? '—'}
             </div>
             <div className={styles.metricLabel}>Avg Resolution Time</div>
           </div>
