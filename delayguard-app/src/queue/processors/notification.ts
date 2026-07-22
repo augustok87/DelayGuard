@@ -15,6 +15,20 @@ interface NotificationJobData {
     delayReason: string;
   };
   shopDomain: string;
+  /**
+   * Launch WS-E (task E3) — merchant-vs-customer routing.
+   * delayType decides the recipient: WAREHOUSE_DELAY alerts go to the
+   * merchant (their warehouse is the problem); CARRIER_DELAY / TRANSIT_DELAY
+   * go to the customer. Legacy payloads without delayType (jobs enqueued
+   * before this field existed) route to the customer — the historical
+   * behavior — via an explicit branch below, never by accident.
+   */
+  delayType?: 'WAREHOUSE_DELAY' | 'CARRIER_DELAY' | 'TRANSIT_DELAY';
+  merchantEmail?: string | null;
+  merchantPhone?: string | null;
+  merchantName?: string | null;
+  customerEmail?: string;
+  customerPhone?: string;
 }
 
 export async function processNotification(job: Job<NotificationJobData>): Promise<void> {
@@ -23,11 +37,12 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
   try {
     logger.info(`📧 Processing notification for order ${orderId}`);
 
-    // Get order and shop details
+    // Get order and shop details (incl. merchant contact for E3 routing)
     const orderResult = await query(
-      `SELECT o.*, s.email_enabled, s.sms_enabled, s.notification_template
-       FROM orders o 
-       JOIN shops s ON o.shop_id = s.id 
+      `SELECT o.*, s.email_enabled, s.sms_enabled, s.notification_template,
+              s.merchant_email, s.merchant_phone, s.merchant_name
+       FROM orders o
+       JOIN shops s ON o.shop_id = s.id
        WHERE o.id = $1`,
       [orderId],
     );
@@ -36,12 +51,12 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       throw new Error(`Order ${orderId} not found`);
     }
 
-    const order = orderResult[0] as { 
-      id: string; 
-      order_number: string; 
-      customer_name: string; 
-      customer_email: string; 
-      tracking_number: string; 
+    const order = orderResult[0] as {
+      id: string;
+      order_number: string;
+      customer_name: string;
+      customer_email: string;
+      tracking_number: string;
       carrier_code: string;
       shopify_order_id: string;
       customer_phone?: string;
@@ -49,6 +64,9 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       created_at: string;
       email_enabled: boolean;
       sms_enabled: boolean;
+      merchant_email: string | null;
+      merchant_phone: string | null;
+      merchant_name: string | null;
     };
 
     // Check if notifications are already sent
@@ -88,6 +106,40 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       createdAt: new Date(order.created_at),
     };
 
+    // Launch WS-E (task E3): merchant-vs-customer routing.
+    // WAREHOUSE_DELAY → merchant (payload contact first, shops-row columns as
+    // fallback for retried/legacy jobs). CARRIER_DELAY / TRANSIT_DELAY (and
+    // legacy payloads without delayType) → customer. A warehouse alert with
+    // no merchant contact configured is SKIPPED with a warning — it must
+    // never silently fall back to customer_email.
+    const recipientType: 'merchant' | 'customer' =
+      job.data.delayType === 'WAREHOUSE_DELAY' ? 'merchant' : 'customer';
+    if (!job.data.delayType) {
+      logger.info(
+        `ℹ️ No delayType on notification payload for order ${orderId} — routing to customer (legacy payload)`,
+      );
+    }
+
+    const recipientEmail =
+      recipientType === 'merchant'
+        ? job.data.merchantEmail || order.merchant_email || null
+        : job.data.customerEmail || order.customer_email || null;
+    const recipientPhone =
+      recipientType === 'merchant'
+        ? job.data.merchantPhone || order.merchant_phone || null
+        : job.data.customerPhone || order.customer_phone || null;
+    const recipientName =
+      recipientType === 'merchant'
+        ? job.data.merchantName || order.merchant_name || 'Merchant'
+        : order.customer_name;
+
+    if (recipientType === 'merchant' && !recipientEmail && !recipientPhone) {
+      logger.warn(
+        `⚠️ Warehouse delay for order ${orderId}: no merchant contact configured — ` +
+          'skipping dispatch (will NOT fall back to the customer)',
+      );
+    }
+
     // Send notifications based on settings and what hasn't been sent.
     //
     // v1.19 notification-routing rule: dispatch lives INSIDE each rule-matched
@@ -98,10 +150,12 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
     // double-dispatch when both flags are true (Wave 4.1, 2026-05-14).
     const promises: Promise<void>[] = [];
 
-    if (order.email_enabled && order.customer_email && !alert.email_sent) {
+    if (order.email_enabled && recipientEmail && !alert.email_sent) {
       promises.push(
         emailService
-          .sendDelayEmail(order.customer_email, orderInfo, delayDetails)
+          .sendDelayEmail(recipientEmail, orderInfo, delayDetails, {
+            recipientName,
+          })
           .then(async() => {
             // Mark email as sent
             await query(
@@ -117,10 +171,12 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       );
     }
 
-    if (order.sms_enabled && order.customer_phone && !alert.sms_sent) {
+    if (order.sms_enabled && recipientPhone && !alert.sms_sent) {
       promises.push(
         smsService
-          .sendDelaySMS(order.customer_phone, orderInfo, delayDetails)
+          .sendDelaySMS(recipientPhone, orderInfo, delayDetails, {
+            audience: recipientType,
+          })
           .then(async() => {
             // Mark SMS as sent
             await query(
