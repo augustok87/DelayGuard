@@ -216,60 +216,27 @@ describe('MonitoringService', () => {
   });
 
   describe('checkAlerts', () => {
-    it('should check alert rules and generate alerts', async() => {
-      // Mock high memory usage
-      const originalMemoryUsage = process.memoryUsage;
-      process.memoryUsage = jest.fn(() => ({
-        heapUsed: 900 * 1024 * 1024, // 900MB
-        heapTotal: 1000 * 1024 * 1024,
-        external: 0,
-        rss: 1000 * 1024 * 1024,
-        arrayBuffers: 0,
-      })) as any;
-
-      // Mock total memory
-      const os = require('os');
-      os.totalmem = jest.fn(() => 1000 * 1024 * 1024); // 1GB
-
+    // LAUNCH_PLAN.md decision D2: internal alerts/alert_rules persistence is
+    // cut from launch scope. checkAlerts must not read alert_rules from the
+    // database nor INSERT INTO alerts — the tables are not in runMigrations().
+    it('does not read alert_rules or persist alerts to the database (D2)', async() => {
       // Mock database and Redis for collectSystemMetrics
       mockQuery.mockResolvedValue({ rows: [{ health_check: 1 }] });
       mockInfo.mockResolvedValue('used_memory:1048576\nused_memory_peak:2097152');
       mockDbsize.mockResolvedValue(100);
       mockSetex.mockResolvedValue('OK');
 
-      // Mock alert rules query
-      mockQuery.mockResolvedValueOnce({ rows: [{ health_check: 1 }] })
-        .mockResolvedValueOnce({
-          rows: [{
-            id: 'high_memory_usage',
-            name: 'High Memory Usage',
-            metric: 'memory.percentage',
-            operator: 'gt',
-            threshold: 80,
-            duration: 60,
-            severity: 'high',
-            enabled: true,
-            channels: ['email', 'sms'],
-          }],
-        });
-
       // Collect metrics first to populate the metrics array
       await monitoringService.collectSystemMetrics();
 
       const alerts = await monitoringService.checkAlerts();
 
-      expect(alerts).toHaveLength(1);
-      expect(alerts[0]).toMatchObject({
-        ruleId: 'high_memory_usage',
-        severity: 'high',
-        message: expect.stringContaining('High Memory Usage'),
-        value: expect.any(Number),
-        threshold: 80,
-        resolved: false,
-      });
-
-      // Restore original function
-      process.memoryUsage = originalMemoryUsage;
+      expect(alerts).toEqual([]);
+      const sqlCalls = mockQuery.mock.calls.map((call) => String(call[0]));
+      for (const sql of sqlCalls) {
+        expect(sql).not.toMatch(/alert_rules/i);
+        expect(sql).not.toMatch(/INSERT\s+INTO\s+alerts/i);
+      }
     });
 
     it('should not generate alerts when metrics are within thresholds', async() => {

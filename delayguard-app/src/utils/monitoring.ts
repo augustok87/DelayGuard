@@ -63,9 +63,6 @@ class MonitoringService {
     // Log to console with appropriate level
     this.logError(errorMetrics);
 
-    // Store in database for analysis
-    await this.storeError(errorMetrics);
-
     // Check for alert conditions
     await this.checkErrorAlerts(errorMetrics);
   }
@@ -242,30 +239,10 @@ class MonitoringService {
     }
   }
 
-  private async storeError(error: ErrorMetrics): Promise<void> {
-    try {
-      await query(
-        `
-        INSERT INTO error_logs (
-          timestamp, error_type, error_message, stack_trace, 
-          context, severity, shop_domain, user_id
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      `,
-        [
-          error.timestamp,
-          error.errorType,
-          error.errorMessage,
-          error.stackTrace || "",
-          JSON.stringify(error.context),
-          error.severity,
-          error.shopDomain,
-          error.userId,
-        ],
-      );
-    } catch (err) {
-      logger.error("Failed to store error in database:", err as Error);
-    }
-  }
+  // LAUNCH_PLAN.md decision D2: error persistence (error_logs table) is cut
+  // from launch scope — the table is not created by runMigrations(). Errors
+  // are surfaced via structured logs (logError above); external monitoring
+  // (Sentry, …) is the post-launch integration point.
 
   private async checkDatabase(): Promise<boolean> {
     try {
@@ -401,19 +378,10 @@ class MonitoringService {
       data as Record<string, unknown>,
     );
 
-    // In production, this would send to monitoring service (e.g., Sentry, PagerDuty)
-    // For now, we'll just log and store in database
-    try {
-      await query(
-        `
-        INSERT INTO alerts (type, data, created_at)
-        VALUES ($1, $2, $3)
-      `,
-        [type, JSON.stringify(data), new Date()],
-      );
-    } catch (err) {
-      logger.error("Failed to store alert:", err as Error);
-    }
+    // LAUNCH_PLAN.md decision D2: alert persistence (alerts table) is cut
+    // from launch scope — the table is not created by runMigrations().
+    // Alerts are surfaced via the structured log line above; external
+    // monitoring (Sentry, PagerDuty, …) is the post-launch integration.
   }
 }
 

@@ -1,5 +1,5 @@
 import { Pool, PoolClient } from 'pg';
-import { setupDatabase, runMigrations, query } from '../../../database/connection';
+import { setupDatabase, runMigrations } from '../../../database/connection';
 
 describe('Tracking Events Database Schema', () => {
   let testPool: Pool;

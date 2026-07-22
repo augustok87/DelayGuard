@@ -19,6 +19,19 @@ jest.mock('../../../utils/logger', () => ({
   },
 }));
 
+// Plan gate (LAUNCH_PLAN WS-F F1): PUT /settings with sms_enabled=true
+// consults the billing service. Default to pro here so the pre-existing
+// settings tests exercise the settings path itself; the gate's own
+// free/pro/error matrix lives in plan-route.test.ts.
+jest.mock('../../../services/billing-service', () => ({
+  billingService: {
+    getCurrentPlan: jest.fn().mockResolvedValue('pro'),
+    getPlanConfig: jest.fn(),
+    isSmsAllowed: jest.fn().mockReturnValue(true),
+    meetsPlan: jest.fn().mockReturnValue(true),
+  },
+}));
+
 describe('API Routes', () => {
   let app: Koa;
   let testToken: string;
