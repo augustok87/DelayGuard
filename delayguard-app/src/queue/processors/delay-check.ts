@@ -20,22 +20,27 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
   try {
     logger.info(`🔍 Processing 3-rule delay check for order ${orderId}`);
 
-    // Get order details with all 3 threshold settings + Phase 2.1 fields
+    // Get order details with all 3 threshold settings + Phase 2.1 fields.
+    // Schema truth: threshold/flag columns live on app_settings (see
+    // runMigrations in database/connection.ts); shops only carries the
+    // merchant contact columns. Reading flags off the shops alias is
+    // runtime-fatal in production ("column s.email_enabled does not exist").
     const orderResult = await query(
       `SELECT o.*,
-              s.warehouse_delay_days,
-              s.carrier_delay_days,
-              s.transit_delay_days,
-              s.email_enabled,
-              s.sms_enabled,
+              st.warehouse_delay_days,
+              st.carrier_delay_days,
+              st.transit_delay_days,
+              st.email_enabled,
+              st.sms_enabled,
               s.merchant_email,
               s.merchant_phone,
               s.merchant_name,
-              s.warehouse_delays_enabled,
-              s.carrier_delays_enabled,
-              s.transit_delays_enabled
+              st.warehouse_delays_enabled,
+              st.carrier_delays_enabled,
+              st.transit_delays_enabled
        FROM orders o
        JOIN shops s ON o.shop_id = s.id
+       JOIN app_settings st ON st.shop_id = o.shop_id
        WHERE o.id = $1`,
       [orderId],
     );

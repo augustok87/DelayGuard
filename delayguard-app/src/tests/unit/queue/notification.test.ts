@@ -580,3 +580,41 @@ describe('processNotification — merchant-vs-customer routing (Launch WS-E task
     });
   });
 });
+
+describe('processNotification — settings columns come from app_settings, not shops (schema-truth fix)', () => {
+  /**
+   * runMigrations() puts email_enabled / sms_enabled / notification_template
+   * on app_settings — only merchant_email / merchant_phone / merchant_name
+   * live on shops. Reading the flags off the shops alias is runtime-fatal in
+   * production. Field-by-field SQL assertions per v1.19 rules.
+   */
+  const SETTINGS_COLUMNS = ['email_enabled', 'sms_enabled', 'notification_template'];
+  const SHOPS_COLUMNS = ['merchant_email', 'merchant_phone', 'merchant_name'];
+
+  it('order+settings SELECT joins app_settings and sources every settings flag from it', async() => {
+    wireQuery(makeOrderRow(), makeAlertRow());
+
+    await processNotification(makeJob());
+
+    const settingsCall = mockQuery.mock.calls.find(
+      ([sql]) =>
+        typeof sql === 'string' &&
+        sql.includes('FROM orders') &&
+        sql.includes('WHERE o.id'),
+    );
+    expect(settingsCall).toBeDefined();
+    const sql = settingsCall?.[0] as string;
+
+    const joinMatch = sql.match(/JOIN\s+app_settings\s+(\w+)\s+ON/);
+    expect(joinMatch).not.toBeNull();
+    const alias = joinMatch?.[1] as string;
+
+    for (const col of SETTINGS_COLUMNS) {
+      expect(sql).toContain(`${alias}.${col}`);
+      expect(sql).not.toMatch(new RegExp(`\\bs\\.${col}\\b`));
+    }
+    for (const col of SHOPS_COLUMNS) {
+      expect(sql).toMatch(new RegExp(`\\bs\\.${col}\\b`));
+    }
+  });
+});

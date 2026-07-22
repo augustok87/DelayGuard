@@ -37,12 +37,16 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
   try {
     logger.info(`📧 Processing notification for order ${orderId}`);
 
-    // Get order and shop details (incl. merchant contact for E3 routing)
+    // Get order and shop details (incl. merchant contact for E3 routing).
+    // Schema truth: email_enabled / sms_enabled / notification_template live
+    // on app_settings (see runMigrations); shops only carries the merchant
+    // contact columns.
     const orderResult = await query(
-      `SELECT o.*, s.email_enabled, s.sms_enabled, s.notification_template,
+      `SELECT o.*, st.email_enabled, st.sms_enabled, st.notification_template,
               s.merchant_email, s.merchant_phone, s.merchant_name
        FROM orders o
        JOIN shops s ON o.shop_id = s.id
+       JOIN app_settings st ON st.shop_id = o.shop_id
        WHERE o.id = $1`,
       [orderId],
     );

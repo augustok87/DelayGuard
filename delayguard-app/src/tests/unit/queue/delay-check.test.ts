@@ -455,3 +455,52 @@ describe('processDelayCheck — delay_alerts persistence (v1.19 field-population
     expect(mockAddNotificationJob).not.toHaveBeenCalled();
   });
 });
+
+describe('processDelayCheck — settings columns come from app_settings, not shops (schema-truth fix)', () => {
+  /**
+   * runMigrations() puts email_enabled / sms_enabled / *_delay_days /
+   * *_delays_enabled on app_settings — only merchant_email / merchant_phone /
+   * merchant_name live on shops. A SELECT that reads the flags off the shops
+   * alias is runtime-fatal in production (column does not exist). Field-by-
+   * field SQL assertions per .claude/rules/backend.md v1.19 rules.
+   */
+  const SETTINGS_COLUMNS = [
+    'warehouse_delay_days',
+    'carrier_delay_days',
+    'transit_delay_days',
+    'email_enabled',
+    'sms_enabled',
+    'warehouse_delays_enabled',
+    'carrier_delays_enabled',
+    'transit_delays_enabled',
+  ];
+  const SHOPS_COLUMNS = ['merchant_email', 'merchant_phone', 'merchant_name'];
+
+  it('order+settings SELECT joins app_settings and sources every settings flag from it', async() => {
+    wireQuery(makeOrderRow());
+
+    await processDelayCheck(makeJob());
+
+    const settingsCall = mockQuery.mock.calls.find(
+      ([sql]) =>
+        typeof sql === 'string' &&
+        sql.includes('FROM orders') &&
+        sql.includes('WHERE o.id'),
+    );
+    expect(settingsCall).toBeDefined();
+    const sql = settingsCall?.[0] as string;
+
+    const joinMatch = sql.match(/JOIN\s+app_settings\s+(\w+)\s+ON/);
+    expect(joinMatch).not.toBeNull();
+    const alias = joinMatch?.[1] as string;
+
+    for (const col of SETTINGS_COLUMNS) {
+      expect(sql).toContain(`${alias}.${col}`);
+      // and NOT read off the shops alias (runtime-fatal: column not on shops)
+      expect(sql).not.toMatch(new RegExp(`\\bs\\.${col}\\b`));
+    }
+    for (const col of SHOPS_COLUMNS) {
+      expect(sql).toMatch(new RegExp(`\\bs\\.${col}\\b`));
+    }
+  });
+});
