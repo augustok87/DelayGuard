@@ -29,7 +29,7 @@ import { deriveSegment, type CustomerSegment } from "./customer-segment";
 // Fallback "days since last order" for first-time customers (no
 // lastOrderAt). Picked well above the 90-day At-Risk cutoff so a brand
 // new customer never gets misclassified as At-Risk; deriveSegment guards
-// At-Risk with ordersCount >= 2 anyway, but this keeps the math
+// At-Risk with numberOfOrders >= 2 anyway, but this keeps the math
 // defensible if those rules ever shift.
 const DAYS_SINCE_LAST_ORDER_FALLBACK = 9999;
 
@@ -125,10 +125,10 @@ export class CustomerSyncService {
         : DAYS_SINCE_LAST_ORDER_FALLBACK;
 
       const segment: CustomerSegment = deriveSegment({
-        ordersCount: customer.ordersCount,
-        totalSpent: customer.totalSpent,
+        numberOfOrders: customer.numberOfOrders,
+        amountSpent: customer.amountSpent,
         daysSinceLastOrder,
-        acceptsMarketing: customer.acceptsMarketing,
+        emailMarketingSubscribed: customer.emailMarketingSubscribed,
       });
 
       await query(
@@ -154,12 +154,12 @@ export class CustomerSyncService {
         [
           shop.id,
           customer.shopifyCustomerId,
-          customer.ordersCount,
-          customer.totalSpent,
+          customer.numberOfOrders,
+          customer.amountSpent,
           customer.customerSince,
           customer.lastOrderAt,
           segment,
-          customer.acceptsMarketing,
+          customer.emailMarketingSubscribed,
         ],
       );
     } catch (error) {

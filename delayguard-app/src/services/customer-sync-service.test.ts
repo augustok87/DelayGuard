@@ -60,20 +60,20 @@ function mockOrderHasCustomer(
 function buildCustomerData(overrides = {}): {
   shopifyCustomerId: string;
   email: string | null;
-  ordersCount: number;
-  totalSpent: number;
+  numberOfOrders: number;
+  amountSpent: number;
   customerSince: Date;
   lastOrderAt: Date | null;
-  acceptsMarketing: boolean;
+  emailMarketingSubscribed: boolean;
 } {
   return {
     shopifyCustomerId: SHOPIFY_CUSTOMER_ID,
     email: "ada@example.com",
-    ordersCount: 7,
-    totalSpent: 1250.5,
+    numberOfOrders: 7,
+    amountSpent: 1250.5,
     customerSince: new Date("2024-01-15T10:30:00.000Z"),
     lastOrderAt: new Date("2026-05-10T08:00:00.000Z"),
-    acceptsMarketing: true,
+    emailMarketingSubscribed: true,
     ...overrides,
   };
 }
@@ -242,8 +242,8 @@ describe("CustomerSyncService.syncCustomerForOrder", () => {
     mockOrderHasCustomer();
     mockFetchCustomerById.mockResolvedValueOnce(
       buildCustomerData({
-        ordersCount: 3,
-        totalSpent: 500,
+        numberOfOrders: 3,
+        amountSpent: 500,
         lastOrderAt,
       }),
     );
@@ -263,10 +263,10 @@ describe("CustomerSyncService.syncCustomerForOrder", () => {
     mockOrderHasCustomer();
     mockFetchCustomerById.mockResolvedValueOnce(
       buildCustomerData({
-        ordersCount: 1,
-        totalSpent: 30,
+        numberOfOrders: 1,
+        amountSpent: 30,
         lastOrderAt: null,
-        acceptsMarketing: true,
+        emailMarketingSubscribed: true,
       }),
     );
     mockQuery.mockResolvedValueOnce([]);
