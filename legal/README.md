@@ -1,107 +1,46 @@
 # DelayGuard Legal Documentation
 
-**Project**: DelayGuard Shopify App  
-**Phase**: Week 2 - Legal & Compliance  
-**Status**: ✅ COMPLETED  
-**Last Updated**: [Current Date]
+**Project**: DelayGuard Shopify App
+**Last Updated**: 2026-07-22
 
-## 📋 Essential Legal Documents (13 files)
+## Documents in this directory (6 files)
 
-### Core Legal Documents
-1. **privacy-policy.md** - Comprehensive GDPR-compliant privacy policy (enhanced version)
-2. **terms-of-service.md** - Complete terms and conditions (enhanced version)
-3. **cookie-policy.md** - Detailed cookie usage policy
-4. **liability-disclaimer.md** - Complete limitation of liability
+### Public-facing (served by the app)
 
-### Compliance Frameworks
-5. **gdpr-compliance-guide.md** - EU data protection compliance framework
-6. **shopify-app-store-compliance.md** - Platform requirements and guidelines
-7. **data-protection-policy.md** - Comprehensive data security framework
+1. **privacy-policy.md** — GDPR-aware privacy policy. Served at `/legal/privacy-policy` by `delayguard-app/src/routes/legal.ts`.
+2. **terms-of-service.md** — Terms and conditions. Served at `/legal/terms-of-service`.
 
-### Business Entity & Tax
-8. **us-llc-setup-guide.md** - Delaware LLC formation guide (delayed until Week 9-10)
-9. **llc-formation-timeline.md** - Detailed formation timeline and checklist
-10. **argentine-tax-guide.md** - Argentine tax obligations and compliance
+### Internal compliance references
 
-### Compliance Management
-11. **legal-compliance-checklist.md** - Complete compliance tracking system
-12. **legal-compliance-summary.md** - Executive summary of all legal work
-13. **README.md** - Navigation and overview guide
+3. **data-protection-policy.md** — Data security framework.
+4. **shopify-app-store-compliance.md** — Shopify platform requirements and guidelines reference.
+5. **legal-compliance-checklist.md** — Compliance tracking checklist.
+6. **README.md** — This file.
 
-## 🎯 Key Features
+> Earlier revisions of this README listed 13 documents (cookie policy, liability disclaimer, GDPR guide, LLC/tax guides, compliance summary). Those files were never created or were removed; only the 6 files above exist. If a new legal document is added, list it here in the same commit.
 
-### GDPR Compliance
-- ✅ Complete data subject rights implementation
-- ✅ Shopify-specific webhook requirements
-- ✅ Data processing agreements (DPAs)
-- ✅ Privacy by design and by default
-- ✅ Comprehensive data protection measures
+## Hosting
 
-### US Legal Compliance
-- ✅ Delaware LLC formation strategy (delayed until commercial launch)
-- ✅ Tax planning for Argentine developer
-- ✅ Business entity structure recommendations
-- ✅ Banking and payment processing setup
+The privacy policy and terms of service are rendered from markdown to HTML at request time by the Koa route module `delayguard-app/src/routes/legal.ts` (unit-tested in `delayguard-app/tests/unit/routes/legal.test.ts`). The Shopify App Store listing must link to the production URLs:
 
-### Shopify App Store Compliance
-- ✅ 2025 platform requirements
-- ✅ Performance standards (p95 ≤500ms)
-- ✅ Security requirements (HMAC, OAuth 2.0)
-- ✅ User experience standards (Polaris, responsive)
-- ✅ Content and legal requirements
+- `https://<SHOPIFY_APP_URL>/legal/privacy-policy`
+- `https://<SHOPIFY_APP_URL>/legal/terms-of-service`
 
-### Argentine Tax Compliance
-- ✅ Monotributo registration strategy
-- ✅ Foreign income handling
-- ✅ Business expense tracking
-- ✅ AFIP compliance requirements
-- ✅ Professional services recommendations
+## Contact Information
 
-## ⚠️ Important Notes
-
-### Delayed LLC Formation Strategy
-- **Current Status**: Development Phase - No LLC Required
-- **Formation Timeline**: Week 9-10 (2-4 weeks before commercial launch)
-- **Reason**: Cost efficiency during development phase
-- **Commercial Requirement**: LLC required for paid app operations
-
-### Argentine Tax Considerations
-- **CUIT**: 20-935297703-3 (already provided)
-- **Recommended**: Monotributo for income under $50K/year
-- **Category**: A/B for software development (code 6202)
-- **Monthly Tax**: $20-50/month fixed
-
-### Next Steps
-1. **Continue Development**: Focus on app development (Weeks 3-8)
-2. **Week 8**: Begin LLC formation preparation
-3. **Week 9-10**: Complete LLC formation and setup
-4. **Week 11-12**: Launch commercially with proper business entity
-
-## 📞 Contact Information
-
-**DelayGuard**  
-Email: augustok87@gmail.com  
+**DelayGuard**
+Email: augustok87@gmail.com
 Address: Billinghurst 1664, 5A, Buenos Aires, Argentina
 
-**Data Protection Officer**  
+**Data Protection / Legal Compliance**
 Email: augustok87@gmail.com
 
-**Legal Compliance Officer**  
-Email: augustok87@gmail.com
+## Document Maintenance
 
-## 🔄 Document Maintenance
-
-### Regular Updates
-- **Monthly**: Review compliance status
-- **Quarterly**: Update legal documents
-- **Annually**: Comprehensive legal review
-- **As Needed**: Update for regulatory changes
-
-### Professional Review
-- **Legal Review**: Recommended before commercial launch
-- **Tax Review**: Recommended for Argentine tax compliance
-- **Compliance Audit**: Recommended annually
+- Review compliance status regularly and before each App Store submission.
+- Update `privacy-policy.md` / `terms-of-service.md` whenever data collection, pricing, or features change — the served pages update automatically on the next deploy.
+- Professional legal review is recommended before commercial launch.
 
 ---
 
-*This legal documentation provides comprehensive coverage for DelayGuard's operations in the US and European markets while ensuring compliance with all applicable laws and regulations.*
+*Note: currently operating as an individual developer. Business-entity formation (LLC) is planned for the commercial phase; legal documents will be updated with entity information upon formation.*
