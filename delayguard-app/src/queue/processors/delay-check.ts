@@ -5,6 +5,7 @@ import { DelayDetectionService, checkWarehouseDelay, checkTransitDelay } from '.
 import { query } from '../../database/connection';
 import { addNotificationJob } from '../setup';
 import { PriorityScoreService } from '../../services/priority-score-service';
+import { resolveTrackingUrl } from '../../utils/tracking-url';
 
 interface DelayCheckJobData {
   orderId: number;
@@ -154,17 +155,32 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
 
     // Send notification if ANY delay detected and notifications enabled
     if (delayDetected && triggeredDelayResult && delayType && (order.email_enabled || order.sms_enabled)) {
-      // Construct tracking URL (TrackingInfo doesn't include URL, so we build it)
-      const trackingUrl = trackingNumber
-        ? `https://tracking.example.com/${trackingNumber}`
-        : undefined;
+      // Real tracking URL (WS-E task E2): the fulfillment's stored
+      // carrier-provided tracking_url wins; otherwise build a carrier-pattern
+      // deep link from carrier_code + tracking number. Empty string when the
+      // order is unfulfilled (warehouse delays have nothing to track yet).
+      let storedTrackingUrl: string | null = null;
+      if (trackingNumber) {
+        const fulfillmentRows = await query<{ tracking_url: string | null }>(
+          `SELECT tracking_url FROM fulfillments
+           WHERE order_id = $1 AND tracking_number = $2
+           ORDER BY updated_at DESC LIMIT 1`,
+          [parseInt(order.id), trackingNumber],
+        );
+        storedTrackingUrl = fulfillmentRows[0]?.tracking_url ?? null;
+      }
+      const trackingUrl = resolveTrackingUrl(
+        storedTrackingUrl,
+        carrierCode || order.carrier_code,
+        trackingNumber,
+      );
 
       await addNotificationJob({
         orderId: parseInt(order.id),
         delayDetails: {
           estimatedDelivery: triggeredDelayResult.estimatedDelivery || '',
           trackingNumber: trackingNumber || '',
-          trackingUrl: trackingUrl || `https://tracking.example.com/unknown`,
+          trackingUrl: trackingUrl || '',
           delayDays: triggeredDelayResult.delayDays || 0,
           delayReason: triggeredDelayResult.delayReason || 'UNKNOWN',
         },

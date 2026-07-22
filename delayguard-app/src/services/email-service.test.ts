@@ -33,7 +33,7 @@ function makeDelayDetails(
   return {
     estimatedDelivery: "2026-05-12",
     trackingNumber: "1Z999AA1234567890",
-    trackingUrl: "https://tracking.example.com/1Z999AA1234567890",
+    trackingUrl: "https://www.ups.com/track?tracknum=1Z999AA1234567890",
     delayDays: 3,
     delayReason: "Weather delay",
     ...overrides,
@@ -175,7 +175,7 @@ describe("EmailService.sendDelayEmail", () => {
           orderNumber: "1001",
           newDeliveryDate: "2026-05-12",
           trackingNumber: "1Z999AA1234567890",
-          trackingUrl: "https://tracking.example.com/1Z999AA1234567890",
+          trackingUrl: "https://www.ups.com/track?tracknum=1Z999AA1234567890",
           delayDays: 3,
           delayReason: "Weather delay",
         }),
@@ -274,5 +274,115 @@ describe("EmailService.sendDelayEmail", () => {
     );
 
     expect(sendMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("EmailService — SENDGRID_DELAY_TEMPLATE_ID resolution (Launch WS-E, task E1)", () => {
+  let emailService: EmailService;
+  const originalTemplateId = process.env.SENDGRID_DELAY_TEMPLATE_ID;
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  beforeEach(() => {
+    sendMock.mockReset();
+    sendMock.mockResolvedValue([{ statusCode: 202 }, {}]);
+    emailService = new EmailService("test-sendgrid-key");
+  });
+
+  afterEach(() => {
+    if (originalTemplateId === undefined) {
+      delete process.env.SENDGRID_DELAY_TEMPLATE_ID;
+    } else {
+      process.env.SENDGRID_DELAY_TEMPLATE_ID = originalTemplateId;
+    }
+    process.env.NODE_ENV = originalNodeEnv;
+  });
+
+  it("uses the template ID from SENDGRID_DELAY_TEMPLATE_ID when set", async() => {
+    process.env.SENDGRID_DELAY_TEMPLATE_ID = "d-real123abc";
+
+    await emailService.sendDelayEmail(
+      "jane@example.com",
+      makeOrderInfo(),
+      makeDelayDetails(),
+    );
+
+    expect(sendMock.mock.calls[0][0].templateId).toBe("d-real123abc");
+  });
+
+  it("falls back to the placeholder template ID outside production when unset", async() => {
+    delete process.env.SENDGRID_DELAY_TEMPLATE_ID;
+
+    await emailService.sendDelayEmail(
+      "jane@example.com",
+      makeOrderInfo(),
+      makeDelayDetails(),
+    );
+
+    expect(sendMock.mock.calls[0][0].templateId).toBe(
+      "d-delay-notification-template",
+    );
+  });
+
+  it("fails loudly in production when SENDGRID_DELAY_TEMPLATE_ID is unset — no email is sent", async() => {
+    delete process.env.SENDGRID_DELAY_TEMPLATE_ID;
+    process.env.NODE_ENV = "production";
+
+    await expect(
+      emailService.sendDelayEmail(
+        "jane@example.com",
+        makeOrderInfo(),
+        makeDelayDetails(),
+      ),
+    ).rejects.toThrow(/SENDGRID_DELAY_TEMPLATE_ID/);
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it("treats a whitespace-only SENDGRID_DELAY_TEMPLATE_ID as unset in production", async() => {
+    process.env.SENDGRID_DELAY_TEMPLATE_ID = "   ";
+    process.env.NODE_ENV = "production";
+
+    await expect(
+      emailService.sendDelayEmail(
+        "jane@example.com",
+        makeOrderInfo(),
+        makeDelayDetails(),
+      ),
+    ).rejects.toThrow(/SENDGRID_DELAY_TEMPLATE_ID/);
+  });
+});
+
+describe("EmailService — recipientName routing (Launch WS-E, task E3)", () => {
+  let emailService: EmailService;
+
+  beforeEach(() => {
+    sendMock.mockReset();
+    sendMock.mockResolvedValue([{ statusCode: 202 }, {}]);
+    emailService = new EmailService("test-sendgrid-key");
+  });
+
+  it("defaults dynamicTemplateData.recipientName to the order's customerName", async() => {
+    await emailService.sendDelayEmail(
+      "jane@example.com",
+      makeOrderInfo({ customerName: "Jane Doe" }),
+      makeDelayDetails(),
+    );
+
+    const dynamicData = sendMock.mock.calls[0][0].dynamicTemplateData;
+    expect(dynamicData.recipientName).toBe("Jane Doe");
+    expect(dynamicData.customerName).toBe("Jane Doe");
+  });
+
+  it("uses options.recipientName for merchant-routed emails while preserving customerName (v1.19 field-population rule)", async() => {
+    await emailService.sendDelayEmail(
+      "mary@merchant-store.com",
+      makeOrderInfo({ customerName: "Jane Doe" }),
+      makeDelayDetails(),
+      { recipientName: "Mary Merchant" },
+    );
+
+    const call = sendMock.mock.calls[0][0];
+    expect(call.to).toBe("mary@merchant-store.com");
+    expect(call.dynamicTemplateData.recipientName).toBe("Mary Merchant");
+    expect(call.dynamicTemplateData.customerName).toBe("Jane Doe");
   });
 });

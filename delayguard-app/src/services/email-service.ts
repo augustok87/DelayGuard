@@ -2,6 +2,43 @@ import * as sgMail from "@sendgrid/mail";
 import { OrderInfo, DelayDetails } from "../types";
 import { PingResult, PING_TIMEOUT_MS } from "./ping-result";
 
+/**
+ * Dev/test-only stand-in. Production must set SENDGRID_DELAY_TEMPLATE_ID to
+ * the real dynamic-template ID — create it once with
+ * `npm run sendgrid:create-template` (Launch WS-E, task E1).
+ */
+const PLACEHOLDER_TEMPLATE_ID = "d-delay-notification-template";
+
+/**
+ * Resolve the SendGrid dynamic-template ID from the environment.
+ * Fails loudly in production when unset — sending with the placeholder ID
+ * would 400 at SendGrid and silently drop every delay notification.
+ */
+function resolveDelayTemplateId(): string {
+  const configured = process.env.SENDGRID_DELAY_TEMPLATE_ID?.trim();
+  if (configured) {
+    return configured;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "SENDGRID_DELAY_TEMPLATE_ID is not set. Refusing to send delay emails " +
+        "with the placeholder template in production. Create the template once " +
+        "with `npm run sendgrid:create-template` and set the printed d-… ID " +
+        "as SENDGRID_DELAY_TEMPLATE_ID.",
+    );
+  }
+  return PLACEHOLDER_TEMPLATE_ID;
+}
+
+export interface SendDelayEmailOptions {
+  /**
+   * Greeting name for the template's {{recipientName}} merge field.
+   * Defaults to the order's customer name; merchant-routed alerts
+   * (warehouse delays) pass the merchant's name instead (WS-E, task E3).
+   */
+  recipientName?: string;
+}
+
 export class EmailService {
   private apiKey: string;
 
@@ -14,12 +51,14 @@ export class EmailService {
     email: string,
     orderInfo: OrderInfo,
     delayDetails: DelayDetails,
+    options?: SendDelayEmailOptions,
   ): Promise<void> {
     const msg = {
       to: email,
       from: "noreply@delayguard.app",
-      templateId: "d-delay-notification-template",
+      templateId: resolveDelayTemplateId(),
       dynamicTemplateData: {
+        recipientName: options?.recipientName ?? orderInfo.customerName,
         customerName: orderInfo.customerName,
         orderNumber: orderInfo.orderNumber,
         newDeliveryDate: delayDetails.estimatedDelivery,
