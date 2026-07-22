@@ -66,12 +66,9 @@ export function AppHeader({ stats, loading = false, shop }: AppHeaderProps) {
           </div>
           <div className={styles.statLabel}>Resolved</div>
         </div>
-        <div className={styles.stat}>
-          <div className={styles.statValue}>
-            {loading ? '...' : stats.supportTicketReduction}
-          </div>
-          <div className={styles.statLabel}>Ticket Reduction</div>
-        </div>
+        {/* G2: the fabricated "Ticket Reduction" tile was deleted — the
+            value was never derived from real data and statistics claims
+            are banned by listing req 4.3.3. */}
       </div>
     </header>
   );

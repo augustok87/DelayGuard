@@ -1,6 +1,6 @@
-import ordersSlice, { 
-  fetchOrders, 
-  updateOrder, 
+import ordersSlice, {
+  fetchOrders,
+  updateOrder,
   deleteOrder,
   setFilters,
   clearFilters,
@@ -9,6 +9,15 @@ import ordersSlice, {
 } from '../../../../src/store/slices/ordersSlice';
 import { configureStore } from '@reduxjs/toolkit';
 import { Order } from '../../../../src/types';
+import { apiClient } from '../../../../src/utils/api-client';
+
+// G2: thunks call the real authenticated API client — mock the singleton.
+jest.mock('../../../../src/utils/api-client', () => ({
+  apiClient: {
+    getOrders: jest.fn(),
+  },
+}));
+const mockedGetOrders = apiClient.getOrders as jest.Mock;
 
 // Mock store setup
 const createMockStore = () => {
@@ -258,6 +267,90 @@ describe('ordersSlice', () => {
       const state = store.getState().orders;
       expect(state.loading).toBe(false);
       expect(state.error).toBe(errorMessage);
+    });
+  });
+
+  describe('fetchOrders thunk (real API — G2)', () => {
+    const wireOrder = {
+      id: 7,
+      shopify_order_id: '9999',
+      order_number: '1001',
+      customer_email: 'jane@example.com',
+      customer_name: 'Jane Doe',
+      total_price: '129.50',
+      financial_status: 'paid',
+      fulfillment_status: 'fulfilled',
+      created_at: '2026-06-28T09:00:00Z',
+      updated_at: '2026-06-29T09:00:00Z',
+      alert_count: '1',
+      last_alert_at: '2026-07-01T10:00:00Z',
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('fetches orders from /api/orders and maps the wire rows', async() => {
+      mockedGetOrders.mockResolvedValueOnce({
+        success: true,
+        data: [wireOrder],
+      });
+
+      await store.dispatch(fetchOrders());
+
+      expect(mockedGetOrders).toHaveBeenCalledWith(50);
+      const state = store.getState().orders;
+      expect(state.loading).toBe(false);
+      expect(state.error).toBeNull();
+      expect(state.items[0]).toMatchObject({
+        id: '7',
+        orderNumber: '1001',
+        customerName: 'Jane Doe',
+        status: 'shipped',
+        totalAmount: 129.5,
+      });
+    });
+
+    it('produces an empty list (designed empty state) for a fresh shop', async() => {
+      mockedGetOrders.mockResolvedValueOnce({ success: true, data: [] });
+
+      await store.dispatch(fetchOrders());
+
+      expect(store.getState().orders.items).toEqual([]);
+      expect(store.getState().orders.error).toBeNull();
+    });
+
+    it('rejects with the API error message on failure', async() => {
+      mockedGetOrders.mockResolvedValueOnce({
+        success: false,
+        error: 'Shop not found',
+      });
+
+      await store.dispatch(fetchOrders());
+
+      expect(store.getState().orders.error).toBe('Shop not found');
+    });
+
+    it('rejects gracefully when the client throws', async() => {
+      mockedGetOrders.mockRejectedValueOnce(new Error('network down'));
+
+      await store.dispatch(fetchOrders());
+
+      expect(store.getState().orders.error).toBe('Failed to fetch orders');
+    });
+
+    it('updateOrder updates local state without fake latency', async() => {
+      mockedGetOrders.mockResolvedValueOnce({
+        success: true,
+        data: [wireOrder],
+      });
+      await store.dispatch(fetchOrders());
+
+      await store.dispatch(
+        updateOrder({ id: '7', updates: { status: 'delivered' } }),
+      );
+
+      expect(store.getState().orders.items[0].status).toBe('delivered');
     });
   });
 

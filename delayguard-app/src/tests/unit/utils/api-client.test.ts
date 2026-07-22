@@ -31,6 +31,173 @@ describe('ApiClient', () => {
     mockFetch.mockClear();
   });
 
+  describe('Token Management (CDN App Bridge global)', () => {
+    afterEach(() => {
+      delete (window as unknown as Record<string, unknown>).shopify;
+    });
+
+    it('should prefer the CDN global shopify.idToken() over the npm util', async() => {
+      const mockIdToken = jest.fn().mockResolvedValue('cdn-id-token');
+      (window as unknown as Record<string, unknown>).shopify = {
+        idToken: mockIdToken,
+      };
+
+      client.setApp(mockApp);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({ success: true, data: [] }),
+      } as Response);
+
+      await client.getAlerts();
+
+      expect(mockIdToken).toHaveBeenCalled();
+      expect(mockGetSessionToken).not.toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/alerts',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Authorization': 'Bearer cdn-id-token',
+          }),
+        }),
+      );
+    });
+
+    it('should use the CDN global even when the npm App Bridge is not initialized', async() => {
+      const mockIdToken = jest.fn().mockResolvedValue('cdn-only-token');
+      (window as unknown as Record<string, unknown>).shopify = {
+        idToken: mockIdToken,
+      };
+
+      // No setApp call — CDN global alone must suffice.
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({ success: true, data: [] }),
+      } as Response);
+
+      await client.getAlerts();
+
+      expect(mockIdToken).toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/alerts',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Authorization': 'Bearer cdn-only-token',
+          }),
+        }),
+      );
+    });
+
+    it('should fall back to the npm util when the CDN idToken() rejects', async() => {
+      const mockIdToken = jest.fn().mockRejectedValue(new Error('CDN error'));
+      (window as unknown as Record<string, unknown>).shopify = {
+        idToken: mockIdToken,
+      };
+      mockGetSessionToken.mockResolvedValueOnce('npm-token');
+
+      client.setApp(mockApp);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({ success: true, data: [] }),
+      } as Response);
+
+      await client.getAlerts();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/alerts',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Authorization': 'Bearer npm-token',
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('POST /api/test-alert', () => {
+    it('should dispatch a test alert with the given delay type', async() => {
+      mockGetSessionToken.mockResolvedValueOnce('token');
+
+      client.setApp(mockApp);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({
+          success: true,
+          data: {
+            channelsAttempted: ['email'],
+            recipientEmail: 'merchant@example.com',
+            recipientPhone: null,
+          },
+        }),
+      } as Response);
+
+      const result = await client.testAlert({ delayType: 'warehouse' });
+
+      expect(result.success).toBe(true);
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/test-alert',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ delayType: 'warehouse' }),
+        }),
+      );
+    });
+
+    it('should pass channel and recipient overrides through', async() => {
+      mockGetSessionToken.mockResolvedValueOnce('token');
+
+      client.setApp(mockApp);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({ success: true, data: { channelsAttempted: ['sms'] } }),
+      } as Response);
+
+      await client.testAlert({
+        delayType: 'carrier',
+        channels: ['sms'],
+        recipientPhone: '+15555550100',
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/test-alert',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            delayType: 'carrier',
+            channels: ['sms'],
+            recipientPhone: '+15555550100',
+          }),
+        }),
+      );
+    });
+
+    it('should surface validation errors from the endpoint', async() => {
+      mockGetSessionToken.mockResolvedValueOnce('token');
+
+      client.setApp(mockApp);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        json: async() => ({
+          error: "Invalid delayType (must be 'warehouse', 'carrier', or 'transit')",
+          code: 'INVALID_DELAY_TYPE',
+        }),
+      } as Response);
+
+      const result = await client.testAlert({
+        delayType: 'bogus' as never,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.code).toBe('INVALID_DELAY_TYPE');
+    });
+  });
+
   describe('Token Management', () => {
     it('should get session token from App Bridge', async() => {
       const testToken = 'test-session-token';

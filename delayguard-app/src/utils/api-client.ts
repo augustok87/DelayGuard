@@ -22,6 +22,28 @@ interface ApiClientConfig {
   app?: ClientApplication;
 }
 
+/**
+ * Global installed by the latest CDN-hosted App Bridge
+ * (https://cdn.shopify.com/shopifycloud/app-bridge.js — req 2.2.3).
+ * `idToken()` is the CDN equivalent of the npm `getSessionToken` util.
+ */
+interface CdnAppBridgeGlobal {
+  idToken?: () => Promise<string>;
+}
+
+export interface TestAlertPayload {
+  delayType: "warehouse" | "carrier" | "transit";
+  channels?: Array<"email" | "sms">;
+  recipientEmail?: string | null;
+  recipientPhone?: string | null;
+}
+
+export interface TestAlertResponse {
+  channelsAttempted: Array<"email" | "sms">;
+  recipientEmail: string | null;
+  recipientPhone: string | null;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -54,6 +76,27 @@ class ApiClient {
    * This token is a JWT that proves the request is coming from Shopify
    */
   private async getToken(): Promise<string | null> {
+    // Prefer the latest App Bridge CDN global (window.shopify.idToken) —
+    // present whenever the app-bridge.js script tag from index.html has
+    // loaded. The npm @shopify/app-bridge path below is kept as a
+    // fallback so existing behavior is preserved (G1 rule: prefer the
+    // CDN global, don't rewrite the working token attachment).
+    const cdnShopify = (globalThis as { shopify?: CdnAppBridgeGlobal })
+      .shopify;
+    if (cdnShopify && typeof cdnShopify.idToken === "function") {
+      try {
+        const token = await cdnShopify.idToken();
+        logger.debug("Session token retrieved from CDN App Bridge");
+        return token;
+      } catch (error) {
+        logger.error(
+          "CDN App Bridge idToken() failed; falling back to npm App Bridge",
+          error as Error,
+        );
+        // fall through to the npm App Bridge path
+      }
+    }
+
     if (!this.app) {
       logger.warn("App Bridge not initialized. Returning null token.");
       return null;
@@ -193,6 +236,18 @@ class ApiClient {
    */
   async getShop() {
     return this.request<unknown>("/shop");
+  }
+
+  /**
+   * POST /api/test-alert
+   * Dispatch a sample delay alert to the merchant's configured contact
+   * (Phase 2.1.e endpoint; dry-run — no DB write, no queue enqueue).
+   */
+  async testAlert(payload: TestAlertPayload) {
+    return this.request<TestAlertResponse>("/test-alert", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   }
 
   /**

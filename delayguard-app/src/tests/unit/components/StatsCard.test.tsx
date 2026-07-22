@@ -19,7 +19,6 @@ describe('StatsCard', () => {
     resolvedAlerts: 17,
     avgResolutionTime: '2.3 days',
     customerSatisfaction: '',
-    supportTicketReduction: '',
   };
 
   describe('Component Rendering', () => {
@@ -204,7 +203,6 @@ describe('StatsCard', () => {
         resolvedAlerts: 5,
         avgResolutionTime: '1.5 days',
         customerSatisfaction: '',
-        supportTicketReduction: '',
       };
 
       render(<StatsCard stats={minimalStats} />);

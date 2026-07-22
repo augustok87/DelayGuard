@@ -1,6 +1,6 @@
-import settingsSlice, { 
-  fetchSettings, 
-  saveSettings, 
+import settingsSlice, {
+  fetchSettings,
+  saveSettings,
   testDelayDetection,
   updateSettings,
   resetSettings,
@@ -8,6 +8,19 @@ import settingsSlice, {
 } from '../../../../src/store/slices/settingsSlice';
 import { configureStore } from '@reduxjs/toolkit';
 import { AppSettings } from '../../../../src/types';
+import { apiClient } from '../../../../src/utils/api-client';
+
+// G2: thunks call the real authenticated API client — mock the singleton.
+jest.mock('../../../../src/utils/api-client', () => ({
+  apiClient: {
+    getSettings: jest.fn(),
+    updateSettings: jest.fn(),
+    testAlert: jest.fn(),
+  },
+}));
+const mockedGetSettings = apiClient.getSettings as jest.Mock;
+const mockedUpdateSettings = apiClient.updateSettings as jest.Mock;
+const mockedTestAlert = apiClient.testAlert as jest.Mock;
 
 // Mock store setup
 const createMockStore = () => {
@@ -220,6 +233,159 @@ describe('settingsSlice', () => {
       const state = store.getState().settings;
       expect(state.loading).toBe(false);
       expect(state.error).toBe(errorMessage);
+    });
+  });
+
+  describe('thunks call the real API (G2)', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('fetchSettings maps the snake_case wire settings over the defaults', async() => {
+      mockedGetSettings.mockResolvedValueOnce({
+        success: true,
+        data: {
+          delay_threshold_days: 5,
+          email_enabled: false,
+          sms_enabled: true,
+          notification_template: 'custom',
+          custom_message: null,
+        },
+      });
+
+      await store.dispatch(fetchSettings());
+
+      expect(mockedGetSettings).toHaveBeenCalledTimes(1);
+      const state = store.getState().settings;
+      expect(state.data).toMatchObject({
+        delayThreshold: 5,
+        emailNotifications: false,
+        smsNotifications: true,
+        notificationTemplate: 'custom',
+        // local-only defaults survive the overlay
+        autoResolveDays: 7,
+        theme: 'light',
+      });
+    });
+
+    it('fetchSettings rejects with the API error on failure', async() => {
+      mockedGetSettings.mockResolvedValueOnce({
+        success: false,
+        error: 'Shop not found',
+      });
+
+      await store.dispatch(fetchSettings());
+
+      expect(store.getState().settings.error).toBe('Shop not found');
+    });
+
+    it('saveSettings PUTs the snake_case wire body and stores the saved settings', async() => {
+      mockedUpdateSettings.mockResolvedValueOnce({
+        success: true,
+        message: 'Settings updated successfully',
+      });
+
+      const newSettings: AppSettings = {
+        delayThreshold: 4,
+        notificationTemplate: 'custom',
+        emailNotifications: true,
+        smsNotifications: true,
+        autoResolveDays: 7,
+        enableAnalytics: true,
+        theme: 'light',
+        language: 'en',
+      };
+
+      await store.dispatch(saveSettings(newSettings));
+
+      expect(mockedUpdateSettings).toHaveBeenCalledWith({
+        delay_threshold_days: 4,
+        email_enabled: true,
+        sms_enabled: true,
+        notification_template: 'custom',
+      });
+      const state = store.getState().settings;
+      expect(state.data).toEqual(newSettings);
+      expect(state.lastSaved).not.toBeNull();
+    });
+
+    it('saveSettings rejects with the API error on failure', async() => {
+      mockedUpdateSettings.mockResolvedValueOnce({
+        success: false,
+        error: 'delay_threshold_days must be between 1 and 30',
+      });
+
+      await store.dispatch(
+        saveSettings({
+          delayThreshold: 99,
+          notificationTemplate: 'default',
+          emailNotifications: true,
+          smsNotifications: false,
+        }),
+      );
+
+      expect(store.getState().settings.error).toBe(
+        'delay_threshold_days must be between 1 and 30',
+      );
+    });
+
+    it('testDelayDetection POSTs to /api/test-alert with a default warehouse delay', async() => {
+      mockedTestAlert.mockResolvedValueOnce({
+        success: true,
+        data: {
+          channelsAttempted: ['email'],
+          recipientEmail: 'merchant@example.com',
+          recipientPhone: null,
+        },
+      });
+
+      const result = await store.dispatch(testDelayDetection());
+
+      expect(mockedTestAlert).toHaveBeenCalledWith({ delayType: 'warehouse' });
+      expect(testDelayDetection.fulfilled.match(result)).toBe(true);
+      expect(
+        (result.payload as { success: boolean; message: string }).message,
+      ).toContain('email');
+      expect(store.getState().settings.loading).toBe(false);
+    });
+
+    it('testDelayDetection forwards an explicit delay type', async() => {
+      mockedTestAlert.mockResolvedValueOnce({
+        success: true,
+        data: { channelsAttempted: ['sms'], recipientEmail: null, recipientPhone: '+15555550100' },
+      });
+
+      await store.dispatch(testDelayDetection({ delayType: 'transit' }));
+
+      expect(mockedTestAlert).toHaveBeenCalledWith({ delayType: 'transit' });
+    });
+
+    it('testDelayDetection reports when no channel could be attempted', async() => {
+      mockedTestAlert.mockResolvedValueOnce({
+        success: true,
+        data: { channelsAttempted: [], recipientEmail: null, recipientPhone: null },
+      });
+
+      const result = await store.dispatch(testDelayDetection());
+
+      expect(testDelayDetection.fulfilled.match(result)).toBe(true);
+      expect(
+        (result.payload as { message: string }).message.toLowerCase(),
+      ).toContain('no channels');
+    });
+
+    it('testDelayDetection rejects with the API error on failure', async() => {
+      mockedTestAlert.mockResolvedValueOnce({
+        success: false,
+        error: 'Merchant email not configured',
+      });
+
+      const result = await store.dispatch(testDelayDetection());
+
+      expect(testDelayDetection.rejected.match(result)).toBe(true);
+      expect(store.getState().settings.error).toBe(
+        'Merchant email not configured',
+      );
     });
   });
 

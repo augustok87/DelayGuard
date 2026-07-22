@@ -54,6 +54,14 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './src/index.html',
       filename: 'index.html',
+      // G1 (req 2.2.3): the shopify-api-key meta tag in src/index.html is
+      // rendered from this parameter; the CDN app-bridge.js script reads it.
+      templateParameters: {
+        SHOPIFY_API_KEY:
+          process.env.SHOPIFY_API_KEY ||
+          process.env.REACT_APP_SHOPIFY_API_KEY ||
+          '',
+      },
       minify: isProduction ? {
         removeComments: true,
         collapseWhitespace: true,

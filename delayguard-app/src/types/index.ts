@@ -145,6 +145,26 @@ export interface DelayAlert {
   };
   suggestedActions?: string[]; // Actionable recommendations for merchant
   trackingEvents?: PersistedTrackingEvent[]; // Timeline of tracking events
+
+  // Phase 2.1.f: customer-intelligence display fields. Populated when the
+  // /api/alerts wire row carries the Phase 2.1.b-d columns
+  // (delay_alerts.priority_score / priority_level + the orders financial
+  // and shipping columns). All optional — the UI renders these sections
+  // only when the data layer provides them.
+  priorityScore?: number; // 0-100 (Phase 2.1.b 4-axis score)
+  priorityLevel?: "Critical" | "High" | "Medium" | "Low";
+  financialBreakdown?: {
+    subtotal?: number;
+    shipping?: number;
+    tax?: number;
+    discounts?: number;
+  };
+  shippingDestination?: {
+    city?: string;
+    provinceCode?: string;
+    countryCode?: string;
+    zip?: string;
+  };
 }
 
 // Persisted shape (tracking_events table row, surfaced via /api/alerts).
@@ -173,13 +193,17 @@ export interface Order {
   lineItems?: OrderLineItem[];
 }
 
+// G2: every field here must be derivable from real data (/api/analytics
+// or the alerts themselves). The fabricated "support ticket reduction"
+// stat tile was deleted (listing req 4.3.3 bans statistics claims);
+// avgResolutionTime / customerSatisfaction are optional and only
+// rendered when actually computed from real data.
 export interface StatsData {
   totalAlerts: number;
   activeAlerts: number;
   resolvedAlerts: number;
-  avgResolutionTime: string;
-  customerSatisfaction: string;
-  supportTicketReduction: string;
+  avgResolutionTime?: string;
+  customerSatisfaction?: string;
   totalOrders?: number;
   delayedOrders?: number;
   revenueImpact?: number;

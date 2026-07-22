@@ -83,7 +83,6 @@ export const mockStats: StatsData = {
   resolvedAlerts: 9,
   avgResolutionTime: '2.5 days',
   customerSatisfaction: '',
-  supportTicketReduction: '',
   totalOrders: 150,
   delayedOrders: 8,
   revenueImpact: 1250.50,

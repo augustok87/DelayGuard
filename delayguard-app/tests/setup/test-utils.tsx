@@ -93,7 +93,6 @@ export const createMockStats = (overrides = {}) => ({
   resolvedAlerts: 9,
   avgResolutionTime: '2.3 days',
   customerSatisfaction: '',
-  supportTicketReduction: '',
   totalOrders: 150,
   delayedOrders: 8,
   revenueImpact: 1250.50,

@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Latest App Bridge (req 2.2.3): api-key meta + CDN script MUST be
+         the first script in <head>. HtmlWebpackPlugin injects SHOPIFY_API_KEY
+         via templateParameters (webpack.config.js) and appends the app
+         bundle as deferred scripts after these tags. -->
+    <meta name="shopify-api-key" content="<%= SHOPIFY_API_KEY %>" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DelayGuard - Proactive Shipping Delay Notifications</title>
     <meta name="description" content="Proactive shipping delay detection and notification system for Shopify merchants">
@@ -11,6 +17,5 @@
 </head>
 <body>
     <div id="root"></div>
-    <script src="bundle.js"></script>
 </body>
 </html>
