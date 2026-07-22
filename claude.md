@@ -11,7 +11,8 @@ Shopify app (not a theme): React 18 + TS frontend, Koa + PostgreSQL + BullMQ/Red
 
 ## Canonical docs (point at these instead of re-explaining)
 
-- [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) — single source of truth for current state, metrics, and roadmap.
+- [LAUNCH_PLAN.md](LAUNCH_PLAN.md) — **active launch execution plan**: verified production-blocker ground truth + workstreams for multi-session execution. Doing launch work? Start here; its Appendix A is pre-verified — don't re-audit it.
+- [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) — single source of truth for current state, metrics, and roadmap. ⚠️ Readiness scores predate the 2026-07-21 production audit; LAUNCH_PLAN.md §1 is the accurate wiring status until reconciled (WS-I).
 - [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) — phase-by-phase technical specs and code examples.
 - [DEEP_DIVE_UX_UI_RESEARCH.md](DEEP_DIVE_UX_UI_RESEARCH.md) — UX strategy and feature prioritization.
 - [DATA_AVAILABILITY_ANALYSIS.md](DATA_AVAILABILITY_ANALYSIS.md) — every data point's source (Shopify / ShipEngine / SendGrid / Postgres).

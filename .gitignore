@@ -144,3 +144,6 @@ delayguard-app/docs/jsdoc/
 delayguard-app/docs/api/generated/
 delayguard-app/docs/api/swagger.json
 delayguard-app/docs/index.html
+
+# Private interview knowledge base (local-only, never pushed)
+interview-prep/
