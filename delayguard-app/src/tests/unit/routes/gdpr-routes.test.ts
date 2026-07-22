@@ -4,6 +4,7 @@
  */
 
 import Koa from 'koa';
+import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import request from 'supertest';
 import crypto from 'crypto';
@@ -34,8 +35,12 @@ describe('GDPR Routes', () => {
     });
     
     app.use(bodyParser());
-    app.use(gdprRoutes.routes());
-    app.use(gdprRoutes.allowedMethods());
+    // Mirror server.ts: routers carry no prefix (LAUNCH_PLAN A3);
+    // the mount point provides it.
+    const root = new Router();
+    root.use('/webhooks', gdprRoutes.routes());
+    app.use(root.routes());
+    app.use(root.allowedMethods());
 
     server = request(app.callback());
 
@@ -59,7 +64,7 @@ describe('GDPR Routes', () => {
       .digest('base64');
   }
 
-  describe('POST /gdpr/customers/data_request', () => {
+  describe('POST /webhooks/customers/data_request', () => {
     it('should process valid data request webhook', async() => {
       const webhookData = {
         shop_id: 123,
@@ -90,7 +95,7 @@ describe('GDPR Routes', () => {
       const hmac = generateHMAC(body);
 
       const response = await server
-        .post('/gdpr/customers/data_request')
+        .post('/webhooks/customers/data_request')
         .set('X-Shopify-Hmac-Sha256', hmac)
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);
@@ -116,7 +121,7 @@ describe('GDPR Routes', () => {
       };
 
       const response = await server
-        .post('/gdpr/customers/data_request')
+        .post('/webhooks/customers/data_request')
         .set('X-Shopify-Hmac-Sha256', 'invalid-hmac')
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);
@@ -148,7 +153,7 @@ describe('GDPR Routes', () => {
       const hmac = generateHMAC(body);
 
       const response = await server
-        .post('/gdpr/customers/data_request')
+        .post('/webhooks/customers/data_request')
         .set('X-Shopify-Hmac-Sha256', hmac)
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);
@@ -158,7 +163,7 @@ describe('GDPR Routes', () => {
     });
   });
 
-  describe('POST /gdpr/customers/redact', () => {
+  describe('POST /webhooks/customers/redact', () => {
     it('should process valid customer redaction webhook', async() => {
       const webhookData = {
         shop_id: 123,
@@ -177,7 +182,7 @@ describe('GDPR Routes', () => {
       const hmac = generateHMAC(body);
 
       const response = await server
-        .post('/gdpr/customers/redact')
+        .post('/webhooks/customers/redact')
         .set('X-Shopify-Hmac-Sha256', hmac)
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);
@@ -200,7 +205,7 @@ describe('GDPR Routes', () => {
       };
 
       const response = await server
-        .post('/gdpr/customers/redact')
+        .post('/webhooks/customers/redact')
         .set('X-Shopify-Hmac-Sha256', 'invalid-hmac')
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);
@@ -229,7 +234,7 @@ describe('GDPR Routes', () => {
       const hmac = generateHMAC(body);
 
       const response = await server
-        .post('/gdpr/customers/redact')
+        .post('/webhooks/customers/redact')
         .set('X-Shopify-Hmac-Sha256', hmac)
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);
@@ -239,7 +244,7 @@ describe('GDPR Routes', () => {
     });
   });
 
-  describe('POST /gdpr/shop/redact', () => {
+  describe('POST /webhooks/shop/redact', () => {
     it('should process valid shop redaction webhook', async() => {
       const webhookData = {
         shop_id: 123,
@@ -252,7 +257,7 @@ describe('GDPR Routes', () => {
       const hmac = generateHMAC(body);
 
       const response = await server
-        .post('/gdpr/shop/redact')
+        .post('/webhooks/shop/redact')
         .set('X-Shopify-Hmac-Sha256', hmac)
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);
@@ -270,7 +275,7 @@ describe('GDPR Routes', () => {
       };
 
       const response = await server
-        .post('/gdpr/shop/redact')
+        .post('/webhooks/shop/redact')
         .set('X-Shopify-Hmac-Sha256', 'invalid-hmac')
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);
@@ -294,7 +299,7 @@ describe('GDPR Routes', () => {
       const hmac = generateHMAC(body);
 
       const response = await server
-        .post('/gdpr/shop/redact')
+        .post('/webhooks/shop/redact')
         .set('X-Shopify-Hmac-Sha256', hmac)
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);
@@ -317,7 +322,7 @@ describe('GDPR Routes', () => {
       const hmac = generateHMAC(body);
 
       const response = await server
-        .post('/gdpr/shop/redact')
+        .post('/webhooks/shop/redact')
         .set('X-Shopify-Hmac-Sha256', hmac)
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);
@@ -338,7 +343,7 @@ describe('GDPR Routes', () => {
       webhookData.shop_id = 999;
 
       const response = await server
-        .post('/gdpr/shop/redact')
+        .post('/webhooks/shop/redact')
         .set('X-Shopify-Hmac-Sha256', hmac)
         .set('X-Shopify-Shop-Domain', 'test-shop.myshopify.com')
         .send(webhookData);

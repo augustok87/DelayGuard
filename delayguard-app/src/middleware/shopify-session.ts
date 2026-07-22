@@ -62,7 +62,12 @@ export const getShopDomain = (ctx: Context): string => {
  * @see https://shopify.dev/docs/apps/auth/oauth/session-tokens
  */
 export const requireAuth = async(ctx: Context, next: Next) => {
-  // Development mode: Skip authentication for easier testing
+  // ⚠️⚠️⚠️ DEV-ONLY AUTH BYPASS — MUST NEVER RUN IN PRODUCTION ⚠️⚠️⚠️
+  // LAUNCH_PLAN A2: this bypass is gated on NODE_ENV === "development",
+  // which is strictly narrower than the required `!== "production"` gate:
+  // production AND test both take the real session-token path. Vercel
+  // sets NODE_ENV=production (vercel.json `env`), so this branch is dead
+  // in every deployed environment. Do NOT widen this condition.
   if (process.env.NODE_ENV === "development" && !ctx.headers.authorization) {
     logger.debug("Development mode: Allowing request without authentication");
     ctx.state.shopDomain = "development.myshopify.com";
