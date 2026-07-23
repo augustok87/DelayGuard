@@ -17,10 +17,20 @@ import { processNotification } from '../../../queue/processors/notification';
 import { query } from '../../../database/connection';
 import { EmailService } from '../../../services/email-service';
 import { SMSService } from '../../../services/sms-service';
+import { billingService } from '../../../services/billing-service';
 
 jest.mock('../../../database/connection');
 jest.mock('../../../services/email-service');
 jest.mock('../../../services/sms-service');
+// SMS is a paid feature — the processor plan-gates dispatch. Default the mock
+// to "allowed" so the existing SMS-positive tests keep exercising dispatch;
+// the plan-gate describe block below overrides per-test.
+jest.mock('../../../services/billing-service', () => ({
+  billingService: {
+    getCurrentPlan: jest.fn().mockResolvedValue('pro'),
+    isSmsAllowed: jest.fn().mockReturnValue(true),
+  },
+}));
 jest.mock('../../../utils/logger', () => ({
   logger: {
     info: jest.fn(),
@@ -33,6 +43,15 @@ jest.mock('../../../utils/logger', () => ({
 const mockQuery = query as jest.MockedFunction<typeof query>;
 const MockEmailService = EmailService as jest.MockedClass<typeof EmailService>;
 const MockSMSService = SMSService as jest.MockedClass<typeof SMSService>;
+const mockGetCurrentPlan = billingService.getCurrentPlan as jest.Mock;
+const mockIsSmsAllowed = billingService.isSmsAllowed as jest.Mock;
+
+// clearAllMocks() (called in each describe's beforeEach) wipes the factory
+// defaults, so restore "SMS allowed" before every test unless overridden.
+function allowSmsByDefault(): void {
+  mockGetCurrentPlan.mockResolvedValue('pro');
+  mockIsSmsAllowed.mockReturnValue(true);
+}
 
 interface OrderRow {
   id: string;
@@ -152,6 +171,7 @@ describe('processNotification — settings-flag routing (v1.19 rule)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    allowSmsByDefault();
     emailSendMock = jest.fn().mockResolvedValue(undefined);
     smsSendMock = jest.fn().mockResolvedValue(undefined);
 
@@ -252,6 +272,7 @@ describe('processNotification — error propagation (BullMQ retry surface)', () 
 
   beforeEach(() => {
     jest.clearAllMocks();
+    allowSmsByDefault();
     emailSendMock = jest.fn().mockResolvedValue(undefined);
     smsSendMock = jest.fn().mockResolvedValue(undefined);
 
@@ -336,6 +357,7 @@ describe('processNotification — DB write side-effects (v1.19 field-population 
 
   beforeEach(() => {
     jest.clearAllMocks();
+    allowSmsByDefault();
     emailSendMock = jest.fn().mockResolvedValue(undefined);
     smsSendMock = jest.fn().mockResolvedValue(undefined);
 
@@ -420,6 +442,7 @@ describe('processNotification — merchant-vs-customer routing (Launch WS-E task
 
   beforeEach(() => {
     jest.clearAllMocks();
+    allowSmsByDefault();
     emailSendMock = jest.fn().mockResolvedValue(undefined);
     smsSendMock = jest.fn().mockResolvedValue(undefined);
 
@@ -616,5 +639,61 @@ describe('processNotification — settings columns come from app_settings, not s
     for (const col of SHOPS_COLUMNS) {
       expect(sql).toMatch(new RegExp(`\\bs\\.${col}\\b`));
     }
+  });
+});
+
+describe('processNotification — SMS plan-gate (Launch WS-D fix d)', () => {
+  let emailSendMock: jest.Mock;
+  let smsSendMock: jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    allowSmsByDefault();
+    emailSendMock = jest.fn().mockResolvedValue(undefined);
+    smsSendMock = jest.fn().mockResolvedValue(undefined);
+    MockEmailService.mockImplementation(
+      () => ({ sendDelayEmail: emailSendMock } as unknown as EmailService),
+    );
+    MockSMSService.mockImplementation(
+      () => ({ sendDelaySMS: smsSendMock } as unknown as SMSService),
+    );
+  });
+
+  it('dispatches SMS when the shop plan allows it (positive)', async() => {
+    mockGetCurrentPlan.mockResolvedValue('pro');
+    mockIsSmsAllowed.mockReturnValue(true);
+    wireQuery(makeOrderRow({ email_enabled: false }), makeAlertRow());
+
+    await processNotification(makeJob());
+
+    expect(smsSendMock).toHaveBeenCalledTimes(1);
+    // Gate consulted the shop's real tier (not just sms_enabled)
+    expect(mockGetCurrentPlan).toHaveBeenCalledWith('test-shop.myshopify.com');
+  });
+
+  it('does NOT dispatch SMS on the free tier even when sms_enabled is true (negative — the billing-leak guard)', async() => {
+    mockGetCurrentPlan.mockResolvedValue('free');
+    mockIsSmsAllowed.mockReturnValue(false);
+    wireQuery(makeOrderRow({ email_enabled: false }), makeAlertRow());
+
+    await processNotification(makeJob());
+
+    expect(smsSendMock).not.toHaveBeenCalled();
+    // and sms_sent is never marked
+    const smsUpdate = mockQuery.mock.calls.find(
+      ([sql]) => typeof sql === 'string' && sql.includes('sms_sent = TRUE'),
+    );
+    expect(smsUpdate).toBeUndefined();
+  });
+
+  it('free tier still sends the customer email (only SMS is gated)', async() => {
+    mockGetCurrentPlan.mockResolvedValue('free');
+    mockIsSmsAllowed.mockReturnValue(false);
+    wireQuery(makeOrderRow(), makeAlertRow());
+
+    await processNotification(makeJob());
+
+    expect(emailSendMock).toHaveBeenCalledTimes(1);
+    expect(smsSendMock).not.toHaveBeenCalled();
   });
 });

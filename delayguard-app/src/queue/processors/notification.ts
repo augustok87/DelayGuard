@@ -2,6 +2,7 @@ import { Job } from 'bullmq';
 import { logger } from '../../utils/logger';
 import { EmailService } from '../../services/email-service';
 import { SMSService } from '../../services/sms-service';
+import { billingService } from '../../services/billing-service';
 import { query } from '../../database/connection';
 // import { AppConfig } from '../../types'; // Available for future use
 
@@ -178,7 +179,25 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       );
     }
 
-    if (order.sms_enabled && recipientPhone && !alert.sms_sent) {
+    // SMS is a paid feature (Pro+). Gate dispatch on the shop's live plan tier
+    // — sms_enabled alone is not enough: a row left true from a prior paid
+    // period (or seeded data) would otherwise SMS on the free tier (billing
+    // leak). getCurrentPlan fails closed to "free", so a Shopify outage blocks
+    // SMS rather than leaking it. Only resolve the plan when SMS would actually
+    // fire, to avoid a GraphQL call on every email-only notification.
+    const smsWanted = order.sms_enabled && !!recipientPhone && !alert.sms_sent;
+    let smsAllowed = false;
+    if (smsWanted) {
+      const plan = await billingService.getCurrentPlan(order.shop_domain);
+      smsAllowed = billingService.isSmsAllowed(plan);
+      if (!smsAllowed) {
+        logger.warn(
+          `⚠️ SMS suppressed for order ${orderId}: shop plan "${plan}" does not include SMS (Pro+ required)`,
+        );
+      }
+    }
+
+    if (smsWanted && smsAllowed) {
       promises.push(
         smsService
           .sendDelaySMS(recipientPhone, orderInfo, delayDetails, {
