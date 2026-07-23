@@ -123,6 +123,66 @@ describe("MerchantApiService", () => {
       expect(result).toEqual(alerts);
     });
 
+    it("selects the Phase 2.1 intelligence columns (priority + financial + shipping address), field by field", async() => {
+      mockShopResolved();
+      mockQuery.mockResolvedValueOnce([]);
+
+      await service.getAlerts(SHOP);
+
+      const [alertsSql] = mockQuery.mock.calls[1];
+      const sql = alertsSql as string;
+
+      // Priority score (Phase 2.1.b) — denormalized on delay_alerts
+      expect(sql).toMatch(/da\.priority_score/);
+      expect(sql).toMatch(/da\.priority_level/);
+      // Financial breakdown (Phase 2.1.c) — order-level columns
+      expect(sql).toMatch(/o\.subtotal_price/);
+      expect(sql).toMatch(/o\.total_tax/);
+      expect(sql).toMatch(/o\.total_discounts/);
+      expect(sql).toMatch(/o\.total_shipping_price/);
+      // Shipping address (Phase 2.1.d) — order-level columns
+      expect(sql).toMatch(/o\.shipping_city/);
+      expect(sql).toMatch(/o\.shipping_province_code/);
+      expect(sql).toMatch(/o\.shipping_country_code/);
+      expect(sql).toMatch(/o\.shipping_zip/);
+    });
+
+    it("returns the intelligence fields verbatim (wire shape flows to api-mappers)", async() => {
+      const alerts = [
+        {
+          id: "alert-2",
+          order_id: "order-2",
+          status: "active",
+          delay_reason: "warehouse delay",
+          estimated_delay_days: 3,
+          notification_sent_at: null,
+          created_at: "2026-07-20T08:00:00.000Z",
+          updated_at: "2026-07-20T08:00:00.000Z",
+          order_number: "1002",
+          customer_email: "buyer2@example.com",
+          customer_name: "Buyer Two",
+          total_price: "149.99",
+          order_created_at: "2026-07-15T00:00:00.000Z",
+          priority_score: "87.5",
+          priority_level: "high",
+          subtotal_price: "120.00",
+          total_tax: "12.00",
+          total_discounts: "5.00",
+          total_shipping_price: "22.99",
+          shipping_city: "Austin",
+          shipping_province_code: "TX",
+          shipping_country_code: "US",
+          shipping_zip: "78701",
+        },
+      ];
+
+      mockShopResolved();
+      mockQuery.mockResolvedValueOnce(alerts);
+
+      const result = await service.getAlerts(SHOP);
+      expect(result).toEqual(alerts);
+    });
+
     it("returns an empty array when the shop has no alerts", async() => {
       mockShopResolved();
       mockQuery.mockResolvedValueOnce([]);

@@ -62,6 +62,19 @@ export interface AlertRow {
   customer_name: string;
   total_price: string;
   order_created_at: string;
+  // Phase 2.1.b — priority (denormalized on delay_alerts)
+  priority_score: string | null;
+  priority_level: string | null;
+  // Phase 2.1.c — financial breakdown (order-level)
+  subtotal_price: string | null;
+  total_tax: string | null;
+  total_discounts: string | null;
+  total_shipping_price: string | null;
+  // Phase 2.1.d — shipping address (order-level)
+  shipping_city: string | null;
+  shipping_province_code: string | null;
+  shipping_country_code: string | null;
+  shipping_zip: string | null;
 }
 
 export interface OrderRow {
@@ -183,7 +196,17 @@ export class MerchantApiService {
            o.customer_email,
            o.customer_name,
            o.total_price,
-           o.created_at as order_created_at
+           o.created_at as order_created_at,
+           da.priority_score,
+           da.priority_level,
+           o.subtotal_price,
+           o.total_tax,
+           o.total_discounts,
+           o.total_shipping_price,
+           o.shipping_city,
+           o.shipping_province_code,
+           o.shipping_country_code,
+           o.shipping_zip
          FROM delay_alerts da
          JOIN orders o ON da.order_id = o.id
          WHERE o.shop_id = $1
