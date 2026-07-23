@@ -53,9 +53,10 @@ describe('A3 — no router-level prefixes (mount-point prefixes only)', () => {
   it('billingRoutes has no /billing prefix', () => {
     expect(routerPrefix(billingRoutes)).toBeUndefined();
     const paths = layerPaths(billingRoutes);
-    for (const expected of ['/plans', '/subscription', '/subscribe', '/cancel', '/usage']) {
-      expect(paths).toContain(expected);
-    }
+    // ws-d rebuilt billing as a Shopify App Pricing plan-gate: Shopify hosts
+    // the entire charge lifecycle, so the only local route is the plan catalog
+    // (GET /plans). The old subscription/subscribe/cancel/usage routes are gone.
+    expect(paths).toContain('/plans');
     expect(paths.some((p) => p.startsWith('/billing/'))).toBe(false);
   });
 
