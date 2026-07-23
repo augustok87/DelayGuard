@@ -155,9 +155,16 @@ ${bodyHtml}
 function resolveLegalDir(): string | null {
   const candidates = [
     process.env.LEGAL_DOCS_DIR,
+    // Canonical in-project serving copy (delayguard-app/legal). Resolves the
+    // same from src/routes (ts-node) and dist/routes (compiled), and is the
+    // only location Vercel can reliably bundle — vercel.json `includeFiles`
+    // ships these two files with the serverless function. Files outside the
+    // project root (repo-root legal/) are NOT dependable in the bundle.
+    path.resolve(__dirname, "../../legal"),
+    path.resolve(process.cwd(), "legal"),
+    // Dev/monorepo fallbacks (repo-root legal/, when cwd = delayguard-app).
     path.resolve(__dirname, "../../../legal"),
     path.resolve(process.cwd(), "../legal"),
-    path.resolve(process.cwd(), "legal"),
   ].filter((candidate): candidate is string => Boolean(candidate));
 
   // An explicit override must not silently fall through to other locations

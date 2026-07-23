@@ -17,6 +17,7 @@ import { gdprRoutes } from './routes/gdpr';
 import { billingRoutes } from './routes/billing';
 import { trackingRefreshCronRoutes } from './routes/tracking-refresh-cron';
 import { queueSweepCronRoutes } from './routes/queue-sweep-cron';
+import { legalRoutes } from './routes/legal';
 import { PerformanceMonitor } from './services/performance-monitor';
 import { healthCheckService } from './services/health-check-service';
 import { appConfig as config } from './config/app-config';
@@ -118,6 +119,7 @@ router.use('/auth', authRoutes.routes());
 router.use('/monitoring', monitoringRoutes.routes());
 router.use('/webhooks', gdprRoutes.routes()); // GDPR webhooks (mandatory for Shopify)
 router.use('/billing', billingRoutes.routes()); // Billing and subscription management
+router.use('/legal', legalRoutes.routes(), legalRoutes.allowedMethods()); // Hosted privacy-policy / terms-of-service pages
 // Cron endpoints (LAUNCH_PLAN A4/B1) — CRON_SECRET-guarded background
 // processing within the 30s serverless cap.
 router.use('/api/cron', trackingRefreshCronRoutes.routes());

@@ -127,6 +127,28 @@ describe('server.ts real app (WS-A)', () => {
     });
   });
 
+  describe('H-1 — legal pages mounted on the real app', () => {
+    it('GET /legal/privacy-policy → 200 HTML', async() => {
+      const res = await request(callback).get('/legal/privacy-policy');
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('text/html');
+      expect(res.text).toContain('Privacy Policy');
+    });
+
+    it('GET /legal/terms-of-service → 200 HTML', async() => {
+      const res = await request(callback).get('/legal/terms-of-service');
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('text/html');
+      expect(res.text).toContain('Terms of Service');
+    });
+
+    it('GET /legal/<unknown> → 404', async() => {
+      await request(callback).get('/legal/does-not-exist').expect(404);
+    });
+  });
+
   describe('A4 — cron route auth', () => {
     it('wrong secret → 401', async() => {
       const res = await request(callback)
