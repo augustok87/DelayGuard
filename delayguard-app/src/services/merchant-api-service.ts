@@ -39,6 +39,22 @@ export class ShopNotFoundError extends Error {
   }
 }
 
+export class AlertNotFoundError extends Error {
+  public readonly alertId: string;
+  constructor(alertId: string) {
+    super(`Alert not found: ${alertId}`);
+    this.name = "AlertNotFoundError";
+    this.alertId = alertId;
+  }
+}
+
+export type AlertStatus = "active" | "resolved" | "dismissed";
+const ALERT_STATUSES: ReadonlySet<string> = new Set([
+  "active",
+  "resolved",
+  "dismissed",
+]);
+
 export class MerchantApiValidationError extends Error {
   public readonly code: string;
   constructor(message: string, code: string) {
@@ -579,6 +595,55 @@ export class MerchantApiService {
         "Failed to update merchant settings",
         error instanceof Error ? error : new Error(String(error)),
         { shopDomain },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Persist the merchant's triage status for one alert. Multi-tenant safe:
+   * the UPDATE is scoped through orders.shop_id so a shop can never mutate
+   * another shop's alert. Throws AlertNotFoundError (routes → 404) when the
+   * id doesn't exist or belongs to another shop, so a cross-tenant probe is
+   * indistinguishable from a missing id.
+   */
+  async updateAlertStatus(
+    shopDomain: string,
+    alertId: string,
+    status: AlertStatus,
+  ): Promise<void> {
+    // Validate BEFORE resolving the shop so a bad body fails fast.
+    if (!ALERT_STATUSES.has(status)) {
+      throw new MerchantApiValidationError(
+        "status must be one of: active, resolved, dismissed",
+        "INVALID_STATUS",
+      );
+    }
+
+    try {
+      const shopId = await this.resolveShopId(shopDomain);
+      const rows = await query<{ id: string }>(
+        `UPDATE delay_alerts
+         SET status = $1, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2
+           AND order_id IN (SELECT id FROM orders WHERE shop_id = $3)
+         RETURNING id`,
+        [status, alertId, shopId],
+      );
+      if (rows.length === 0) {
+        throw new AlertNotFoundError(alertId);
+      }
+    } catch (error) {
+      if (
+        error instanceof ShopNotFoundError ||
+        error instanceof AlertNotFoundError
+      ) {
+        throw error;
+      }
+      logger.error(
+        "Failed to update alert status",
+        error instanceof Error ? error : new Error(String(error)),
+        { shopDomain, alertId },
       );
       throw error;
     }

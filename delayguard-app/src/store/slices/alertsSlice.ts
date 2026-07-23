@@ -36,13 +36,29 @@ export const fetchAlerts = createAsyncThunk(
   },
 );
 
-// NOTE (G2): the backend exposes no PUT /api/alerts/:id or DELETE
-// /api/alerts/:id yet — resolve/dismiss/reopen are dashboard-local state
-// transitions until those endpoints land. These thunks are the single
-// wiring point when they do.
+// A status change (resolve/dismiss/reopen) is persisted through
+// PUT /api/alerts/:id/status so it survives a reload; any other field
+// update stays dashboard-local. The optimistic local update happens in the
+// fulfilled reducer regardless — a failed persist rejects the thunk (leaving
+// local state untouched) and surfaces the error.
 export const updateAlert = createAsyncThunk(
   'alerts/updateAlert',
-  async({ id, updates }: { id: string; updates: Partial<DelayAlert> }) => {
+  async(
+    { id, updates }: { id: string; updates: Partial<DelayAlert> },
+    { rejectWithValue },
+  ) => {
+    if (updates.status) {
+      try {
+        const response = await apiClient.updateAlertStatus(id, updates.status);
+        if (!response.success) {
+          return rejectWithValue(
+            response.error || 'Failed to update alert status',
+          );
+        }
+      } catch {
+        return rejectWithValue('Failed to update alert status');
+      }
+    }
     return { id, updates };
   },
 );

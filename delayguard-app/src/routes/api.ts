@@ -5,7 +5,9 @@ import { requireAuth, getShopDomain } from "../middleware/shopify-session";
 import {
   MerchantApiService,
   ShopNotFoundError,
+  AlertNotFoundError,
   MerchantApiValidationError,
+  AlertStatus,
 } from "../services/merchant-api-service";
 import {
   TestAlertService,
@@ -79,6 +81,11 @@ function respondWithServiceError(
     ctx.body = { error: "Shop not found" };
     return;
   }
+  if (error instanceof AlertNotFoundError) {
+    ctx.status = 404;
+    ctx.body = { error: "Alert not found" };
+    return;
+  }
   if (error instanceof MerchantApiValidationError) {
     ctx.status = 400;
     ctx.body = { error: error.message, code: error.code };
@@ -105,6 +112,28 @@ router.get("/alerts", requireAuth, async(ctx: Context) => {
     ctx.body = { success: true, data: alerts, count: alerts.length };
   } catch (error) {
     respondWithServiceError(ctx, error, "Failed to fetch alerts");
+  }
+});
+
+/**
+ * PUT /api/alerts/:id/status
+ * Persist the merchant's triage status for one alert
+ * (active | resolved | dismissed). Multi-tenant safe via the service.
+ */
+router.put("/alerts/:id/status", requireAuth, async(ctx: Context) => {
+  try {
+    const shopDomain = getShopDomain(ctx);
+    const alertId = ctx.params.id;
+    const body = ctx.request.body as { status?: string };
+    await merchantApi.updateAlertStatus(
+      shopDomain,
+      alertId,
+      body.status as AlertStatus,
+    );
+    ctx.status = 200;
+    ctx.body = { success: true };
+  } catch (error) {
+    respondWithServiceError(ctx, error, "Failed to update alert status");
   }
 });
 

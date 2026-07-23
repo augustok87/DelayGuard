@@ -15,9 +15,11 @@ import { apiClient } from '../../../src/utils/api-client';
 jest.mock('../../../src/utils/api-client', () => ({
   apiClient: {
     getAlerts: jest.fn(),
+    updateAlertStatus: jest.fn(),
   },
 }));
 const mockedGetAlerts = apiClient.getAlerts as jest.Mock;
+const mockedUpdateAlertStatus = apiClient.updateAlertStatus as jest.Mock;
 
 const mockAlert: DelayAlert = {
   id: 'alert-1',
@@ -223,14 +225,44 @@ describe('alertsSlice', () => {
       expect(store.getState().alerts.error).toBe('Failed to fetch alerts');
     });
 
-    it('updateAlert updates local state without fake latency or RNG', async() => {
+    it('updateAlert persists a status change through the API and updates local state', async() => {
+      mockedUpdateAlertStatus.mockResolvedValueOnce({ success: true });
       const store = createStore({ ...initialState, items: [mockAlert] });
 
       await store.dispatch(
         updateAlert({ id: 'alert-1', updates: { status: 'resolved' } }),
       );
 
+      // Persisted to the backend (survives a reload) …
+      expect(mockedUpdateAlertStatus).toHaveBeenCalledWith('alert-1', 'resolved');
+      // … and reflected optimistically in local state.
       expect(store.getState().alerts.items[0].status).toBe('resolved');
+    });
+
+    it('updateAlert rejects (no local mutation) when the API call fails', async() => {
+      mockedUpdateAlertStatus.mockResolvedValueOnce({
+        success: false,
+        error: 'Alert not found',
+      });
+      const store = createStore({ ...initialState, items: [mockAlert] });
+
+      await store.dispatch(
+        updateAlert({ id: 'alert-1', updates: { status: 'dismissed' } }),
+      );
+
+      expect(store.getState().alerts.items[0].status).toBe('active');
+      expect(store.getState().alerts.error).toBe('Alert not found');
+    });
+
+    it('updateAlert with no status change skips the API (pure local update)', async() => {
+      const store = createStore({ ...initialState, items: [mockAlert] });
+
+      await store.dispatch(
+        updateAlert({ id: 'alert-1', updates: { customerName: 'Renamed' } }),
+      );
+
+      expect(mockedUpdateAlertStatus).not.toHaveBeenCalled();
+      expect(store.getState().alerts.items[0].customerName).toBe('Renamed');
     });
 
     it('deleteAlert removes the alert from local state', async() => {

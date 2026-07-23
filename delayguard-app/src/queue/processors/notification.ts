@@ -161,9 +161,12 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
             recipientName,
           })
           .then(async() => {
-            // Mark email as sent
+            // Mark email as sent + stamp first-dispatch time (dashboard badge)
             await query(
-              `UPDATE delay_alerts SET email_sent = TRUE WHERE order_id = $1`,
+              `UPDATE delay_alerts
+               SET email_sent = TRUE,
+                   notification_sent_at = COALESCE(notification_sent_at, CURRENT_TIMESTAMP)
+               WHERE order_id = $1`,
               [orderId],
             );
             logger.info(`✅ Email sent for order ${orderId}`);
@@ -182,9 +185,12 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
             audience: recipientType,
           })
           .then(async() => {
-            // Mark SMS as sent
+            // Mark SMS as sent + stamp first-dispatch time (dashboard badge)
             await query(
-              `UPDATE delay_alerts SET sms_sent = TRUE WHERE order_id = $1`,
+              `UPDATE delay_alerts
+               SET sms_sent = TRUE,
+                   notification_sent_at = COALESCE(notification_sent_at, CURRENT_TIMESTAMP)
+               WHERE order_id = $1`,
               [orderId],
             );
             logger.info(`✅ SMS sent for order ${orderId}`);

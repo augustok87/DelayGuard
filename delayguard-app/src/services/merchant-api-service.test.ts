@@ -20,6 +20,7 @@ import {
   MerchantApiService,
   ShopNotFoundError,
   MerchantApiValidationError,
+  AlertNotFoundError,
 } from "./merchant-api-service";
 import { query } from "../database/connection";
 import { logger } from "../utils/logger";
@@ -198,6 +199,61 @@ describe("MerchantApiService", () => {
       await expect(service.getAlerts(SHOP)).rejects.toThrow(
         "connection refused",
       );
+      expect(logger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe("updateAlertStatus", () => {
+    it("rejects an out-of-enum status with a validation error BEFORE touching the DB", async() => {
+      await expect(
+        service.updateAlertStatus(SHOP, "42", "bogus" as never),
+      ).rejects.toBeInstanceOf(MerchantApiValidationError);
+      // No query at all — fails fast before resolveShopId
+      expect(mockQuery).not.toHaveBeenCalled();
+    });
+
+    it("scopes the UPDATE to the resolved shop_id (multi-tenant guard) and writes status + updated_at", async() => {
+      mockShopResolved();
+      mockQuery.mockResolvedValueOnce([{ id: "42" }]); // UPDATE ... RETURNING id
+
+      await service.updateAlertStatus(SHOP, "42", "resolved");
+
+      const [updateSql, updateParams] = mockQuery.mock.calls[1];
+      expect(updateSql).toMatch(/UPDATE\s+delay_alerts/i);
+      expect(updateSql).toMatch(/SET[\s\S]*status\s*=\s*\$1/i);
+      expect(updateSql).toMatch(/updated_at\s*=\s*CURRENT_TIMESTAMP/i);
+      // Cross-tenant guard: the row must belong to an order owned by this shop
+      expect(updateSql).toMatch(/shop_id\s*=\s*\$3/i);
+      expect(updateParams).toEqual(["resolved", "42", RESOLVED_SHOP_ID]);
+    });
+
+    it("accepts every allowed status value", async() => {
+      for (const status of ["active", "resolved", "dismissed"] as const) {
+        mockQuery.mockReset();
+        mockShopResolved();
+        mockQuery.mockResolvedValueOnce([{ id: "7" }]);
+        await expect(
+          service.updateAlertStatus(SHOP, "7", status),
+        ).resolves.toBeUndefined();
+      }
+    });
+
+    it("throws AlertNotFoundError when no row matches (wrong shop or missing id)", async() => {
+      mockShopResolved();
+      mockQuery.mockResolvedValueOnce([]); // UPDATE affected nothing
+
+      await expect(
+        service.updateAlertStatus(SHOP, "999", "resolved"),
+      ).rejects.toBeInstanceOf(AlertNotFoundError);
+    });
+
+    it("propagates a DB failure and logs", async() => {
+      mockShopResolved();
+      mockQuery.mockRejectedValueOnce(new Error("deadlock detected"));
+
+      await expect(
+        service.updateAlertStatus(SHOP, "42", "dismissed"),
+      ).rejects.toThrow("deadlock detected");
       expect(logger.error).toHaveBeenCalled();
     });
   });

@@ -422,6 +422,7 @@ describe('processDelayCheck — delay_alerts persistence (v1.19 field-population
     expect(insertCall?.[1]).toEqual([
       101, // order_id
       3, // delay_days
+      3, // estimated_delay_days (display copy)
       'WAREHOUSE_DELAY', // delay_reason
       '2026-07-25', // original_delivery_date
       '2026-07-30', // estimated_delivery_date
@@ -440,6 +441,7 @@ describe('processDelayCheck — delay_alerts persistence (v1.19 field-population
     expect(insertCall?.[1]).toEqual([
       101,
       2,
+      2, // estimated_delay_days (display copy)
       'DELAYED_STATUS',
       '2026-07-20',
       '2026-08-01',

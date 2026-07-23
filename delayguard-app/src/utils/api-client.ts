@@ -218,6 +218,22 @@ class ApiClient {
   }
 
   /**
+   * PUT /api/alerts/:id/status
+   * Persist the merchant's triage status for one alert
+   * (active | resolved | dismissed). Backs the dashboard resolve/dismiss
+   * actions so they survive a reload.
+   */
+  async updateAlertStatus(
+    id: string,
+    status: "active" | "resolved" | "dismissed",
+  ) {
+    return this.request<unknown>(`/alerts/${id}/status`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  /**
    * GET /api/analytics
    * Fetch analytics summary.
    * Wire shape: `AnalyticsSummary` from MerchantApiService — caller narrows.

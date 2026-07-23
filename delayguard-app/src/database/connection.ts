@@ -378,6 +378,32 @@ export async function runMigrations(): Promise<void> {
       END $$;
     `);
 
+    // Alert workflow lifecycle (Launch WS-3 integration fix c): merchant-facing
+    // resolve/dismiss state persisted on delay_alerts. Additive + nullable-safe:
+    //   - status: 'active' (default) | 'resolved' | 'dismissed'. The dispatch
+    //     lifecycle ('pending'/'sent'/'failed') is tracked separately via the
+    //     email_sent/sms_sent booleans; this column is purely the merchant's
+    //     triage state so dashboard resolve/dismiss survives a reload.
+    //   - estimated_delay_days: denormalized display copy of delay_days, read by
+    //     the dashboard (api-mappers reads estimated_delay_days).
+    //   - notification_sent_at: timestamp the first customer/merchant
+    //     notification fired, set by the notification processor.
+    // These three columns are referenced by MerchantApiService.getAlerts; before
+    // this block that SELECT was runtime-fatal against the real schema.
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='delay_alerts' AND column_name='status'
+        ) THEN
+          ALTER TABLE delay_alerts ADD COLUMN status VARCHAR(50) DEFAULT 'active';
+          ALTER TABLE delay_alerts ADD COLUMN estimated_delay_days INTEGER;
+          ALTER TABLE delay_alerts ADD COLUMN notification_sent_at TIMESTAMP;
+        END IF;
+      END $$;
+    `);
+
     // Phase 2.1.c (Financial Breakdown): order-level subtotal / tax / discount /
     // shipping captured at webhook time for pure-display narrative ("$199 =
     // $180 subtotal + $15 tax + $4 shipping − $0 discounts"). All four columns

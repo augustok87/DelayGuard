@@ -233,14 +233,18 @@ async function storeDelayAlert(orderId: number, delayResult: { delayDays?: numbe
     `INSERT INTO delay_alerts (
       order_id,
       delay_days,
+      estimated_delay_days,
       delay_reason,
       original_delivery_date,
       estimated_delivery_date
-    ) VALUES ($1, $2, $3, $4, $5)
+    ) VALUES ($1, $2, $3, $4, $5, $6)
     ON CONFLICT DO NOTHING
     RETURNING id`,
     [
       orderId,
+      delayResult.delayDays || 0,
+      // Denormalized display copy read by the dashboard (api-mappers reads
+      // estimated_delay_days). Kept equal to delay_days at creation.
       delayResult.delayDays || 0,
       delayResult.delayReason || 'UNKNOWN',
       delayResult.originalDelivery,
