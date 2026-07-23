@@ -225,9 +225,6 @@
  *         customerSatisfaction:
  *           type: string
  *           description: Customer satisfaction percentage
- *         supportTicketReduction:
- *           type: string
- *           description: Reduction in support tickets
  *
  * tags:
  *   - name: System
