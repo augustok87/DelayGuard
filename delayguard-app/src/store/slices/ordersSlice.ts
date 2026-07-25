@@ -1,6 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { OrdersState, OrderFilters, PaginationState } from '../../types/store';
 import { Order } from '../../types';
+import { apiClient } from '../../utils/api-client';
+import { mapOrderRows } from '../../utils/api-mappers';
+
+// How many orders the dashboard requests per load (server caps at 200).
+const ORDERS_FETCH_LIMIT = 50;
 
 // Initial state
 const initialState: OrdersState = {
@@ -16,81 +21,38 @@ const initialState: OrdersState = {
   },
 };
 
-// Mock data
-const mockOrders: Order[] = [
-  {
-    id: '1',
-    orderNumber: '#1001',
-    customerName: 'John Smith',
-    status: 'shipped',
-    trackingNumber: '1Z999AA1234567890',
-    carrierCode: 'UPS',
-    createdAt: '2024-01-15T10:30:00Z',
-    customerEmail: 'john@example.com',
-    totalAmount: 99.99,
-    currency: 'USD',
-  },
-  {
-    id: '2',
-    orderNumber: '#1002',
-    customerName: 'Sarah Johnson',
-    status: 'delivered',
-    trackingNumber: '1Z999BB9876543210',
-    carrierCode: 'UPS',
-    createdAt: '2024-01-14T14:20:00Z',
-    customerEmail: 'sarah@example.com',
-    totalAmount: 149.99,
-    currency: 'USD',
-  },
-  {
-    id: '3',
-    orderNumber: '#1003',
-    customerName: 'Mike Wilson',
-    status: 'processing',
-    createdAt: '2024-01-16T08:45:00Z',
-    customerEmail: 'mike@example.com',
-    totalAmount: 79.99,
-    currency: 'USD',
-  },
-];
-
-// Async thunks
+// Async thunks — G2: real API calls through the session-token
+// authenticated apiClient (mock orders deleted; the Orders tab renders
+// its designed empty state for a fresh shop).
 export const fetchOrders = createAsyncThunk(
   'orders/fetchOrders',
   async(_, { rejectWithValue }) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return mockOrders;
-    } catch (error) {
+      const response = await apiClient.getOrders(ORDERS_FETCH_LIMIT);
+      if (!response.success) {
+        return rejectWithValue(response.error || 'Failed to fetch orders');
+      }
+      return mapOrderRows(response.data ?? []);
+    } catch {
       return rejectWithValue('Failed to fetch orders');
     }
   },
 );
 
+// NOTE (G2): the backend exposes no PUT/DELETE /api/orders/:id — orders
+// are Shopify-canonical and read-only in DelayGuard. These thunks only
+// adjust dashboard-local presentation state.
 export const updateOrder = createAsyncThunk(
   'orders/updateOrder',
-  async({ id, updates }: { id: string; updates: Partial<Order> }, { rejectWithValue }) => {
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { id, updates };
-    } catch (error) {
-      return rejectWithValue('Failed to update order');
-    }
+  async({ id, updates }: { id: string; updates: Partial<Order> }) => {
+    return { id, updates };
   },
 );
 
 export const deleteOrder = createAsyncThunk(
   'orders/deleteOrder',
-  async(id: string, { rejectWithValue }) => {
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return id;
-    } catch (error) {
-      return rejectWithValue('Failed to delete order');
-    }
+  async(id: string) => {
+    return id;
   },
 );
 

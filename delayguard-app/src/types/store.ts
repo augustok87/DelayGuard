@@ -1,6 +1,5 @@
 // Redux Store Types
-import { AppSettings, DelayAlert, Order, Toast } from "./index";
-// import { StatsData } from './index'; // Available for future use
+import { AppSettings, DelayAlert, Order, StatsData, Toast } from "./index";
 
 // Root State
 export interface RootState {
@@ -17,6 +16,9 @@ export interface AppState {
   error: string | null;
   shop: string | null;
   initialized: boolean;
+  // G2: dashboard stats from GET /api/analytics (null until fetched or
+  // when the fetch fails — the header renders a quiet zero fallback).
+  stats: StatsData | null;
 }
 
 // Alerts State

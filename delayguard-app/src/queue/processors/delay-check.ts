@@ -5,6 +5,7 @@ import { DelayDetectionService, checkWarehouseDelay, checkTransitDelay } from '.
 import { query } from '../../database/connection';
 import { addNotificationJob } from '../setup';
 import { PriorityScoreService } from '../../services/priority-score-service';
+import { resolveTrackingUrl } from '../../utils/tracking-url';
 
 interface DelayCheckJobData {
   orderId: number;
@@ -19,22 +20,27 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
   try {
     logger.info(`🔍 Processing 3-rule delay check for order ${orderId}`);
 
-    // Get order details with all 3 threshold settings + Phase 2.1 fields
+    // Get order details with all 3 threshold settings + Phase 2.1 fields.
+    // Schema truth: threshold/flag columns live on app_settings (see
+    // runMigrations in database/connection.ts); shops only carries the
+    // merchant contact columns. Reading flags off the shops alias is
+    // runtime-fatal in production ("column s.email_enabled does not exist").
     const orderResult = await query(
       `SELECT o.*,
-              s.warehouse_delay_days,
-              s.carrier_delay_days,
-              s.transit_delay_days,
-              s.email_enabled,
-              s.sms_enabled,
+              st.warehouse_delay_days,
+              st.carrier_delay_days,
+              st.transit_delay_days,
+              st.email_enabled,
+              st.sms_enabled,
               s.merchant_email,
               s.merchant_phone,
               s.merchant_name,
-              s.warehouse_delays_enabled,
-              s.carrier_delays_enabled,
-              s.transit_delays_enabled
+              st.warehouse_delays_enabled,
+              st.carrier_delays_enabled,
+              st.transit_delays_enabled
        FROM orders o
        JOIN shops s ON o.shop_id = s.id
+       JOIN app_settings st ON st.shop_id = o.shop_id
        WHERE o.id = $1`,
       [orderId],
     );
@@ -154,17 +160,32 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
 
     // Send notification if ANY delay detected and notifications enabled
     if (delayDetected && triggeredDelayResult && delayType && (order.email_enabled || order.sms_enabled)) {
-      // Construct tracking URL (TrackingInfo doesn't include URL, so we build it)
-      const trackingUrl = trackingNumber
-        ? `https://tracking.example.com/${trackingNumber}`
-        : undefined;
+      // Real tracking URL (WS-E task E2): the fulfillment's stored
+      // carrier-provided tracking_url wins; otherwise build a carrier-pattern
+      // deep link from carrier_code + tracking number. Empty string when the
+      // order is unfulfilled (warehouse delays have nothing to track yet).
+      let storedTrackingUrl: string | null = null;
+      if (trackingNumber) {
+        const fulfillmentRows = await query<{ tracking_url: string | null }>(
+          `SELECT tracking_url FROM fulfillments
+           WHERE order_id = $1 AND tracking_number = $2
+           ORDER BY updated_at DESC LIMIT 1`,
+          [parseInt(order.id), trackingNumber],
+        );
+        storedTrackingUrl = fulfillmentRows[0]?.tracking_url ?? null;
+      }
+      const trackingUrl = resolveTrackingUrl(
+        storedTrackingUrl,
+        carrierCode || order.carrier_code,
+        trackingNumber,
+      );
 
       await addNotificationJob({
         orderId: parseInt(order.id),
         delayDetails: {
           estimatedDelivery: triggeredDelayResult.estimatedDelivery || '',
           trackingNumber: trackingNumber || '',
-          trackingUrl: trackingUrl || `https://tracking.example.com/unknown`,
+          trackingUrl: trackingUrl || '',
           delayDays: triggeredDelayResult.delayDays || 0,
           delayReason: triggeredDelayResult.delayReason || 'UNKNOWN',
         },
@@ -212,14 +233,18 @@ async function storeDelayAlert(orderId: number, delayResult: { delayDays?: numbe
     `INSERT INTO delay_alerts (
       order_id,
       delay_days,
+      estimated_delay_days,
       delay_reason,
       original_delivery_date,
       estimated_delivery_date
-    ) VALUES ($1, $2, $3, $4, $5)
+    ) VALUES ($1, $2, $3, $4, $5, $6)
     ON CONFLICT DO NOTHING
     RETURNING id`,
     [
       orderId,
+      delayResult.delayDays || 0,
+      // Denormalized display copy read by the dashboard (api-mappers reads
+      // estimated_delay_days). Kept equal to delay_days at creation.
       delayResult.delayDays || 0,
       delayResult.delayReason || 'UNKNOWN',
       delayResult.originalDelivery,

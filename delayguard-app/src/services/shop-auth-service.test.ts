@@ -156,6 +156,72 @@ describe("ShopAuthService", () => {
     });
   });
 
+  describe("exchangeCodeForToken", () => {
+    let mockFetch: jest.Mock;
+
+    beforeEach(() => {
+      mockFetch = jest.fn();
+      global.fetch = mockFetch as unknown as typeof fetch;
+    });
+
+    it("POSTs the code with client credentials to Shopify's access_token endpoint", async() => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async() => ({
+          access_token: "shpat_new_token",
+          scope: "read_orders,read_customers",
+        }),
+      });
+
+      const result = await service.exchangeCodeForToken(
+        "test-shop.myshopify.com",
+        "auth-code-123",
+      );
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe(
+        "https://test-shop.myshopify.com/admin/oauth/access_token",
+      );
+      expect(options.method).toBe("POST");
+      expect(options.headers["Content-Type"]).toBe("application/json");
+      expect(JSON.parse(options.body)).toEqual({
+        client_id: "test_api_key",
+        client_secret: "test_api_secret",
+        code: "auth-code-123",
+      });
+
+      expect(result).toEqual({
+        accessToken: "shpat_new_token",
+        scope: "read_orders,read_customers",
+      });
+    });
+
+    it("throws on a non-OK response from Shopify", async() => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+      });
+
+      await expect(
+        service.exchangeCodeForToken("test-shop.myshopify.com", "bad-code"),
+      ).rejects.toThrow(/token exchange failed/i);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it("throws when the response body lacks an access_token", async() => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async() => ({ scope: "read_orders" }),
+      });
+
+      await expect(
+        service.exchangeCodeForToken("test-shop.myshopify.com", "code"),
+      ).rejects.toThrow(/token exchange/i);
+    });
+  });
+
   describe("loadShopByDomain", () => {
     it("returns a typed ShopMetadata record (camelCase) when the shop exists", async() => {
       const created = new Date("2024-01-15T10:00:00Z");

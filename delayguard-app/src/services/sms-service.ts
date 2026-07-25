@@ -2,6 +2,14 @@ const twilio = require("twilio");
 import { OrderInfo, DelayDetails } from "../types";
 import { PingResult, PING_TIMEOUT_MS } from "./ping-result";
 
+export interface SendDelaySMSOptions {
+  /**
+   * Who receives the SMS. Merchant-routed alerts (warehouse delays,
+   * WS-E task E3) use operational copy instead of "your order".
+   */
+  audience?: "customer" | "merchant";
+}
+
 interface TwilioAccountContext {
   fetch: () => Promise<unknown>;
 }
@@ -36,8 +44,14 @@ export class SMSService {
     phone: string,
     orderInfo: OrderInfo,
     delayDetails: DelayDetails,
+    options?: SendDelaySMSOptions,
   ): Promise<void> {
-    const message = `Hi ${orderInfo.customerName}, your order #${orderInfo.orderNumber} is delayed. New delivery: ${delayDetails.estimatedDelivery}. Track: ${delayDetails.trackingUrl}`;
+    // Merchant-routed alerts (warehouse delays, WS-E task E3) get operational
+    // copy about the customer's order; customers get second-person copy.
+    const message =
+      options?.audience === "merchant"
+        ? `DelayGuard: order #${orderInfo.orderNumber} for ${orderInfo.customerName} is delayed (${delayDetails.delayReason}). New ETA: ${delayDetails.estimatedDelivery}. Track: ${delayDetails.trackingUrl}`
+        : `Hi ${orderInfo.customerName}, your order #${orderInfo.orderNumber} is delayed. New delivery: ${delayDetails.estimatedDelivery}. Track: ${delayDetails.trackingUrl}`;
 
     try {
       await this.client.messages.create({

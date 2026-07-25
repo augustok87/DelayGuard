@@ -29,7 +29,7 @@ function makeDelayDetails(
   return {
     estimatedDelivery: "2026-05-12",
     trackingNumber: "1Z999AA1234567890",
-    trackingUrl: "https://tracking.example.com/1Z999AA1234567890",
+    trackingUrl: "https://www.ups.com/track?tracknum=1Z999AA1234567890",
     delayDays: 3,
     delayReason: "Weather delay",
     ...overrides,
@@ -284,5 +284,86 @@ describe("SMSService.sendDelaySMS", () => {
     );
 
     expect(messagesCreateMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("SMSService.sendDelaySMS — merchant audience (Launch WS-E, task E3)", () => {
+  let SMSService: typeof import("./sms-service").SMSService;
+  let smsService: import("./sms-service").SMSService;
+  let messagesCreateMock: jest.Mock;
+
+  beforeEach(() => {
+    jest.resetModules();
+    messagesCreateMock = jest.fn().mockResolvedValue({ sid: "SM_TEST" });
+    twilioMock.mockReturnValue({
+      messages: { create: messagesCreateMock },
+      api: { v2010: { accounts: jest.fn() } },
+    });
+    SMSService = require("./sms-service").SMSService;
+    smsService = new SMSService("AC_TEST_SID", "auth-token", "+15551234567");
+  });
+
+  it("defaults to the customer-facing copy ('Hi <customerName>, your order …') when no audience is given", async() => {
+    await smsService.sendDelaySMS(
+      "+15558675309",
+      makeOrderInfo({ customerName: "Jane Doe" }),
+      makeDelayDetails(),
+    );
+
+    expect(messagesCreateMock.mock.calls[0][0].body).toContain(
+      "Hi Jane Doe, your order",
+    );
+  });
+
+  it("merchant audience: sends operational copy naming the customer's order, NOT 'your order' second-person copy", async() => {
+    await smsService.sendDelaySMS(
+      "+15550001111",
+      makeOrderInfo({ customerName: "Jane Doe", orderNumber: "1001" }),
+      makeDelayDetails({ delayReason: "WAREHOUSE_DELAY" }),
+      { audience: "merchant" },
+    );
+
+    const body = messagesCreateMock.mock.calls[0][0].body;
+    expect(body).toContain("#1001");
+    expect(body).toContain("Jane Doe");
+    expect(body).toContain("WAREHOUSE_DELAY");
+    expect(body).not.toContain("your order");
+  });
+
+  it("merchant audience: still interpolates estimatedDelivery and trackingUrl (v1.19 field-population rule)", async() => {
+    await smsService.sendDelaySMS(
+      "+15550001111",
+      makeOrderInfo(),
+      makeDelayDetails({
+        estimatedDelivery: "2026-06-30",
+        trackingUrl: "https://www.ups.com/track?tracknum=1Z999AA1234567890",
+      }),
+      { audience: "merchant" },
+    );
+
+    const body = messagesCreateMock.mock.calls[0][0].body;
+    expect(body).toContain("2026-06-30");
+    expect(body).toContain(
+      "https://www.ups.com/track?tracknum=1Z999AA1234567890",
+    );
+  });
+
+  it("explicit customer audience matches the default copy (regression guard)", async() => {
+    await smsService.sendDelaySMS(
+      "+15558675309",
+      makeOrderInfo(),
+      makeDelayDetails(),
+      { audience: "customer" },
+    );
+    const explicitBody = messagesCreateMock.mock.calls[0][0].body;
+
+    await smsService.sendDelaySMS(
+      "+15558675309",
+      makeOrderInfo(),
+      makeDelayDetails(),
+    );
+    const defaultBody = messagesCreateMock.mock.calls[1][0].body;
+
+    expect(explicitBody).toBe(defaultBody);
   });
 });

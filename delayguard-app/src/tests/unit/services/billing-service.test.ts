@@ -1,403 +1,259 @@
 /**
- * Billing Service Tests
- * Tests for Shopify Billing API integration
+ * Billing Service Tests — Shopify App Pricing plan gate (LAUNCH_PLAN WS-F F1)
+ *
+ * The old fake-charge / local-subscriptions flow is deleted. BillingService
+ * is now a thin plan-gate: it reads the shop's current subscription from the
+ * Shopify Admin GraphQL API (currentAppInstallation.activeSubscriptions) and
+ * maps it to a plan tier. On ANY failure it FAILS CLOSED to the free tier.
  */
 
 import { BillingService } from '../../../services/billing-service';
 import { query } from '../../../database/connection';
-import { logger } from '../../../utils/logger';
-import type { AppSubscription } from '../../../types';
+import { createGraphQLClient } from '../../../services/shopify-service';
 
 // Mock dependencies
 jest.mock('../../../database/connection');
-jest.mock('../../../utils/logger');
+jest.mock('../../../utils/logger', () => ({
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+jest.mock('../../../services/shopify-service', () => ({
+  createGraphQLClient: jest.fn(),
+}));
 
 const mockQuery = query as jest.MockedFunction<typeof query>;
-const mockLogger = logger as jest.Mocked<typeof logger>;
+const mockCreateGraphQLClient = createGraphQLClient as jest.MockedFunction<
+  typeof createGraphQLClient
+>;
 
-describe('BillingService', () => {
+const testShop = 'test-store.myshopify.com';
+
+/** Queue the shops access-token lookup that getCurrentPlan performs. */
+const mockShopTokenLookup = (): void => {
+  mockQuery.mockResolvedValueOnce([{ access_token: 'shpat_test-token' }]);
+};
+
+/** Wire the GraphQL client mock to return the given active subscriptions. */
+const mockActiveSubscriptions = (
+  subscriptions: Array<{ name: string; status: string }>,
+): jest.Mock => {
+  const graphqlQuery = jest.fn().mockResolvedValue({
+    data: {
+      currentAppInstallation: {
+        activeSubscriptions: subscriptions,
+      },
+    },
+  });
+  mockCreateGraphQLClient.mockResolvedValue({ query: graphqlQuery });
+  return graphqlQuery;
+};
+
+describe('BillingService (plan gate)', () => {
   let billingService: BillingService;
 
   beforeEach(() => {
     billingService = new BillingService();
     jest.clearAllMocks();
+    mockQuery.mockReset();
+    mockCreateGraphQLClient.mockReset();
   });
 
   describe('getPlanConfig', () => {
-    it('should return free plan configuration', () => {
+    it('returns the free plan configuration', () => {
       const plan = billingService.getPlanConfig('free');
-
-      expect(plan).toEqual({
-        name: 'Free Plan',
-        price: 0,
-        trial_days: 0,
-        features: [
-          '50 delay alerts per month',
-          'Email notifications',
-          'Basic analytics',
-          'Email support',
-        ],
-        monthly_alert_limit: 50,
-      });
+      expect(plan.name).toBe('Free Plan');
+      expect(plan.price).toBe(0);
+      expect(plan.monthly_alert_limit).toBe(50);
     });
 
-    it('should return pro plan configuration', () => {
+    it('returns the pro plan configuration at $7', () => {
       const plan = billingService.getPlanConfig('pro');
-
-      expect(plan).toEqual({
-        name: 'Pro Plan',
-        price: 7,
-        trial_days: 14,
-        features: [
-          'Unlimited delay alerts',
-          'Email and SMS notifications',
-          'Advanced analytics',
-          'Custom templates',
-          'Priority email support',
-        ],
-        monthly_alert_limit: undefined,
-      });
+      expect(plan.name).toBe('Pro Plan');
+      expect(plan.price).toBe(7);
     });
 
-    it('should return enterprise plan configuration', () => {
+    it('returns the enterprise plan configuration at $25', () => {
       const plan = billingService.getPlanConfig('enterprise');
-
-      expect(plan).toEqual({
-        name: 'Enterprise Plan',
-        price: 25,
-        trial_days: 14,
-        features: [
-          'Unlimited delay alerts',
-          'Email and SMS notifications',
-          'Advanced analytics with custom reports',
-          'White-label notifications',
-          'API access',
-          'Custom integrations',
-          'Dedicated account manager',
-          '24/7 phone support',
-        ],
-        monthly_alert_limit: undefined,
-      });
+      expect(plan.name).toBe('Enterprise Plan');
+      expect(plan.price).toBe(25);
     });
 
-    it('should throw error for invalid plan', () => {
-      expect(() => {
-        billingService.getPlanConfig('invalid' as 'free');
-      }).toThrow('Invalid plan name: invalid');
+    it('throws for an invalid plan name', () => {
+      expect(() => billingService.getPlanConfig('invalid' as 'free')).toThrow(
+        'Invalid plan name: invalid',
+      );
     });
   });
 
-  describe('getSubscription', () => {
-    it('should retrieve active subscription', async() => {
-      const mockSubscription: AppSubscription = {
-        id: 'sub-123',
-        shop_id: 'shop-uuid',
-        plan_name: 'pro',
-        status: 'active',
-        current_period_start: new Date('2024-01-01'),
-        current_period_end: new Date('2024-02-01'),
-        trial_ends_at: new Date('2024-01-15'),
-        shopify_charge_id: 'charge-123',
-        monthly_alert_count: 15,
-        created_at: new Date('2024-01-01'),
-        updated_at: new Date('2024-01-01'),
-      };
+  describe('getCurrentPlan', () => {
+    it('returns "pro" when the shop has an active Pro subscription', async() => {
+      mockShopTokenLookup();
+      mockActiveSubscriptions([{ name: 'Pro Plan', status: 'ACTIVE' }]);
 
-      mockQuery.mockResolvedValueOnce([mockSubscription]);
-
-      const result = await billingService.getSubscription('shop-uuid');
-
-      expect(result).toEqual(mockSubscription);
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT * FROM subscriptions'),
-        ['shop-uuid', 'cancelled'],
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
+        'pro',
+      );
+      expect(mockCreateGraphQLClient).toHaveBeenCalledWith(
+        testShop,
+        'shpat_test-token',
       );
     });
 
-    it('should return null if no subscription found', async() => {
-      mockQuery.mockResolvedValueOnce([]);
+    it('returns "enterprise" when the shop has an active Enterprise subscription', async() => {
+      mockShopTokenLookup();
+      mockActiveSubscriptions([{ name: 'Enterprise Plan', status: 'ACTIVE' }]);
 
-      const result = await billingService.getSubscription('shop-uuid');
-
-      expect(result).toBeNull();
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
+        'enterprise',
+      );
     });
 
-    it('should handle database errors', async() => {
-      mockQuery.mockRejectedValueOnce(new Error('Database error'));
+    it('queries currentAppInstallation.activeSubscriptions with name and status', async() => {
+      mockShopTokenLookup();
+      const graphqlQuery = mockActiveSubscriptions([
+        { name: 'Pro Plan', status: 'ACTIVE' },
+      ]);
 
-      await expect(
-        billingService.getSubscription('shop-uuid'),
-      ).rejects.toThrow('Database error');
+      await billingService.getCurrentPlan(testShop);
+
+      const queryString = graphqlQuery.mock.calls[0][0] as string;
+      expect(queryString).toContain('currentAppInstallation');
+      expect(queryString).toContain('activeSubscriptions');
+      expect(queryString).toContain('name');
+      expect(queryString).toContain('status');
     });
-  });
 
-  describe('createSubscription', () => {
-    it('should create free subscription successfully', async() => {
-      const mockSubscription: AppSubscription = {
-        id: 'sub-new',
-        shop_id: 'shop-uuid',
-        plan_name: 'free',
-        status: 'active',
-        current_period_start: new Date(),
-        current_period_end: new Date(),
-        monthly_alert_count: 0,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
+    it('returns "free" when there are no active subscriptions', async() => {
+      mockShopTokenLookup();
+      mockActiveSubscriptions([]);
 
-      mockQuery.mockResolvedValueOnce([mockSubscription]);
-
-      const result = await billingService.createSubscription(
-        'shop-uuid',
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
         'free',
       );
+    });
 
-      expect(result).toEqual(mockSubscription);
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO subscriptions'),
-        expect.arrayContaining(['shop-uuid', 'free', 'active']),
+    it('ignores non-ACTIVE subscriptions (fail closed)', async() => {
+      mockShopTokenLookup();
+      mockActiveSubscriptions([
+        { name: 'Pro Plan', status: 'CANCELLED' },
+        { name: 'Enterprise Plan', status: 'FROZEN' },
+      ]);
+
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
+        'free',
       );
     });
 
-    it('should create pro subscription with trial', async() => {
-      const mockSubscription: AppSubscription = {
-        id: 'sub-new',
-        shop_id: 'shop-uuid',
-        plan_name: 'pro',
-        status: 'active',
-        current_period_start: new Date(),
-        current_period_end: new Date(),
-        trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-        monthly_alert_count: 0,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
+    it('maps subscription names case-insensitively', async() => {
+      mockShopTokenLookup();
+      mockActiveSubscriptions([{ name: 'DelayGuard PRO', status: 'ACTIVE' }]);
 
-      mockQuery.mockResolvedValueOnce([mockSubscription]);
-
-      const result = await billingService.createSubscription(
-        'shop-uuid',
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
         'pro',
-        'charge-123',
-      );
-
-      expect(result.plan_name).toBe('pro');
-      expect(result.trial_ends_at).toBeDefined();
-    });
-  });
-
-  describe('updateSubscription', () => {
-    it('should update subscription status', async() => {
-      const mockUpdatedSubscription: AppSubscription = {
-        id: 'sub-123',
-        shop_id: 'shop-uuid',
-        plan_name: 'pro',
-        status: 'cancelled',
-        current_period_start: new Date('2024-01-01'),
-        current_period_end: new Date('2024-02-01'),
-        cancelled_at: new Date(),
-        monthly_alert_count: 15,
-        created_at: new Date('2024-01-01'),
-        updated_at: new Date(),
-      };
-
-      mockQuery.mockResolvedValueOnce([mockUpdatedSubscription]);
-
-      const result = await billingService.updateSubscription('sub-123', {
-        status: 'cancelled',
-        cancelled_at: new Date(),
-      });
-
-      expect(result.status).toBe('cancelled');
-      expect(result.cancelled_at).toBeDefined();
-    });
-
-    it('should increment alert count', async() => {
-      const mockSubscription: AppSubscription = {
-        id: 'sub-123',
-        shop_id: 'shop-uuid',
-        plan_name: 'free',
-        status: 'active',
-        current_period_start: new Date(),
-        current_period_end: new Date(),
-        monthly_alert_count: 10,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-
-      mockQuery.mockResolvedValueOnce([mockSubscription]);
-
-      await billingService.incrementAlertCount('sub-123');
-
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE subscriptions'),
-        expect.arrayContaining(['sub-123']),
       );
     });
-  });
 
-  describe('checkAlertLimit', () => {
-    it('should allow alerts within free plan limit', async() => {
-      const mockSubscription: AppSubscription = {
-        id: 'sub-123',
-        shop_id: 'shop-uuid',
-        plan_name: 'free',
-        status: 'active',
-        current_period_start: new Date(),
-        current_period_end: new Date(),
-        monthly_alert_count: 30,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
+    it('picks the highest tier when multiple subscriptions are active', async() => {
+      mockShopTokenLookup();
+      mockActiveSubscriptions([
+        { name: 'Pro Plan', status: 'ACTIVE' },
+        { name: 'Enterprise Plan', status: 'ACTIVE' },
+      ]);
 
-      mockQuery.mockResolvedValueOnce([mockSubscription]);
-
-      const result = await billingService.checkAlertLimit('shop-uuid');
-
-      expect(result).toEqual({
-        allowed: true,
-        current_count: 30,
-        limit: 50,
-        plan_name: 'free',
-        upgrade_required: false,
-      });
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
+        'enterprise',
+      );
     });
 
-    it('should block alerts exceeding free plan limit', async() => {
-      const mockSubscription: AppSubscription = {
-        id: 'sub-123',
-        shop_id: 'shop-uuid',
-        plan_name: 'free',
-        status: 'active',
-        current_period_start: new Date(),
-        current_period_end: new Date(),
-        monthly_alert_count: 50,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
+    it('returns "free" for an unrecognized active plan name (fail closed)', async() => {
+      mockShopTokenLookup();
+      mockActiveSubscriptions([{ name: 'Mystery Plan', status: 'ACTIVE' }]);
 
-      mockQuery.mockResolvedValueOnce([mockSubscription]);
-
-      const result = await billingService.checkAlertLimit('shop-uuid');
-
-      expect(result).toEqual({
-        allowed: false,
-        current_count: 50,
-        limit: 50,
-        plan_name: 'free',
-        upgrade_required: true,
-      });
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
+        'free',
+      );
     });
 
-    it('should always allow alerts for pro plan', async() => {
-      const mockSubscription: AppSubscription = {
-        id: 'sub-123',
-        shop_id: 'shop-uuid',
-        plan_name: 'pro',
-        status: 'active',
-        current_period_start: new Date(),
-        current_period_end: new Date(),
-        monthly_alert_count: 1000,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-
-      mockQuery.mockResolvedValueOnce([mockSubscription]);
-
-      const result = await billingService.checkAlertLimit('shop-uuid');
-
-      expect(result).toEqual({
-        allowed: true,
-        current_count: 1000,
-        limit: undefined,
-        plan_name: 'pro',
-      });
-    });
-
-    it('should handle subscription not found', async() => {
+    it('returns "free" when the shop is not in the database (fail closed)', async() => {
       mockQuery.mockResolvedValueOnce([]);
 
-      const result = await billingService.checkAlertLimit('shop-uuid');
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
+        'free',
+      );
+      expect(mockCreateGraphQLClient).not.toHaveBeenCalled();
+    });
 
-      expect(result).toEqual({
-        allowed: false,
-        current_count: 0,
-        limit: 0,
-        plan_name: 'none',
-        error: 'No active subscription found',
+    it('returns "free" when the database lookup fails (fail closed)', async() => {
+      mockQuery.mockRejectedValueOnce(new Error('connection refused'));
+
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
+        'free',
+      );
+    });
+
+    it('returns "free" when the Shopify GraphQL query fails (fail closed)', async() => {
+      mockShopTokenLookup();
+      mockCreateGraphQLClient.mockResolvedValue({
+        query: jest
+          .fn()
+          .mockRejectedValue(new Error('GraphQL error: throttled')),
       });
+
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
+        'free',
+      );
+    });
+
+    it('returns "free" when the GraphQL response has no installation data (fail closed)', async() => {
+      mockShopTokenLookup();
+      mockCreateGraphQLClient.mockResolvedValue({
+        query: jest.fn().mockResolvedValue({ data: undefined }),
+      });
+
+      await expect(billingService.getCurrentPlan(testShop)).resolves.toBe(
+        'free',
+      );
+    });
+
+    it('never touches a local subscriptions table', async() => {
+      mockShopTokenLookup();
+      mockActiveSubscriptions([{ name: 'Pro Plan', status: 'ACTIVE' }]);
+
+      await billingService.getCurrentPlan(testShop);
+
+      for (const call of mockQuery.mock.calls) {
+        expect(String(call[0])).not.toMatch(/subscriptions/i);
+      }
     });
   });
 
-  describe('generateRecurringCharge', () => {
-    it('should generate charge for pro plan', () => {
-      const charge = billingService.generateRecurringCharge(
-        'pro',
-        'https://example.com/billing/callback',
-        false,
-      );
-
-      expect(charge).toEqual({
-        name: 'Pro Plan',
-        price: '7.00',
-        return_url: 'https://example.com/billing/callback',
-        trial_days: 14,
-        test: false,
-      });
-    });
-
-    it('should generate test charge for development', () => {
-      const charge = billingService.generateRecurringCharge(
-        'enterprise',
-        'https://example.com/billing/callback',
-        true,
-      );
-
-      expect(charge).toEqual({
-        name: 'Enterprise Plan',
-        price: '25.00',
-        return_url: 'https://example.com/billing/callback',
-        trial_days: 14,
-        test: true,
-      });
-    });
-
-    it('should throw error for free plan charge', () => {
-      expect(() => {
-        billingService.generateRecurringCharge(
-          'free',
-          'https://example.com/billing/callback',
-        );
-      }).toThrow('Cannot create charge for free plan');
+  describe('meetsPlan', () => {
+    it.each([
+      ['free', 'free', true],
+      ['free', 'pro', false],
+      ['free', 'enterprise', false],
+      ['pro', 'free', true],
+      ['pro', 'pro', true],
+      ['pro', 'enterprise', false],
+      ['enterprise', 'pro', true],
+      ['enterprise', 'enterprise', true],
+    ] as const)('meetsPlan(%s, %s) === %s', (tier, required, expected) => {
+      expect(billingService.meetsPlan(tier, required)).toBe(expected);
     });
   });
 
-  describe('cancelSubscription', () => {
-    it('should cancel active subscription', async() => {
-      const mockCancelledSubscription: AppSubscription = {
-        id: 'sub-123',
-        shop_id: 'shop-uuid',
-        plan_name: 'pro',
-        status: 'cancelled',
-        current_period_start: new Date('2024-01-01'),
-        current_period_end: new Date('2024-02-01'),
-        cancelled_at: new Date(),
-        monthly_alert_count: 15,
-        created_at: new Date('2024-01-01'),
-        updated_at: new Date(),
-      };
+  describe('isSmsAllowed', () => {
+    it('denies SMS on the free tier', () => {
+      expect(billingService.isSmsAllowed('free')).toBe(false);
+    });
 
-      mockQuery.mockResolvedValueOnce([mockCancelledSubscription]);
-
-      const result = await billingService.cancelSubscription('shop-uuid');
-
-      expect(result.status).toBe('cancelled');
-      expect(result.cancelled_at).toBeDefined();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Subscription cancelled'),
-        expect.any(Object),
-      );
+    it('allows SMS on pro and enterprise tiers', () => {
+      expect(billingService.isSmsAllowed('pro')).toBe(true);
+      expect(billingService.isSmsAllowed('enterprise')).toBe(true);
     });
   });
 });
-

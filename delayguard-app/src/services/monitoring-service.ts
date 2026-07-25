@@ -460,15 +460,12 @@ export class MonitoringService {
   }
 
   private async getAlertRules(): Promise<AlertRule[]> {
-    try {
-      const result = await this.db.query(
-        "SELECT * FROM alert_rules WHERE enabled = true ORDER BY severity DESC",
-      );
-      return result.rows;
-    } catch (error) {
-      // Return empty array if database query fails
-      return [];
-    }
+    // LAUNCH_PLAN.md decision D2: internal alert-rule persistence
+    // (alert_rules table) is cut from launch scope — the table is not
+    // created by runMigrations(). External monitoring (e.g. Sentry,
+    // UptimeRobot) is the post-launch answer; DB-backed rules can return
+    // here behind a real migration if that decision is revisited.
+    return [];
   }
 
   private async getMetricValue(
@@ -511,30 +508,10 @@ export class MonitoringService {
   }
 
   private async sendAlertNotification(alert: Alert): Promise<void> {
-    // This would integrate with your notification services
+    // LAUNCH_PLAN.md decision D2: alert persistence (alerts table) is cut
+    // from launch scope — the table is not created by runMigrations().
+    // Alerts are logged and kept in the in-memory `this.alerts` map only.
     logger.info(`ALERT [${alert.severity.toUpperCase()}]: ${alert.message}`);
-
-    // Store alert in database
-    try {
-      await this.db.query(
-        `
-        INSERT INTO alerts (id, rule_id, severity, message, value, threshold, timestamp, resolved)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      `,
-        [
-          alert.id,
-          alert.ruleId,
-          alert.severity,
-          alert.message,
-          alert.value,
-          alert.threshold,
-          alert.timestamp,
-          alert.resolved,
-        ],
-      );
-    } catch (error) {
-      logger.error("Monitoring service error", error as Error);
-    }
   }
 
   async close(): Promise<void> {

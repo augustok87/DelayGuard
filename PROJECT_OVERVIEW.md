@@ -1,9 +1,33 @@
 # DelayGuard - Project Overview & Roadmap
 
-**Last Updated**: May 15, 2026
-**Current Phase**: ✅ Phase 1 + Audit Waves 1-7 (largely closed) — **Phase 2.1.a–e shipped 2026-05-15** (ingestion + priority score + financial breakdown + shipping address + test-alert endpoint); Phase 2.1.f (customer-intelligence UI) pending
-**Latest Update**: v1.52 — Phase 2.1.e test-alert endpoint (dashboard-only POST `/api/test-alert` + new `TestAlertService` thin wrapper around EmailService/SMSService + per-channel `app_settings` flag honoring + per-request channel-picker + per-request recipient-override + dry-run dispatch — no DB write, no BullMQ enqueue; +21 sibling tests, backend complete, frontend wiring deferred to 2.1.f)
+**Last Updated**: July 25, 2026 (WS-I docs truth pass on `launch/integration`)
+**Current Phase**: ✅ Phase 1 + Audit Waves 1-7 + launch integration (WS-A..H) — **code-complete for launch**; the 13 production blockers are resolved in code (see Production wiring status). Phase 2.1.a–e shipped 2026-05-15; Phase 2.1.f (customer-intelligence UI) landed with WS-G.
+**Latest Update**: v1.53 — launch integration: real backend deploy path, serverless cron processing, Shopify `2026-07` + OAuth, prod schema source-of-truth, App-Pricing plan-gate, notification routing, real dashboard data, hosted legal + sanitized listing, plus cross-workstream integration fixes (see CHANGELOG.md v1.53 and LAUNCH_PLAN.md Session Log)
 **Document Purpose**: Single consolidated view of current state, readiness, and future roadmap
+
+---
+
+## Production wiring status
+
+Post-integration snapshot (mirrors [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §1, updated for the `launch/integration` branch). The 13 production blockers verified in the 2026-07-21 audit are now **resolved in code**; what remains is the human dashboard gate and deploy-time steps that no session can perform. "Fixed in code, pending deploy" means the code is merged and CI-green but the behavior only becomes live after the Wave-3 deploy.
+
+| # | Problem (2026-07-21 audit) | Status now |
+|---|---|---|
+| 1 | Koa backend never deployed; real routes 404 | Fixed in code — catch-all `api/[[...path]].ts` adapts the Koa app (WS-A `c6f2ae70`); **pending deploy** |
+| 2 | No background-job runtime; cron pointed at nothing | Fixed in code — Vercel-cron batch processing (WS-B `877c1881`) |
+| 3 | Webhooks never registered with Shopify | `shopify.app.toml` authored (WS-C `0e034a0b`); **deploy-gated** — `shopify app deploy` (C4) runs at Wave-3 deploy time |
+| 4 | Middleware kill-chain (CSP framing, CSRF, double prefixes) | Fixed in code (WS-A `c6f2ae70`) |
+| 5 | OAuth broken (VERCEL_URL redirect, no state, dead callback) | Fixed in code — `SHOPIFY_APP_URL` + state nonce + real token exchange (WS-C `0e034a0b`) |
+| 6 | API pinned `2024-01`; customer query used removed fields | Fixed in code — bumped to `2026-07`, query rewritten (WS-C `0e034a0b`) |
+| 7 | Prod DB schema never created | Schema single-source-of-truth fixed in code (WS-D `3e56dd7c`); **deploy-gated** — `npm run migrate:vercel` against prod (D3) at deploy time |
+| 8 | Billing was a stub | Fixed in code — App-Pricing plan-gate, fails closed to free (WS-F `3e56dd7c`); plan config is human (H3) |
+| 9 | Notification details (placeholder template, example.com, routing) | Fixed in code — real tracking URLs + merchant/customer routing (WS-E `a88eac24`); **deploy-gated** — live SendGrid template + send (E1) pending `SENDGRID_API_KEY` |
+| 10 | Dashboard rendered mock data; apiClient unmounted | Fixed in code — real API thunks + apiClient mounted (WS-G `fdc03f82`) |
+| 11 | Listing assets violated current rules | Fixed in code — testimonials/stats removed, pricing reconciled, feature media (WS-H `eb20d745`); **human** — listing submission (H-4) |
+| 12 | `read_customers` scope missing; PCD never requested | Scope fixed in code (WS-C `0e034a0b`); **human** — Protected Customer Data Level 2 approval (H4) |
+| 13 | Expiring offline tokens mandatory 2027-01-01 | Post-launch fast-follow (C5); not launch-blocking |
+
+**Human / deploy-gated remainder:** PCD Level 2 approval (H4), prod migration (D3), webhook registration `shopify app deploy` (C4), live SendGrid template + send (E1), and AI self-review + listing submission (H-4). See LAUNCH_PLAN.md §2 for the full human gate (H1–H9).
 
 ---
 
@@ -14,8 +38,8 @@
 | Metric | Status | Details |
 |--------|--------|---------|
 | **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
-| **Readiness Score** | **95/100 (A)** | Ready for Shopify submission (assets pending) |
-| **Test Success** | **100%** | 2,091 passing, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run (1 known-flake in `input-sanitization.test.ts:405` performance assertion intermittent under coverage instrumentation) |
+| **Launch Readiness** | **Code-complete for launch** | Submission pending the human dashboard gate + Wave-3 deploy (see Production wiring status above and LAUNCH_PLAN.md §2) |
+| **Test Success** | **100%** | 2,400 passing (see [CHANGELOG.md](CHANGELOG.md) v1.53), 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run (1 known-flake in `input-sanitization.test.ts:405` performance assertion intermittent under coverage instrumentation) |
 | **Test Suites** | **All passing** | 96 of 98 suites pass; 2 suites skipped (require PostgreSQL) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
@@ -40,7 +64,7 @@
 - BullMQ + Redis (Upstash) for queues
 
 **APIs & Integrations:**
-- Shopify Admin API (GraphQL 2024-01)
+- Shopify Admin API (GraphQL 2026-07)
 - ShipEngine API (50+ carriers)
 - SendGrid (email notifications)
 - Twilio (SMS notifications)
@@ -318,7 +342,7 @@
 
 ## 🚀 Shopify App Store Submission Readiness
 
-### ✅ **Ready for Submission** (97/100 - Grade A)
+### ✅ **Code-complete for launch** (submission pending human dashboard gate + deploy)
 
 **What's Complete:**
 - ✅ All 4 Phase 1 requirements implemented and tested
@@ -331,7 +355,7 @@
 - ✅ 14 environment variables configured in Vercel
 - ✅ Legal documentation (privacy policy, terms of service)
 - ✅ API documentation (OpenAPI 3.0)
-- ✅ 100% test success rate (1,313/1,313 passing)
+- ✅ 100% test success rate (2,400 passing — see CHANGELOG.md v1.53)
 
 **What Remains:**
 - ⚠️ App Store Assets (1-2 days)
@@ -581,8 +605,8 @@ Phone: (406) 555-0123
 - ✅ `write_discounts` - Generate apology discount codes
 
 **Monetization:**
-- Premium tier feature ($49/month)
-- Enterprise tier ($149/month with advanced workflows)
+- Pro tier feature ($7/month)
+- Enterprise tier ($25/month with advanced workflows)
 
 ---
 
@@ -653,8 +677,7 @@ Phone: (406) 555-0123
 - **[README.md](README.md)** - Main project overview, quick start
 
 ### Status & Readiness
-- **[PROJECT_STATUS_AND_NEXT_STEPS.md](PROJECT_STATUS_AND_NEXT_STEPS.md)** - Current state snapshot (Oct 28)
-- **[SHOPIFY_APP_READINESS_ASSESSMENT.md](SHOPIFY_APP_READINESS_ASSESSMENT.md)** - Readiness checklist (95/100)
+- **[LAUNCH_PLAN.md](LAUNCH_PLAN.md)** - Live launch execution plan + production wiring status (the accurate readiness source)
 
 ### Technical Guides
 - **[AUTHENTICATION_GUIDE.md](AUTHENTICATION_GUIDE.md)** - Shopify embedded app auth
@@ -679,10 +702,10 @@ Phone: (406) 555-0123
 
 **Where We Are:**
 - ✅ Phase 1 Complete (Oct 28, 2025)
-- ✅ Ready for Shopify submission (95/100 readiness)
+- ✅ Code-complete for launch (13 production blockers resolved on `launch/integration` — see Production wiring status)
 - ✅ Phase 2.1.a–e shipped (2026-05-15, v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint
-- ✅ 2,091 passing tests, production-ready code
-- ⚠️ 2-3 days from submission (assets creation remaining)
+- ✅ 2,400 passing tests, production-ready code (see CHANGELOG.md v1.53)
+- ⚠️ Submission pending the human dashboard gate (H1–H9) + Wave-3 deploy — see LAUNCH_PLAN.md §2
 
 **Where We're Going:**
 - 📋 Phase 2: Customer intelligence & priority scoring (14-16 days)

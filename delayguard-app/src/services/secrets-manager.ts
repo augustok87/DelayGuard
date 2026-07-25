@@ -378,11 +378,22 @@ export class SecretsManager extends EventEmitter {
   }
 
   /**
-   * Encrypt value
+   * Encrypt value.
+   *
+   * AES-256-CBC with a per-value random IV, stored as `ivHex:cipherHex`.
+   * Uses createCipheriv (createCipher was removed in Node ≥22 and ignored the
+   * IV entirely — the old code generated an IV but never fed it to the cipher,
+   * so identical plaintexts produced identical ciphertexts). There is NO
+   * production encrypted data yet (the prod schema was never created), so this
+   * format change needs no data migration.
    */
   private encrypt(value: string): string {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher("aes-256-cbc", this.encryptionKey);
+    const cipher = crypto.createCipheriv(
+      "aes-256-cbc",
+      this.encryptionKey,
+      iv,
+    );
 
     let encrypted = cipher.update(value, "utf8", "hex");
     encrypted += cipher.final("hex");
@@ -391,13 +402,19 @@ export class SecretsManager extends EventEmitter {
   }
 
   /**
-   * Decrypt value
+   * Decrypt value. Reads the IV back from the stored `ivHex:cipherHex` payload.
+   * A malformed payload (bad IV length, non-hex) throws, which callers catch
+   * and surface as a null secret.
    */
   private decrypt(encryptedValue: string): string {
-    const [, encrypted] = encryptedValue.split(":");
-    // const iv = Buffer.from(ivHex, 'hex'); // Available for future use
+    const [ivHex, encrypted] = encryptedValue.split(":");
+    const iv = Buffer.from(ivHex, "hex");
 
-    const decipher = crypto.createDecipher("aes-256-cbc", this.encryptionKey);
+    const decipher = crypto.createDecipheriv(
+      "aes-256-cbc",
+      this.encryptionKey,
+      iv,
+    );
 
     let decrypted = decipher.update(encrypted, "hex", "utf8");
     decrypted += decipher.final("utf8");
@@ -406,10 +423,13 @@ export class SecretsManager extends EventEmitter {
   }
 
   /**
-   * Derive encryption key from master key
+   * Derive a 32-byte AES key from the master key via scrypt (a deliberate,
+   * memory-hard KDF). The salt is a stable application constant — the master
+   * key is the secret; the salt only needs to be fixed so encrypt and decrypt
+   * derive the same key within a process.
    */
   private deriveEncryptionKey(masterKey: string): Buffer {
-    return crypto.createHash("sha256").update(masterKey).digest();
+    return crypto.scryptSync(masterKey, "delayguard-secrets-manager-v1", 32);
   }
 
   /**

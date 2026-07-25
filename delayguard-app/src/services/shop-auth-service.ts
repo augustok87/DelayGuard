@@ -7,6 +7,9 @@
  * in route handlers.
  *
  * Surface:
+ *   - exchangeCodeForToken(shopDomain, code)
+ *       OAuth code → access-token exchange against Shopify's
+ *       /admin/oauth/access_token endpoint (WS-C C3).
  *   - upsertShop({ shopDomain, accessToken, scope })
  *       Idempotent install / re-auth: writes the shop row, then seeds
  *       default app_settings on first install (no-op on conflict).
@@ -18,6 +21,7 @@
 
 import { query } from "../database/connection";
 import { logger } from "../utils/logger";
+import { appConfig } from "../config/app-config";
 
 export interface ShopMetadata {
   shopDomain: string;
@@ -45,7 +49,62 @@ function parseScope(scope: string): string[] {
     .filter((entry) => entry.length > 0);
 }
 
+export interface TokenExchangeResult {
+  accessToken: string;
+  /** Comma-separated scope string as granted by Shopify. */
+  scope: string;
+}
+
 export class ShopAuthService {
+  /**
+   * Exchange the OAuth authorization `code` for a permanent offline
+   * access token. NOTE (C5, post-launch deadline 2027-01-01): expiring
+   * offline tokens (`expiring=1` + refresh-token rotation) are mandatory
+   * for all public apps from Jan 1, 2027 — see LAUNCH_PLAN.md C5.
+   */
+  async exchangeCodeForToken(
+    shopDomain: string,
+    code: string,
+  ): Promise<TokenExchangeResult> {
+    try {
+      const response = await fetch(
+        `https://${shopDomain}/admin/oauth/access_token`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: appConfig.shopify.apiKey,
+            client_secret: appConfig.shopify.apiSecret,
+            code,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `OAuth token exchange failed: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const json = (await response.json()) as {
+        access_token?: string;
+        scope?: string;
+      };
+      if (!json.access_token) {
+        throw new Error("OAuth token exchange returned no access_token");
+      }
+
+      return { accessToken: json.access_token, scope: json.scope ?? "" };
+    } catch (error) {
+      logger.error(
+        "OAuth token exchange failed",
+        error instanceof Error ? error : new Error(String(error)),
+        { shopDomain },
+      );
+      throw error;
+    }
+  }
+
   async upsertShop({
     shopDomain,
     accessToken,

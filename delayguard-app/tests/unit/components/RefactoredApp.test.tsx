@@ -178,6 +178,38 @@ jest.mock('../../../src/hooks', () => ({
   useSettingsActions: jest.fn(() => mockUseSettingsActions),
 }));
 
+// G2: RefactoredAppOptimized now mounts the authenticated API client and
+// reads shop/stats from Redux — mock those modules here (this suite tests
+// the component contract, not the store wiring; the slices have their own
+// thunk tests).
+jest.mock('../../../src/hooks/useApiClient', () => ({
+  useApiClient: jest.fn(() => ({})),
+  default: jest.fn(() => ({})),
+}));
+
+const mockAppSliceState = {
+  app: {
+    shop: null,
+    stats: null,
+    loading: false,
+    error: null,
+    initialized: false,
+  },
+};
+
+jest.mock('../../../src/store/hooks', () => ({
+  useAppDispatch: jest.fn(() => jest.fn()),
+  useAppSelector: jest.fn((selector: (state: unknown) => unknown) =>
+    selector(mockAppSliceState),
+  ),
+}));
+
+jest.mock('../../../src/store/slices/appSlice', () => ({
+  initializeApp: jest.fn(() => ({ type: 'app/initialize/mock' })),
+  fetchDashboardStats: jest.fn(() => ({ type: 'app/fetchDashboardStats/mock' })),
+  connectShopify: jest.fn(() => ({ type: 'app/connectShopify/mock' })),
+}));
+
 // Mock CSS modules
 jest.mock('../../../src/components/RefactoredApp.module.css', () => ({
   container: 'container',

@@ -92,10 +92,15 @@ describe('Delay Type Toggle Schema', () => {
     let testShopId: number;
 
     beforeEach(async() => {
+      // Idempotent: clear leftovers from previously aborted runs (the
+      // afterEach cleanup is skipped when a test errors before it).
+      await query(
+        `DELETE FROM shops WHERE shop_domain LIKE 'test-delay-toggles%'`,
+      );
       // Create test shop for app_settings
       const shopResult = await query(`
-        INSERT INTO shops (shop_domain, access_token)
-        VALUES ($1, $2)
+        INSERT INTO shops (shop_domain, access_token, scope)
+        VALUES ($1, $2, '{read_orders}')
         RETURNING id
       `, ['test-delay-toggles.myshopify.com', 'test-token']);
 
@@ -109,7 +114,7 @@ describe('Delay Type Toggle Schema', () => {
 
     it('should use DEFAULT TRUE when inserting new app_settings', async() => {
       await query(`
-        INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled)
+        INSERT INTO app_settings (shop_id, delay_threshold_days, email_enabled, sms_enabled)
         VALUES ($1, 2, true, false)
       `, [testShopId]);
 
@@ -126,7 +131,7 @@ describe('Delay Type Toggle Schema', () => {
 
     it('should allow UPDATE to FALSE for warehouse_delays_enabled', async() => {
       await query(`
-        INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled)
+        INSERT INTO app_settings (shop_id, delay_threshold_days, email_enabled, sms_enabled)
         VALUES ($1, 2, true, false)
       `, [testShopId]);
 
@@ -147,7 +152,7 @@ describe('Delay Type Toggle Schema', () => {
 
     it('should allow UPDATE to FALSE for carrier_delays_enabled', async() => {
       await query(`
-        INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled)
+        INSERT INTO app_settings (shop_id, delay_threshold_days, email_enabled, sms_enabled)
         VALUES ($1, 2, true, false)
       `, [testShopId]);
 
@@ -168,7 +173,7 @@ describe('Delay Type Toggle Schema', () => {
 
     it('should allow UPDATE to FALSE for transit_delays_enabled', async() => {
       await query(`
-        INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled)
+        INSERT INTO app_settings (shop_id, delay_threshold_days, email_enabled, sms_enabled)
         VALUES ($1, 2, true, false)
       `, [testShopId]);
 
@@ -189,7 +194,7 @@ describe('Delay Type Toggle Schema', () => {
 
     it('should allow all 3 flags to be independently toggled', async() => {
       await query(`
-        INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled)
+        INSERT INTO app_settings (shop_id, delay_threshold_days, email_enabled, sms_enabled)
         VALUES ($1, 2, true, false)
       `, [testShopId]);
 
@@ -215,7 +220,7 @@ describe('Delay Type Toggle Schema', () => {
 
     it('should SELECT toggle flags in JOIN with shops table', async() => {
       await query(`
-        INSERT INTO app_settings (shop_id, delay_threshold, email_enabled, sms_enabled, warehouse_delays_enabled)
+        INSERT INTO app_settings (shop_id, delay_threshold_days, email_enabled, sms_enabled, warehouse_delays_enabled)
         VALUES ($1, 2, true, false, false)
       `, [testShopId]);
 

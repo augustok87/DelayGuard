@@ -2,6 +2,7 @@ import { query } from "../database/connection";
 import { logger } from "../utils/logger";
 import { EmailService } from "./email-service";
 import { SMSService } from "./sms-service";
+import { billingService } from "./billing-service";
 import {
   ShopNotFoundError,
   MerchantApiValidationError,
@@ -154,10 +155,24 @@ export class TestAlertService {
       channelsAttempted.push("email");
     }
     if (requested.includes("sms") && smsEnabled && recipientPhone) {
-      dispatches.push(
-        this.smsService.sendDelaySMS(recipientPhone, orderInfo, delayDetails),
-      );
-      channelsAttempted.push("sms");
+      // SMS is a paid feature (Pro+). Gate on the shop's LIVE plan tier, not
+      // just app_settings.sms_enabled — mirrors queue/processors/notification.ts.
+      // A flag left TRUE after a downgrade from Pro would otherwise fire a real,
+      // billable Twilio test SMS on the free tier (billing leak). getCurrentPlan
+      // fails closed to "free", so a Shopify outage suppresses SMS rather than
+      // leaking it. Only resolve the plan when SMS would actually fire.
+      const plan = await billingService.getCurrentPlan(shopDomain);
+      if (billingService.isSmsAllowed(plan)) {
+        dispatches.push(
+          this.smsService.sendDelaySMS(recipientPhone, orderInfo, delayDetails),
+        );
+        channelsAttempted.push("sms");
+      } else {
+        logger.warn(
+          "Test-alert SMS suppressed: shop plan does not include SMS (Pro+ required)",
+          { shopDomain, plan },
+        );
+      }
     }
 
     await Promise.all(dispatches);

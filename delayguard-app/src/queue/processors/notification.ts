@@ -2,6 +2,7 @@ import { Job } from 'bullmq';
 import { logger } from '../../utils/logger';
 import { EmailService } from '../../services/email-service';
 import { SMSService } from '../../services/sms-service';
+import { billingService } from '../../services/billing-service';
 import { query } from '../../database/connection';
 // import { AppConfig } from '../../types'; // Available for future use
 
@@ -15,6 +16,20 @@ interface NotificationJobData {
     delayReason: string;
   };
   shopDomain: string;
+  /**
+   * Launch WS-E (task E3) — merchant-vs-customer routing.
+   * delayType decides the recipient: WAREHOUSE_DELAY alerts go to the
+   * merchant (their warehouse is the problem); CARRIER_DELAY / TRANSIT_DELAY
+   * go to the customer. Legacy payloads without delayType (jobs enqueued
+   * before this field existed) route to the customer — the historical
+   * behavior — via an explicit branch below, never by accident.
+   */
+  delayType?: 'WAREHOUSE_DELAY' | 'CARRIER_DELAY' | 'TRANSIT_DELAY';
+  merchantEmail?: string | null;
+  merchantPhone?: string | null;
+  merchantName?: string | null;
+  customerEmail?: string;
+  customerPhone?: string;
 }
 
 export async function processNotification(job: Job<NotificationJobData>): Promise<void> {
@@ -23,11 +38,16 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
   try {
     logger.info(`📧 Processing notification for order ${orderId}`);
 
-    // Get order and shop details
+    // Get order and shop details (incl. merchant contact for E3 routing).
+    // Schema truth: email_enabled / sms_enabled / notification_template live
+    // on app_settings (see runMigrations); shops only carries the merchant
+    // contact columns.
     const orderResult = await query(
-      `SELECT o.*, s.email_enabled, s.sms_enabled, s.notification_template
-       FROM orders o 
-       JOIN shops s ON o.shop_id = s.id 
+      `SELECT o.*, st.email_enabled, st.sms_enabled, st.notification_template,
+              s.merchant_email, s.merchant_phone, s.merchant_name
+       FROM orders o
+       JOIN shops s ON o.shop_id = s.id
+       JOIN app_settings st ON st.shop_id = o.shop_id
        WHERE o.id = $1`,
       [orderId],
     );
@@ -36,12 +56,12 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       throw new Error(`Order ${orderId} not found`);
     }
 
-    const order = orderResult[0] as { 
-      id: string; 
-      order_number: string; 
-      customer_name: string; 
-      customer_email: string; 
-      tracking_number: string; 
+    const order = orderResult[0] as {
+      id: string;
+      order_number: string;
+      customer_name: string;
+      customer_email: string;
+      tracking_number: string;
       carrier_code: string;
       shopify_order_id: string;
       customer_phone?: string;
@@ -49,6 +69,9 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       created_at: string;
       email_enabled: boolean;
       sms_enabled: boolean;
+      merchant_email: string | null;
+      merchant_phone: string | null;
+      merchant_name: string | null;
     };
 
     // Check if notifications are already sent
@@ -88,6 +111,40 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       createdAt: new Date(order.created_at),
     };
 
+    // Launch WS-E (task E3): merchant-vs-customer routing.
+    // WAREHOUSE_DELAY → merchant (payload contact first, shops-row columns as
+    // fallback for retried/legacy jobs). CARRIER_DELAY / TRANSIT_DELAY (and
+    // legacy payloads without delayType) → customer. A warehouse alert with
+    // no merchant contact configured is SKIPPED with a warning — it must
+    // never silently fall back to customer_email.
+    const recipientType: 'merchant' | 'customer' =
+      job.data.delayType === 'WAREHOUSE_DELAY' ? 'merchant' : 'customer';
+    if (!job.data.delayType) {
+      logger.info(
+        `ℹ️ No delayType on notification payload for order ${orderId} — routing to customer (legacy payload)`,
+      );
+    }
+
+    const recipientEmail =
+      recipientType === 'merchant'
+        ? job.data.merchantEmail || order.merchant_email || null
+        : job.data.customerEmail || order.customer_email || null;
+    const recipientPhone =
+      recipientType === 'merchant'
+        ? job.data.merchantPhone || order.merchant_phone || null
+        : job.data.customerPhone || order.customer_phone || null;
+    const recipientName =
+      recipientType === 'merchant'
+        ? job.data.merchantName || order.merchant_name || 'Merchant'
+        : order.customer_name;
+
+    if (recipientType === 'merchant' && !recipientEmail && !recipientPhone) {
+      logger.warn(
+        `⚠️ Warehouse delay for order ${orderId}: no merchant contact configured — ` +
+          'skipping dispatch (will NOT fall back to the customer)',
+      );
+    }
+
     // Send notifications based on settings and what hasn't been sent.
     //
     // v1.19 notification-routing rule: dispatch lives INSIDE each rule-matched
@@ -98,14 +155,19 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
     // double-dispatch when both flags are true (Wave 4.1, 2026-05-14).
     const promises: Promise<void>[] = [];
 
-    if (order.email_enabled && order.customer_email && !alert.email_sent) {
+    if (order.email_enabled && recipientEmail && !alert.email_sent) {
       promises.push(
         emailService
-          .sendDelayEmail(order.customer_email, orderInfo, delayDetails)
+          .sendDelayEmail(recipientEmail, orderInfo, delayDetails, {
+            recipientName,
+          })
           .then(async() => {
-            // Mark email as sent
+            // Mark email as sent + stamp first-dispatch time (dashboard badge)
             await query(
-              `UPDATE delay_alerts SET email_sent = TRUE WHERE order_id = $1`,
+              `UPDATE delay_alerts
+               SET email_sent = TRUE,
+                   notification_sent_at = COALESCE(notification_sent_at, CURRENT_TIMESTAMP)
+               WHERE order_id = $1`,
               [orderId],
             );
             logger.info(`✅ Email sent for order ${orderId}`);
@@ -117,14 +179,37 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       );
     }
 
-    if (order.sms_enabled && order.customer_phone && !alert.sms_sent) {
+    // SMS is a paid feature (Pro+). Gate dispatch on the shop's live plan tier
+    // — sms_enabled alone is not enough: a row left true from a prior paid
+    // period (or seeded data) would otherwise SMS on the free tier (billing
+    // leak). getCurrentPlan fails closed to "free", so a Shopify outage blocks
+    // SMS rather than leaking it. Only resolve the plan when SMS would actually
+    // fire, to avoid a GraphQL call on every email-only notification.
+    const smsWanted = order.sms_enabled && !!recipientPhone && !alert.sms_sent;
+    let smsAllowed = false;
+    if (smsWanted) {
+      const plan = await billingService.getCurrentPlan(order.shop_domain);
+      smsAllowed = billingService.isSmsAllowed(plan);
+      if (!smsAllowed) {
+        logger.warn(
+          `⚠️ SMS suppressed for order ${orderId}: shop plan "${plan}" does not include SMS (Pro+ required)`,
+        );
+      }
+    }
+
+    if (smsWanted && smsAllowed) {
       promises.push(
         smsService
-          .sendDelaySMS(order.customer_phone, orderInfo, delayDetails)
+          .sendDelaySMS(recipientPhone, orderInfo, delayDetails, {
+            audience: recipientType,
+          })
           .then(async() => {
-            // Mark SMS as sent
+            // Mark SMS as sent + stamp first-dispatch time (dashboard badge)
             await query(
-              `UPDATE delay_alerts SET sms_sent = TRUE WHERE order_id = $1`,
+              `UPDATE delay_alerts
+               SET sms_sent = TRUE,
+                   notification_sent_at = COALESCE(notification_sent_at, CURRENT_TIMESTAMP)
+               WHERE order_id = $1`,
               [orderId],
             );
             logger.info(`✅ SMS sent for order ${orderId}`);

@@ -11,6 +11,7 @@
 
 import request from "supertest";
 import Koa from "koa";
+import Router from "koa-router";
 import bodyParser from "koa-bodyparser";
 import jwt from "jsonwebtoken";
 
@@ -23,6 +24,16 @@ jest.mock("../../../services/sms-service", () => ({
   SMSService: jest.fn().mockImplementation(() => ({
     sendDelaySMS: jest.fn().mockResolvedValue(undefined),
   })),
+}));
+
+// SMS is Pro+; TestAlertService now gates the SMS channel on the live plan
+// tier (billing-leak defense). Mock an SMS-eligible plan so the boundary test
+// still exercises the both-channels success shape without a real Admin API call.
+jest.mock("../../../services/billing-service", () => ({
+  billingService: {
+    getCurrentPlan: jest.fn().mockResolvedValue("pro"),
+    isSmsAllowed: jest.fn(() => true),
+  },
 }));
 
 jest.mock("../../../database/connection");
@@ -70,8 +81,12 @@ describe("POST /api/test-alert", () => {
   beforeEach(() => {
     app = new Koa();
     app.use(bodyParser());
-    app.use(apiRoutes.routes());
-    app.use(apiRoutes.allowedMethods());
+    // Mirror server.ts: routers carry no prefix (LAUNCH_PLAN A3);
+    // the mount point provides it.
+    const root = new Router();
+    root.use("/api", apiRoutes.routes());
+    app.use(root.routes());
+    app.use(root.allowedMethods());
 
     testToken = jwt.sign(
       {

@@ -54,17 +54,21 @@ export class CSRFProtectionMiddleware {
    * Apply CSRF protection middleware
    */
   async apply(ctx: Context, next: Next): Promise<void> {
+    // Skip CSRF entirely for excluded paths (LAUNCH_PLAN A2). Checked
+    // BEFORE the safe-method branch so exempt surfaces (webhooks, cron,
+    // token-authed APIs) are never issued a CSRF cookie either — machine
+    // clients don't consume cookies, and setting a `secure` cookie can
+    // itself fail on a non-TLS hop.
+    if (this.config?.excludedPaths?.some((path) => ctx.path.startsWith(path))) {
+      await next();
+      return;
+    }
+
     // Generate and set CSRF token for safe methods
     if (this.config?.excludedMethods?.includes(ctx.method)) {
       const token = this.generateToken();
       this.setCSRFCookie(ctx, token);
       ctx.state.csrfToken = token;
-      await next();
-      return;
-    }
-
-    // Skip CSRF check for excluded paths
-    if (this.config?.excludedPaths?.some((path) => ctx.path.startsWith(path))) {
       await next();
       return;
     }
@@ -212,17 +216,21 @@ export class APICSRFProtection {
    * Apply CSRF protection to API routes
    */
   async apply(ctx: Context, next: Next): Promise<void> {
+    // Skip CSRF entirely for excluded paths (LAUNCH_PLAN A2). Checked
+    // BEFORE the safe-method branch so exempt surfaces (webhooks, cron,
+    // token-authed APIs) are never issued a CSRF cookie either — machine
+    // clients don't consume cookies, and setting a `secure` cookie can
+    // itself fail on a non-TLS hop.
+    if (this.config?.excludedPaths?.some((path) => ctx.path.startsWith(path))) {
+      await next();
+      return;
+    }
+
     // Generate and set CSRF token for safe methods
     if (this.config?.excludedMethods?.includes(ctx.method)) {
       const token = this.generateToken();
       this.setCSRFCookie(ctx, token);
       ctx.state.csrfToken = token;
-      await next();
-      return;
-    }
-
-    // Skip CSRF check for excluded paths
-    if (this.config?.excludedPaths?.some((path) => ctx.path.startsWith(path))) {
       await next();
       return;
     }

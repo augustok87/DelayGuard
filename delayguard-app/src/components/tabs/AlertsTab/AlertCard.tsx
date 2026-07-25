@@ -144,6 +144,65 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
   };
 
 
+  // Phase 2.1.f: financial breakdown (orders subtotal/shipping/tax/discount
+  // columns, Phase 2.1.c). Rendered only when the data layer provides it.
+  const renderFinancialBreakdown = () => {
+    const breakdown = alert.financialBreakdown;
+    if (!breakdown) return null;
+
+    const rows: Array<{ label: string; value: string }> = [];
+    if (breakdown.subtotal !== undefined) {
+      rows.push({ label: 'Subtotal', value: formatCurrency(breakdown.subtotal, alert.currency) });
+    }
+    if (breakdown.shipping !== undefined) {
+      rows.push({ label: 'Shipping', value: formatCurrency(breakdown.shipping, alert.currency) });
+    }
+    if (breakdown.tax !== undefined) {
+      rows.push({ label: 'Tax', value: formatCurrency(breakdown.tax, alert.currency) });
+    }
+    if (breakdown.discounts !== undefined) {
+      rows.push({ label: 'Discounts', value: `-${formatCurrency(breakdown.discounts, alert.currency)}` });
+    }
+    if (rows.length === 0) return null;
+
+    return (
+      <div className={styles.etaSection}>
+        <h5 className={styles.sectionTitle}>Order Financials</h5>
+        {rows.map((row) => (
+          <div key={row.label} className={styles.etaItem}>
+            <span className={styles.etaLabel}>{row.label}:</span>
+            <span className={styles.etaValue}>{row.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Phase 2.1.f: shipping destination (orders shipping_* columns, Phase
+  // 2.1.d — street address intentionally excluded from the card).
+  const renderShippingDestination = () => {
+    const destination = alert.shippingDestination;
+    if (!destination) return null;
+
+    const regionZip = [destination.provinceCode, destination.zip]
+      .filter(Boolean)
+      .join(' ');
+    const parts = [destination.city, regionZip, destination.countryCode].filter(
+      (part) => part && part.length > 0,
+    );
+    if (parts.length === 0) return null;
+
+    return (
+      <div className={styles.trackingInfo}>
+        <span className={styles.label}>
+          <MapPin size={14} aria-hidden={true} strokeWidth={2} style={{ display: 'inline', marginRight: '0.25rem' }} />
+          Ships to:
+        </span>
+        <span className={styles.value}>{parts.join(', ')}</span>
+      </div>
+    );
+  };
+
   const renderEtaInformation = () => {
     if (!alert.originalEta && !alert.revisedEta) return null;
 
@@ -419,8 +478,19 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     );
   };
 
-  // Phase 1.1: Get priority info
-  const priorityBadge = getPriorityBadge(alert.delayDays, alert.totalAmount);
+  // Phase 2.1.f: persisted 4-axis priority level (delay_alerts.priority_level)
+  // wins over the local heuristic; legacy alerts without it keep the
+  // Phase 1.1 delay/value heuristic badge.
+  const PRIORITY_LEVEL_BADGES = {
+    Critical: { label: 'CRITICAL', color: '#dc2626', bgColor: '#fee2e2', borderColor: '#fecaca' },
+    High: { label: 'HIGH', color: '#ea580c', bgColor: '#ffedd5', borderColor: '#fed7aa' },
+    Medium: { label: 'MEDIUM', color: '#d97706', bgColor: '#fef3c7', borderColor: '#fde68a' },
+    Low: { label: 'LOW', color: '#059669', bgColor: '#d1fae5', borderColor: '#a7f3d0' },
+  } as const;
+
+  const priorityBadge = alert.priorityLevel
+    ? PRIORITY_LEVEL_BADGES[alert.priorityLevel]
+    : getPriorityBadge(alert.delayDays, alert.totalAmount);
 
   // v1.29: Get priority variant class for color-coded left border
   const getPriorityVariantClass = (delayDays: number, orderTotal?: number) => {
@@ -436,7 +506,16 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
     return styles.alertCardLow;
   };
 
-  const priorityVariantClass = getPriorityVariantClass(alert.delayDays, alert.totalAmount);
+  const PRIORITY_LEVEL_VARIANT_CLASSES = {
+    Critical: styles.alertCardCritical,
+    High: styles.alertCardHigh,
+    Medium: styles.alertCardMedium,
+    Low: styles.alertCardLow,
+  } as const;
+
+  const priorityVariantClass = alert.priorityLevel
+    ? PRIORITY_LEVEL_VARIANT_CLASSES[alert.priorityLevel]
+    : getPriorityVariantClass(alert.delayDays, alert.totalAmount);
 
   return (
     <div className={`${styles.alertCard} ${styles[variant]} ${priorityVariantClass}`}>
@@ -474,7 +553,7 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
         </div>
         <div className={styles.status}>
           {getStatusBadge(alert.status)}
-          {/* Phase 1.1: Priority badge */}
+          {/* Phase 1.1: Priority badge (Phase 2.1.f: persisted level wins) */}
           <span
             className={styles.priorityBadge}
             style={{
@@ -485,6 +564,16 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
           >
             {priorityBadge.label}
           </span>
+          {/* Phase 2.1.f: 4-axis priority score */}
+          {alert.priorityScore !== undefined && (
+            <span
+              className={styles.priorityBadge}
+              style={{ color: priorityBadge.color }}
+              title="DelayGuard priority score"
+            >
+              {alert.priorityScore}/100
+            </span>
+          )}
         </div>
       </div>
 
@@ -503,8 +592,14 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
           </div>
         )}
 
+        {/* Phase 2.1.f: Shipping destination */}
+        {renderShippingDestination()}
+
         {/* Priority 3: ETA Information */}
         {renderEtaInformation()}
+
+        {/* Phase 2.1.f: Financial breakdown */}
+        {renderFinancialBreakdown()}
 
         {/* Phase A: Customer Engagement Section with Header + Tooltip */}
         {alert.notificationStatus && (

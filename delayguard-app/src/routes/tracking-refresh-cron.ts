@@ -1,59 +1,32 @@
 /**
- * Tracking Refresh Cron Job API Endpoint
+ * Tracking Refresh Cron Endpoint
  *
- * Purpose: Hourly cron job that refreshes tracking data for all in-transit orders
- * - Triggered by Vercel Cron or external scheduler
- * - Calls processTrackingRefresh() to fetch latest tracking data from ShipEngine
+ * Purpose: cron-triggered refresh of tracking data for in-transit orders
+ * - Invoked by Vercel Cron (GET) or an external scheduler (POST kept for
+ *   manual triggers)
+ * - Calls processTrackingRefresh() to fetch latest tracking data from
+ *   ShipEngine for a bounded batch (cursor-resumed, 25s time budget)
  * - Returns statistics for monitoring
  *
- * Security:
- * - Protected by CRON_SECRET environment variable
- * - Only callable with correct Authorization header
+ * Security: guarded by the shared CRON_SECRET bearer check
+ * (src/middleware/cron-auth.ts) — Vercel Cron sends
+ * `Authorization: Bearer ${CRON_SECRET}` automatically.
  *
- * Vercel Cron Configuration (vercel.json):
- * {
- *   "crons": [{
- *     "path": "/api/cron/tracking-refresh",
- *     "schedule": "*\/15 * * * *"  // Every 15 minutes — drains BATCH_SIZE per tick
- *   }]
- * }
+ * Routing: no router-level prefix (LAUNCH_PLAN A3) — server.ts mounts
+ * this router at /api/cron, so the endpoint is /api/cron/tracking-refresh
+ * (matching the vercel.json crons entry).
  */
 
 import Router from "koa-router";
 import { Context } from "koa";
 import { logger } from "../utils/logger";
+import { requireCronSecret } from "../middleware/cron-auth";
 import { processTrackingRefresh } from "../queue/processors/tracking-refresh";
 
 const router = new Router();
 
-/**
- * POST /api/cron/tracking-refresh
- *
- * Triggers tracking refresh for all in-transit orders
- */
-router.post("/api/cron/tracking-refresh", async(ctx: Context) => {
+const trackingRefreshHandler = async(ctx: Context): Promise<void> => {
   try {
-    // Verify cron secret for security
-    const cronSecret = process.env.CRON_SECRET;
-    const authHeader = ctx.get("Authorization");
-
-    if (!cronSecret) {
-      logger.error("CRON_SECRET environment variable not set");
-      ctx.status = 500;
-      ctx.body = { error: "Server configuration error" };
-      return;
-    }
-
-    if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
-      logger.error("Unauthorized cron job attempt", undefined, {
-        ip: ctx.ip,
-        userAgent: ctx.get("User-Agent"),
-      });
-      ctx.status = 401;
-      ctx.body = { error: "Unauthorized" };
-      return;
-    }
-
     logger.info("🕐 Tracking refresh cron job started");
 
     // Process tracking refresh
@@ -77,6 +50,9 @@ router.post("/api/cron/tracking-refresh", async(ctx: Context) => {
       timestamp: new Date().toISOString(),
     };
   }
-});
+};
+
+router.get("/tracking-refresh", requireCronSecret, trackingRefreshHandler);
+router.post("/tracking-refresh", requireCronSecret, trackingRefreshHandler);
 
 export { router as trackingRefreshCronRoutes };

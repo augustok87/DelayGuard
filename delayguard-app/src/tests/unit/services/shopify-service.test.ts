@@ -229,7 +229,7 @@ describe('ShopifyService - Phase 1.2 Product Information Integration', () => {
 
       const [url, options] = mockFetch.mock.calls[0] as [string, any];
       expect(url).toContain('test-shop.myshopify.com');
-      expect(url).toContain('/admin/api/');
+      expect(url).toContain('/admin/api/2026-07/');
       expect(url).toContain('/graphql.json');
 
       expect(options.method).toBe('POST');
@@ -704,6 +704,9 @@ describe('ShopifyService - Phase 1.2 Product Information Integration', () => {
   // ==========================================
 
   describe('Fetch Customer By ID', () => {
+    // 2026-07 Admin API shapes: numberOfOrders is UnsignedInt64 (serialized
+    // as a string), amountSpent is MoneyV2, emailMarketingConsent replaces
+    // the removed opt-in boolean.
     const mockCustomerResponse = {
       data: {
         customer: {
@@ -711,9 +714,9 @@ describe('ShopifyService - Phase 1.2 Product Information Integration', () => {
           firstName: 'Ada',
           lastName: 'Lovelace',
           email: 'ada@example.com',
-          ordersCount: 7,
-          totalSpent: '1250.50',
-          acceptsMarketing: true,
+          numberOfOrders: '7',
+          amountSpent: { amount: '1250.50', currencyCode: 'USD' },
+          emailMarketingConsent: { marketingState: 'SUBSCRIBED' },
           createdAt: '2024-01-15T10:30:00.000Z',
           lastOrder: { createdAt: '2026-05-10T08:00:00.000Z' },
         },
@@ -737,9 +740,9 @@ describe('ShopifyService - Phase 1.2 Product Information Integration', () => {
       expect(result).toMatchObject({
         shopifyCustomerId: 'gid://shopify/Customer/5550001',
         email: 'ada@example.com',
-        ordersCount: 7,
-        totalSpent: 1250.5,
-        acceptsMarketing: true,
+        numberOfOrders: 7,
+        amountSpent: 1250.5,
+        emailMarketingSubscribed: true,
       });
       expect(result.customerSince).toBeInstanceOf(Date);
       expect(result.customerSince.toISOString()).toBe('2024-01-15T10:30:00.000Z');
@@ -764,15 +767,30 @@ describe('ShopifyService - Phase 1.2 Product Information Integration', () => {
 
       const body = JSON.parse(options.body);
       // Documents the query shape so a future Customer schema change
-      // forces a deliberate edit instead of silent breakage.
+      // forces a deliberate edit instead of silent breakage. Field names
+      // are the 2026-07 Admin API replacements for the removed 2022-04 /
+      // 2024-01 customer fields.
       expect(body.query).toContain('query GetCustomerById');
       expect(body.query).toContain('customer(id: $customerId)');
-      expect(body.query).toContain('ordersCount');
-      expect(body.query).toContain('totalSpent');
-      expect(body.query).toContain('acceptsMarketing');
+      expect(body.query).toContain('numberOfOrders');
+      expect(body.query).toContain('amountSpent');
+      expect(body.query).toContain('currencyCode');
+      expect(body.query).toContain('emailMarketingConsent');
+      expect(body.query).toContain('marketingState');
       expect(body.query).toContain('createdAt');
       expect(body.query).toContain('lastOrder');
       expect(body.variables.customerId).toBe('gid://shopify/Customer/5550001');
+    });
+
+    it('pins the 2026-07 Admin API version in the GraphQL endpoint URL', async() => {
+      await ShopifyService.fetchCustomerById(
+        'test-shop.myshopify.com',
+        'test-token',
+        '5550001',
+      );
+
+      const [url] = mockFetch.mock.calls[0] as [string, any];
+      expect(url).toContain('/admin/api/2026-07/graphql.json');
     });
 
     it('accepts a pre-GID-formatted customer ID without re-normalizing', async() => {
@@ -787,14 +805,14 @@ describe('ShopifyService - Phase 1.2 Product Information Integration', () => {
       expect(body.variables.customerId).toBe('gid://shopify/Customer/5550001');
     });
 
-    it('parses totalSpent (string in the GraphQL response) into a JS number', async() => {
+    it('parses amountSpent.amount (MoneyV2 Decimal string) into a JS number', async() => {
       (mockFetch as any).mockResolvedValueOnce({
         ok: true,
         json: async() => ({
           data: {
             customer: {
               ...mockCustomerResponse.data.customer,
-              totalSpent: '42.99',
+              amountSpent: { amount: '42.99', currencyCode: 'EUR' },
             },
           },
         }),
@@ -805,7 +823,71 @@ describe('ShopifyService - Phase 1.2 Product Information Integration', () => {
         'test-token',
         '5550001',
       );
-      expect(result.totalSpent).toBe(42.99);
+      expect(result.amountSpent).toBe(42.99);
+    });
+
+    it('parses numberOfOrders (UnsignedInt64 string) into a JS number', async() => {
+      (mockFetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({
+          data: {
+            customer: {
+              ...mockCustomerResponse.data.customer,
+              numberOfOrders: '12',
+            },
+          },
+        }),
+      });
+
+      const result = await ShopifyService.fetchCustomerById(
+        'test-shop.myshopify.com',
+        'test-token',
+        '5550001',
+      );
+      expect(result.numberOfOrders).toBe(12);
+      expect(typeof result.numberOfOrders).toBe('number');
+    });
+
+    it('derives emailMarketingSubscribed=false when emailMarketingConsent is null', async() => {
+      (mockFetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({
+          data: {
+            customer: {
+              ...mockCustomerResponse.data.customer,
+              emailMarketingConsent: null,
+            },
+          },
+        }),
+      });
+
+      const result = await ShopifyService.fetchCustomerById(
+        'test-shop.myshopify.com',
+        'test-token',
+        '5550001',
+      );
+      expect(result.emailMarketingSubscribed).toBe(false);
+    });
+
+    it('derives emailMarketingSubscribed=false for any non-SUBSCRIBED marketingState', async() => {
+      (mockFetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async() => ({
+          data: {
+            customer: {
+              ...mockCustomerResponse.data.customer,
+              emailMarketingConsent: { marketingState: 'UNSUBSCRIBED' },
+            },
+          },
+        }),
+      });
+
+      const result = await ShopifyService.fetchCustomerById(
+        'test-shop.myshopify.com',
+        'test-token',
+        '5550001',
+      );
+      expect(result.emailMarketingSubscribed).toBe(false);
     });
 
     it('returns null lastOrderAt when the customer has no orders yet', async() => {
@@ -815,7 +897,7 @@ describe('ShopifyService - Phase 1.2 Product Information Integration', () => {
           data: {
             customer: {
               ...mockCustomerResponse.data.customer,
-              ordersCount: 0,
+              numberOfOrders: '0',
               lastOrder: null,
             },
           },
@@ -828,7 +910,7 @@ describe('ShopifyService - Phase 1.2 Product Information Integration', () => {
         '5550001',
       );
       expect(result.lastOrderAt).toBeNull();
-      expect(result.ordersCount).toBe(0);
+      expect(result.numberOfOrders).toBe(0);
     });
 
     it('returns null when Shopify reports the customer does not exist (data.customer === null)', async() => {

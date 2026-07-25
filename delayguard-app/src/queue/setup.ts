@@ -1,39 +1,24 @@
 /**
- * ⚠️ IMPORTANT: SERVERLESS DEPLOYMENT LIMITATION
+ * BullMQ setup — SERVERLESS-SAFE SPLIT (LAUNCH_PLAN B1, decision D4)
  *
- * BullMQ Workers (lines 59-75) require long-running processes and DO NOT WORK in serverless
- * environments like Vercel. These workers will start but immediately terminate after the
- * function execution completes.
+ * setupQueues()  → producers ONLY (Redis connection + Queues). Safe in
+ *                  Vercel functions; this is what the serverless entry
+ *                  (api/[[...path]].ts → ensureInitialized) calls.
+ * startWorkers() → BullMQ Workers. Long-running processes ONLY (the dev
+ *                  server in src/server.ts, or an external worker host).
+ *                  Workers started inside a Vercel function terminate the
+ *                  moment the invocation ends — never call this from any
+ *                  serverless code path.
  *
- * CURRENT STATUS:
- * - ✅ Queue producers (addDelayCheckJob, addNotificationJob) work in Vercel
- * - ❌ Workers DO NOT RUN in Vercel (background jobs will NOT be processed)
- * - ✅ This code works in traditional server deployments (src/server.ts)
- *
- * SOLUTIONS FOR SERVERLESS:
- *
- * Option A: Vercel Cron Jobs (Simplest)
- * - Create api/cron/process-delays.ts
- * - Add cron config to vercel.json
- * - Runs every N minutes (not real-time)
- *
- * Option B: External Worker Service (Recommended for production)
- * - Deploy this file to Railway/Render/Fly.io (~$5-10/mo)
- * - Keep Redis queue in Upstash (shared between Vercel + workers)
- * - Real-time processing
- *
- * Option C: Serverless-Native Queue
- * - Migrate to Vercel Queue or Upstash QStash
- * - HTTP-based, no workers needed
- *
- * See: docs/SERVERLESS_ARCHITECTURE.md for detailed migration guide
+ * In production, background processing is done by DB-driven cron sweeps
+ * (src/queue/sweeps/*, exposed at /api/cron/*) that invoke the processor
+ * functions directly within the 30s function cap — see
+ * .claude/rules/deploy.md.
  */
 
 import { Queue, Worker } from "bullmq";
 import { logger } from "../utils/logger";
 import IORedis from "ioredis";
-// import { QueueEvents } from 'bullmq'; // Available for future use
-// import { AppConfig } from '../types'; // Available for future use
 import { processDelayCheck } from "./processors/delay-check";
 import { processNotification } from "./processors/notification";
 import { processCustomerSync } from "./processors/customer-sync";
@@ -46,7 +31,16 @@ let delayCheckWorker: Worker;
 let notificationWorker: Worker;
 let customerSyncWorker: Worker;
 
+/**
+ * Initialize the shared Redis connection and the three queues
+ * (producers). Idempotent — safe to call once per serverless cold start.
+ * Creates NO Workers.
+ */
 export async function setupQueues(): Promise<void> {
+  if (redis) {
+    return;
+  }
+
   try {
     // Initialize Redis connection
     const redisUrl = process.env.REDIS_URL;
@@ -54,7 +48,9 @@ export async function setupQueues(): Promise<void> {
       throw new Error("REDIS_URL environment variable is required");
     }
     redis = new IORedis(redisUrl, {
-      maxRetriesPerRequest: 3,
+      // BullMQ requires maxRetriesPerRequest: null — its blocking
+      // commands break with a bounded retry count (LAUNCH_PLAN B1).
+      maxRetriesPerRequest: null,
       enableReadyCheck: false,
     });
 
@@ -105,48 +101,64 @@ export async function setupQueues(): Promise<void> {
       },
     });
 
-    // Create workers
-    delayCheckWorker = new Worker("delay-check", processDelayCheck, {
-      connection: redis,
-      concurrency: 5,
-      limiter: {
-        max: 100,
-        duration: 60000, // 100 jobs per minute
-      },
-    });
-
-    notificationWorker = new Worker("notifications", processNotification, {
-      connection: redis,
-      concurrency: 10,
-      limiter: {
-        max: 200,
-        duration: 60000, // 200 jobs per minute
-      },
-    });
-
-    // Phase 2.1.a: customer-sync worker. Conservative concurrency + rate
-    // limit — every job makes one Shopify GraphQL call. ShipEngine
-    // rate-limit territory is documented at audit Wave 1.1; the Shopify
-    // GraphQL cost-points limit is 1000/sec on standard plans, and one
-    // Customer query is a couple of points, so 200/min leaves ample
-    // headroom. Concurrency 5 mirrors the delay-check worker.
-    customerSyncWorker = new Worker("customer-sync", processCustomerSync, {
-      connection: redis,
-      concurrency: 5,
-      limiter: {
-        max: 200,
-        duration: 60000,
-      },
-    });
-
-    // Set up event listeners
-    setupQueueEvents();
-
-    logger.info("✅ Queues and workers initialized");
+    logger.info("✅ Queues initialized (producers only — no workers)");
   } catch (error) {
     logger.error("Error setting up queues", error as Error);
     throw error;
   }
+}
+
+/**
+ * Start the BullMQ Workers. ⚠️ LONG-RUNNING PROCESSES ONLY — the dev
+ * server (`require.main === module` path in src/server.ts) or an external
+ * worker host. NEVER called from a serverless code path: Vercel functions
+ * terminate Workers immediately (LAUNCH_PLAN B1 / deploy.md).
+ */
+export async function startWorkers(): Promise<void> {
+  if (!redis) {
+    await setupQueues();
+  }
+  if (delayCheckWorker) {
+    return;
+  }
+
+  delayCheckWorker = new Worker("delay-check", processDelayCheck, {
+    connection: redis,
+    concurrency: 5,
+    limiter: {
+      max: 100,
+      duration: 60000, // 100 jobs per minute
+    },
+  });
+
+  notificationWorker = new Worker("notifications", processNotification, {
+    connection: redis,
+    concurrency: 10,
+    limiter: {
+      max: 200,
+      duration: 60000, // 200 jobs per minute
+    },
+  });
+
+  // Phase 2.1.a: customer-sync worker. Conservative concurrency + rate
+  // limit — every job makes one Shopify GraphQL call. ShipEngine
+  // rate-limit territory is documented at audit Wave 1.1; the Shopify
+  // GraphQL cost-points limit is 1000/sec on standard plans, and one
+  // Customer query is a couple of points, so 200/min leaves ample
+  // headroom. Concurrency 5 mirrors the delay-check worker.
+  customerSyncWorker = new Worker("customer-sync", processCustomerSync, {
+    connection: redis,
+    concurrency: 5,
+    limiter: {
+      max: 200,
+      duration: 60000,
+    },
+  });
+
+  // Set up event listeners
+  setupQueueEvents();
+
+  logger.info("✅ Workers started (long-running process mode)");
 }
 
 function setupQueueEvents(): void {

@@ -1,5 +1,6 @@
 import request from 'supertest';
 import Koa from 'koa';
+import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import jwt from 'jsonwebtoken';
 import { apiRoutes } from '../../../routes/api';
@@ -16,6 +17,19 @@ jest.mock('../../../utils/logger', () => ({
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
+  },
+}));
+
+// Plan gate (LAUNCH_PLAN WS-F F1): PUT /settings with sms_enabled=true
+// consults the billing service. Default to pro here so the pre-existing
+// settings tests exercise the settings path itself; the gate's own
+// free/pro/error matrix lives in plan-route.test.ts.
+jest.mock('../../../services/billing-service', () => ({
+  billingService: {
+    getCurrentPlan: jest.fn().mockResolvedValue('pro'),
+    getPlanConfig: jest.fn(),
+    isSmsAllowed: jest.fn().mockReturnValue(true),
+    meetsPlan: jest.fn().mockReturnValue(true),
   },
 }));
 
@@ -55,8 +69,12 @@ describe('API Routes', () => {
     // Create fresh app for each test
     app = new Koa();
     app.use(bodyParser());
-    app.use(apiRoutes.routes());
-    app.use(apiRoutes.allowedMethods());
+    // Mirror server.ts: routers carry no prefix (LAUNCH_PLAN A3);
+    // the mount point provides it.
+    const root = new Router();
+    root.use('/api', apiRoutes.routes());
+    app.use(root.routes());
+    app.use(root.allowedMethods());
 
     // Create valid test token (Shopify session token format)
     testToken = jwt.sign(
@@ -151,6 +169,60 @@ describe('API Routes', () => {
         data: [],
         count: 0,
       });
+    });
+  });
+
+  describe('PUT /api/alerts/:id/status', () => {
+    it('persists a resolved status for the authenticated shop', async() => {
+      mockAuth(); // requireAuth middleware lookup
+      mockResolveShopId(); // service.resolveShopId
+      mockQuery.mockResolvedValueOnce([{ id: '42' }]); // UPDATE ... RETURNING id
+
+      const response = await request(app.callback())
+        .put('/api/alerts/42/status')
+        .set('Authorization', `Bearer ${testToken}`)
+        .send({ status: 'resolved' })
+        .expect(200);
+
+      expect(response.body).toEqual({ success: true });
+      // The UPDATE carries status, alert id, and resolved shop id
+      const updateCall = mockQuery.mock.calls.find(
+        ([sql]) => typeof sql === 'string' && /UPDATE\s+delay_alerts/i.test(sql),
+      );
+      expect(updateCall?.[1]).toEqual(['resolved', '42', mockShopData.id]);
+    });
+
+    it('returns 400 for an out-of-enum status', async() => {
+      mockAuth();
+
+      const response = await request(app.callback())
+        .put('/api/alerts/42/status')
+        .set('Authorization', `Bearer ${testToken}`)
+        .send({ status: 'bogus' })
+        .expect(400);
+
+      expect(response.body).toHaveProperty('code', 'INVALID_STATUS');
+    });
+
+    it('returns 404 when the alert does not belong to the shop', async() => {
+      mockAuth();
+      mockResolveShopId();
+      mockQuery.mockResolvedValueOnce([]); // UPDATE affected no rows
+
+      await request(app.callback())
+        .put('/api/alerts/999/status')
+        .set('Authorization', `Bearer ${testToken}`)
+        .send({ status: 'dismissed' })
+        .expect(404);
+    });
+
+    it('returns 401 without authentication', async() => {
+      await request(app.callback())
+        .put('/api/alerts/42/status')
+        .send({ status: 'resolved' })
+        .expect(401);
+
+      expect(mockQuery).not.toHaveBeenCalled();
     });
   });
 

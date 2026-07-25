@@ -16,7 +16,10 @@ export class SecurityHeadersMiddleware {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-ancestors 'none'",
+    // Embedded Shopify app (LAUNCH_PLAN A2): the Shopify admin iframes
+    // this app, so frame-ancestors must allow the admin + merchant shop
+    // domains. 'none' (the previous value) made the app un-embeddable.
+    "frame-ancestors https://admin.shopify.com https://*.myshopify.com",
     "upgrade-insecure-requests",
   ].join("; ");
 
@@ -41,8 +44,9 @@ export class SecurityHeadersMiddleware {
     // Set X-Powered-By header
     ctx.set("X-Powered-By", "DelayGuard");
 
-    // X-Frame-Options (redundant with CSP frame-ancestors but for older browsers)
-    ctx.set("X-Frame-Options", "DENY");
+    // NO X-Frame-Options (LAUNCH_PLAN A2): it cannot express an
+    // allow-list, so any value (DENY/SAMEORIGIN) would block Shopify
+    // admin embedding. CSP frame-ancestors above is the framing policy.
 
     // X-Content-Type-Options
     ctx.set("X-Content-Type-Options", "nosniff");

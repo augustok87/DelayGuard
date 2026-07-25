@@ -35,6 +35,24 @@ jest.mock("../utils/logger", () => ({
   },
 }));
 
+// SMS is a paid feature (Pro+). The service must gate the SMS channel on the
+// shop's LIVE plan tier (mirroring queue/processors/notification.ts), not just
+// on the app_settings.sms_enabled flag. Default the mock to an SMS-eligible
+// plan so the pre-existing dispatch tests keep exercising the SMS path.
+jest.mock("./billing-service", () => ({
+  billingService: {
+    getCurrentPlan: jest.fn().mockResolvedValue("pro"),
+    isSmsAllowed: jest.fn((tier: string) => tier === "pro" || tier === "enterprise"),
+  },
+}));
+import { billingService } from "./billing-service";
+const mockGetCurrentPlan = billingService.getCurrentPlan as jest.MockedFunction<
+  typeof billingService.getCurrentPlan
+>;
+const mockIsSmsAllowed = billingService.isSmsAllowed as jest.MockedFunction<
+  typeof billingService.isSmsAllowed
+>;
+
 describe("TestAlertService.dispatchTestAlert", () => {
   const shopDomain = "test-store.myshopify.com";
   let emailService: jest.Mocked<EmailService>;
@@ -254,6 +272,73 @@ describe("TestAlertService.dispatchTestAlert", () => {
 
     const calls = emailService.sendDelayEmail.mock.calls.map((c) => c[2].delayReason);
     expect(calls).toEqual(["WAREHOUSE_DELAY", "DELAYED_STATUS", "STUCK_IN_TRANSIT"]);
+  });
+
+  // --- SMS plan gating (billing-leak defense, mirrors notification.ts) ---
+
+  it("suppresses SMS when the shop's live plan does not include SMS, even if sms_enabled=true (stale-flag billing leak)", async() => {
+    // Realistic scenario: shop was Pro (enabled SMS), downgraded to free, but
+    // app_settings.sms_enabled is still TRUE. Default-channel dispatch must NOT
+    // fire a billable Twilio SMS off-plan.
+    mockShopRow({ sms_enabled: true });
+    mockGetCurrentPlan.mockResolvedValueOnce("free");
+
+    const result = await service.dispatchTestAlert(shopDomain, {
+      delayType: "warehouse",
+    });
+
+    expect(mockGetCurrentPlan).toHaveBeenCalledWith(shopDomain);
+    expect(result.channelsAttempted).toEqual(["email"]);
+    expect(smsService.sendDelaySMS).not.toHaveBeenCalled();
+  });
+
+  it("suppresses SMS on the free plan even when channels: ['sms'] is explicitly requested", async() => {
+    mockShopRow({ sms_enabled: true });
+    mockGetCurrentPlan.mockResolvedValueOnce("free");
+    const channels: TestAlertChannel[] = ["sms"];
+
+    const result = await service.dispatchTestAlert(shopDomain, {
+      delayType: "warehouse",
+      channels,
+    });
+
+    expect(result.channelsAttempted).toEqual([]);
+    expect(smsService.sendDelaySMS).not.toHaveBeenCalled();
+  });
+
+  it("dispatches SMS on the enterprise plan (isSmsAllowed=true)", async() => {
+    mockShopRow({ sms_enabled: true });
+    mockGetCurrentPlan.mockResolvedValueOnce("enterprise");
+
+    const result = await service.dispatchTestAlert(shopDomain, {
+      delayType: "warehouse",
+    });
+
+    expect(result.channelsAttempted).toEqual(["email", "sms"]);
+    expect(smsService.sendDelaySMS).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT resolve the plan when SMS would not fire anyway (email-only request)", async() => {
+    // Optimization guard, matching notification.ts: avoid a billing GraphQL
+    // lookup on every email-only test-alert.
+    mockShopRow();
+    const channels: TestAlertChannel[] = ["email"];
+
+    await service.dispatchTestAlert(shopDomain, {
+      delayType: "warehouse",
+      channels,
+    });
+
+    expect(mockGetCurrentPlan).not.toHaveBeenCalled();
+  });
+
+  it("does NOT resolve the plan when sms_enabled=false (no SMS intent)", async() => {
+    mockShopRow({ sms_enabled: false });
+
+    await service.dispatchTestAlert(shopDomain, { delayType: "warehouse" });
+
+    expect(mockGetCurrentPlan).not.toHaveBeenCalled();
+    expect(mockIsSmsAllowed).not.toHaveBeenCalled();
   });
 
   it("defaults email_enabled=TRUE / sms_enabled=FALSE when app_settings row is missing (LEFT JOIN nulls)", async() => {

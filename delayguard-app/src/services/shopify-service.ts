@@ -18,9 +18,9 @@ import { query } from "../database/connection";
 
 /**
  * Shopify API version to use
- * Using 2024-01 (stable version with lineItems support)
+ * 2026-07 (stable). Supported window as of 2026-07: 2025-10 → 2026-07.
  */
-const SHOPIFY_API_VERSION = "2024-01";
+const SHOPIFY_API_VERSION = "2026-07";
 
 /**
  * Internal representation of order line item
@@ -172,18 +172,22 @@ function normalizeCustomerId(customerId: string): string {
 /**
  * Customer intelligence data fetched from Shopify — Phase 2.1.a.
  *
- * Wire field names normalized to camelCase + parsed types (totalSpent is
- * a string in the GraphQL response, Date for timestamps). The downstream
- * deriveSegment() pure function takes a subset of this shape.
+ * Wire field names normalized to camelCase + parsed types (numeric wire
+ * values arrive as strings in the GraphQL response, Date for timestamps).
+ * The downstream deriveSegment() pure function takes a subset of this
+ * shape.
  */
 export interface CustomerIntelligenceData {
   shopifyCustomerId: string;
   email: string | null;
-  ordersCount: number;
-  totalSpent: number;
+  /** Lifetime order count — GraphQL `numberOfOrders` (UnsignedInt64 string) parsed to number. */
+  numberOfOrders: number;
+  /** Lifetime spend in shop currency — GraphQL `amountSpent.amount` (MoneyV2 Decimal string) parsed to number. */
+  amountSpent: number;
   customerSince: Date;
   lastOrderAt: Date | null;
-  acceptsMarketing: boolean;
+  /** True iff `emailMarketingConsent.marketingState === "SUBSCRIBED"`. */
+  emailMarketingSubscribed: boolean;
 }
 
 /**
@@ -330,11 +334,16 @@ export async function fetchOrderLineItems(
  * above: reuses createGraphQLClient + the Wave 3.5 generic query<T> so
  * the response shape is typed at the call site, not the client.
  *
- * Field semantics (Admin API 2024-01):
- *   - ordersCount: lifetime order count (Int)
- *   - totalSpent: lifetime spend in shop currency, returned as a String
- *     in the deprecated `totalSpent` field — parsed to a number here
- *   - acceptsMarketing: opt-in flag (Boolean)
+ * Field semantics (Admin API 2026-07):
+ *   - numberOfOrders: lifetime order count (UnsignedInt64 — serialized
+ *     as a String in JSON, parsed to a number here)
+ *   - amountSpent: lifetime spend (MoneyV2 { amount currencyCode };
+ *     amount is a Decimal string, parsed to a number here)
+ *   - emailMarketingConsent.marketingState: email opt-in state enum —
+ *     emailMarketingSubscribed derives from `=== "SUBSCRIBED"`.
+ *     NOTE: `emailMarketingConsent` is deprecated-but-present in
+ *     2026-07 and its successor field is unnamed in the docs as of
+ *     2026-07-21 — re-check at the next API version bump.
  *   - createdAt: customer creation timestamp → customerSince
  *   - lastOrder.createdAt: most recent order timestamp → lastOrderAt
  *
@@ -356,6 +365,9 @@ export async function fetchCustomerById(
   const client = await createGraphQLClient(shopDomain, accessToken);
   const customerGid = normalizeCustomerId(shopifyCustomerId);
 
+  // emailMarketingConsent is deprecated-but-present in 2026-07; its
+  // successor is unnamed in shopify.dev docs as of 2026-07-21 — re-check
+  // at the next SHOPIFY_API_VERSION bump.
   const queryString = `
     query GetCustomerById($customerId: ID!) {
       customer(id: $customerId) {
@@ -363,9 +375,14 @@ export async function fetchCustomerById(
         firstName
         lastName
         email
-        ordersCount
-        totalSpent
-        acceptsMarketing
+        numberOfOrders
+        amountSpent {
+          amount
+          currencyCode
+        }
+        emailMarketingConsent {
+          marketingState
+        }
         createdAt
         lastOrder {
           createdAt
@@ -381,9 +398,11 @@ export async function fetchCustomerById(
     firstName: string | null;
     lastName: string | null;
     email: string | null;
-    ordersCount: number;
-    totalSpent: string;
-    acceptsMarketing: boolean;
+    /** UnsignedInt64 — serialized as a string in the JSON response. */
+    numberOfOrders: string;
+    /** MoneyV2 — amount is a Decimal string. */
+    amountSpent: { amount: string; currencyCode: string };
+    emailMarketingConsent: { marketingState: string } | null;
     createdAt: string;
     lastOrder: { createdAt: string } | null;
   }
@@ -407,11 +426,12 @@ export async function fetchCustomerById(
   return {
     shopifyCustomerId: c.id,
     email: c.email,
-    ordersCount: c.ordersCount,
-    totalSpent: parseFloat(c.totalSpent),
+    numberOfOrders: parseInt(c.numberOfOrders, 10),
+    amountSpent: parseFloat(c.amountSpent.amount),
     customerSince: new Date(c.createdAt),
     lastOrderAt: c.lastOrder ? new Date(c.lastOrder.createdAt) : null,
-    acceptsMarketing: c.acceptsMarketing,
+    emailMarketingSubscribed:
+      c.emailMarketingConsent?.marketingState === "SUBSCRIBED",
   };
 }
 

@@ -5,7 +5,9 @@ import { requireAuth, getShopDomain } from "../middleware/shopify-session";
 import {
   MerchantApiService,
   ShopNotFoundError,
+  AlertNotFoundError,
   MerchantApiValidationError,
+  AlertStatus,
 } from "../services/merchant-api-service";
 import {
   TestAlertService,
@@ -14,9 +16,34 @@ import {
 } from "../services/test-alert-service";
 import { EmailService } from "../services/email-service";
 import { SMSService } from "../services/sms-service";
+import { billingService } from "../services/billing-service";
 
-const router = new Router({ prefix: "/api" });
+// No router-level prefix (LAUNCH_PLAN A3): server.ts mounts this router
+// at /api. A prefix here double-prefixed every route to /api/api/*.
+const router = new Router();
 const merchantApi = new MerchantApiService();
+
+/**
+ * Plan gate (LAUNCH_PLAN WS-F F1): SMS is a paid feature (Pro+). Resolves
+ * the shop's App Pricing tier and, when SMS is not allowed, writes the 403
+ * response and returns false. BillingService fails closed to "free" on any
+ * lookup error, so a Shopify outage can never unlock a paid feature.
+ */
+async function ensureSmsPlan(
+  ctx: Context,
+  shopDomain: string,
+): Promise<boolean> {
+  const plan = await billingService.getCurrentPlan(shopDomain);
+  if (billingService.isSmsAllowed(plan)) {
+    return true;
+  }
+  ctx.status = 403;
+  ctx.body = {
+    error: "SMS notifications require the Pro plan or above",
+    code: "PLAN_UPGRADE_REQUIRED",
+  };
+  return false;
+}
 
 // Lazy singleton — env vars must be present at call time (Vercel cold
 // start has them; tests mock the underlying services). Constructed once
@@ -54,6 +81,11 @@ function respondWithServiceError(
     ctx.body = { error: "Shop not found" };
     return;
   }
+  if (error instanceof AlertNotFoundError) {
+    ctx.status = 404;
+    ctx.body = { error: "Alert not found" };
+    return;
+  }
   if (error instanceof MerchantApiValidationError) {
     ctx.status = 400;
     ctx.body = { error: error.message, code: error.code };
@@ -80,6 +112,28 @@ router.get("/alerts", requireAuth, async(ctx: Context) => {
     ctx.body = { success: true, data: alerts, count: alerts.length };
   } catch (error) {
     respondWithServiceError(ctx, error, "Failed to fetch alerts");
+  }
+});
+
+/**
+ * PUT /api/alerts/:id/status
+ * Persist the merchant's triage status for one alert
+ * (active | resolved | dismissed). Multi-tenant safe via the service.
+ */
+router.put("/alerts/:id/status", requireAuth, async(ctx: Context) => {
+  try {
+    const shopDomain = getShopDomain(ctx);
+    const alertId = ctx.params.id;
+    const body = ctx.request.body as { status?: string };
+    await merchantApi.updateAlertStatus(
+      shopDomain,
+      alertId,
+      body.status as AlertStatus,
+    );
+    ctx.status = 200;
+    ctx.body = { success: true };
+  } catch (error) {
+    respondWithServiceError(ctx, error, "Failed to update alert status");
   }
 });
 
@@ -123,6 +177,10 @@ router.put("/settings", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
     const body = ctx.request.body as Record<string, unknown>;
+    // Enabling SMS is gated on plan >= Pro (disabling is always allowed).
+    if (body.sms_enabled === true && !(await ensureSmsPlan(ctx, shopDomain))) {
+      return;
+    }
     await merchantApi.updateSettings(shopDomain, {
       delay_threshold_days: body.delay_threshold_days as number | undefined,
       email_enabled: body.email_enabled as boolean | undefined,
@@ -225,9 +283,19 @@ router.post("/test-alert", requireAuth, async(ctx: Context) => {
   try {
     const shopDomain = getShopDomain(ctx);
     const body = ctx.request.body as Record<string, unknown>;
+    const requestedChannels = body.channels as TestAlertChannel[] | undefined;
+    // Requesting the SMS channel is gated on plan >= Pro. Default-channel
+    // dispatch is governed by app_settings.sms_enabled, which the
+    // PUT /settings gate already prevents free-tier shops from enabling.
+    if (
+      requestedChannels?.includes("sms") &&
+      !(await ensureSmsPlan(ctx, shopDomain))
+    ) {
+      return;
+    }
     const result = await getTestAlertService().dispatchTestAlert(shopDomain, {
       delayType: body.delayType as TestAlertDelayType,
-      channels: body.channels as TestAlertChannel[] | undefined,
+      channels: requestedChannels,
       recipientEmail: body.recipientEmail as string | null | undefined,
       recipientPhone: body.recipientPhone as string | null | undefined,
     });
@@ -235,6 +303,31 @@ router.post("/test-alert", requireAuth, async(ctx: Context) => {
     ctx.body = { success: true, data: result };
   } catch (error) {
     respondWithServiceError(ctx, error, "Failed to dispatch test alert");
+  }
+});
+
+/**
+ * GET /api/plan
+ * Resolve the shop's current Shopify App Pricing tier (LAUNCH_PLAN WS-F F1).
+ * BillingService reads currentAppInstallation.activeSubscriptions from the
+ * Admin GraphQL API and FAILS CLOSED to "free" on any lookup error, so this
+ * endpoint always returns a usable tier for feature gating.
+ */
+router.get("/plan", requireAuth, async(ctx: Context) => {
+  try {
+    const shopDomain = getShopDomain(ctx);
+    const plan = await billingService.getCurrentPlan(shopDomain);
+    ctx.status = 200;
+    ctx.body = {
+      success: true,
+      data: {
+        plan,
+        smsAllowed: billingService.isSmsAllowed(plan),
+        planConfig: billingService.getPlanConfig(plan),
+      },
+    };
+  } catch (error) {
+    respondWithServiceError(ctx, error, "Failed to resolve plan");
   }
 });
 

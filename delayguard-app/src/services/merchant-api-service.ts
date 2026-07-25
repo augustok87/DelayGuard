@@ -39,6 +39,22 @@ export class ShopNotFoundError extends Error {
   }
 }
 
+export class AlertNotFoundError extends Error {
+  public readonly alertId: string;
+  constructor(alertId: string) {
+    super(`Alert not found: ${alertId}`);
+    this.name = "AlertNotFoundError";
+    this.alertId = alertId;
+  }
+}
+
+export type AlertStatus = "active" | "resolved" | "dismissed";
+const ALERT_STATUSES: ReadonlySet<string> = new Set([
+  "active",
+  "resolved",
+  "dismissed",
+]);
+
 export class MerchantApiValidationError extends Error {
   public readonly code: string;
   constructor(message: string, code: string) {
@@ -62,6 +78,19 @@ export interface AlertRow {
   customer_name: string;
   total_price: string;
   order_created_at: string;
+  // Phase 2.1.b — priority (denormalized on delay_alerts)
+  priority_score: string | null;
+  priority_level: string | null;
+  // Phase 2.1.c — financial breakdown (order-level)
+  subtotal_price: string | null;
+  total_tax: string | null;
+  total_discounts: string | null;
+  total_shipping_price: string | null;
+  // Phase 2.1.d — shipping address (order-level)
+  shipping_city: string | null;
+  shipping_province_code: string | null;
+  shipping_country_code: string | null;
+  shipping_zip: string | null;
 }
 
 export interface OrderRow {
@@ -183,7 +212,17 @@ export class MerchantApiService {
            o.customer_email,
            o.customer_name,
            o.total_price,
-           o.created_at as order_created_at
+           o.created_at as order_created_at,
+           da.priority_score,
+           da.priority_level,
+           o.subtotal_price,
+           o.total_tax,
+           o.total_discounts,
+           o.total_shipping_price,
+           o.shipping_city,
+           o.shipping_province_code,
+           o.shipping_country_code,
+           o.shipping_zip
          FROM delay_alerts da
          JOIN orders o ON da.order_id = o.id
          WHERE o.shop_id = $1
@@ -556,6 +595,55 @@ export class MerchantApiService {
         "Failed to update merchant settings",
         error instanceof Error ? error : new Error(String(error)),
         { shopDomain },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Persist the merchant's triage status for one alert. Multi-tenant safe:
+   * the UPDATE is scoped through orders.shop_id so a shop can never mutate
+   * another shop's alert. Throws AlertNotFoundError (routes → 404) when the
+   * id doesn't exist or belongs to another shop, so a cross-tenant probe is
+   * indistinguishable from a missing id.
+   */
+  async updateAlertStatus(
+    shopDomain: string,
+    alertId: string,
+    status: AlertStatus,
+  ): Promise<void> {
+    // Validate BEFORE resolving the shop so a bad body fails fast.
+    if (!ALERT_STATUSES.has(status)) {
+      throw new MerchantApiValidationError(
+        "status must be one of: active, resolved, dismissed",
+        "INVALID_STATUS",
+      );
+    }
+
+    try {
+      const shopId = await this.resolveShopId(shopDomain);
+      const rows = await query<{ id: string }>(
+        `UPDATE delay_alerts
+         SET status = $1, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2
+           AND order_id IN (SELECT id FROM orders WHERE shop_id = $3)
+         RETURNING id`,
+        [status, alertId, shopId],
+      );
+      if (rows.length === 0) {
+        throw new AlertNotFoundError(alertId);
+      }
+    } catch (error) {
+      if (
+        error instanceof ShopNotFoundError ||
+        error instanceof AlertNotFoundError
+      ) {
+        throw error;
+      }
+      logger.error(
+        "Failed to update alert status",
+        error instanceof Error ? error : new Error(String(error)),
+        { shopDomain, alertId },
       );
       throw error;
     }

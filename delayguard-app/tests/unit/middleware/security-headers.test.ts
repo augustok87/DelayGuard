@@ -66,11 +66,29 @@ describe('Security Headers Middleware', () => {
     });
   });
 
-  describe('X-Frame-Options', () => {
-    it('should set X-Frame-Options to DENY', async() => {
+  describe('Shopify embedded-app framing (LAUNCH_PLAN A2)', () => {
+    it('must NOT set X-Frame-Options — it cannot express an allow-list and blocks admin embedding', async() => {
       await securityHeaders(ctx, next);
 
-      expect(ctx.set).toHaveBeenCalledWith('X-Frame-Options', 'DENY');
+      expect(ctx.set).not.toHaveBeenCalledWith(
+        'X-Frame-Options',
+        expect.anything(),
+      );
+    });
+
+    it('CSP frame-ancestors allows Shopify admin + merchant shop domains', async() => {
+      await securityHeaders(ctx, next);
+
+      expect(ctx.set).toHaveBeenCalledWith(
+        'Content-Security-Policy',
+        expect.stringContaining(
+          'frame-ancestors https://admin.shopify.com https://*.myshopify.com',
+        ),
+      );
+      expect(ctx.set).not.toHaveBeenCalledWith(
+        'Content-Security-Policy',
+        expect.stringContaining("frame-ancestors 'none'"),
+      );
     });
   });
 

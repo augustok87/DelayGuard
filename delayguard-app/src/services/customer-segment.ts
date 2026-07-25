@@ -9,17 +9,17 @@
  * Precedence highest-first (a customer that matches multiple rules takes
  * the first match in this order):
  *
- *   1. VIP        — ordersCount >= 5 OR totalSpent >= 1000
+ *   1. VIP        — numberOfOrders >= 5 OR amountSpent >= 1000
  *                   Plan source: IMPLEMENTATION_PLAN.md line 2108.
- *   2. At-Risk    — ordersCount >= 2 AND daysSinceLastOrder >= 90
+ *   2. At-Risk    — numberOfOrders >= 2 AND daysSinceLastOrder >= 90
  *                   A previously-repeat customer who has lapsed.
  *                   90-day cutoff matches Shopify's "Returning" segment.
- *   3. Gift-Buyer — ordersCount === 1 AND totalSpent >= 200 AND
- *                   !acceptsMarketing
+ *   3. Gift-Buyer — numberOfOrders === 1 AND amountSpent >= 200 AND
+ *                   !emailMarketingSubscribed
  *                   Heuristic for one-off high-value purchases (gifts,
  *                   wedding registries) where the buyer hasn't opted into
  *                   marketing — retention plays are unlikely to convert.
- *   4. Repeat     — ordersCount >= 2 (active, not lapsed)
+ *   4. Repeat     — numberOfOrders >= 2 (active, not lapsed)
  *   5. New        — fallback (orders <= 1, low LTV)
  *
  * Boundaries are inclusive at the threshold (5 orders === VIP, 90 days
@@ -29,20 +29,20 @@
 export type CustomerSegment = "VIP" | "Repeat" | "New" | "At-Risk" | "Gift-Buyer";
 
 export interface DeriveSegmentInput {
-  ordersCount: number;
-  totalSpent: number;
+  numberOfOrders: number;
+  amountSpent: number;
   daysSinceLastOrder: number;
-  acceptsMarketing: boolean;
+  emailMarketingSubscribed: boolean;
 }
 
 export function deriveSegment(input: DeriveSegmentInput): CustomerSegment {
-  const { ordersCount, totalSpent, daysSinceLastOrder, acceptsMarketing } = input;
+  const { numberOfOrders, amountSpent, daysSinceLastOrder, emailMarketingSubscribed } = input;
 
-  if (ordersCount >= 5 || totalSpent >= 1000) return "VIP";
-  if (ordersCount >= 2 && daysSinceLastOrder >= 90) return "At-Risk";
-  if (ordersCount === 1 && totalSpent >= 200 && !acceptsMarketing) {
+  if (numberOfOrders >= 5 || amountSpent >= 1000) return "VIP";
+  if (numberOfOrders >= 2 && daysSinceLastOrder >= 90) return "At-Risk";
+  if (numberOfOrders === 1 && amountSpent >= 200 && !emailMarketingSubscribed) {
     return "Gift-Buyer";
   }
-  if (ordersCount >= 2) return "Repeat";
+  if (numberOfOrders >= 2) return "Repeat";
   return "New";
 }

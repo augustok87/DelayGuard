@@ -1,6 +1,9 @@
 import { TrackingInfo, DelayDetectionResult } from "../types";
 
-export { DelayDetectionResult };
+// `export type` required: isolatedModules (tsconfig.frontend.json) forbids
+// re-exporting a type as a value. Surfaced when WS-E's delay-check tests
+// pulled this file into the frontend type-check program.
+export type { DelayDetectionResult };
 
 export function checkForDelays(
   trackingInfo: TrackingInfo,

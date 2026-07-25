@@ -17,10 +17,20 @@ import {
   useOrderActions,
   useSettingsActions,
 } from "../hooks";
+import { useApiClient } from "../hooks/useApiClient";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { initializeApp, fetchDashboardStats } from "../store/slices/appSlice";
 import { AppSettings, StatsData } from "../types";
 import styles from "./RefactoredApp.module.css";
 
 export function RefactoredAppOptimized() {
+  // G2: mount the authenticated API client FIRST — this hands the App
+  // Bridge instance to the apiClient singleton so every thunk dispatched
+  // by the data hooks below carries a session token.
+  useApiClient();
+
+  const dispatch = useAppDispatch();
+
   // Custom hooks for data and state management
   const { selectedTab, changeTab } = useTabs();
   const {
@@ -41,21 +51,23 @@ export function RefactoredAppOptimized() {
   const { saveSettings, testDelayDetection, connectToShopify } =
     useSettingsActions();
 
+  // G2: shop + stats come from the real API via Redux (appSlice).
+  const shop = useAppSelector((state) => state.app.shop);
+  const apiStats = useAppSelector((state) => state.app.stats);
+
   // Local state
-  const [shop, setShop] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Memoized statistics for the dashboard
+  // Header stats: /api/analytics when available, otherwise derived live
+  // from the fetched alerts (all real data — no fabricated metrics).
   const stats = useMemo<StatsData>(
-    () => ({
-      totalAlerts: 12,
-      activeAlerts: 3,
-      resolvedAlerts: 9,
-      avgResolutionTime: "2.3 days",
-      customerSatisfaction: "94%",
-      supportTicketReduction: "35%",
-    }),
-    [],
+    () =>
+      apiStats ?? {
+        totalAlerts: alerts.length,
+        activeAlerts: alerts.filter((a) => a.status === "active").length,
+        resolvedAlerts: alerts.filter((a) => a.status === "resolved").length,
+      },
+    [apiStats, alerts],
   );
 
   // Combined loading state
@@ -70,10 +82,11 @@ export function RefactoredAppOptimized() {
     [error, alertsError, ordersError, settingsError],
   );
 
-  // Initialize shop data
+  // G2: resolve the real shop + analytics from the backend on mount.
   useEffect(() => {
-    setShop("my-awesome-store.myshopify.com");
-  }, []); // Empty deps array is intentional - only run on mount
+    dispatch(initializeApp());
+    dispatch(fetchDashboardStats());
+  }, [dispatch]);
 
   // Memoized handler functions
   const handleSaveSettings = useCallback(async() => {
@@ -87,10 +100,9 @@ export function RefactoredAppOptimized() {
   }, [testDelayDetection]);
 
   const handleConnectShopify = useCallback(async() => {
-    const result = await connectToShopify();
-    if (result.success) {
-      setShop("my-awesome-store.myshopify.com");
-    }
+    // appSlice.connectShopify re-verifies the session and stores the
+    // real shop domain — no hardcoded fallback.
+    await connectToShopify();
   }, [connectToShopify]);
 
   const handleAlertAction = useCallback(

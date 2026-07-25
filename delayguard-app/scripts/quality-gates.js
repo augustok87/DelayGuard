@@ -19,7 +19,9 @@ const CONFIG = {
   maxBuildTime: 10, // seconds
   requiredFiles: [
     'src/components/index.ts',
-    'src/services/AnalyticsService.ts',
+    // Analytics moved into MerchantApiService.getAnalytics — the standalone
+    // AnalyticsService.ts never existed in this tree.
+    'src/services/merchant-api-service.ts',
     'src/types/index.ts',
     'tests/unit/components/MinimalApp.test.tsx',
   ],
