@@ -54,6 +54,15 @@ For every feature, in this order:
 - **External APIs**: Shopify Admin API, ShipEngine, SendGrid, Twilio. Each has a service wrapper — don't call `fetch`/`axios` from a route or component directly.
 - **Smallest blast radius.** Touch only what the task requires. No drive-by refactors, no speculative abstractions.
 
+## Money-path & third-party invariants (DelayGuard-specific)
+
+These concretize the global revenue-first constitution for *this app's* risk surface — money leaves the building through SMS/email and every alert is a paid promise. Don't restate the generic rules; apply them here:
+
+- **Paid-feature gating is on the LIVE plan, never a stored flag.** SMS is Pro+. Gate every SMS/paid dispatch on `billingService.getCurrentPlan()` + `isSmsAllowed()` — an `app_settings.sms_enabled` left TRUE after a downgrade is a billing leak. `getCurrentPlan` fails closed to `"free"` (a Shopify outage suppresses SMS rather than leaking it). Canonical: [notification.ts](delayguard-app/src/queue/processors/notification.ts), [test-alert-service.ts](delayguard-app/src/services/test-alert-service.ts).
+- **Notification dispatch must be idempotent.** A replayed BullMQ job or an overlapping Vercel-cron sweep must not double-send. Alerts carry `email_sent`/`sms_sent`; every send path checks them. ⚠️ Known gap (verified 2026-07-25): the check-then-send is *non-atomic* and `delay_alerts` has no unique constraint backing its `ON CONFLICT DO NOTHING` — so the flag is not yet a hard dedupe. Don't ship a new send path that assumes it is until the migration lands (dedupe existing rows → `UNIQUE(order_id, delay_reason)` → atomic `UPDATE … WHERE email_sent = FALSE RETURNING` claim-before-send).
+- **Third-party calls get a timeout + BullMQ retry, not a hand-rolled loop.** ShipEngine / Twilio / SendGrid / Shopify Admin GraphQL: `try/catch` with an `AbortController` timeout; let the queue's `attempts: 3` exp-backoff do the retrying (see [.claude/rules/backend.md](.claude/rules/backend.md)). Timeout pattern: the `ping()` methods in [email-service.ts](delayguard-app/src/services/email-service.ts) / [sms-service.ts](delayguard-app/src/services/sms-service.ts). ⚠️ The Shopify Admin GraphQL fetch and the live send calls still lack timeouts — add one when you next touch them.
+- **Validate bodies before they touch Postgres.** Webhooks verify HMAC first (see [.claude/rules/backend.md](.claude/rules/backend.md)); request bodies narrow `unknown` → typed via explicit guards (e.g. `isValidDelayType` / `isValidChannelArray` in `test-alert-service.ts`) before any value reaches a SQL parameter. Never cast `ctx.request.body` straight into a query.
+
 ## Asking-vs-acting
 
 - Reverse-prompt when intent is unclear; don't guess your way into the wrong implementation.

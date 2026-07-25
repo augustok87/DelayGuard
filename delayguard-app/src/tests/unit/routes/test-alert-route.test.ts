@@ -26,6 +26,16 @@ jest.mock("../../../services/sms-service", () => ({
   })),
 }));
 
+// SMS is Pro+; TestAlertService now gates the SMS channel on the live plan
+// tier (billing-leak defense). Mock an SMS-eligible plan so the boundary test
+// still exercises the both-channels success shape without a real Admin API call.
+jest.mock("../../../services/billing-service", () => ({
+  billingService: {
+    getCurrentPlan: jest.fn().mockResolvedValue("pro"),
+    isSmsAllowed: jest.fn(() => true),
+  },
+}));
+
 jest.mock("../../../database/connection");
 import { query } from "../../../database/connection";
 const mockQuery = query as jest.MockedFunction<typeof query>;

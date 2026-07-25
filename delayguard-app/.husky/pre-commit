@@ -1,10 +1,18 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+# DelayGuard pre-commit gate. Self-contained — does NOT depend on husky being
+# installed. Git invokes this via `core.hooksPath=delayguard-app/.husky` (set by
+# the `prepare` script in delayguard-app/package.json, re-run on every install).
+# Runs from the repo root, so cd into the app dir where quality-gates.js lives.
+set -e
 
-echo "🔍 Running DelayGuard Quality Gates..."
+# Resolve the app dir relative to this hook file (.husky/ is inside delayguard-app/).
+APP_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+cd "$APP_DIR"
 
-# Run quality gates
+echo "🔍 Running DelayGuard Quality Gates (build + type-check + tests + lint)..."
+
+# quality-gates.js runs: build, tsc --noEmit, jest (+coverage), lint, and guards.
+# It exits non-zero on any failure, which aborts the commit.
 node scripts/quality-gates.js
 
-# If quality gates pass, continue with commit
 echo "✅ Quality gates passed, proceeding with commit..."

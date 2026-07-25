@@ -7,6 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "prepare": "git -C .. config core.hooksPath delayguard-app/.husky",
     "dev": "concurrently \"npm run dev:server:simple\" \"npm run dev:client\"",
     "dev:full": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "ts-node src/server.ts",
