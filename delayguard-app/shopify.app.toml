@@ -7,10 +7,9 @@
 # Webhook URIs are relative to application_url. Regular topics target the
 # canonical /webhooks/* mounts; compliance topics target the A3 GDPR routes.
 
-# ⚠️ PLACEHOLDER — replace with the real client ID from the Partner Dashboard
-# (Apps → DelayGuard → Client credentials) before `shopify app deploy`.
-# Must equal SHOPIFY_API_KEY in Vercel env.
-client_id = "REPLACE_WITH_PARTNER_DASHBOARD_CLIENT_ID"
+# Client ID from the Dev Dashboard (Apps → DelayGuard → Settings). Equals
+# SHOPIFY_API_KEY in Vercel env.
+client_id = "e9d96cad62c5e6db0a67e6752a23d0ea"
 
 name = "DelayGuard"
 handle = "delayguard"
