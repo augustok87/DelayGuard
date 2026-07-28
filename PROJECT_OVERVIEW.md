@@ -39,7 +39,7 @@ Post-deploy snapshot (mirrors [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §1), updated 202
 |--------|--------|---------|
 | **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
 | **Launch Readiness** | **Code-complete for launch** | Submission pending the human dashboard gate + Wave-3 deploy (see Production wiring status above and LAUNCH_PLAN.md §2) |
-| **Test Success** | **100%** | 2,414 passing (see [CHANGELOG.md](CHANGELOG.md) v1.54), 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run. The long-standing `input-sanitization.test.ts` wall-clock flake was fixed in v1.54 |
+| **Test Success** | **100%** | 2,417 passing (see [CHANGELOG.md](CHANGELOG.md) v1.54), 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run. The long-standing `input-sanitization.test.ts` wall-clock flake was fixed in v1.54 |
 | **Test Suites** | **All passing** | 96 of 98 suites pass; 2 suites skipped (require PostgreSQL) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
@@ -355,7 +355,7 @@ Post-deploy snapshot (mirrors [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §1), updated 202
 - ✅ 14 environment variables configured in Vercel
 - ✅ Legal documentation (privacy policy, terms of service)
 - ✅ API documentation (OpenAPI 3.0)
-- ✅ 100% test success rate (2,414 passing — see CHANGELOG.md v1.54)
+- ✅ 100% test success rate (2,417 passing — see CHANGELOG.md v1.54)
 
 **What Remains:**
 - ⚠️ App Store Assets (1-2 days)
@@ -704,7 +704,7 @@ Phone: (406) 555-0123
 - ✅ Phase 1 Complete (Oct 28, 2025)
 - ✅ Code-complete for launch (13 production blockers resolved on `launch/integration` — see Production wiring status)
 - ✅ Phase 2.1.a–e shipped (2026-05-15, v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint
-- ✅ 2,414 passing tests, production-ready code (see CHANGELOG.md v1.54)
+- ✅ 2,417 passing tests, production-ready code (see CHANGELOG.md v1.54)
 - ⚠️ Submission pending the human dashboard gate (H1–H9) + Wave-3 deploy — see LAUNCH_PLAN.md §2
 
 **Where We're Going:**

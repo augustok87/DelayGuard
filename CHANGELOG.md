@@ -12,7 +12,7 @@
 
 ### v1.54 (2026-07-28): Production deploy verified + CI truth pass
 
-**Test Results**: 2,414 passing (+14), 25 skipped, 0 failing. Full local gate green (`npm test && npm run lint && npm run type-check && npm run build`): lint 0 errors / 13 pre-existing warnings, `tsc --noEmit` clean, webpack build clean. `npm run test:db:schema` also green (51 passing).
+**Test Results**: 2,417 passing (+17), 25 skipped, 0 failing. Full local gate green (`npm test && npm run lint && npm run type-check && npm run build`): lint 0 errors / 13 pre-existing warnings, `tsc --noEmit` clean, webpack build clean. `npm run test:db:schema` also green (51 passing).
 
 **Production is live.** The Appendix B probe matrix in [LAUNCH_PLAN.md](LAUNCH_PLAN.md) was re-run against `https://delayguard-api.vercel.app` and passes **9/9**: `/health` returns honest health with real Postgres (79ms) and Redis (2ms) pings, `POST /webhooks/orders/updated` without an HMAC returns 401 (route live, HMAC rejecting), `/api/alerts` without a session token returns 401, `/api/cron/*` without `CRON_SECRET` returns 401 and 200 with it, `/billing/plans` serves Free / $7 Pro / $25 Enterprise, `/legal/privacy-policy` and `/legal/terms-of-service` return 200 HTML, and the old `/api` placeholder is gone. Launch-plan human gate H1, H2, H5, H6 confirmed done against live evidence; D3 (prod migration) confirmed functionally by the four `/api/cron/*` sweeps returning `errors:0`; C4 confirmed by `shopify app versions list` showing version `delayguard-3` active.
 
@@ -34,7 +34,9 @@
 
 Both monitoring suites also now stub `process.memoryUsage` and mock `v8.getHeapStatistics`, so the Application check no longer depends on whatever the Jest worker's live heap happens to look like — the underlying reason these suites passed locally and failed on CI.
 
-**Files**: `src/services/monitoring-service.ts`, `tests/unit/services/monitoring-service.test.ts`, `tests/unit/monitoring-service.test.ts`, `tests/unit/middleware/input-sanitization.test.ts`, `tests/unit/services/optimized-database.test.ts`, `tests/integration/database/delay-type-toggles-schema.test.ts`, `tests/integration/database/merchant-contact-schema.test.ts`, plus doc truth pass in `LAUNCH_PLAN.md` / `PROJECT_OVERVIEW.md`.
+**Configurable sender identity (`SENDGRID_FROM_EMAIL`)**: `EmailService` hardcoded `from: "noreply@delayguard.app"`. SendGrid rejects any send whose `from` is not a verified Sender Identity, and `delayguard.app` — while registered — resolves to a lapsed Squarespace site (`HTTP 404`, "Squarespace — Website Expired"), so it cannot be domain-authenticated. The sender now resolves from `SENDGRID_FROM_EMAIL`, trimming blank values and falling back to the historical address so existing deployments are unaffected. Documented in `env.example`. Three tests cover set / unset / whitespace-only.
+
+**Files**: `src/services/email-service.ts`, `src/services/monitoring-service.ts`, `tests/unit/services/monitoring-service.test.ts`, `tests/unit/monitoring-service.test.ts`, `tests/unit/middleware/input-sanitization.test.ts`, `tests/unit/services/optimized-database.test.ts`, `tests/integration/database/delay-type-toggles-schema.test.ts`, `tests/integration/database/merchant-contact-schema.test.ts`, plus doc truth pass in `LAUNCH_PLAN.md` / `PROJECT_OVERVIEW.md`.
 
 **Blocker remaining for App Store submission**: E1 (live SendGrid dynamic template) needs the real `SENDGRID_API_KEY` — the local `.env` holds a placeholder and the SendGrid API returns 403, and `email-service.ts` deliberately refuses to send delay email in production while `SENDGRID_DELAY_TEMPLATE_ID` is unset. Then a dev-store install + end-to-end `/api/test-alert`, and human items H3 (App Pricing plans), H4 (Protected Customer Data Level 2), H7 (ShipStation Advanced plan), H8 (screencast), H9 (submit).
 

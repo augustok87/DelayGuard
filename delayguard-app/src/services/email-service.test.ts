@@ -277,6 +277,75 @@ describe("EmailService.sendDelayEmail", () => {
   });
 });
 
+describe("EmailService — SENDGRID_FROM_EMAIL sender identity (Launch WS-E, task E1)", () => {
+  // SendGrid rejects any send whose `from` is not a verified Sender Identity.
+  // The address was hardcoded to noreply@delayguard.app, but that domain is
+  // registered to a lapsed Squarespace site and cannot be domain-authenticated,
+  // so the deployment has to be able to point at whatever sender is actually
+  // verified (Single Sender Verification) without a code change.
+  let emailService: EmailService;
+  const originalFrom = process.env.SENDGRID_FROM_EMAIL;
+
+  beforeEach(() => {
+    sendMock.mockReset();
+    sendMock.mockResolvedValue([{ statusCode: 202 }, {}]);
+    emailService = new EmailService("test-sendgrid-key");
+  });
+
+  afterEach(() => {
+    if (originalFrom === undefined) {
+      delete process.env.SENDGRID_FROM_EMAIL;
+    } else {
+      process.env.SENDGRID_FROM_EMAIL = originalFrom;
+    }
+  });
+
+  it("sends from SENDGRID_FROM_EMAIL when set", async() => {
+    process.env.SENDGRID_FROM_EMAIL = "augustok87@gmail.com";
+    const orderInfo = makeOrderInfo();
+
+    await emailService.sendDelayEmail(
+      orderInfo.customerEmail!,
+      orderInfo,
+      makeDelayDetails(),
+    );
+
+    expect(sendMock).toHaveBeenCalledWith(
+      expect.objectContaining({ from: "augustok87@gmail.com" }),
+    );
+  });
+
+  it("falls back to the historical noreply@delayguard.app when unset", async() => {
+    delete process.env.SENDGRID_FROM_EMAIL;
+    const orderInfo = makeOrderInfo();
+
+    await emailService.sendDelayEmail(
+      orderInfo.customerEmail!,
+      orderInfo,
+      makeDelayDetails(),
+    );
+
+    expect(sendMock).toHaveBeenCalledWith(
+      expect.objectContaining({ from: "noreply@delayguard.app" }),
+    );
+  });
+
+  it("ignores a whitespace-only SENDGRID_FROM_EMAIL", async() => {
+    process.env.SENDGRID_FROM_EMAIL = "   ";
+    const orderInfo = makeOrderInfo();
+
+    await emailService.sendDelayEmail(
+      orderInfo.customerEmail!,
+      orderInfo,
+      makeDelayDetails(),
+    );
+
+    expect(sendMock).toHaveBeenCalledWith(
+      expect.objectContaining({ from: "noreply@delayguard.app" }),
+    );
+  });
+});
+
 describe("EmailService — SENDGRID_DELAY_TEMPLATE_ID resolution (Launch WS-E, task E1)", () => {
   let emailService: EmailService;
   const originalTemplateId = process.env.SENDGRID_DELAY_TEMPLATE_ID;
