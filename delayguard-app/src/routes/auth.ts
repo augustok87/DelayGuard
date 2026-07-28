@@ -26,6 +26,7 @@
 import Router from "koa-router";
 import { logger } from "../utils/logger";
 import { ShopAuthService } from "../services/shop-auth-service";
+import { registerWebhooks } from "../services/webhook-registration-service";
 import { appConfig } from "../config/app-config";
 import {
   STATE_COOKIE_NAME,
@@ -159,6 +160,32 @@ router.get("/callback", async(ctx) => {
     await shopAuth.upsertShop({ shopDomain: shop, accessToken, scope });
 
     logger.info(`✅ Shop ${shop} authenticated and stored successfully`);
+
+    // Register the functional webhooks for this shop. The custom
+    // authorization-code flow (use_legacy_install_flow=true) forbids
+    // app-specific webhook subscriptions in shopify.app.toml, so they are
+    // registered per-shop here via the Admin API. BEST-EFFORT: a webhook
+    // hiccup must not block the install — log it and still land the
+    // merchant in the app. registerWebhooks itself never throws, but we
+    // still guard against an unexpected rejection.
+    try {
+      const result = await registerWebhooks(shop, accessToken);
+      if (result.failed.length > 0) {
+        logger.warn("Some webhooks failed to register during install", {
+          shop,
+          registered: result.registered,
+          failed: result.failed,
+        });
+      }
+    } catch (error) {
+      logger.warn(
+        "Webhook registration threw during install (continuing anyway)",
+        {
+          shop,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
 
     // Land the merchant back inside the embedded admin app.
     ctx.redirect(`https://${shop}/admin/apps/${appConfig.shopify.apiKey}`);

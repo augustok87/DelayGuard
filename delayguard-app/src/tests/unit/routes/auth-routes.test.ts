@@ -32,6 +32,17 @@ jest.mock("../../../utils/logger", () => ({
   },
 }));
 
+// Webhook registration is best-effort after install — mock it so the OAuth
+// callback tests can assert it is invoked (and that a failure does not break
+// the install redirect).
+jest.mock("../../../services/webhook-registration-service", () => ({
+  registerWebhooks: jest.fn(),
+}));
+import { registerWebhooks } from "../../../services/webhook-registration-service";
+const mockRegisterWebhooks = registerWebhooks as jest.MockedFunction<
+  typeof registerWebhooks
+>;
+
 process.env.SHOPIFY_APP_URL = "https://delayguard-api.vercel.app";
 
 // Imported AFTER mocks + env so the route module loads the test doubles.
@@ -92,6 +103,8 @@ describe("OAuth routes", () => {
     jest.clearAllMocks();
     mockQuery.mockReset();
     mockQuery.mockResolvedValue([]);
+    mockRegisterWebhooks.mockReset();
+    mockRegisterWebhooks.mockResolvedValue({ registered: [], failed: [] });
   });
 
   describe("GET /auth (authorize redirect)", () => {
@@ -215,6 +228,41 @@ describe("OAuth routes", () => {
       expect(res.headers.location).toBe(
         `https://${SHOP}/admin/apps/test_api_key`,
       );
+    });
+
+    it("registers per-shop webhooks with (shop, accessToken) after upserting the shop", async() => {
+      const { state, cookie } = await initiateOAuth(app);
+      mockTokenExchangeSuccess();
+
+      await request(app.callback())
+        .get(`/auth/callback?${toQueryString(callbackParams(state))}`)
+        .set("Cookie", cookie)
+        .expect(302);
+
+      expect(mockRegisterWebhooks).toHaveBeenCalledTimes(1);
+      expect(mockRegisterWebhooks).toHaveBeenCalledWith(
+        SHOP,
+        "shpat_from_exchange",
+      );
+    });
+
+    it("still completes the install redirect when webhook registration rejects (best-effort)", async() => {
+      const { state, cookie } = await initiateOAuth(app);
+      mockTokenExchangeSuccess();
+      mockRegisterWebhooks.mockRejectedValueOnce(
+        new Error("Shopify Admin API unavailable"),
+      );
+
+      const res = await request(app.callback())
+        .get(`/auth/callback?${toQueryString(callbackParams(state))}`)
+        .set("Cookie", cookie)
+        .expect(302);
+
+      // The merchant still lands inside the embedded app despite the failure.
+      expect(res.headers.location).toBe(
+        `https://${SHOP}/admin/apps/test_api_key`,
+      );
+      expect(mockRegisterWebhooks).toHaveBeenCalledTimes(1);
     });
 
     it("403s when the state param does not match the cookie nonce", async() => {
