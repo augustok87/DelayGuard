@@ -57,11 +57,13 @@ class EnvironmentValidator {
     this.errors = [];
     this.warnings = [];
 
-    // Required variables for production
+    // Required variables for production.
+    // PORT/HOST are intentionally NOT required: they only matter for the local
+    // dev `app.listen` (server.ts defaults them to 3000/localhost). On Vercel
+    // serverless there is no port to bind, so requiring them here crashed the
+    // function on cold start (FUNCTION_INVOCATION_FAILED).
     const requiredVars: (keyof EnvironmentConfig)[] = [
       "NODE_ENV",
-      "PORT",
-      "HOST",
       "SHOPIFY_API_KEY",
       "SHOPIFY_API_SECRET",
       "SHOPIFY_SCOPES",

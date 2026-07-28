@@ -3,7 +3,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "functions": {
-    "api/[[...path]].ts": {
+    "api/index.ts": {
       "maxDuration": 30,
       "includeFiles": "legal/**"
     }
@@ -12,24 +12,6 @@
     {
       "source": "/(.*)",
       "destination": "/api"
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/tracking-refresh",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "path": "/api/cron/delay-check",
-      "schedule": "*/10 * * * *"
-    },
-    {
-      "path": "/api/cron/notification-dispatch",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/customer-sync",
-      "schedule": "*/10 * * * *"
     }
   ],
   "env": {

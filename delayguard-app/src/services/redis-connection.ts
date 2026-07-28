@@ -20,6 +20,11 @@ interface RedisConfig {
   keepAlive: number;
   connectTimeout: number;
   commandTimeout: number;
+  // Present (as {}) when the URL scheme is rediss:// — required for TLS
+  // providers like Upstash. Parsing the URL into host/port/password below
+  // otherwise drops the scheme, so the client connects without TLS and the
+  // server closes it ("Connection is closed").
+  tls?: Record<string, unknown>;
 }
 
 class RedisConnectionManager {
@@ -50,6 +55,8 @@ class RedisConnectionManager {
         keepAlive: 30000,
         connectTimeout: 10000,
         commandTimeout: 5000,
+        // rediss:// → TLS (Upstash and other managed Redis require it).
+        tls: url.protocol === "rediss:" ? {} : undefined,
       };
     } catch (error) {
       throw new Error(
