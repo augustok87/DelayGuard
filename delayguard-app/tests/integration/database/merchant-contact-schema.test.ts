@@ -16,8 +16,12 @@ import { query, pool, setupDatabase, runMigrations } from '../../../src/database
 // Load environment variables for database connection
 dotenv.config();
 
-// Override test DATABASE_URL to use dev database (which has migrations)
-process.env.DATABASE_URL = 'postgresql://localhost:5432/delayguard_dev';
+// Respect an ambient DATABASE_URL first: CI provisions a credentialed Postgres
+// service, and hardcoding the passwordless local dev URL made this suite die
+// with "SASL: client password must be a string" on every CI run. Fall back to
+// the local dev database (which has migrations) when nothing is set.
+process.env.DATABASE_URL =
+  process.env.DATABASE_URL || 'postgresql://localhost:5432/delayguard_dev';
 
 describe('Merchant Contact Schema', () => {
   beforeAll(async() => {

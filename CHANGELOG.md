@@ -2,12 +2,43 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 15, 2026 (v1.52 — Phase 2.1.e test-alert endpoint: dashboard-only POST `/api/test-alert` + new `TestAlertService` thin wrapper around EmailService/SMSService + per-channel app_settings flag honoring + per-request channel-picker + per-request recipient-override + dry-run dispatch (no DB write))
+**Last Updated**: July 28, 2026 (v1.54 — production deploy verified: Appendix B probe matrix 9/9 green against `delayguard-api.vercel.app`; CI truth pass fixing four test-environment defects that had `main` red; `AbortController` timeout added to external-API health probes)
+**Previously**: May 15, 2026 (v1.52 — Phase 2.1.e test-alert endpoint: dashboard-only POST `/api/test-alert` + new `TestAlertService` thin wrapper around EmailService/SMSService + per-channel app_settings flag honoring + per-request channel-picker + per-request recipient-override + dry-run dispatch (no DB write))
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.54 (2026-07-28): Production deploy verified + CI truth pass
+
+**Test Results**: 2,417 passing (+17), 25 skipped, 0 failing. Full local gate green (`npm test && npm run lint && npm run type-check && npm run build`): lint 0 errors / 13 pre-existing warnings, `tsc --noEmit` clean, webpack build clean. `npm run test:db:schema` also green (51 passing).
+
+**Production is live.** The Appendix B probe matrix in [LAUNCH_PLAN.md](LAUNCH_PLAN.md) was re-run against `https://delayguard-api.vercel.app` and passes **9/9**: `/health` returns honest health with real Postgres (79ms) and Redis (2ms) pings, `POST /webhooks/orders/updated` without an HMAC returns 401 (route live, HMAC rejecting), `/api/alerts` without a session token returns 401, `/api/cron/*` without `CRON_SECRET` returns 401 and 200 with it, `/billing/plans` serves Free / $7 Pro / $25 Enterprise, `/legal/privacy-policy` and `/legal/terms-of-service` return 200 HTML, and the old `/api` placeholder is gone. Launch-plan human gate H1, H2, H5, H6 confirmed done against live evidence; D3 (prod migration) confirmed functionally by the four `/api/cron/*` sweeps returning `errors:0`; C4 confirmed by `shopify app versions list` showing version `delayguard-3` active.
+
+**Problem (CI had no honest signal)**: both the *DelayGuard Test Suite* and *Quality Gates* workflows had been failing on `main`. None of the failures were product bugs — all four were test-environment defects, and they masked each other:
+
+1. **A unit test made live network calls.** `tests/unit/services/monitoring-service.test.ts` mocked `ioredis` and `pg` but never mocked `fetch`, so `MonitoringService.checkExternalAPIs()` issued real HEAD requests to `api.shipengine.com`, `api.sendgrid.com` and `api.twilio.com`. On a CI runner those return non-2xx or throw, so `healthChecks.every(c => c.status === 'healthy')` was false. It passed locally only because a dev machine's network happened to cooperate.
+2. **Two schema suites hardcoded a passwordless DATABASE_URL.** `tests/integration/database/{delay-type-toggles,merchant-contact}-schema.test.ts` overwrote `process.env.DATABASE_URL` with `postgresql://localhost:5432/delayguard_dev`, discarding the credentialed URL that the CI Postgres service job provides. Every CI run died with `SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string`. They now prefer the ambient value and fall back to the local dev database.
+3. **Two wall-clock assertions flaked on shared runners.** `input-sanitization.test.ts` asserted a 1000-property sanitization pass completes in `< 120ms` — 236ms on a loaded runner (this is the flake documented since v1.52). `optimized-database.test.ts` asserted `expect(duration).toBeGreaterThan(3000)` for a 1000ms + 2000ms backoff, which fails when the timers fire with no scheduling slack and `Date.now()` reports exactly 3000.
+
+**Fix**: mock `global.fetch` in the monitoring unit suite; prefer the ambient `DATABASE_URL` in both schema suites; assert *correctness* (all 1000 payloads stripped) as the primary claim in the sanitization perf test and relax its wall-clock budget to 1000ms under `CI` rather than deleting the timing check; change the backoff matcher to `toBeGreaterThanOrEqual` to match the "waited at least" intent stated in its own comment.
+
+**Production hardening**: `checkExternalAPIs()` now wraps each third-party probe in an `AbortController` with a 5000ms budget (matching the existing `degraded` threshold) and clears the timer in `finally`. This closes one of the gaps flagged in the CLAUDE.md third-party invariant — previously a hung carrier/email/SMS endpoint would stall the entire health check with no timeout. New test asserts every external request receives an `AbortSignal`.
+
+**Root cause of the CI-only monitoring failures — a real metric bug**: two monitoring tests failed only on CI (`getSystemStatus` returning `unhealthy` where `degraded` was expected; `performHealthChecks`'s "every check healthy" assertion false) and could not be reproduced locally across repeated runs, with `CI=true`, or in isolation. Rather than guess, the assertion was instrumented to embed a per-check breakdown in its failure message — and the next CI run named the culprit: `Application=unhealthy, memoryPercentage: 93`.
+
+`checkApplication()` computed `process.memoryUsage().heapUsed / os.totalmem()` — the V8 heap measured against **total system RAM**. That is ~1% on any developer machine (measured: heapUsed 380 MB against 34 GB = 1.1%), so the `> 80` degraded / `> 90` unhealthy thresholds could never fire locally, while on a CI runner the same expression produced 93 and declared the application unhealthy. The metric was wrong by construction in both directions: a false negative on big hosts, a false positive on CI.
+
+`heapUsed / heapTotal` was considered and rejected — V8 grows `heapTotal` lazily and keeps it just above `heapUsed`, so that ratio sits near 90% during normal operation. The check now measures **headroom against the V8 heap ceiling** (`heapUsed / v8.getHeapStatistics().heap_size_limit`), which is what "how close are we to an out-of-memory crash" means and is what the 80/90 thresholds describe. New tests pin the semantics at 50% healthy / 85% degraded / 95% unhealthy.
+
+Both monitoring suites also now stub `process.memoryUsage` and mock `v8.getHeapStatistics`, so the Application check no longer depends on whatever the Jest worker's live heap happens to look like — the underlying reason these suites passed locally and failed on CI.
+
+**Configurable sender identity (`SENDGRID_FROM_EMAIL`)**: `EmailService` hardcoded `from: "noreply@delayguard.app"`. SendGrid rejects any send whose `from` is not a verified Sender Identity, and `delayguard.app` — while registered — resolves to a lapsed Squarespace site (`HTTP 404`, "Squarespace — Website Expired"), so it cannot be domain-authenticated. The sender now resolves from `SENDGRID_FROM_EMAIL`, trimming blank values and falling back to the historical address so existing deployments are unaffected. Documented in `env.example`. Three tests cover set / unset / whitespace-only.
+
+**Files**: `src/services/email-service.ts`, `src/services/monitoring-service.ts`, `tests/unit/services/monitoring-service.test.ts`, `tests/unit/monitoring-service.test.ts`, `tests/unit/middleware/input-sanitization.test.ts`, `tests/unit/services/optimized-database.test.ts`, `tests/integration/database/delay-type-toggles-schema.test.ts`, `tests/integration/database/merchant-contact-schema.test.ts`, plus doc truth pass in `LAUNCH_PLAN.md` / `PROJECT_OVERVIEW.md`.
+
+**Blocker remaining for App Store submission**: E1 (live SendGrid dynamic template) needs the real `SENDGRID_API_KEY` — the local `.env` holds a placeholder and the SendGrid API returns 403, and `email-service.ts` deliberately refuses to send delay email in production while `SENDGRID_DELAY_TEMPLATE_ID` is unset. Then a dev-store install + end-to-end `/api/test-alert`, and human items H3 (App Pricing plans), H4 (Protected Customer Data Level 2), H7 (ShipStation Advanced plan), H8 (screencast), H9 (submit).
 
 ### v1.53 (2026-07-25): Robustness — test-alert SMS plan-gate + local commit-gate wiring
 

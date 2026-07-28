@@ -1,3 +1,13 @@
+// Pin the V8 heap ceiling the Application health check measures against.
+// Must be an inline literal: jest.mock factories are hoisted above consts.
+jest.mock('v8', () => ({
+  ...jest.requireActual('v8'),
+  getHeapStatistics: () => ({ heap_size_limit: 4_000_000_000 }),
+}));
+
+const HEAP_LIMIT_BYTES = 4_000_000_000;
+const realMemoryUsage = process.memoryUsage;
+
 // Mock the database and Redis modules before importing the service
 const mockQuery = jest.fn();
 const mockPing = jest.fn();
@@ -78,11 +88,23 @@ describe('MonitoringService', () => {
       status: 'ready',
     };
     
+    // Pin process memory + the V8 heap ceiling so the Application health check
+    // is deterministic. Unstubbed it reflects the Jest worker's live heap,
+    // which is why this suite passed locally and failed on CI.
+    process.memoryUsage = (() => ({
+      heapUsed: HEAP_LIMIT_BYTES * 0.1,
+      heapTotal: HEAP_LIMIT_BYTES,
+      rss: HEAP_LIMIT_BYTES,
+      external: 0,
+      arrayBuffers: 0,
+    })) as unknown as typeof process.memoryUsage;
+
     monitoringService = new MonitoringService(mockConfig);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    process.memoryUsage = realMemoryUsage;
   });
 
   describe('performHealthChecks', () => {
@@ -316,7 +338,15 @@ describe('MonitoringService', () => {
 
       const status = await monitoringService.getSystemStatus();
 
-      expect(status.status).toBe('degraded');
+      // Redis is the only check that should be slow enough to degrade; assert
+      // that directly so a failure names the offending check instead of only
+      // reporting the rolled-up status. (This aggregate intermittently came
+      // back 'unhealthy' on CI while passing locally — the per-check
+      // breakdown below is what identifies which probe actually threw.)
+      const breakdown = status.checks.map(c => `${c.name}=${c.status}${c.error ? `(${c.error})` : ''}`).join(', ');
+      expect(status.checks.find(c => c.name === 'Redis')?.status).toBe('degraded');
+      expect(status.checks.filter(c => c.status === 'unhealthy')).toEqual([]);
+      expect(`${status.status} [${breakdown}]`).toBe(`degraded [${breakdown}]`);
     });
 
     it('should return unhealthy status when critical checks fail', async() => {

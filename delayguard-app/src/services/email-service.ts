@@ -30,6 +30,20 @@ function resolveDelayTemplateId(): string {
   return PLACEHOLDER_TEMPLATE_ID;
 }
 
+/**
+ * Historical sender, kept as the default so existing deployments keep working.
+ * `delayguard.app` currently serves a lapsed Squarespace site and cannot be
+ * domain-authenticated, so deployments override this with a verified Single
+ * Sender address instead (SendGrid rejects any send whose `from` is not a
+ * verified Sender Identity).
+ */
+const DEFAULT_FROM_EMAIL = "noreply@delayguard.app";
+
+/** Resolve the sender identity from the environment, trimming blank values. */
+function resolveFromEmail(): string {
+  return process.env.SENDGRID_FROM_EMAIL?.trim() || DEFAULT_FROM_EMAIL;
+}
+
 export interface SendDelayEmailOptions {
   /**
    * Greeting name for the template's {{recipientName}} merge field.
@@ -55,7 +69,7 @@ export class EmailService {
   ): Promise<void> {
     const msg = {
       to: email,
-      from: "noreply@delayguard.app",
+      from: resolveFromEmail(),
       templateId: resolveDelayTemplateId(),
       dynamicTemplateData: {
         recipientName: options?.recipientName ?? orderInfo.customerName,

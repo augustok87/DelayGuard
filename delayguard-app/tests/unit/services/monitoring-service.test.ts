@@ -1,5 +1,29 @@
+// 4 GB — the V8 heap ceiling the Application health check measures against.
+// Must be an inline literal: jest.mock factories are hoisted above consts.
+jest.mock('v8', () => ({
+  ...jest.requireActual('v8'),
+  getHeapStatistics: () => ({ heap_size_limit: 4_000_000_000 }),
+}));
+
 import { MonitoringService } from '../../../src/services/monitoring-service';
 import { AppConfig } from '../../../src/types';
+
+// The Application health check reads live process memory. Left unstubbed, its
+// result depends on whatever the Jest worker's heap happens to look like —
+// which is exactly how this suite passed locally and failed on CI. Pin both
+// the usage and the ceiling so every assertion here is deterministic.
+const HEAP_LIMIT_BYTES = 4_000_000_000;
+const realMemoryUsage = process.memoryUsage;
+
+function stubHeapUsage(fractionOfLimit: number): void {
+  process.memoryUsage = (() => ({
+    heapUsed: Math.round(HEAP_LIMIT_BYTES * fractionOfLimit),
+    heapTotal: HEAP_LIMIT_BYTES,
+    rss: HEAP_LIMIT_BYTES,
+    external: 0,
+    arrayBuffers: 0,
+  })) as unknown as typeof process.memoryUsage;
+}
 
 // Mock the dependencies
 const mockRedisInstance = {
@@ -56,7 +80,19 @@ describe('MonitoringService', () => {
     mockRedisInstance.ping = jest.fn().mockResolvedValue('PONG');
     mockPoolInstance.query = jest.fn().mockResolvedValue({ rows: [] });
 
+    // checkExternalAPIs() calls the global fetch against real ShipEngine /
+    // SendGrid / Twilio URLs. Unmocked, this suite made live network requests
+    // and failed on CI runners (HEAD -> non-2xx or a throw => not 'healthy').
+    // Unit tests must never depend on network weather.
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+
+    stubHeapUsage(0.1); // comfortable headroom unless a test says otherwise
+
     monitoringService = new MonitoringService(mockConfig);
+  });
+
+  afterEach(() => {
+    process.memoryUsage = realMemoryUsage;
   });
 
   describe('performHealthChecks', () => {
@@ -76,6 +112,48 @@ describe('MonitoringService', () => {
       const redisCheck = healthChecks.find(check => check.name === 'Redis');
       expect(redisCheck?.status).toBe('unhealthy');
       expect(redisCheck?.error).toBe('Connection failed');
+    });
+
+    it('gives every external API request an abort signal so it cannot hang', async() => {
+      const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+      global.fetch = fetchMock;
+
+      await monitoringService.performHealthChecks();
+
+      expect(fetchMock).toHaveBeenCalledTimes(3); // ShipEngine, SendGrid, Twilio
+      for (const [, init] of fetchMock.mock.calls) {
+        expect(init.signal).toBeInstanceOf(AbortSignal);
+      }
+    });
+
+    // The Application check previously computed heapUsed / os.totalmem() — the
+    // V8 heap measured against TOTAL SYSTEM RAM. That ratio is ~1% on any
+    // developer machine (so the 80/90 thresholds could never fire) yet reported
+    // 93% on a CI runner, flagging the app 'unhealthy' and turning both
+    // monitoring suites red. The metric is now headroom against the V8 heap
+    // ceiling — "how close are we to OOM" — which is what the thresholds mean.
+    describe('Application memory pressure', () => {
+      const appCheck = async() =>
+        (await monitoringService.performHealthChecks()).find(c => c.name === 'Application');
+
+      it('is healthy with plenty of heap headroom', async() => {
+        stubHeapUsage(0.5); // 50% of the ceiling
+        expect((await appCheck())?.status).toBe('healthy');
+      });
+
+      it('degrades above 80% of the heap ceiling', async() => {
+        stubHeapUsage(0.85);
+        expect((await appCheck())?.status).toBe('degraded');
+      });
+
+      it('is unhealthy above 90% of the heap ceiling, whatever the host size', async() => {
+        // Small in absolute terms — under the old heapUsed/os.totalmem()
+        // formula this read as ~0% and was wrongly reported healthy.
+        stubHeapUsage(0.95);
+        const check = await appCheck();
+        expect(check?.status).toBe('unhealthy');
+        expect((check?.details as Record<string, unknown>)?.memoryPercentage).toBe(95);
+      });
     });
 
     it('should detect degraded services', async() => {
