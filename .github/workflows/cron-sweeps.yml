@@ -1,0 +1,51 @@
+name: DelayGuard cron sweeps
+
+# External scheduler for DelayGuard's background jobs.
+#
+# Vercel's Hobby plan caps cron jobs at once/day, but the delay-detection and
+# notification sweeps need to run every few minutes. So instead of Vercel Cron,
+# this workflow hits the CRON_SECRET-guarded /api/cron/* endpoints on a schedule.
+#
+# Requires a repository secret CRON_SECRET whose value EXACTLY matches the
+# CRON_SECRET env var set on the Vercel project (Settings → Secrets and
+# variables → Actions → New repository secret).
+#
+# Note: GitHub's scheduled runners are best-effort and can be delayed several
+# minutes under load — fine for this workload. Trigger manually any time via
+# the "Run workflow" button (workflow_dispatch).
+
+on:
+  schedule:
+    - cron: "*/10 * * * *" # every ~10 minutes (best-effort)
+  workflow_dispatch: {}
+
+concurrency:
+  group: cron-sweeps
+  cancel-in-progress: false
+
+jobs:
+  sweeps:
+    runs-on: ubuntu-latest
+    env:
+      BASE_URL: https://delayguard-api.vercel.app
+    steps:
+      - name: Tracking refresh
+        run: |
+          curl -fsS --retry 2 --max-time 40 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "$BASE_URL/api/cron/tracking-refresh"
+      - name: Delay-check sweep
+        run: |
+          curl -fsS --retry 2 --max-time 40 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "$BASE_URL/api/cron/delay-check"
+      - name: Notification dispatch
+        run: |
+          curl -fsS --retry 2 --max-time 40 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "$BASE_URL/api/cron/notification-dispatch"
+      - name: Customer sync
+        run: |
+          curl -fsS --retry 2 --max-time 40 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "$BASE_URL/api/cron/customer-sync"
