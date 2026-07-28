@@ -37,17 +37,11 @@ redirect_urls = [
 [webhooks]
 api_version = "2026-07"
 
-[[webhooks.subscriptions]]
-topics = ["orders/updated"]
-uri = "/webhooks/orders/updated"
-
-[[webhooks.subscriptions]]
-topics = ["fulfillments/updated"]
-uri = "/webhooks/fulfillments/updated"
-
-[[webhooks.subscriptions]]
-topics = ["orders/paid"]
-uri = "/webhooks/orders/paid"
+# NOTE: orders/updated, fulfillments/updated, orders/paid are NOT declared here.
+# use_legacy_install_flow = true (custom OAuth) forbids app-specific webhook
+# subscriptions, so those functional topics are registered PER-SHOP after OAuth
+# via webhook-registration-service.ts (Admin GraphQL webhookSubscriptionCreate).
+# Only the mandatory privacy-compliance topics remain below.
 
 # Mandatory privacy-compliance topics (GDPR) — one subscription block per
 # topic so each routes to its own canonical endpoint.
