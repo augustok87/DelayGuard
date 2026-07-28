@@ -12,7 +12,7 @@
 
 ### v1.54 (2026-07-28): Production deploy verified + CI truth pass
 
-**Test Results**: 2,411 passing (+11), 25 skipped, 0 failing. Full local gate green (`npm test && npm run lint && npm run type-check && npm run build`): lint 0 errors / 13 pre-existing warnings, `tsc --noEmit` clean, webpack build clean. `npm run test:db:schema` also green (51 passing).
+**Test Results**: 2,414 passing (+14), 25 skipped, 0 failing. Full local gate green (`npm test && npm run lint && npm run type-check && npm run build`): lint 0 errors / 13 pre-existing warnings, `tsc --noEmit` clean, webpack build clean. `npm run test:db:schema` also green (51 passing).
 
 **Production is live.** The Appendix B probe matrix in [LAUNCH_PLAN.md](LAUNCH_PLAN.md) was re-run against `https://delayguard-api.vercel.app` and passes **9/9**: `/health` returns honest health with real Postgres (79ms) and Redis (2ms) pings, `POST /webhooks/orders/updated` without an HMAC returns 401 (route live, HMAC rejecting), `/api/alerts` without a session token returns 401, `/api/cron/*` without `CRON_SECRET` returns 401 and 200 with it, `/billing/plans` serves Free / $7 Pro / $25 Enterprise, `/legal/privacy-policy` and `/legal/terms-of-service` return 200 HTML, and the old `/api` placeholder is gone. Launch-plan human gate H1, H2, H5, H6 confirmed done against live evidence; D3 (prod migration) confirmed functionally by the four `/api/cron/*` sweeps returning `errors:0`; C4 confirmed by `shopify app versions list` showing version `delayguard-3` active.
 
@@ -26,7 +26,13 @@
 
 **Production hardening**: `checkExternalAPIs()` now wraps each third-party probe in an `AbortController` with a 5000ms budget (matching the existing `degraded` threshold) and clears the timer in `finally`. This closes one of the gaps flagged in the CLAUDE.md third-party invariant — previously a hung carrier/email/SMS endpoint would stall the entire health check with no timeout. New test asserts every external request receives an `AbortSignal`.
 
-**Diagnostic left in place**: `tests/unit/monitoring-service.test.ts` had one CI-only failure (`getSystemStatus` returning `unhealthy` where `degraded` was expected) that could not be reproduced locally across repeated runs, with `CI=true`, or in isolation. Rather than guess, the assertion now checks the Redis check is `degraded` and that *no* check is `unhealthy`, and embeds a per-check breakdown (`name=status(error)`) in the failure message so the next CI run names the offending probe instead of only reporting the rolled-up status.
+**Root cause of the CI-only monitoring failures — a real metric bug**: two monitoring tests failed only on CI (`getSystemStatus` returning `unhealthy` where `degraded` was expected; `performHealthChecks`'s "every check healthy" assertion false) and could not be reproduced locally across repeated runs, with `CI=true`, or in isolation. Rather than guess, the assertion was instrumented to embed a per-check breakdown in its failure message — and the next CI run named the culprit: `Application=unhealthy, memoryPercentage: 93`.
+
+`checkApplication()` computed `process.memoryUsage().heapUsed / os.totalmem()` — the V8 heap measured against **total system RAM**. That is ~1% on any developer machine (measured: heapUsed 380 MB against 34 GB = 1.1%), so the `> 80` degraded / `> 90` unhealthy thresholds could never fire locally, while on a CI runner the same expression produced 93 and declared the application unhealthy. The metric was wrong by construction in both directions: a false negative on big hosts, a false positive on CI.
+
+`heapUsed / heapTotal` was considered and rejected — V8 grows `heapTotal` lazily and keeps it just above `heapUsed`, so that ratio sits near 90% during normal operation. The check now measures **headroom against the V8 heap ceiling** (`heapUsed / v8.getHeapStatistics().heap_size_limit`), which is what "how close are we to an out-of-memory crash" means and is what the 80/90 thresholds describe. New tests pin the semantics at 50% healthy / 85% degraded / 95% unhealthy.
+
+Both monitoring suites also now stub `process.memoryUsage` and mock `v8.getHeapStatistics`, so the Application check no longer depends on whatever the Jest worker's live heap happens to look like — the underlying reason these suites passed locally and failed on CI.
 
 **Files**: `src/services/monitoring-service.ts`, `tests/unit/services/monitoring-service.test.ts`, `tests/unit/monitoring-service.test.ts`, `tests/unit/middleware/input-sanitization.test.ts`, `tests/unit/services/optimized-database.test.ts`, `tests/integration/database/delay-type-toggles-schema.test.ts`, `tests/integration/database/merchant-contact-schema.test.ts`, plus doc truth pass in `LAUNCH_PLAN.md` / `PROJECT_OVERVIEW.md`.
 

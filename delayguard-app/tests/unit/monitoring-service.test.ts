@@ -1,3 +1,13 @@
+// Pin the V8 heap ceiling the Application health check measures against.
+// Must be an inline literal: jest.mock factories are hoisted above consts.
+jest.mock('v8', () => ({
+  ...jest.requireActual('v8'),
+  getHeapStatistics: () => ({ heap_size_limit: 4_000_000_000 }),
+}));
+
+const HEAP_LIMIT_BYTES = 4_000_000_000;
+const realMemoryUsage = process.memoryUsage;
+
 // Mock the database and Redis modules before importing the service
 const mockQuery = jest.fn();
 const mockPing = jest.fn();
@@ -78,11 +88,23 @@ describe('MonitoringService', () => {
       status: 'ready',
     };
     
+    // Pin process memory + the V8 heap ceiling so the Application health check
+    // is deterministic. Unstubbed it reflects the Jest worker's live heap,
+    // which is why this suite passed locally and failed on CI.
+    process.memoryUsage = (() => ({
+      heapUsed: HEAP_LIMIT_BYTES * 0.1,
+      heapTotal: HEAP_LIMIT_BYTES,
+      rss: HEAP_LIMIT_BYTES,
+      external: 0,
+      arrayBuffers: 0,
+    })) as unknown as typeof process.memoryUsage;
+
     monitoringService = new MonitoringService(mockConfig);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    process.memoryUsage = realMemoryUsage;
   });
 
   describe('performHealthChecks', () => {

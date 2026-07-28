@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Complex monitoring service with dynamic metric collection and alerting
 import Redis from "ioredis";
+import * as v8 from "v8";
 import { logger } from "../utils/logger";
 import { Pool } from "pg";
 import { AppConfig } from "../types";
@@ -370,8 +371,18 @@ export class MonitoringService {
       await new Promise((resolve) => setTimeout(resolve, 1));
       const responseTime = Date.now() - start;
       const memoryUsage = process.memoryUsage();
-      const memoryPercentage =
-        (memoryUsage.heapUsed / require("os").totalmem()) * 100;
+      // Headroom against the V8 heap ceiling — i.e. "how close are we to an
+      // out-of-memory crash", which is what the 80/90 thresholds below mean.
+      //
+      // Two wrong metrics were considered and rejected:
+      //  - heapUsed / os.totalmem() (the original): the V8 heap measured
+      //    against the whole machine's RAM. ~1% on any dev box, so the
+      //    thresholds could never fire, yet it read 93% on a CI runner and
+      //    wrongly flagged the app unhealthy.
+      //  - heapUsed / heapTotal: V8 grows heapTotal lazily and keeps it just
+      //    above heapUsed, so this sits near 90% during normal operation.
+      const heapLimit = v8.getHeapStatistics().heap_size_limit;
+      const memoryPercentage = (memoryUsage.heapUsed / heapLimit) * 100;
 
       let status: "healthy" | "degraded" | "unhealthy" = "healthy";
       if (memoryPercentage > 90) {
