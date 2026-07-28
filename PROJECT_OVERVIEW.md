@@ -1,25 +1,25 @@
 # DelayGuard - Project Overview & Roadmap
 
 **Last Updated**: July 25, 2026 (WS-I docs truth pass on `launch/integration`)
-**Current Phase**: ✅ Phase 1 + Audit Waves 1-7 + launch integration (WS-A..H) — **code-complete for launch**; the 13 production blockers are resolved in code (see Production wiring status). Phase 2.1.a–e shipped 2026-05-15; Phase 2.1.f (customer-intelligence UI) landed with WS-G.
-**Latest Update**: v1.53 — launch integration: real backend deploy path, serverless cron processing, Shopify `2026-07` + OAuth, prod schema source-of-truth, App-Pricing plan-gate, notification routing, real dashboard data, hosted legal + sanitized listing, plus cross-workstream integration fixes (see CHANGELOG.md v1.53 and LAUNCH_PLAN.md Session Log)
+**Current Phase**: ✅ Phase 1 + Audit Waves 1-7 + launch integration (WS-A..H) — **deployed and live in production** as of 2026-07-28; the 13 production blockers are resolved (see Production wiring status). Phase 2.1.a–e shipped 2026-05-15; Phase 2.1.f (customer-intelligence UI) landed with WS-G.
+**Latest Update**: v1.54 — **production deploy + CI truth pass** (see CHANGELOG.md v1.54). Prior: v1.53 launch integration: real backend deploy path, serverless cron processing, Shopify `2026-07` + OAuth, prod schema source-of-truth, App-Pricing plan-gate, notification routing, real dashboard data, hosted legal + sanitized listing, plus cross-workstream integration fixes (see CHANGELOG.md v1.53 and LAUNCH_PLAN.md Session Log)
 **Document Purpose**: Single consolidated view of current state, readiness, and future roadmap
 
 ---
 
 ## Production wiring status
 
-Post-integration snapshot (mirrors [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §1, updated for the `launch/integration` branch). The 13 production blockers verified in the 2026-07-21 audit are now **resolved in code**; what remains is the human dashboard gate and deploy-time steps that no session can perform. "Fixed in code, pending deploy" means the code is merged and CI-green but the behavior only becomes live after the Wave-3 deploy.
+Post-deploy snapshot (mirrors [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §1), updated 2026-07-28 after the app went live. The 13 production blockers verified in the 2026-07-21 audit are now **resolved**, and the Appendix B probe matrix passes 9/9 against `https://delayguard-api.vercel.app`. What remains is the human dashboard gate (H3/H4/H7/H8/H9) plus E1's live SendGrid template.
 
 | # | Problem (2026-07-21 audit) | Status now |
 |---|---|---|
-| 1 | Koa backend never deployed; real routes 404 | Fixed in code — catch-all `api/[[...path]].ts` adapts the Koa app (WS-A `c6f2ae70`); **pending deploy** |
+| 1 | Koa backend never deployed; real routes 404 | ✅ **Live** — Koa served via `api/index.ts` (WS-A `c6f2ae70`, deploy fixes `f84839b2`); Appendix B probe matrix 9/9 green in prod 2026-07-28 |
 | 2 | No background-job runtime; cron pointed at nothing | Fixed in code — Vercel-cron batch processing (WS-B `877c1881`) |
-| 3 | Webhooks never registered with Shopify | `shopify.app.toml` authored (WS-C `0e034a0b`); **deploy-gated** — `shopify app deploy` (C4) runs at Wave-3 deploy time |
+| 3 | Webhooks never registered with Shopify | ✅ **Deployed** — `shopify app deploy` shipped version `delayguard-3` (active); compliance topics via toml, functional topics registered per-shop after OAuth (`812b772b`) |
 | 4 | Middleware kill-chain (CSP framing, CSRF, double prefixes) | Fixed in code (WS-A `c6f2ae70`) |
 | 5 | OAuth broken (VERCEL_URL redirect, no state, dead callback) | Fixed in code — `SHOPIFY_APP_URL` + state nonce + real token exchange (WS-C `0e034a0b`) |
 | 6 | API pinned `2024-01`; customer query used removed fields | Fixed in code — bumped to `2026-07`, query rewritten (WS-C `0e034a0b`) |
-| 7 | Prod DB schema never created | Schema single-source-of-truth fixed in code (WS-D `3e56dd7c`); **deploy-gated** — `npm run migrate:vercel` against prod (D3) at deploy time |
+| 7 | Prod DB schema never created | ✅ **Migrated** — 8 tables live on prod Neon (`f84839b2`); confirmed functionally by the four `/api/cron/*` sweeps returning `errors:0` |
 | 8 | Billing was a stub | Fixed in code — App-Pricing plan-gate, fails closed to free (WS-F `3e56dd7c`); plan config is human (H3) |
 | 9 | Notification details (placeholder template, example.com, routing) | Fixed in code — real tracking URLs + merchant/customer routing (WS-E `a88eac24`); **deploy-gated** — live SendGrid template + send (E1) pending `SENDGRID_API_KEY` |
 | 10 | Dashboard rendered mock data; apiClient unmounted | Fixed in code — real API thunks + apiClient mounted (WS-G `fdc03f82`) |
@@ -27,7 +27,7 @@ Post-integration snapshot (mirrors [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §1, updated
 | 12 | `read_customers` scope missing; PCD never requested | Scope fixed in code (WS-C `0e034a0b`); **human** — Protected Customer Data Level 2 approval (H4) |
 | 13 | Expiring offline tokens mandatory 2027-01-01 | Post-launch fast-follow (C5); not launch-blocking |
 
-**Human / deploy-gated remainder:** PCD Level 2 approval (H4), prod migration (D3), webhook registration `shopify app deploy` (C4), live SendGrid template + send (E1), and AI self-review + listing submission (H-4). See LAUNCH_PLAN.md §2 for the full human gate (H1–H9).
+**Human / deploy-gated remainder (as of 2026-07-28):** live SendGrid template + send (E1 — needs the real `SENDGRID_API_KEY`; `email-service.ts` refuses to send delay email in production until `SENDGRID_DELAY_TEMPLATE_ID` is set), Shopify App Pricing plan configuration (H3), PCD Level 2 approval (H4), ShipStation Advanced plan confirmation (H7), demo screencast (H8), and AI self-review + listing submission (H-4/H9). **Done:** deploy (WS-A), prod migration (D3), webhook registration (C4), pricing decision (H1), Partner Dashboard URLs (H2), Vercel secrets (H5), `shopify auth login` (H6). See LAUNCH_PLAN.md §2.
 
 ---
 
@@ -39,7 +39,7 @@ Post-integration snapshot (mirrors [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §1, updated
 |--------|--------|---------|
 | **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
 | **Launch Readiness** | **Code-complete for launch** | Submission pending the human dashboard gate + Wave-3 deploy (see Production wiring status above and LAUNCH_PLAN.md §2) |
-| **Test Success** | **100%** | 2,400 passing (see [CHANGELOG.md](CHANGELOG.md) v1.53), 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run (1 known-flake in `input-sanitization.test.ts:405` performance assertion intermittent under coverage instrumentation) |
+| **Test Success** | **100%** | 2,411 passing (see [CHANGELOG.md](CHANGELOG.md) v1.54), 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run. The long-standing `input-sanitization.test.ts` wall-clock flake was fixed in v1.54 |
 | **Test Suites** | **All passing** | 96 of 98 suites pass; 2 suites skipped (require PostgreSQL) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
@@ -355,7 +355,7 @@ Post-integration snapshot (mirrors [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §1, updated
 - ✅ 14 environment variables configured in Vercel
 - ✅ Legal documentation (privacy policy, terms of service)
 - ✅ API documentation (OpenAPI 3.0)
-- ✅ 100% test success rate (2,400 passing — see CHANGELOG.md v1.53)
+- ✅ 100% test success rate (2,411 passing — see CHANGELOG.md v1.54)
 
 **What Remains:**
 - ⚠️ App Store Assets (1-2 days)
@@ -704,7 +704,7 @@ Phone: (406) 555-0123
 - ✅ Phase 1 Complete (Oct 28, 2025)
 - ✅ Code-complete for launch (13 production blockers resolved on `launch/integration` — see Production wiring status)
 - ✅ Phase 2.1.a–e shipped (2026-05-15, v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint
-- ✅ 2,400 passing tests, production-ready code (see CHANGELOG.md v1.53)
+- ✅ 2,411 passing tests, production-ready code (see CHANGELOG.md v1.54)
 - ⚠️ Submission pending the human dashboard gate (H1–H9) + Wave-3 deploy — see LAUNCH_PLAN.md §2
 
 **Where We're Going:**

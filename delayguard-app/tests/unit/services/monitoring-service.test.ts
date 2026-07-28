@@ -56,6 +56,12 @@ describe('MonitoringService', () => {
     mockRedisInstance.ping = jest.fn().mockResolvedValue('PONG');
     mockPoolInstance.query = jest.fn().mockResolvedValue({ rows: [] });
 
+    // checkExternalAPIs() calls the global fetch against real ShipEngine /
+    // SendGrid / Twilio URLs. Unmocked, this suite made live network requests
+    // and failed on CI runners (HEAD -> non-2xx or a throw => not 'healthy').
+    // Unit tests must never depend on network weather.
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+
     monitoringService = new MonitoringService(mockConfig);
   });
 
@@ -76,6 +82,18 @@ describe('MonitoringService', () => {
       const redisCheck = healthChecks.find(check => check.name === 'Redis');
       expect(redisCheck?.status).toBe('unhealthy');
       expect(redisCheck?.error).toBe('Connection failed');
+    });
+
+    it('gives every external API request an abort signal so it cannot hang', async() => {
+      const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+      global.fetch = fetchMock;
+
+      await monitoringService.performHealthChecks();
+
+      expect(fetchMock).toHaveBeenCalledTimes(3); // ShipEngine, SendGrid, Twilio
+      for (const [, init] of fetchMock.mock.calls) {
+        expect(init.signal).toBeInstanceOf(AbortSignal);
+      }
     });
 
     it('should detect degraded services', async() => {

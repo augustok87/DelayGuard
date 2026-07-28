@@ -5,6 +5,9 @@ import { logger } from "../utils/logger";
 import { Pool } from "pg";
 import { AppConfig } from "../types";
 
+/** Abort budget for third-party availability probes (see checkExternalAPIs). */
+const EXTERNAL_API_TIMEOUT_MS = 5000;
+
 export interface HealthCheck {
   name: string;
   status: "healthy" | "degraded" | "unhealthy";
@@ -317,14 +320,27 @@ export class MonitoringService {
     for (const api of apis) {
       const start = Date.now();
 
+      // Third-party invariant (CLAUDE.md): every external call gets a timeout.
+      // Without one a hung carrier/email/SMS endpoint would stall the whole
+      // health check. The budget matches the 'degraded' threshold below —
+      // anything slower than this is already not healthy.
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), EXTERNAL_API_TIMEOUT_MS);
+
       try {
         // Simple HEAD request to check availability
-        const response = await fetch(api.url, { method: "HEAD" });
+        const response = await fetch(api.url, {
+          method: "HEAD",
+          signal: controller.signal,
+        });
         const responseTime = Date.now() - start;
 
         checks.push({
           name: api.name,
-          status: response.ok && responseTime < 5000 ? "healthy" : "degraded",
+          status:
+            response.ok && responseTime < EXTERNAL_API_TIMEOUT_MS
+              ? "healthy"
+              : "degraded",
           responseTime,
           lastChecked: new Date(),
           details: { status: response.status },
@@ -337,6 +353,8 @@ export class MonitoringService {
           lastChecked: new Date(),
           error: error instanceof Error ? error.message : "Unknown error",
         });
+      } finally {
+        clearTimeout(timeout);
       }
     }
 

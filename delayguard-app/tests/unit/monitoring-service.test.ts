@@ -316,7 +316,15 @@ describe('MonitoringService', () => {
 
       const status = await monitoringService.getSystemStatus();
 
-      expect(status.status).toBe('degraded');
+      // Redis is the only check that should be slow enough to degrade; assert
+      // that directly so a failure names the offending check instead of only
+      // reporting the rolled-up status. (This aggregate intermittently came
+      // back 'unhealthy' on CI while passing locally — the per-check
+      // breakdown below is what identifies which probe actually threw.)
+      const breakdown = status.checks.map(c => `${c.name}=${c.status}${c.error ? `(${c.error})` : ''}`).join(', ');
+      expect(status.checks.find(c => c.name === 'Redis')?.status).toBe('degraded');
+      expect(status.checks.filter(c => c.status === 'unhealthy')).toEqual([]);
+      expect(`${status.status} [${breakdown}]`).toBe(`degraded [${breakdown}]`);
     });
 
     it('should return unhealthy status when critical checks fail', async() => {

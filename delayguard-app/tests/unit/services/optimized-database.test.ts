@@ -203,8 +203,11 @@ describe('OptimizedDatabase', () => {
       await database.query('SELECT * FROM test', [], { retries: 2 });
       const duration = Date.now() - startTime;
 
-      // Should have waited for backoff (at least 1000ms + 2000ms = 3000ms)
-      expect(duration).toBeGreaterThan(3000);
+      // Should have waited for backoff (at least 1000ms + 2000ms = 3000ms).
+      // toBeGreaterThanOrEqual, not toBeGreaterThan: the assertion is "waited
+      // at least this long", and Date.now() legitimately reports exactly 3000
+      // when the two timers fire without extra scheduling slack.
+      expect(duration).toBeGreaterThanOrEqual(3000);
     });
 
     it('should throw error after all retries exhausted', async() => {
