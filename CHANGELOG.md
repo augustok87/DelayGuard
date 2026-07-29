@@ -2,7 +2,7 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: July 29, 2026 (v1.54 — launch truth pass: production verified live end-to-end via probe matrix; LAUNCH_PLAN §6 established as the remaining-blocker list; SendGrid account blocker found and documented)
+**Last Updated**: July 29, 2026 (v1.54.1 — deleted five tautological stub-fixture test suites; pre-commit gate stable again at 2,385 passing / 0 failing, verified across three consecutive full runs)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
@@ -33,6 +33,22 @@ A third, unverified risk was flagged rather than assumed away: `EmailService` se
 - **[CLAUDE.md](CLAUDE.md)** — Status block and canonical-docs pointers updated; new sessions are now directed to LAUNCH_PLAN §6 rather than §1.
 
 **Standing rule reaffirmed**: a task is done when its acceptance criterion passes against production, not when the code compiles. E1's code has been complete and CI-green since `a88eac24`; its acceptance criterion has never once passed.
+
+### v1.54.1 (2026-07-29): Delete tautological stub-fixture tests — pre-commit gate made trustworthy again
+
+**Test Results**: 2,385 passing of 2,410, 25 skipped, **0 failing**, 120 suites — verified by **three consecutive identical full runs with coverage** (the point of running it three times: the bug being fixed was nondeterministic, so a single green run would have proved nothing).
+
+**Problem**: the pre-commit quality gate had become order-flaky. Three consecutive full-suite runs each failed a *different* test while passing 2,408–2,409 of 2,435: `monitoring-service.test.ts:67`; then `integration/api.test.ts` "should return alerts" (HTTP 404 where 200 was expected); then `integration/api.test.ts` "CORS headers" plus `e2e/delay-detection-flow` "concurrent requests". Every one passed in isolation (`api.test.ts` 10/10 on three consecutive isolated runs).
+
+**Mechanism**: `jest.config.ts` sets `maxWorkers: 1`, so all suites share a single process, and Jest orders test files by *cached prior durations* — so execution order shifts between runs, changing which suite neighbours which and making leaked cross-suite state nondeterministic rather than reproducible.
+
+**Fix — deletion, not debugging.** Every flaking assertion lived in a suite importing `tests/setup/test-server.ts`, a hardcoded Koa **stub fixture** returning canned JSON that shares no code with the real application. Deleted the fixture and its five consumers (25 tests): `tests/integration/api.test.ts`, `tests/integration/workflow.test.ts`, `tests/integration/analytics-integration.test.ts`, `tests/e2e/delay-detection-flow.test.ts`, `tests/e2e/analytics-dashboard-flow.test.ts`. These asserted only that the stub returned its own constants — and several exercised a `POST /api/test-delay` endpoint **that does not exist in the real application**, so the "e2e" and "integration" labels were actively misleading about what was covered.
+
+**Deliberately kept**: `tests/integration/server-app.test.ts`. It matches a grep for the fixture name but only in a comment — it boots the *actual* configured Koa app from `src/server.ts`, and its 15 tests mirror the LAUNCH_PLAN Appendix B probe matrix (webhook reaching HMAC rather than CSRF, CSP framing for Shopify admin, session-token guard on `/api/*`, canonical single-prefix routes, honest `/health`, legal pages, cron auth). That is the real coverage the deleted suites only appeared to provide. Its header comment was updated to record why the stub is gone.
+
+**No production code touched.** No `--no-verify` was used at any point; the two commits made while the gate was still flaky each passed it legitimately, one after a single informed re-run.
+
+**Rule worth carrying forward** (added to CLAUDE.md): *a test that asserts a fixture returns its own constants is worse than no test* — it costs gate reliability and buys no coverage. This is the same family as the v1.20 no-placeholder-tests incident: CI passing while covering nothing.
 
 ### v1.53 (2026-07-25): Robustness — test-alert SMS plan-gate + local commit-gate wiring
 

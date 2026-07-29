@@ -39,8 +39,8 @@
 |--------|--------|---------|
 | **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
 | **Launch Readiness** | **Deployed and live** | Production healthy at `https://delayguard-api.vercel.app`; submission pending SendGrid account + dev-store E2E + human gate (LAUNCH_PLAN.md §6) |
-| **Test Success** | **100%** | 2,409 passing of 2,435 (verified 2026-07-29), 25 skipped (Phase 2.6 / future-routing scaffolding), 0 real failures. **Two known load-dependent flakes**, both timing-budget assertions that pass in isolation: `input-sanitization.test.ts:405` and `monitoring-service.test.ts:67` |
-| **Test Suites** | **All passing** | 124 of 127 suites pass; 2 skipped (require PostgreSQL) |
+| **Test Success** | **100%** | 2,385 passing of 2,410, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing — **stable**, verified 2026-07-29 by three consecutive identical full runs with coverage |
+| **Test Suites** | **All passing** | 120 of 122 suites pass; 2 skipped (require PostgreSQL). Five tautological stub-fixture suites (25 tests) removed 2026-07-29 — they covered no production code and caused order-dependent gate flakiness (LAUNCH_PLAN.md §6 R5) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
 | **Build Success** | ✅ **100%** | 0 errors, webpack bundle ~5.8 MiB |

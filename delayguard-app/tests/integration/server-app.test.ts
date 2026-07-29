@@ -1,9 +1,12 @@
 /**
  * Real-app integration tests — WS-A acceptance criteria (LAUNCH_PLAN A1–A4).
  *
- * Boots the ACTUAL configured Koa app from src/server.ts (not the
- * simplified tests/setup/test-server.ts stub) and exercises the full
- * middleware chain end-to-end:
+ * Boots the ACTUAL configured Koa app from src/server.ts and exercises the
+ * full middleware chain end-to-end. (This suite superseded a set of
+ * tautological tests against a hardcoded stub fixture, deleted 2026-07-29 —
+ * they asserted only that the fixture returned its own constants, covered no
+ * production code, and were the source of the order-dependent flakiness that
+ * destabilized the pre-commit gate. See LAUNCH_PLAN.md §6 R5.)
  *
  * - A1: /health is Koa-served and honest (real Postgres/Redis pings,
  *   measured latencies — no fake response_time: 0).
