@@ -2,12 +2,37 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: May 15, 2026 (v1.52 — Phase 2.1.e test-alert endpoint: dashboard-only POST `/api/test-alert` + new `TestAlertService` thin wrapper around EmailService/SMSService + per-channel app_settings flag honoring + per-request channel-picker + per-request recipient-override + dry-run dispatch (no DB write))
+**Last Updated**: July 29, 2026 (v1.54 — launch truth pass: production verified live end-to-end via probe matrix; LAUNCH_PLAN §6 established as the remaining-blocker list; SendGrid account blocker found and documented)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.54 (2026-07-29): Launch truth pass — production verified live, SendGrid blocker found
+
+**Docs-only change.** No source files touched. Local CI gate re-run at HEAD: 2,409 passing / 2,435 total / 25 skipped, 0 lint errors (13 `no-console` warnings in CLI scripts), 0 TypeScript errors, webpack build clean.
+
+**Context**: `LAUNCH_PLAN.md` had drifted seven commits behind reality. It still described an undeployed app whose every route 404'd, while the app had in fact shipped to production on 2026-07-28. Three working sessions (deploy, CI/cron scheduling, webhook-architecture correction) were missing from the Session Log entirely, and `PROJECT_OVERVIEW.md`'s wiring table still read "pending deploy" on rows that were live.
+
+**Production re-probed this session** (`https://delayguard-api.vercel.app`): full LAUNCH_PLAN Appendix B matrix **green** — `/health` 200 and honest (`status: healthy`, Postgres 3ms, Redis 2ms), all four webhook endpoints 401 on a tokenless POST (proving the routes are live and reaching the HMAC check), `/api/alerts` 401, `/api/cron/tracking-refresh` 401 without a secret, `/billing/plans` 200, both legal routes 200 HTML, the old placeholder `/api` handler gone. GitHub-Actions cron sweeps confirmed succeeding every ~10 minutes.
+
+**New blocker found — SendGrid account cannot send email (LAUNCH_PLAN §6 R1)**. Email is the only notification channel at launch (SMS is deliberately off per decision D3), so this makes the app's core value proposition inert in production. Two independent problems, both verified live against the SendGrid v3 API using the key currently in Vercel:
+
+1. A sandbox-mode `POST /v3/mail/send` (validates the request, delivers nothing) returns `HTTP 401 {"errors":[{"message":"Maximum credits exceeded"}]}` — the account is over its sending limit.
+2. `GET /v3/scopes` returns a Mail-Send-only key (`mail.send`, `mail.batch.*`, `user.scheduled_sends.*`, `sender_verification_eligible`, `2fa_required` — no `templates.*`), so `/v3/templates` returns `HTTP 403 access forbidden` and `npm run sendgrid:create-template` cannot create the dynamic template. **Task E1 has been un-ticked** in LAUNCH_PLAN accordingly.
+
+A third, unverified risk was flagged rather than assumed away: `EmailService` sends from the hardcoded `noreply@delayguard.app` ([email-service.ts:58](delayguard-app/src/services/email-service.ts#L58)) while the production domain is `delayguard-api.vercel.app`. SendGrid rejects sends whose From address is not a verified Sender Identity. This could not be tested past the credits error, so it is documented as a check to perform, not a confirmed failure.
+
+**Second known test flake documented**: `tests/unit/services/monitoring-service.test.ts:67` ("should perform all health checks successfully") joins `input-sanitization.test.ts:405` as a load-dependent flake. Both assert timing budgets; both fail only under full-suite CPU contention and pass in isolation (`npx jest tests/unit/services/monitoring-service.test.ts` → 12/12 passing, verified). Neither is a regression.
+
+**What changed in the docs**:
+
+- **[LAUNCH_PLAN.md](LAUNCH_PLAN.md)** — new **§6 Remaining blockers**, now the document's entry point (R1 SendGrid, R2 no dev-store end-to-end verification, R3 human gate H3/H4/H7, R4 listing submission, R5 known non-blockers). §1's blocker table capped with a status banner marking it historical. §2 human gate re-scored on live evidence (H1/H2/H5/H6 ticked with the evidence cited; H3/H4/H7 called out as open with their consequences). C4 rewritten to record the `use_legacy_install_flow` webhook-architecture correction; D3 ticked; E1 un-ticked and re-opened. Appendix B extended with a 2026-07-29 actual-result column plus an explicit note on what the matrix does *not* cover. Session Log backfilled with the three missing 2026-07-28 sessions and this one.
+- **[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** — wiring-status rows 1/2/3/7/9 corrected from "pending deploy" to live (or, for row 9, to blocked-with-reason); header and remainder paragraph rewritten; test metrics reconciled (2,400 → 2,409 passing, 96/98 → 124/127 suites, second flake noted).
+- **[CLAUDE.md](CLAUDE.md)** — Status block and canonical-docs pointers updated; new sessions are now directed to LAUNCH_PLAN §6 rather than §1.
+
+**Standing rule reaffirmed**: a task is done when its acceptance criterion passes against production, not when the code compiles. E1's code has been complete and CI-green since `a88eac24`; its acceptance criterion has never once passed.
 
 ### v1.53 (2026-07-25): Robustness — test-alert SMS plan-gate + local commit-gate wiring
 

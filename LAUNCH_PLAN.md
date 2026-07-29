@@ -29,6 +29,8 @@
 
 ## 1. Where the app actually stands (30-second read)
 
+> **STATUS UPDATE 2026-07-29 — all 13 problems below are CLOSED in code and the app is LIVE in production.** The table is kept as the historical audit record; do not read it as current state. Verified this session by live probe: `GET /health` → `{"status":"healthy","database":{"responseTimeMs":3},"redis":{"responseTimeMs":2}}`, the full Appendix B matrix green, GitHub-Actions cron sweeps succeeding every ~10 min. **What remains is not code** — it is the §2 human dashboard gate, one third-party account problem (§6 R1), and end-to-end verification on a real dev store (§6 R2). Read **§6** for the live blocker list.
+
 **Real and tested (keep, don't rebuild):** delay-detection engine (3 rules), ShipEngine/SendGrid/Twilio service wrappers, HMAC webhook verification, all three GDPR handlers, session-token middleware, SQL analytics, 2,091 passing tests, Phase 2.1 data layer (priority score, financial breakdown, shipping address, test-alert endpoint).
 
 **Broken or missing (the work):**
@@ -55,13 +57,15 @@
 
 Estimated ~1–2 hours of dashboard work. Sessions cannot do these; everything else assumes they're done.
 
-- [ ] **H1. Pick pricing** — §5 D1. Recommended: **$7 Pro / $25 Enterprise + free tier** (matches code, most credible for a zero-review app; raiseable later — 8 public plans now allowed).
-- [ ] **H2. Partner Dashboard:** confirm app exists as a **public app created before 2026-04-01** (determines token deadline = Jan 1, 2027); set App URL + OAuth redirect URL to the **stable production domain** (decide now, e.g. `https://delayguard-api.vercel.app` or a custom domain — record it as `SHOPIFY_APP_URL`).
-- [ ] **H3. Configure Shopify App Pricing plans** (Partner Dashboard → Pricing): free + paid tiers per H1. No Billing API code needed — this replaces the stub entirely.
-- [ ] **H4. Request Protected Customer Data access (Level 2)** — app reads customer name/email/phone. State per-field use reasons (delay notifications + customer-intelligence display), complete the questionnaire. *Without approval, PII fields return null in prod.*
-- [ ] **H5. Secrets into Vercel env:** `DATABASE_URL`, `REDIS_URL` (`rediss://` if Upstash), `SHOPIFY_API_KEY/SECRET`, `SHOPIFY_SCOPES` (incl. `read_customers`), `SHOPIFY_APP_URL`, `SHIPENGINE_API_KEY`, `SENDGRID_API_KEY`, `TWILIO_*`, `CRON_SECRET` (generate one).
-- [ ] **H6. Run `shopify auth login`** once in a terminal so sessions can run `shopify app deploy` (webhook/toml push) non-interactively afterward.
-- [ ] **H7. ShipStation API plan:** confirm the Advanced plan is active (tracking-any-parcel requires it — verified: sold as 1,000/5,000/10,000 calls per endpoint/month).
+*Status refreshed 2026-07-29. H2/H5/H6 are ticked on live evidence, not self-report.*
+
+- [x] **H1. Pick pricing** — §5 D1. Recommended taken: **Free + $7 Pro + $25 Enterprise** (matches code, most credible for a zero-review app; raiseable later — 8 public plans now allowed). Applied to all listing copy in `eb20d745`. *Decision made; the Partner-Dashboard configuration of these plans is H3 and is still open.*
+- [x] **H2. Partner Dashboard:** app exists, App URL + OAuth redirect set to `https://delayguard-api.vercel.app`. **Evidence:** `shopify app deploy` released `delayguard-3` against `client_id = e9d96cad62c5e6db0a67e6752a23d0ea` (`shopify.app.toml`, commit `87f8aa4f`), and prod serves the app at that domain. ⚠️ *Still unconfirmed: whether the app was created before 2026-04-01, which sets the expiring-token deadline (see C5).*
+- [ ] **H3. Configure Shopify App Pricing plans** (Partner Dashboard → Pricing): free + paid tiers per H1. No Billing API code needed — this replaces the stub entirely. **← OPEN. Blocks revenue: `/api/plan` and every SMS/paid gate fail closed to `free` until these plans exist.**
+- [ ] **H4. Request Protected Customer Data access (Level 2)** — app reads customer name/email/phone. State per-field use reasons (delay notifications + customer-intelligence display), complete the questionnaire. *Without approval, PII fields return null in prod.* **← OPEN. Has approval latency — submit early.**
+- [x] **H5. Secrets into Vercel env** — `DATABASE_URL`, `REDIS_URL`, `SHOPIFY_API_KEY/SECRET`, `SHOPIFY_SCOPES`, `SHOPIFY_APP_URL`, `CRON_SECRET` all confirmed working. **Evidence:** `/health` reports Postgres + Redis healthy; the `CRON_SECRET`-guarded endpoints 401 without a secret and 200 from the GitHub-Actions workflow. ⚠️ *Unverified from here: `SHIPENGINE_API_KEY`, `SENDGRID_API_KEY`, `TWILIO_*` — no probe exercises them without a merchant session. `SENDGRID_DELAY_TEMPLATE_ID` is definitely NOT set (§6 R1).*
+- [x] **H6. Run `shopify auth login`** — done; `shopify app deploy` succeeded on 2026-07-28.
+- [ ] **H7. ShipStation API plan:** confirm the Advanced plan is active (tracking-any-parcel requires it — verified: sold as 1,000/5,000/10,000 calls per endpoint/month). **← OPEN/unverified. Without Advanced, tracking third-party parcels — the app's core input — silently fails.**
 - [ ] **H8. Record the demo screencast** (English, after WS-G lands) + prepare test credentials + emergency developer contact for the listing. *(Only item that must wait until late in the day.)*
 - [ ] **H9. Final submit click** after AI self-review passes.
 
@@ -89,18 +93,20 @@ Task format: **ID — name `[TAG]`** · files · what to do · acceptance criter
 - [x] **C1 — API version + Customer query fix `[AGENT]`** (done 0e034a0b) · `src/services/shopify-service.ts:23,99,333-416` and types/tests · Bump `SHOPIFY_API_VERSION` to **`2026-07`**. Rewrite the customer query: `ordersCount` → `numberOfOrders`, `totalSpent` → `amountSpent { amount currencyCode }`, `acceptsMarketing` → derive from `emailMarketingConsent { marketingState }` (`=== "SUBSCRIBED"`); note in-code that `emailMarketingConsent` is deprecated-but-present in 2026-07 (successor unnamed in docs as of 2026-07-21 — re-check at next version bump). **Accept:** updated unit tests assert the new query string and mapping; `grep -r "ordersCount\|totalSpent\|acceptsMarketing" src/` clean except DB column names.
 - [x] **C2 — Scopes `[AGENT]`** (done 0e034a0b) · `env.example:21`, `src/routes/auth.ts` · Add `read_customers,read_products` to the env template; make the OAuth URL consume `config.shopify.scopes` (which already includes them as defaults at `src/config/app-config.ts:44-51`) instead of raw `process.env.SHOPIFY_SCOPES`. **Accept:** test asserts the generated authorize URL contains `read_customers` and never the literal `undefined`.
 - [x] **C3 — OAuth done right `[AGENT+SECRET]`** (done 0e034a0b) · `src/routes/auth.ts` · Replace `VERCEL_URL` with `SHOPIFY_APP_URL` for the redirect URI. Add `state` nonce (generate, store in session/short-lived cookie, verify in callback). Implement the callback for real: exchange `code` for the access token (`POST /admin/oauth/access_token`), then `shopAuth.upsertShop` — the current callback reads `ctx.state.shopify.session` which nothing populates. **Accept:** integration test walks authorize→callback with mocked Shopify token endpoint; state mismatch → 403.
-- [x] **C4 — `shopify.app.toml` + webhook registration `[AGENT+SECRET]`** (needs H6) (done 0e034a0b — authored, not yet deployed; `shopify app deploy` runs at Wave 3 deploy time) · new `delayguard-app/shopify.app.toml` · Declare: `application_url = SHOPIFY_APP_URL`, redirect URLs, scopes (match C2), `[webhooks]` API version `2026-07`, subscriptions for `orders/updated`, `fulfillments/updated`, `orders/paid` → `/webhooks/...`, and the three compliance topics → the A3 GDPR URLs. Run `shopify app deploy`. **Accept:** deploy succeeds; Partner Dashboard shows the subscriptions; a test webhook from a dev store lands (verify via logs/DB row).
+- [x] **C4 — `shopify.app.toml` + webhook registration `[AGENT+SECRET]`** (needs H6) (authored 0e034a0b; client_id set 87f8aa4f; **deployed 2026-07-28 — `shopify app deploy` → `delayguard-3` released**; architecture corrected 265627c9 + 812b772b + 0c9bf1d0) · `delayguard-app/shopify.app.toml`, new `src/services/webhook-registration-service.ts` · Declare: `application_url = SHOPIFY_APP_URL`, redirect URLs, scopes (match C2), `[webhooks]` API version `2026-07`, and the three compliance topics → the A3 GDPR URLs. **Correction found at deploy time:** `use_legacy_install_flow = true` (this app's custom authorization-code OAuth) **forbids app-specific webhook subscriptions in the toml**, so the three functional topics (`orders/updated`, `fulfillments/updated`, `orders/paid`) moved to **per-shop registration after OAuth** via `webhookSubscriptionCreate` (Admin GraphQL 2026-07) — idempotent ("already been taken" → success), 10s `AbortController` timeout, best-effort (never fails the install). Compliance topics stay in the toml (separate mechanism, deploys cleanly with the legacy flow). **Accept:** ✅ deploy succeeded; ⏳ *a test webhook from a real dev-store install has NOT yet been observed landing* — that verification is the outstanding piece (see §6 R2).
 - [ ] **C5 — Expiring offline tokens `[AGENT]` — POST-LAUNCH (deadline 2027-01-01)** · Spec for the follow-up session: add `refresh_token`, `access_token_expires_at`, `refresh_token_expires_at` to `shops`; request tokens with `expiring=1`; proactive refresh before background work (`grant_type=refresh_token`; refresh tokens are 90-day and **rotate** — persist both tokens atomically, single-flight the refresh); one-time migration via token exchange (revokes the permanent token irreversibly — persist response before discarding). Existing permanent tokens keep working until the deadline. **Do not do this today; do not forget it either.**
 
 ### WS-D · Database schema in production (owns `database/`)
 
 - [x] **D1 — One source of truth for schema `[AGENT]`** (done 3e56dd7c) · `src/database/connection.ts`, `src/database/migrations/`, `scripts/run-migrations.ts` · Keep the idempotent hardcoded DDL in `runMigrations()` as canonical (tested, additive). Delete dead+broken `003_create_subscriptions_table.sql` (UUID FK vs SERIAL `shops.id`; superseded by App Pricing — see F1). Add DDL for `alerts`/`alert_rules` **only if** D2's decision keeps monitoring; otherwise delete the querying code paths. Fix `.claude/rules/deploy.md:33` (`db:migrate:vercel` → `migrate:vercel`). **Accept:** every table name queried anywhere in `src/` (grep `FROM |INTO |UPDATE `) is created by `runMigrations()`; `npm run test:db:schema` passes.
 - [x] **D2 — Monitoring tables decision `[AGENT]`** (done 3e56dd7c) · Recommended (per §5 D2): strip the internal `alerts`/`alert_rules` monitoring persistence from launch scope (routes behind a feature flag or removed); external monitoring is a post-launch concern. **Accept:** no orphan table references remain.
-- [ ] **D3 — Run migrations against prod `[AGENT+SECRET]`** (needs H5) · Run `npm run migrate:vercel` with prod `DATABASE_URL`; then add a documented release step so future deploys migrate deliberately (not per-request). **Accept:** prod psql shows all tables; the step is documented in `deploy.md`.
+- [x] **D3 — Run migrations against prod `[AGENT+SECRET]`** (needs H5) (done 2026-07-28 alongside f84839b2) · Ran `npm run migrate:vercel` against the prod Neon `DATABASE_URL`. **Accept:** ✅ all 8 tables present on prod Neon; `GET /health` reports `database: healthy` (3ms, re-probed 2026-07-29).
 
 ### WS-E · Notification pipeline truth (owns `services/email-service.ts`, `queue/processors/`)
 
-- [x] **E1 — Real SendGrid dynamic template `[AGENT+SECRET]`** (needs H5) (done a88eac24 — code + create-sendgrid-template script done; live template creation + email send pending `SENDGRID_API_KEY` at deploy time) · Create the delay-notification dynamic template **via the SendGrid API** (automatable — clean HTML with order/tracking/delay-reason/ETA merge fields), store the returned `d-…` ID in env (`SENDGRID_DELAY_TEMPLATE_ID`), replace the placeholder at `src/services/email-service.ts:21`. **Accept:** a dry-run via the existing `/api/test-alert` endpoint (Phase 2.1.e) sends a real email to the merchant address.
+- [ ] **E1 — Real SendGrid dynamic template `[AGENT+SECRET]`** (needs H5) (code done a88eac24; **live creation BLOCKED on the SendGrid account — see §6 R1**) · Create the delay-notification dynamic template **via the SendGrid API** (automatable — clean HTML with order/tracking/delay-reason/ETA merge fields), store the returned `d-…` ID in env (`SENDGRID_DELAY_TEMPLATE_ID`), replace the placeholder at `src/services/email-service.ts:21`. **Accept:** a dry-run via the existing `/api/test-alert` endpoint (Phase 2.1.e) sends a real email to the merchant address.
+  - Code side is complete and tested: `src/scripts/create-sendgrid-template.ts` builds + POSTs the dynamic template (navy/gold, all 8 merge fields, plain-text fallback), and `EmailService` **refuses to send in production** when `SENDGRID_DELAY_TEMPLATE_ID` is unset rather than sending with the placeholder.
+  - Blocked 2026-07-29 by two account-level facts, both verified live against the SendGrid API (see §6 R1).
 - [x] **E2 — Real tracking URLs `[AGENT]`** (done a88eac24) · `src/queue/processors/delay-check.ts:159,167` · Replace `tracking.example.com` with the fulfillment's stored `tracking_url` (DB column exists) and fall back to a carrier-pattern link built from `carrier_code` + tracking number. **Accept:** unit tests cover both paths; no `example.com` in `src/`.
 - [x] **E3 — Restore merchant-vs-customer routing `[AGENT]`** (done a88eac24) · `src/queue/processors/notification.ts:8-18`, `delay-check.ts:172-177` · Extend the notification job payload with recipient type + merchant contact fields; dispatch warehouse-delay alerts to the merchant, carrier/transit to the customer. Per the v1.19 incident rule: positive AND negative dispatch tests per rule, and field-by-field persistence assertions. **Accept:** the routing matrix is fully tested; nothing silently defaults to `customer_email`.
 
@@ -169,6 +175,42 @@ Task format: **ID — name `[TAG]`** · files · what to do · acceptance criter
 
 ---
 
+## 6. Remaining blockers (live list — start here)
+
+*Established 2026-07-29. Code and deploy are done; §§1–4 are now history. This is the whole remaining path to submission.*
+
+### R1 — SendGrid account cannot send email `[HUMAN]` — **most severe**
+
+Email is the **only** notification channel at launch (§5 D3 ships SMS off), so an account that cannot send means the app's entire value proposition is inert in production. Two independent problems, both verified live against the SendGrid v3 API on 2026-07-29 using the key currently in Vercel:
+
+1. **The account is over its sending limit.** A sandbox-mode `POST /v3/mail/send` (validates the request, delivers nothing) returns `HTTP 401 {"errors":[{"message":"Maximum credits exceeded"}]}`. **Every production delay email will fail until the plan is upgraded or the quota resets.** This is a paid-plan decision, not a code fix.
+2. **The API key is Mail-Send-only, so E1 cannot run.** `GET /v3/scopes` returns exactly `mail.send`, `mail.batch.*`, `user.scheduled_sends.*`, `sender_verification_eligible`, `2fa_required` — no `templates.*`. `GET/POST /v3/templates` therefore returns `HTTP 403 access forbidden`, and `npm run sendgrid:create-template` cannot create the dynamic template.
+
+**Also unverified and likely to bite (could not be reached past the credits error):** `EmailService` sends from the hardcoded `noreply@delayguard.app` (`src/services/email-service.ts:58`). SendGrid rejects any send whose From address is not a verified Sender Identity, and the production domain is `delayguard-api.vercel.app` — so unless `delayguard.app` is owned and domain-authenticated (or `noreply@delayguard.app` is a verified single sender), sends will fail with a sender-identity error even after the credits problem is fixed. **Confirm this in SendGrid → Settings → Sender Authentication before assuming email works.**
+
+**To unblock, in order:** (a) resolve the account credits/plan; (b) verify the sender identity for the From address (or change the From address to one that is verified — that part is a small code change); (c) mint a **temporary Full Access key**, hand it over, let a session run `npm run sendgrid:create-template`, put the printed `d-…` ID into Vercel as `SENDGRID_DELAY_TEMPLATE_ID`, redeploy, then **delete the temporary key** — the least-privilege `mail.send` key stays as the production `SENDGRID_API_KEY`.
+
+### R2 — No end-to-end verification on a real dev store `[HUMAN]` + `[AGENT]`
+
+The app has never completed a real merchant install. Unproven in production, in dependency order: OAuth authorize → callback → `upsertShop`; per-shop webhook registration (C4's new `webhook-registration-service`, which is best-effort and only logs on failure — a silent failure here means **no alerts ever fire**); a real `orders/updated` payload passing HMAC and landing in Postgres; the embedded dashboard loading inside Shopify admin with a session token; `/api/test-alert` sending a real email (also gated on R1). **Install on a dev store and walk the flow** — this is where the remaining real bugs are, and it must precede H8's screencast anyway.
+
+### R3 — Human dashboard gate: H3, H4, H7 `[HUMAN]`
+
+H3 (App Pricing plans) blocks all revenue. H4 (Protected Customer Data) has approval latency — submit it first, today. H7 (ShipStation Advanced plan) gates tracking third-party parcels, the app's core data input.
+
+### R4 — Listing submission: H8 → H-4 → H9 `[HUMAN]`
+
+Screencast, AI self-review, submit. Gated on R2 (needs a working app to film) and R3.
+
+### R5 — Known non-blockers (carry forward, do not let them stall launch)
+
+- **C5 expiring offline tokens** — deadline 2027-01-01, spec already written above.
+- **Two load-dependent test flakes** — `tests/unit/middleware/input-sanitization.test.ts:405` and `tests/unit/services/monitoring-service.test.ts:67`. Both assert timing budgets, both fail only under full-suite CPU contention, both pass in isolation (verified 2026-07-29). Not regressions.
+- **Non-atomic notification dedupe** — the `email_sent`/`sms_sent` check-then-send race and the missing `UNIQUE(order_id, delay_reason)` constraint behind `ON CONFLICT DO NOTHING`, both documented in `CLAUDE.md` and CHANGELOG v1.53. Low real-world risk at zero install volume; fix before meaningful traffic.
+- **Husky pre-commit** was rewired in v1.53 but `node_modules` was empty on a fresh clone this session — run `npm install` from `delayguard-app/` to re-establish the hook.
+
+---
+
 ## Appendix A — Verified ground truth (do not re-verify; evidence @ `55cb3e66`, shopify.dev fetched 2026-07-21)
 
 1. **Deployment:** `src/server.ts:261` dev-only listen; `api/` = 4 placeholder handlers, none import Koa; `vercel.json` has no rewrites; declared cron `/api/cron/tracking-refresh` targets nothing; `src/routes/tracking-refresh-cron.ts` imported by nothing.
@@ -185,19 +227,26 @@ Task format: **ID — name `[TAG]`** · files · what to do · acceptance criter
 12. **ShipStation API (ex-ShipEngine) pricing (official pricing-page FAQ, verified):** Advanced plan sold at *"1000, 5000 or 10,000 API calls per month to each of the following endpoints: … track parcels …"*; "Track **any** parcel" (third-party carriers — our use case) is Advanced-only; free plan tracks only their own discounted-carrier shipments. This is the main COGS.
 13. **What's genuinely real (don't rebuild):** delay-detection service + processors, carrier/email/SMS service wrappers (real SDKs), webhook HMAC verification (no bypass), GDPR handlers, session-token JWT middleware, SQL analytics, `src/utils/api-client.ts:56-91` correctly attaches App Bridge session tokens (dead code today — mount it, don't rewrite it), Phase 2.1.a–e data layer incl. `/api/test-alert` dry-run endpoint.
 
-## Appendix B — Live production probe matrix (2026-07-21 baseline; re-run after Wave 3)
+## Appendix B — Live production probe matrix (2026-07-21 baseline → **2026-07-29 re-probe: ALL GREEN**)
 
-| Probe | Baseline (broken) | Required after deploy |
-|---|---|---|
-| `GET /` | 200 SPA shell, mock data | 200, embedded app loads real data |
-| `GET /health` | (Koa unreachable; `api/health.ts` fakes healthy, `response_time: 0`) | 200 honest health from Koa |
-| `POST /webhooks/orders/updated` (no HMAC) | 404 platform NOT_FOUND | 401 (HMAC rejection — proves route is live) |
-| `GET /api/alerts` (no session token) | 404 | 401 (session-token rejection) |
-| `GET /api/cron/tracking-refresh` (no secret) | 404 | 401; with `CRON_SECRET` → 200 |
-| `GET /billing/plans` | 404 | 200 plan info (single prefix!) |
-| `POST /webhooks/customers/redact` (no HMAC) | 404 | 401 |
-| `GET /legal/privacy-policy` | 404 | 200 HTML |
-| `GET /api` | 200 placeholder JSON ("Configure environment variables…") | gone or real |
+Re-run against `https://delayguard-api.vercel.app` on 2026-07-29. Every probe meets its required post-deploy result.
+
+| Probe | Baseline (broken) | Required after deploy | 2026-07-29 actual |
+|---|---|---|---|
+| `GET /` | 200 SPA shell, mock data | 200, embedded app loads real data | ✅ 200 |
+| `GET /health` | (Koa unreachable; `api/health.ts` fakes healthy, `response_time: 0`) | 200 honest health from Koa | ✅ 200 — `healthy`, Postgres 3ms, Redis 2ms |
+| `POST /webhooks/orders/updated` (no HMAC) | 404 platform NOT_FOUND | 401 (HMAC rejection — proves route is live) | ✅ 401 |
+| `GET /api/alerts` (no session token) | 404 | 401 (session-token rejection) | ✅ 401 |
+| `GET /api/cron/tracking-refresh` (no secret) | 404 | 401; with `CRON_SECRET` → 200 | ✅ 401; with secret → 200 (GH-Actions runs succeed) |
+| `GET /billing/plans` | 404 | 200 plan info (single prefix!) | ✅ 200 |
+| `POST /webhooks/customers/redact` (no HMAC) | 404 | 401 | ✅ 401 |
+| `POST /webhooks/customers/data_request` (no HMAC) | 404 | 401 | ✅ 401 |
+| `POST /webhooks/shop/redact` (no HMAC) | 404 | 401 | ✅ 401 |
+| `GET /legal/privacy-policy` | 404 | 200 HTML | ✅ 200 |
+| `GET /legal/terms-of-service` | 404 | 200 HTML | ✅ 200 |
+| `GET /api` | 200 placeholder JSON ("Configure environment variables…") | gone or real | ✅ placeholder gone |
+
+**Not covered by this matrix** (needs a real merchant session / dev-store install, tracked as §6 R2): embedded load inside Shopify admin, OAuth round-trip, per-shop webhook registration actually firing, and a webhook payload landing in `delay_alerts`.
 
 ---
 
@@ -214,3 +263,7 @@ Task format: **ID — name `[TAG]`** · files · what to do · acceptance criter
 | 2026-07-22 | Wave 2 · Session δ1 | WS-G | Frontend: App Bridge CDN tag + real API thunks replacing mocks (Phase 2.1.f UI wiring). Commit `fdc03f82`. |
 | 2026-07-22 | Wave 2 · Session δ2 | WS-H | Legal docs hosted, listing copy sanitized (testimonials + stats removed, pricing → Free/$7/$25), feature media. Commits `55044eed` (H-1), `eb20d745` (H-2/H-3). H-4 AI self-review + submit is human. |
 | 2026-07-22/23 | Wave 3 | Integration + WS-I | Merged all branches (`d522b248`→`66748a50`) + cross-workstream fixes (`e166516e`..`2587021d`: settings-flag source, getAlerts intelligence columns, alert status PUT, SMS plan-gate, `createCipheriv` Node-22, swagger stat removal, legal-route mount, quality-gates file list) + docs truth pass (this file, PROJECT_OVERVIEW, deploy.md, tests.md, CHANGELOG, env.example). **Husky pre-commit rewire (fix h) deferred:** husky not installed and git-root≠npm-root makes it fragile; commits + CI gate manually; revisit post-launch. **Key blocker remaining:** human dashboard gate H1–H9 + deploy-time steps (C4 `shopify app deploy`, D3 prod migration, E1 live SendGrid template, H4 PCD approval, H-4 listing submission). |
+| 2026-07-28 | Wave 4 · Deploy | WS-A follow-through + D3 + C4 | **The app actually shipped.** Real production issues that only deploying could surface: `api/[[...path]].ts` → `api/index.ts` (bracket optional-catch-all doesn't resolve the bare `/api` rewrite outside Next.js — every route 404'd); `environment.ts` PORT/HOST `process.exit(1)` crashed the serverless cold start; `parseRedisUrl` dropped the `rediss://` TLS scheme so Upstash closed the connection; the husky `prepare` script exited 128 on Vercel's git-less build and failed `npm install`. Commits `87f8aa4f`, `f84839b2`, `23c73260`. **D3 done** (all 8 tables migrated on prod Neon). **C4 deployed** (`shopify app deploy` → `delayguard-3` released). Appendix B matrix green. |
+| 2026-07-28 | Wave 4 · Scheduling | CI/cron | Vercel Hobby caps native crons at once/day, so sweep scheduling moved to a GitHub Actions workflow (`.github/workflows/cron-sweeps.yml`) curling the `CRON_SECRET`-guarded `/api/cron/*` endpoints every ~10 min. Test matrix dropped EOL Node 18 → 20.x only. Commit `b70e969d`. |
+| 2026-07-28 | Wave 4 · Webhooks | C4 correction | `use_legacy_install_flow = true` forbids app-specific webhook subscriptions in the toml, so the three functional topics moved to per-shop registration after OAuth via a new `webhook-registration-service` (Admin GraphQL `webhookSubscriptionCreate`, idempotent, 10s timeout, best-effort). Compliance topics stay in the toml. Commits `265627c9`, `812b772b`, `0c9bf1d0`. 2,410 tests passing. |
+| 2026-07-29 | Truth pass + blocker triage | Doc reconciliation | Plan was stale by 7 commits (it still described an undeployed app). Re-probed production — **entire Appendix B matrix green**, `/health` healthy (Postgres 3ms, Redis 2ms), GH-Actions cron sweeps succeeding every ~10 min. Reconciled §1, §2, C4, D3, E1, Appendix B; added **§6 Remaining blockers** as the new entry point. **E1 un-ticked and re-opened:** verified live that the SendGrid account returns `Maximum credits exceeded` on a sandbox send *and* that the production key is Mail-Send-only (`GET /v3/scopes`), so `/v3/templates` 403s and the template cannot be created — plus an unverified sender-identity risk on the hardcoded `noreply@delayguard.app` From address (§6 R1). Local CI: 2,409 passing / 25 skipped / 1 load-flake (`monitoring-service.test.ts:67`, passes in isolation — documented as a second known flake alongside the input-sanitization one). |

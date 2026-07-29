@@ -5,14 +5,14 @@ Shopify app (not a theme): React 18 + TS frontend, Koa + PostgreSQL + BullMQ/Red
 
 ## Status
 
-- **Phase**: 1 complete (95/100 readiness for Shopify App Store submission — see [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)). **Phase 2.1.e shipped 2026-05-15** (test-alert endpoint: dashboard-only POST `/api/test-alert` gated by existing `requireAuth` session-token middleware; new `TestAlertService` thin wrapper dispatches a synthesized sample alert via `EmailService.sendDelayEmail` / `SMSService.sendDelaySMS` directly to `shops.merchant_email` / `merchant_phone`; per-channel `app_settings.email_enabled` / `sms_enabled` flag honoring (intentionally stricter than production delay-check dispatch); per-request `channels: [...]` picker + `recipientEmail` / `recipientPhone` overrides; dry-run — no DB write, no BullMQ enqueue; backend complete, frontend wiring deferred to 2.1.f). Phase 2.1.a–d (customer-intelligence ingestion, priority score, financial breakdown, shipping address) all shipped same day. Remaining Phase 2.1 sub-slice: customer-intelligence UI (2.1.f).
-- **Tests**: 2,091 passing, 25 skipped, 0 failing (1 known-flake in `tests/unit/middleware/input-sanitization.test.ts:405` performance-budget assertion intermittently exceeds 120ms threshold under coverage instrumentation; passes in isolation). Local CI gate: `npm test && npm run lint && npm run type-check && npm run build` (run from `delayguard-app/`).
+- **Phase**: 🚀 **Deployed to production 2026-07-28** — live at `https://delayguard-api.vercel.app`, `/health` green, full probe matrix passing. Phase 1 + launch workstreams WS-A..H complete; Phase 2.1.a–f all shipped. Remaining work to App Store submission is **not code** — see [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §6.
+- **Tests**: 2,409 passing of 2,435, 25 skipped, 0 real failures (verified 2026-07-29). **Two known load-dependent flakes**, both timing-budget assertions that pass in isolation and fail only under full-suite CPU contention: `tests/unit/middleware/input-sanitization.test.ts:405` and `tests/unit/services/monitoring-service.test.ts:67`. Local CI gate: `npm test && npm run lint && npm run type-check && npm run build` (run from `delayguard-app/`).
 - **Husky**: pre-commit runs `node scripts/quality-gates.js` automatically. Don't bypass with `--no-verify`.
 
 ## Canonical docs (point at these instead of re-explaining)
 
-- [LAUNCH_PLAN.md](LAUNCH_PLAN.md) — **active launch execution plan**: verified production-blocker ground truth + workstreams for multi-session execution. Doing launch work? Start here; its Appendix A is pre-verified — don't re-audit it.
-- [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) — single source of truth for current state, metrics, and roadmap. ⚠️ Readiness scores predate the 2026-07-21 production audit; LAUNCH_PLAN.md §1 is the accurate wiring status until reconciled (WS-I).
+- [LAUNCH_PLAN.md](LAUNCH_PLAN.md) — **active launch execution plan**. Doing launch work? Start at **§6 Remaining blockers** — the app deployed 2026-07-28 and is live, so §§1–4 are history. Appendix A is pre-verified ground truth — don't re-audit it.
+- [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) — single source of truth for current state, metrics, and roadmap; its "Production wiring status" section is reconciled with LAUNCH_PLAN as of 2026-07-29.
 - [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) — phase-by-phase technical specs and code examples.
 - [DEEP_DIVE_UX_UI_RESEARCH.md](DEEP_DIVE_UX_UI_RESEARCH.md) — UX strategy and feature prioritization.
 - [DATA_AVAILABILITY_ANALYSIS.md](DATA_AVAILABILITY_ANALYSIS.md) — every data point's source (Shopify / ShipEngine / SendGrid / Postgres).

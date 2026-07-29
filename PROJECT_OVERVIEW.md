@@ -1,7 +1,7 @@
 # DelayGuard - Project Overview & Roadmap
 
 **Last Updated**: July 25, 2026 (WS-I docs truth pass on `launch/integration`)
-**Current Phase**: ✅ Phase 1 + Audit Waves 1-7 + launch integration (WS-A..H) — **code-complete for launch**; the 13 production blockers are resolved in code (see Production wiring status). Phase 2.1.a–e shipped 2026-05-15; Phase 2.1.f (customer-intelligence UI) landed with WS-G.
+**Current Phase**: 🚀 **Deployed to production 2026-07-28** — live and healthy at `https://delayguard-api.vercel.app`. Phase 1 + Audit Waves 1-7 + launch integration (WS-A..H) complete; all 13 production blockers resolved and shipped (see Production wiring status). Phase 2.1.a–e shipped 2026-05-15; Phase 2.1.f (customer-intelligence UI) landed with WS-G. **Remaining work is not code** — see [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §6.
 **Latest Update**: v1.53 — launch integration: real backend deploy path, serverless cron processing, Shopify `2026-07` + OAuth, prod schema source-of-truth, App-Pricing plan-gate, notification routing, real dashboard data, hosted legal + sanitized listing, plus cross-workstream integration fixes (see CHANGELOG.md v1.53 and LAUNCH_PLAN.md Session Log)
 **Document Purpose**: Single consolidated view of current state, readiness, and future roadmap
 
@@ -9,25 +9,25 @@
 
 ## Production wiring status
 
-Post-integration snapshot (mirrors [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §1, updated for the `launch/integration` branch). The 13 production blockers verified in the 2026-07-21 audit are now **resolved in code**; what remains is the human dashboard gate and deploy-time steps that no session can perform. "Fixed in code, pending deploy" means the code is merged and CI-green but the behavior only becomes live after the Wave-3 deploy.
+**Updated 2026-07-29 — the app is LIVE in production.** Deployed 2026-07-28 to `https://delayguard-api.vercel.app`. All 13 blockers from the 2026-07-21 audit are resolved **and shipped**; the full [LAUNCH_PLAN.md](LAUNCH_PLAN.md) Appendix B probe matrix is green (re-probed 2026-07-29: `/health` healthy with Postgres 3ms + Redis 2ms, every webhook/API/legal route responding correctly). What remains is **not code** — see [LAUNCH_PLAN.md](LAUNCH_PLAN.md) **§6 Remaining blockers** for the live list.
 
 | # | Problem (2026-07-21 audit) | Status now |
 |---|---|---|
-| 1 | Koa backend never deployed; real routes 404 | Fixed in code — catch-all `api/[[...path]].ts` adapts the Koa app (WS-A `c6f2ae70`); **pending deploy** |
-| 2 | No background-job runtime; cron pointed at nothing | Fixed in code — Vercel-cron batch processing (WS-B `877c1881`) |
-| 3 | Webhooks never registered with Shopify | `shopify.app.toml` authored (WS-C `0e034a0b`); **deploy-gated** — `shopify app deploy` (C4) runs at Wave-3 deploy time |
+| 1 | Koa backend never deployed; real routes 404 | ✅ **Live** — single-function `api/index.ts` adapts the Koa app (WS-A `c6f2ae70`, deploy fix `f84839b2`); probe matrix green |
+| 2 | No background-job runtime; cron pointed at nothing | ✅ **Live** — cron batch processing (WS-B `877c1881`); Vercel Hobby caps crons at once/day, so scheduling runs from a GitHub Actions workflow every ~10 min (`b70e969d`), succeeding in production |
+| 3 | Webhooks never registered with Shopify | ✅ **Deployed** — `shopify app deploy` released `delayguard-3` (2026-07-28). Compliance topics via `shopify.app.toml`; the three functional topics register per-shop after OAuth (`use_legacy_install_flow` forbids app-specific subscriptions) via `webhook-registration-service` (`812b772b`). ⏳ *Not yet observed firing on a real dev-store install* |
 | 4 | Middleware kill-chain (CSP framing, CSRF, double prefixes) | Fixed in code (WS-A `c6f2ae70`) |
 | 5 | OAuth broken (VERCEL_URL redirect, no state, dead callback) | Fixed in code — `SHOPIFY_APP_URL` + state nonce + real token exchange (WS-C `0e034a0b`) |
 | 6 | API pinned `2024-01`; customer query used removed fields | Fixed in code — bumped to `2026-07`, query rewritten (WS-C `0e034a0b`) |
-| 7 | Prod DB schema never created | Schema single-source-of-truth fixed in code (WS-D `3e56dd7c`); **deploy-gated** — `npm run migrate:vercel` against prod (D3) at deploy time |
+| 7 | Prod DB schema never created | ✅ **Live** — schema single-source-of-truth (WS-D `3e56dd7c`); `npm run migrate:vercel` run against prod Neon 2026-07-28, all 8 tables present (D3 done) |
 | 8 | Billing was a stub | Fixed in code — App-Pricing plan-gate, fails closed to free (WS-F `3e56dd7c`); plan config is human (H3) |
-| 9 | Notification details (placeholder template, example.com, routing) | Fixed in code — real tracking URLs + merchant/customer routing (WS-E `a88eac24`); **deploy-gated** — live SendGrid template + send (E1) pending `SENDGRID_API_KEY` |
+| 9 | Notification details (placeholder template, example.com, routing) | Fixed in code — real tracking URLs + merchant/customer routing (WS-E `a88eac24`). ⛔ **E1 BLOCKED on the SendGrid account** (verified 2026-07-29): the account returns `Maximum credits exceeded` on send, and the production key is Mail-Send-only so the template API 403s. Email is the only launch channel — see LAUNCH_PLAN.md §6 R1 |
 | 10 | Dashboard rendered mock data; apiClient unmounted | Fixed in code — real API thunks + apiClient mounted (WS-G `fdc03f82`) |
 | 11 | Listing assets violated current rules | Fixed in code — testimonials/stats removed, pricing reconciled, feature media (WS-H `eb20d745`); **human** — listing submission (H-4) |
 | 12 | `read_customers` scope missing; PCD never requested | Scope fixed in code (WS-C `0e034a0b`); **human** — Protected Customer Data Level 2 approval (H4) |
 | 13 | Expiring offline tokens mandatory 2027-01-01 | Post-launch fast-follow (C5); not launch-blocking |
 
-**Human / deploy-gated remainder:** PCD Level 2 approval (H4), prod migration (D3), webhook registration `shopify app deploy` (C4), live SendGrid template + send (E1), and AI self-review + listing submission (H-4). See LAUNCH_PLAN.md §2 for the full human gate (H1–H9).
+**Remainder as of 2026-07-29** (deploy, D3 and C4 are now done): ⛔ SendGrid account cannot send + template uncreatable (E1 — §6 R1, most severe); ⏳ no end-to-end verification on a real dev store (§6 R2 — OAuth, per-shop webhook registration, and an alert landing are all unproven against a live merchant); human dashboard gate H3 (App Pricing plans), H4 (PCD Level 2 — has approval latency, submit first), H7 (ShipStation Advanced plan); then H8 screencast → H-4 AI self-review → H9 submit. See [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §6.
 
 ---
 
@@ -38,9 +38,9 @@ Post-integration snapshot (mirrors [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §1, updated
 | Metric | Status | Details |
 |--------|--------|---------|
 | **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
-| **Launch Readiness** | **Code-complete for launch** | Submission pending the human dashboard gate + Wave-3 deploy (see Production wiring status above and LAUNCH_PLAN.md §2) |
-| **Test Success** | **100%** | 2,400 passing (see [CHANGELOG.md](CHANGELOG.md) v1.53), 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing in default test run (1 known-flake in `input-sanitization.test.ts:405` performance assertion intermittent under coverage instrumentation) |
-| **Test Suites** | **All passing** | 96 of 98 suites pass; 2 suites skipped (require PostgreSQL) |
+| **Launch Readiness** | **Deployed and live** | Production healthy at `https://delayguard-api.vercel.app`; submission pending SendGrid account + dev-store E2E + human gate (LAUNCH_PLAN.md §6) |
+| **Test Success** | **100%** | 2,409 passing of 2,435 (verified 2026-07-29), 25 skipped (Phase 2.6 / future-routing scaffolding), 0 real failures. **Two known load-dependent flakes**, both timing-budget assertions that pass in isolation: `input-sanitization.test.ts:405` and `monitoring-service.test.ts:67` |
+| **Test Suites** | **All passing** | 124 of 127 suites pass; 2 skipped (require PostgreSQL) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
 | **Build Success** | ✅ **100%** | 0 errors, webpack bundle ~5.8 MiB |
