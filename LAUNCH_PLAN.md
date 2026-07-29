@@ -214,7 +214,19 @@ Screencast, AI self-review, submit. Gated on R2 (needs a working app to film) an
 ### R5 — Known non-blockers (carry forward, do not let them stall launch)
 
 - **C5 expiring offline tokens** — deadline 2027-01-01, spec already written above.
-- **Two load-dependent test flakes** — `tests/unit/middleware/input-sanitization.test.ts:405` and `tests/unit/services/monitoring-service.test.ts:67`. Both assert timing budgets, both fail only under full-suite CPU contention, both pass in isolation (verified 2026-07-29). Not regressions.
+- **Flaky test suites are destabilizing the pre-commit gate `[AGENT]` — worth one focused session.** Characterized 2026-07-29 across three consecutive full-suite runs, each of which failed a *different* test while passing 2,408–2,409 of 2,435:
+
+  | Run | Failed |
+  |---|---|
+  | `npm test` | `tests/unit/services/monitoring-service.test.ts:67` |
+  | `npm test --coverage` (commit gate) | `tests/integration/api.test.ts` — "should return alerts" (`404`, not the expected `200`) |
+  | `npm test --coverage` (repeat) | `tests/integration/api.test.ts` — "CORS headers"; `tests/e2e/delay-detection-flow.test.ts` — "multiple concurrent delay detection requests" |
+
+  Every one passes in isolation (`tests/integration/api.test.ts` → 10/10 on three consecutive isolated runs; `monitoring-service.test.ts` → 12/12). **Mechanism:** `jest.config.ts` sets `maxWorkers: 1`, so all 127 suites share one process, and Jest orders files by *cached prior durations* — so the execution order shifts between runs, changing which suite neighbours which. That makes leaked cross-suite state nondeterministic rather than reproducible.
+
+  **The cheap fix is probably deletion, not debugging.** Every flaking assertion lives in a suite that imports `tests/setup/test-server.ts` — a hardcoded Koa **stub fixture** that returns canned JSON and shares no code with the real application. Six suites consume it (`integration/api`, `integration/workflow`, `integration/server-app`, `integration/analytics-integration`, `e2e/delay-detection-flow`, `e2e/analytics-dashboard-flow`). These tests assert that a fixture returns its own constants — they cover no production code, yet they are the thing blocking launch commits. Recommend deleting the fixture-only assertions (real route coverage already exists in `tests/unit/routes/*` and the live Appendix B probe matrix) rather than spending a session chasing state leakage. **Decide before the next code change** — a gate that fails randomly trains you to ignore it, and per the repo's own rules `--no-verify` is not an option.
+
+  Consequence today: a commit may need one legitimate re-run. That is *not* a licence to bypass the gate — re-run, and if the same test fails twice, treat it as real.
 - **Non-atomic notification dedupe** — the `email_sent`/`sms_sent` check-then-send race and the missing `UNIQUE(order_id, delay_reason)` constraint behind `ON CONFLICT DO NOTHING`, both documented in `CLAUDE.md` and CHANGELOG v1.53. Low real-world risk at zero install volume; fix before meaningful traffic.
 - **Husky pre-commit** was rewired in v1.53 but `node_modules` was empty on a fresh clone this session — run `npm install` from `delayguard-app/` to re-establish the hook.
 
