@@ -2,12 +2,36 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: July 29, 2026 (v1.54.1 — deleted five tautological stub-fixture test suites; pre-commit gate stable again at 2,385 passing / 0 failing, verified across three consecutive full runs)
+**Last Updated**: July 29, 2026 (v1.55 — fixed the two defects that blocked a real merchant install: a trailing-newline OAuth scope and an app URL that never started OAuth; 2,390 passing / 0 failing)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.55 (2026-07-29): Two install-blocking defects fixed — the app URL never started OAuth
+
+**Test Results**: 2,390 passing of 2,415, 25 skipped, **0 failing**, 121 suites. Lint 0 errors, type-check clean, webpack build clean. All 7 pre-commit quality gates passed. Commit `560b86b0`.
+
+**Context**: first session of LAUNCH_PLAN §6 **R2** — get one real merchant install working end to end. Both defects below were found *before the first browser click*, by reading the live install path and probing production, and **neither was visible to the 2,385-test suite or to the Appendix B probe matrix** — because neither had ever walked the merchant's actual entry point. This is the recurring lesson: green tests and green probes describe the surfaces you thought to check.
+
+**B1 — the OAuth authorize URL carried a corrupted scope.** Live `GET /auth?shop=…` on production 302'd to Shopify with:
+
+```
+scope=read_orders,…,read_products,read_customers%0A
+```
+
+That `%0A` is a newline. `SHOPIFY_SCOPES` had been saved in the Vercel dashboard with a trailing line break, and [app-config.ts](delayguard-app/src/config/app-config.ts) did `process.env.SHOPIFY_SCOPES?.split(",")` with no trim — so the final scope was literally `read_customers\n`. Shopify either rejects the grant or drops the scope, and `read_customers` is what Phase 2.1.a customer intelligence runs on. New `parseScopes()` trims every entry, drops empties, and falls back to the exported `DEFAULT_SHOPIFY_SCOPES` when nothing usable remains (5 new tests in `src/tests/unit/config/app-config-scopes.test.ts`). The Vercel env value is fixed separately — the code change makes a repeat harmless rather than fatal.
+
+**B2 — the app URL never started OAuth.** Per shopify.dev's authorization-code grant (fetched this session): *"When a user installs your app through the Shopify App Store or using an installation link, your app receives a `GET` request to the App URL path… The request includes the `shop`, `timestamp`, and `hmac` query parameters."* The app must then redirect into OAuth. Production served the static SPA shell there and stalled — no token, no shop row, no webhooks, and **no error logged anywhere**.
+
+The root cause is a routing fact, not a missing code path: `outputDirectory: "public"` puts the built `index.html` at `/`, and Vercel rewrites are evaluated *after* the static filesystem check — so `GET /` **never reaches Koa**. Proof: `/` responds with `x-vercel-cache: HIT` and no `x-powered-by: DelayGuard`, while `/auth` returns the full Koa header set. The `GET /` handler in `src/server.ts` is dead code in production.
+
+Fix: a `redirects` entry in [vercel.json](delayguard-app/vercel.json), which the edge evaluates *before* the filesystem — `/` + a `shop` query + no `embedded`/`id_token` → `/auth` (307). Embedded loads (`embedded=1`) still get the SPA shell untouched. **Deliberately not unit-tested**: a test asserting `vercel.json` contains its own literal is precisely the tautology that cost us the flaky gate in v1.54.1, so this is verified with curl against the deployment instead.
+
+**New blocker recorded, not fixed — LAUNCH_PLAN §6 R6.** Shopify's iframe-protection requirement is a **per-shop** CSP (`frame-ancestors https://<shop>.myshopify.com https://admin.shopify.com;`), required on *"any routes that render HTML content"*, and the directive *"must be different for every shop"* — so a wildcard does not satisfy it. Two gaps, both verified live: the framed HTML document sends **no CSP at all** (it is CDN-served, so `security-headers.ts` never runs on it), and where the middleware does run it uses `frame-ancestors https://*.myshopify.com`. Not a functional blocker — absent CSP means framing is allowed, so the embedded app still loads — but it is a review blocker, and it cannot be fixed with a static `vercel.json` header because the value is per-shop by definition. Sequenced after the live install walk so it cannot destabilize the one deployment that currently works.
+
+**Docs updated in the same commits**: LAUNCH_PLAN §6 R2 (findings + evidence) and new §6 R6, Session Log, §7 kickoff; PROJECT_OVERVIEW wiring row 5, remainder paragraph, and test metrics.
 
 ### v1.54 (2026-07-29): Launch truth pass — production verified live, SendGrid blocker found
 

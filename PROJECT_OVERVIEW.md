@@ -17,7 +17,7 @@
 | 2 | No background-job runtime; cron pointed at nothing | ✅ **Live** — cron batch processing (WS-B `877c1881`); Vercel Hobby caps crons at once/day, so scheduling runs from a GitHub Actions workflow every ~10 min (`b70e969d`), succeeding in production |
 | 3 | Webhooks never registered with Shopify | ✅ **Deployed** — `shopify app deploy` released `delayguard-3` (2026-07-28). Compliance topics via `shopify.app.toml`; the three functional topics register per-shop after OAuth (`use_legacy_install_flow` forbids app-specific subscriptions) via `webhook-registration-service` (`812b772b`). ⏳ *Not yet observed firing on a real dev-store install* |
 | 4 | Middleware kill-chain (CSP framing, CSRF, double prefixes) | Fixed in code (WS-A `c6f2ae70`) |
-| 5 | OAuth broken (VERCEL_URL redirect, no state, dead callback) | Fixed in code — `SHOPIFY_APP_URL` + state nonce + real token exchange (WS-C `0e034a0b`) |
+| 5 | OAuth broken (VERCEL_URL redirect, no state, dead callback) | Fixed in code — `SHOPIFY_APP_URL` + state nonce + real token exchange (WS-C `0e034a0b`). ⚠️ Two further defects found on the live install path 2026-07-29 and fixed (`560b86b0`): the authorize URL carried a trailing-newline scope (`read_customers%0A`) from an untrimmed `SHOPIFY_SCOPES`, and the **App URL never redirected into OAuth** — Shopify's install request hits `/`, which Vercel's static CDN answers before Koa sees it. See LAUNCH_PLAN.md §6 R2 |
 | 6 | API pinned `2024-01`; customer query used removed fields | Fixed in code — bumped to `2026-07`, query rewritten (WS-C `0e034a0b`) |
 | 7 | Prod DB schema never created | ✅ **Live** — schema single-source-of-truth (WS-D `3e56dd7c`); `npm run migrate:vercel` run against prod Neon 2026-07-28, all 8 tables present (D3 done) |
 | 8 | Billing was a stub | Fixed in code — App-Pricing plan-gate, fails closed to free (WS-F `3e56dd7c`); plan config is human (H3) |
@@ -27,7 +27,7 @@
 | 12 | `read_customers` scope missing; PCD never requested | Scope fixed in code (WS-C `0e034a0b`); **human** — Protected Customer Data Level 2 approval (H4) |
 | 13 | Expiring offline tokens mandatory 2027-01-01 | Post-launch fast-follow (C5); not launch-blocking |
 
-**Remainder as of 2026-07-29** (deploy, D3 and C4 are now done): ⛔ SendGrid account cannot send + template uncreatable (E1 — §6 R1, most severe); ⏳ no end-to-end verification on a real dev store (§6 R2 — OAuth, per-shop webhook registration, and an alert landing are all unproven against a live merchant); human dashboard gate H3 (App Pricing plans), H4 (PCD Level 2 — has approval latency, submit first), H7 (ShipStation Advanced plan); then H8 screencast → H-4 AI self-review → H9 submit. See [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §6.
+**Remainder as of 2026-07-29 (b)** (deploy, D3 and C4 are now done): ⛔ SendGrid account cannot send + template uncreatable (E1 — §6 R1, most severe); 🔄 **dev-store end-to-end verification in progress** (§6 R2 — two install-blocking defects already found and fixed in `560b86b0`; OAuth round-trip, per-shop webhook registration, and a webhook landing in Postgres still unproven against a live merchant); ⛔ **new: no per-shop `frame-ancestors` on the framed HTML document** (§6 R6 — submission-blocking, not functional); human dashboard gate H3 (App Pricing plans), H4 (PCD Level 2 — has approval latency, submit first), H7 (ShipStation Advanced plan); then H8 screencast → H-4 AI self-review → H9 submit. See [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §6.
 
 ---
 
@@ -39,8 +39,8 @@
 |--------|--------|---------|
 | **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
 | **Launch Readiness** | **Deployed and live** | Production healthy at `https://delayguard-api.vercel.app`; submission pending SendGrid account + dev-store E2E + human gate (LAUNCH_PLAN.md §6) |
-| **Test Success** | **100%** | 2,385 passing of 2,410, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing — **stable**, verified 2026-07-29 by three consecutive identical full runs with coverage |
-| **Test Suites** | **All passing** | 120 of 122 suites pass; 2 skipped (require PostgreSQL). Five tautological stub-fixture suites (25 tests) removed 2026-07-29 — they covered no production code and caused order-dependent gate flakiness (LAUNCH_PLAN.md §6 R5) |
+| **Test Success** | **100%** | 2,390 passing of 2,415, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing — **stable**, verified 2026-07-29 by three consecutive identical full runs with coverage; +5 for the `parseScopes` install fix (§6 R2 B1) |
+| **Test Suites** | **All passing** | 121 of 123 suites pass; 2 skipped (require PostgreSQL). Five tautological stub-fixture suites (25 tests) removed 2026-07-29 — they covered no production code and caused order-dependent gate flakiness (LAUNCH_PLAN.md §6 R5) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
 | **Build Success** | ✅ **100%** | 0 errors, webpack bundle ~5.8 MiB |
