@@ -34,6 +34,38 @@ function requireEnvDev(key: string, defaultValue?: string): string {
 }
 
 /**
+ * Code-default OAuth scopes. Keep in sync with `access_scopes` in
+ * shopify.app.toml and SHOPIFY_SCOPES in env.example.
+ */
+export const DEFAULT_SHOPIFY_SCOPES = [
+  "read_orders",
+  "write_orders",
+  "read_fulfillments",
+  "write_fulfillments",
+  "read_products", // Phase 1.2: Required for fetching product line items
+  "read_customers", // Phase 2.1.a: Customer intelligence ingestion
+] as const satisfies readonly string[];
+
+/**
+ * Parse SHOPIFY_SCOPES into a clean scope list.
+ *
+ * Every entry is trimmed and empties are dropped, because a scope carrying
+ * whitespace silently corrupts the OAuth authorize URL: a value pasted into
+ * the Vercel dashboard with a trailing newline produced
+ * `scope=…,read_customers%0A` in production (R2/B1, 2026-07-29), which is
+ * not a scope Shopify recognizes. Falls back to the code defaults when the
+ * env var is unset or contains nothing usable.
+ */
+export function parseScopes(raw: string | undefined): string[] {
+  const parsed = (raw ?? "")
+    .split(",")
+    .map((scope) => scope.trim())
+    .filter((scope) => scope.length > 0);
+
+  return parsed.length > 0 ? parsed : [...DEFAULT_SHOPIFY_SCOPES];
+}
+
+/**
  * Application configuration object
  * Uses environment variables with defaults for development
  */
@@ -41,14 +73,7 @@ export const appConfig: AppConfig = {
   shopify: {
     apiKey: requireEnvDev("SHOPIFY_API_KEY", "dev_api_key"),
     apiSecret: requireEnvDev("SHOPIFY_API_SECRET", "dev_api_secret"),
-    scopes: process.env.SHOPIFY_SCOPES?.split(",") || [
-      "read_orders",
-      "write_orders",
-      "read_fulfillments",
-      "write_fulfillments",
-      "read_products", // Phase 1.2: Required for fetching product line items
-      "read_customers", // Phase 2.1.a: Customer intelligence ingestion
-    ],
+    scopes: parseScopes(process.env.SHOPIFY_SCOPES),
   },
   database: {
     url: requireEnvDev(

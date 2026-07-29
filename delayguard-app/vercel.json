@@ -8,6 +8,18 @@
       "includeFiles": "legal/**"
     }
   },
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "query", "key": "shop" }],
+      "missing": [
+        { "type": "query", "key": "embedded" },
+        { "type": "query", "key": "id_token" }
+      ],
+      "destination": "/auth",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
