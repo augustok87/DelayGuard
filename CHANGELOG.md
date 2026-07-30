@@ -31,7 +31,13 @@ Fix: a `redirects` entry in [vercel.json](delayguard-app/vercel.json), which the
 
 **New blocker recorded, not fixed — LAUNCH_PLAN §6 R6.** Shopify's iframe-protection requirement is a **per-shop** CSP (`frame-ancestors https://<shop>.myshopify.com https://admin.shopify.com;`), required on *"any routes that render HTML content"*, and the directive *"must be different for every shop"* — so a wildcard does not satisfy it. Two gaps, both verified live: the framed HTML document sends **no CSP at all** (it is CDN-served, so `security-headers.ts` never runs on it), and where the middleware does run it uses `frame-ancestors https://*.myshopify.com`. Not a functional blocker — absent CSP means framing is allowed, so the embedded app still loads — but it is a review blocker, and it cannot be fixed with a static `vercel.json` header because the value is per-shop by definition. Sequenced after the live install walk so it cannot destabilize the one deployment that currently works.
 
-**Docs updated in the same commits**: LAUNCH_PLAN §6 R2 (findings + evidence) and new §6 R6, Session Log, §7 kickoff; PROJECT_OVERVIEW wiring row 5, remainder paragraph, and test metrics.
+**Both fixes verified live after deploy** (`delayguard-qeyoasbfx`, Ready): the authorize URL now ends `…read_products,read_customers` with no `%0A`/`%0D`/`%20`; `GET /?shop=…&hmac=abc&timestamp=1` returns **307 → `/auth?shop=…`** with the query string forwarded; `GET /?shop=…&embedded=1` still returns the 200 SPA shell.
+
+**Trap recorded — `vercel env pull` normalizes away trailing whitespace.** The pulled `SHOPIFY_SCOPES` is byte-for-byte clean (`od -c`) and `vercel env ls` shows it untouched for 283 days, which made the newline look like it came from somewhere else. Curling the *previous* deployment at its immutable URL — same env, old untrimmed code — still returned `…read_customers%0A`, proving the runtime value does end in a newline. Verify env whitespace through the running deployment, never through `env pull`.
+
+**Operational facts established** (all previously unknown, all now in LAUNCH_PLAN §6 R2): deploys are **not** git-triggered — `git push` changed nothing in production and every deployment in the project's history came from `npx vercel --prod` run locally; the Vercel CLI is already authenticated on the dev machine, so a session can pull env, read logs, and deploy unattended; production Postgres (Neon, PG 17.10) is reachable with the pulled `DATABASE_URL` and all 8 tables exist; and **`shops` contains 0 rows**, direct proof that no merchant has ever installed.
+
+**Docs updated in the same commits**: LAUNCH_PLAN §6 R2 (findings + evidence + verified results + operational facts) and new §6 R6, Session Log, §7 kickoff; PROJECT_OVERVIEW wiring row 5, remainder paragraph, and test metrics.
 
 ### v1.54 (2026-07-29): Launch truth pass — production verified live, SendGrid blocker found
 
