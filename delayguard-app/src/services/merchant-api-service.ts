@@ -211,7 +211,7 @@ export class MerchantApiService {
            o.order_number,
            o.customer_email,
            o.customer_name,
-           o.total_price,
+           o.total_amount as total_price,
            o.created_at as order_created_at,
            da.priority_score,
            da.priority_level,
@@ -251,9 +251,9 @@ export class MerchantApiService {
            o.order_number,
            o.customer_email,
            o.customer_name,
-           o.total_price,
-           o.financial_status,
-           o.fulfillment_status,
+           o.total_amount as total_price,
+           NULL::text as financial_status,
+           o.status as fulfillment_status,
            o.created_at,
            o.updated_at,
            COUNT(da.id) as alert_count,
@@ -388,9 +388,9 @@ export class MerchantApiService {
       const alertRows = await query<AlertStats>(
         `SELECT
            COUNT(*) as total_alerts,
-           COUNT(CASE WHEN status = 'sent' THEN 1 END) as sent_alerts,
-           COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_alerts,
-           COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_alerts,
+           COUNT(CASE WHEN da.status = 'sent' THEN 1 END) as sent_alerts,
+           COUNT(CASE WHEN da.status = 'pending' THEN 1 END) as pending_alerts,
+           COUNT(CASE WHEN da.status = 'failed' THEN 1 END) as failed_alerts,
            COUNT(CASE WHEN da.created_at >= NOW() - INTERVAL '30 days' THEN 1 END) as alerts_last_30_days,
            COUNT(CASE WHEN da.created_at >= NOW() - INTERVAL '7 days' THEN 1 END) as alerts_last_7_days
          FROM delay_alerts da
@@ -404,7 +404,7 @@ export class MerchantApiService {
            COUNT(*) as total_orders,
            COUNT(CASE WHEN o.created_at >= NOW() - INTERVAL '30 days' THEN 1 END) as orders_last_30_days,
            COUNT(CASE WHEN o.created_at >= NOW() - INTERVAL '7 days' THEN 1 END) as orders_last_7_days,
-           AVG(o.total_price::numeric) as average_order_value
+           AVG(o.total_amount::numeric) as average_order_value
          FROM orders o
          WHERE o.shop_id = $1`,
         [shopId],
