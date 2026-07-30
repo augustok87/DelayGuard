@@ -39,19 +39,19 @@ export class GDPRService {
 
       // Fetch all customer orders
       const orders = await this.fetchCustomerOrders(
-        webhook.shop_id,
+        webhook.shop_domain,
         customerId,
       );
 
       // Fetch all customer alerts
       const alerts = await this.fetchCustomerAlerts(
-        webhook.shop_id,
+        webhook.shop_domain,
         customerId,
       );
 
       // Fetch all fulfillments
       const fulfillments = await this.fetchCustomerFulfillments(
-        webhook.shop_id,
+        webhook.shop_domain,
         customerId,
       );
 
@@ -126,29 +126,31 @@ export class GDPRService {
              shipping_address1 = NULL,
              shipping_phone = NULL,
              updated_at = CURRENT_TIMESTAMP
-         WHERE shop_id = (SELECT id FROM shops WHERE shop_id = $4)
+         WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $4)
            AND customer_email = $5`,
         [
           anonymizedEmail,
           anonymizedName,
           null, // Remove phone number
-          webhook.shop_id,
+          webhook.shop_domain,
           webhook.customer.email,
         ],
       );
 
-      // Anonymize customer data in alerts
+      // No customer PII in delay_alerts (B11b): the table carries only
+      // order_id, delay metadata and notification flags — customer identity
+      // lives on `orders`, which the UPDATE above anonymizes. The previous
+      // `UPDATE delay_alerts SET customer_email = …, customer_name = …`
+      // referenced columns that have never existed, so every customers/redact
+      // webhook threw before reaching this point. Counted, not written.
       const alertsResult = await query<{ count: number }>(
-        `UPDATE delay_alerts 
-         SET customer_email = $1,
-             customer_name = $2,
-             updated_at = CURRENT_TIMESTAMP
+        `SELECT COUNT(*) as count FROM delay_alerts
          WHERE order_id IN (
-           SELECT id FROM orders 
-           WHERE shop_id = (SELECT id FROM shops WHERE shop_id = $3)
-             AND customer_email = $4
+           SELECT id FROM orders
+           WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $1)
+             AND customer_email = $2
          )`,
-        [anonymizedEmail, anonymizedName, webhook.shop_id, anonymizedEmail],
+        [webhook.shop_domain, anonymizedEmail],
       );
 
       // No PII in fulfillments table (only tracking numbers)
@@ -156,10 +158,10 @@ export class GDPRService {
         `SELECT COUNT(*) as count FROM fulfillments
          WHERE order_id IN (
            SELECT id FROM orders
-           WHERE shop_id = (SELECT id FROM shops WHERE shop_id = $1)
+           WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $1)
              AND customer_email = $2
          )`,
-        [webhook.shop_id, anonymizedEmail],
+        [webhook.shop_domain, anonymizedEmail],
       );
 
       logger.info("GDPR customer redaction completed successfully", {
@@ -259,7 +261,7 @@ export class GDPRService {
    * @private
    */
   private async fetchCustomerOrders(
-    shopId: number,
+    shopDomain: string,
     customerId: string,
   ): Promise<
     Array<{
@@ -276,9 +278,9 @@ export class GDPRService {
         created_at,
         0 as total_amount
        FROM orders
-       WHERE shop_id = (SELECT id FROM shops WHERE shop_id = $1)
-         AND shopify_order_id = $2`,
-      [shopId, customerId],
+       WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $1)
+         AND shopify_customer_id = $2`,
+      [shopDomain, customerId],
     );
   }
 
@@ -287,7 +289,7 @@ export class GDPRService {
    * @private
    */
   private async fetchCustomerAlerts(
-    shopId: number,
+    shopDomain: string,
     customerId: string,
   ): Promise<
     Array<{
@@ -306,10 +308,10 @@ export class GDPRService {
        FROM delay_alerts
        WHERE order_id IN (
          SELECT id FROM orders
-         WHERE shop_id = (SELECT id FROM shops WHERE shop_id = $1)
-           AND shopify_order_id = $2
+         WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $1)
+           AND shopify_customer_id = $2
        )`,
-      [shopId, customerId],
+      [shopDomain, customerId],
     );
   }
 
@@ -318,7 +320,7 @@ export class GDPRService {
    * @private
    */
   private async fetchCustomerFulfillments(
-    shopId: number,
+    shopDomain: string,
     customerId: string,
   ): Promise<
     Array<{
@@ -335,10 +337,10 @@ export class GDPRService {
        FROM fulfillments
        WHERE order_id IN (
          SELECT id FROM orders
-         WHERE shop_id = (SELECT id FROM shops WHERE shop_id = $1)
-           AND shopify_order_id = $2
+         WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $1)
+           AND shopify_customer_id = $2
        )`,
-      [shopId, customerId],
+      [shopDomain, customerId],
     );
   }
 }

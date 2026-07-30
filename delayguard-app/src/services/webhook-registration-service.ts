@@ -17,7 +17,7 @@
  * Callback URLs match the handler paths mounted in routes/webhooks.ts
  * (server.ts mounts that router at `/webhooks`):
  *   ORDERS_UPDATED       → /webhooks/orders/updated
- *   FULFILLMENTS_UPDATED → /webhooks/fulfillments/updated
+ *   FULFILLMENTS_UPDATE  → /webhooks/fulfillments/updated
  *   ORDERS_PAID          → /webhooks/orders/paid
  */
 
@@ -37,9 +37,13 @@ const REGISTRATION_TIMEOUT_MS = 10_000;
  * relative path of the handler that serves each (routes/webhooks.ts). The
  * GraphQL enum name is Shopify's `WebhookSubscriptionTopic`.
  */
-const WEBHOOK_TOPICS = [
+export const WEBHOOK_TOPICS = [
   { topic: "ORDERS_UPDATED", path: "/webhooks/orders/updated" },
-  { topic: "FULFILLMENTS_UPDATED", path: "/webhooks/fulfillments/updated" },
+  // FULFILLMENTS_UPDATE, not …UPDATED (B9): Shopify's enum uses the past
+  // tense for order topics but not fulfillment ones, and the live install
+  // rejected FULFILLMENTS_UPDATED as "provided invalid value". The handler
+  // path below is our own routing choice and is unaffected.
+  { topic: "FULFILLMENTS_UPDATE", path: "/webhooks/fulfillments/updated" },
   { topic: "ORDERS_PAID", path: "/webhooks/orders/paid" },
 ] as const;
 

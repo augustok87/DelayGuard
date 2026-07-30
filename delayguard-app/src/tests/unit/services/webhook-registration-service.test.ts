@@ -34,7 +34,7 @@ const APP_URL = "https://delayguard-api.vercel.app";
 const EXPECTED = [
   { topic: "ORDERS_UPDATED", callbackUrl: `${APP_URL}/webhooks/orders/updated` },
   {
-    topic: "FULFILLMENTS_UPDATED",
+    topic: "FULFILLMENTS_UPDATE",
     callbackUrl: `${APP_URL}/webhooks/fulfillments/updated`,
   },
   { topic: "ORDERS_PAID", callbackUrl: `${APP_URL}/webhooks/orders/paid` },
@@ -108,7 +108,7 @@ describe("webhook-registration-service", () => {
 
     expect(result.registered).toEqual([
       "ORDERS_UPDATED",
-      "FULFILLMENTS_UPDATED",
+      "FULFILLMENTS_UPDATE",
       "ORDERS_PAID",
     ]);
     expect(result.failed).toEqual([]);
@@ -183,7 +183,7 @@ describe("webhook-registration-service", () => {
 
     expect(result.registered).toEqual([
       "ORDERS_UPDATED",
-      "FULFILLMENTS_UPDATED",
+      "FULFILLMENTS_UPDATE",
       "ORDERS_PAID",
     ]);
     expect(result.failed).toEqual([]);
@@ -199,7 +199,7 @@ describe("webhook-registration-service", () => {
 
     expect(result.registered).toEqual(["ORDERS_UPDATED", "ORDERS_PAID"]);
     expect(result.failed).toEqual([
-      { topic: "FULFILLMENTS_UPDATED", reason: "Invalid callback URL" },
+      { topic: "FULFILLMENTS_UPDATE", reason: "Invalid callback URL" },
     ]);
   });
 
@@ -215,7 +215,7 @@ describe("webhook-registration-service", () => {
 
     expect(result.registered).toEqual([
       "ORDERS_UPDATED",
-      "FULFILLMENTS_UPDATED",
+      "FULFILLMENTS_UPDATE",
     ]);
     expect(result.failed).toHaveLength(1);
     expect(result.failed[0].topic).toBe("ORDERS_PAID");
@@ -236,7 +236,7 @@ describe("webhook-registration-service", () => {
 
     expect(result.registered).toEqual(["ORDERS_UPDATED", "ORDERS_PAID"]);
     expect(result.failed).toEqual([
-      { topic: "FULFILLMENTS_UPDATED", reason: "Throttled" },
+      { topic: "FULFILLMENTS_UPDATE", reason: "Throttled" },
     ]);
   });
 
@@ -255,7 +255,7 @@ describe("webhook-registration-service", () => {
 
     expect(result.registered).toEqual([
       "ORDERS_UPDATED",
-      "FULFILLMENTS_UPDATED",
+      "FULFILLMENTS_UPDATE",
     ]);
     expect(result.failed).toHaveLength(1);
     expect(result.failed[0].topic).toBe("ORDERS_PAID");

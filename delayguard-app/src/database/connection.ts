@@ -290,6 +290,23 @@ export async function runMigrations(): Promise<void> {
       END $$;
     `);
 
+    // R2/B10: the merchant's custom notification message. MerchantApiService
+    // has always read and written app_settings.custom_message, but the column
+    // was never created — so the first real install failed every settings
+    // fetch with `column "custom_message" does not exist`. Additive and
+    // nullable, so existing rows stay valid.
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='app_settings' AND column_name='custom_message'
+        ) THEN
+          ALTER TABLE app_settings ADD COLUMN custom_message TEXT;
+        END IF;
+      END $$;
+    `);
+
     // Phase 2.1.a (Customer Intelligence): track Shopify customer ID on each
     // order so customer_intelligence rows have a stable join key. Additive
     // and nullable — pre-Phase-2 orders stay valid; guest checkouts (no
