@@ -428,12 +428,18 @@ export class MerchantApiService {
   async getShop(shopDomain: string): Promise<ShopInfo> {
     try {
       const rows = await query<ShopInfo>(
+        // B6: shopify_shop_id / shop_name / plan_name are NOT columns on
+        // `shops` and never have been — selecting them made /api/shop 500.
+        // They are part of the ShopInfo contract but nothing populates
+        // them (they would need a shop.json fetch at install), so they are
+        // reported as NULL rather than silently dropped from the response.
+        // `email` is served from the real merchant_email column.
         `SELECT
            shop_domain,
-           shopify_shop_id,
-           shop_name,
-           email,
-           plan_name,
+           NULL::text AS shopify_shop_id,
+           NULL::text AS shop_name,
+           merchant_email AS email,
+           NULL::text AS plan_name,
            created_at,
            updated_at
          FROM shops

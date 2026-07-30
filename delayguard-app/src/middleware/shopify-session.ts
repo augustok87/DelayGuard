@@ -161,9 +161,10 @@ export const requireAuth = async(ctx: Context, next: Next) => {
       id: string;
       access_token: string;
       scope: string;
-      shop_name?: string;
     }>(
-      "SELECT id, access_token, scope, shop_name FROM shops WHERE shop_domain = $1",
+      // `shops` has no shop_name column and never did (B6) — selecting it
+      // made every authenticated request throw. Select only what is used.
+      "SELECT id, access_token, scope FROM shops WHERE shop_domain = $1",
       [shopDomain],
     );
 
@@ -309,9 +310,10 @@ export const optionalAuth = async(ctx: Context, next: Next) => {
       id: string;
       access_token: string;
       scope: string;
-      shop_name?: string;
     }>(
-      "SELECT id, access_token, scope, shop_name FROM shops WHERE shop_domain = $1",
+      // `shops` has no shop_name column and never did (B6) — selecting it
+      // made every authenticated request throw. Select only what is used.
+      "SELECT id, access_token, scope FROM shops WHERE shop_domain = $1",
       [shopDomain],
     );
 

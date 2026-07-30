@@ -9,10 +9,20 @@
 
 # Client ID from the Dev Dashboard (Apps → DelayGuard → Settings). Equals
 # SHOPIFY_API_KEY in Vercel env.
-client_id = "e9d96cad62c5e6db0a67e6752a23d0ea"
+#
+# Corrected 2026-07-30 (R2/B5): this was e9d96cad62c5e6db0a67e6752a23d0ea,
+# an app record that does not exist in the owning organization (185109091)
+# — `shopify app info` returned 403 "not a member" because the CLI resolved
+# that id to a different org entirely. The real app is below. The mismatch
+# meant App Bridge session tokens were signed with the real app's secret and
+# verified against the phantom app's, so every /api/* call failed with
+# "invalid signature", and the install ran Shopify's managed flow instead of
+# our OAuth — which is why upsertShop and webhook registration never ran.
+client_id = "99187ae8a201f83e39407a1e79b725c1"
 
 name = "DelayGuard"
-handle = "delayguard"
+# Must match the app's real handle in the Dev Dashboard.
+handle = "delayguard-2"
 application_url = "https://delayguard-api.vercel.app"
 embedded = true
 
