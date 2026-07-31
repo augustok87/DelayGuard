@@ -2,12 +2,42 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: July 29, 2026 (v1.55 — fixed the two defects that blocked a real merchant install: a trailing-newline OAuth scope and an app URL that never started OAuth; 2,390 passing / 0 failing)
+**Last Updated**: July 30, 2026 (v1.56 — first real merchant install: 7 defects found and fixed, R2 steps 1/3/4 proven live; new top blocker R7, Protected Customer Data approval; 2,399 passing / 0 failing)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.56 (2026-07-30): First real merchant install — 7 defects found, R2 steps 1/3/4 proven
+
+**Test Results**: 2,399 passing of 2,424, 25 skipped, **0 failing**, 124 suites. Lint 0 errors, type-check clean, build clean, 7/7 quality gates. Commits `26e4e34a`, `7e741bdf`, `0d3a1cbd`.
+
+**DelayGuard was installed on a real Shopify store for the first time** (`delayguard-dev.myshopify.com`). Three of LAUNCH_PLAN §6 R2's four steps are now proven against production; the fourth is blocked on a human approval, not on code.
+
+**The headline defect: production was wired to a Shopify app that does not exist.** `shopify.app.toml` and Vercel's `SHOPIFY_API_KEY` declared `e9d96cad62c5e6db0a67e6752a23d0ea`; the only app in the owning organization is `99187ae8a201f83e39407a1e79b725c1`. That single mismatch explained three separate symptoms — App Bridge session tokens rejected with `invalid signature` (signed by the real app's secret, verified against the phantom app's); the install silently running Shopify's **managed** flow so `/auth/callback` was never called, leaving `shops` empty and no webhooks registered; and an earlier `shopify app info` **403 "not a member of the requested organization"** that had been misread as a wrong login but was actually the CLI resolving the phantom id to a different org.
+
+**Seven defects, in the order the install exposed them** (full evidence in LAUNCH_PLAN §6 R2):
+
+| | Defect | Effect |
+|---|---|---|
+| B4 | Install used managed flow; toml never deployed to the real app | No token, no shop row, **no webhooks** |
+| B5 | Wrong Shopify app identity (key + secret + toml) | Every `/api/*` call `invalid signature` |
+| B6 | `SELECT … shop_name FROM shops` — column never existed | Every authenticated request 500 |
+| B9 | `FULFILLMENTS_UPDATED` is not a Shopify enum value | Fulfillment webhook could never register |
+| B10 | `app_settings.custom_message` read/written but never created | Settings fetch failed |
+| B11 | GDPR handlers: 6× `shops.shop_id`, a PII UPDATE on columns `delay_alerts` lacks, orders filtered by customer id against the *order* id column | `customers/redact` + `data_request` threw |
+| B12 | `o.total_price`, `o.financial_status`, `o.fulfillment_status`, ambiguous `status` | `/api/orders`, `/api/alerts`, `/api/analytics` all 500 |
+
+**Four of these were structurally invisible to a fully green 2,385-test suite**, because every test mocks `query` and mocks `registerWebhooks` — and a mocked boundary cannot tell you the thing on the other side exists. Every one was caught by reading production logs, querying the production database, or asking the Shopify Admin API directly.
+
+**New guard**: `src/tests/unit/database/sql-column-conformance.test.ts` derives every table's real columns from `runMigrations()` and validates SELECT lists, UPDATE targets, INSERT column lists and WHERE filters, resolving table aliases so qualified references are checked too. It was too narrow twice before it was right — v1 covered only `shops` (so B10 slipped through minutes later) and v2 skipped aliased queries (so all of B12 did). It attributes unqualified columns only where the target is unambiguous and skips rather than guesses, so it produces no false positives across the tree.
+
+**Verified live, not inferred**: `shops` + `app_settings` rows written by our own OAuth callback; a validly-signed `orders/updated` landing in `orders` with every column correct including the Phase 2.1.b/c/d financial and shipping fields; all five dashboard endpoints returning 200 with real data; a webhook signed with the real secret returning 200 while a deliberately wrong secret returns 401 (negative control).
+
+**New blocker — LAUNCH_PLAN §6 R7: Protected Customer Data approval blocks every order webhook.** `webhookSubscriptionCreate` returns *"This app is not approved to subscribe to webhook topics containing protected customer data"* for `ORDERS_UPDATED`, `ORDERS_PAID` and `FULFILLMENTS_UPDATE` alike, and `webhookSubscriptions` on the installed store returns `[]`. Until Shopify grants approval, **no merchant data can reach the app and no alert can fire**. §2's H4 had framed this as mere "approval latency"; it is a hard functional gate.
+
+**Operational facts recorded** (LAUNCH_PLAN §6 R2): deploys are not git-triggered (`npx vercel --prod`); migrations do not run at startup (`npm run migrate:vercel`); `shopify app env show` yields the app's real credentials directly; `vercel env pull` silently normalizes trailing whitespace, so env values must be verified through the running deployment.
 
 ### v1.55 (2026-07-29): Two install-blocking defects fixed — the app URL never started OAuth
 
