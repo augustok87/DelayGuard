@@ -53,7 +53,12 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: './src/index.html',
-      filename: 'index.html',
+      // NOT index.html (LAUNCH_PLAN R6): Vercel's static filesystem check
+      // answers `/` from public/index.html before any rewrite reaches the
+      // function, so the framed document would bypass Koa and ship with no
+      // per-shop `frame-ancestors`. Naming it app.html frees `/` to fall
+      // through to Koa, which serves this file via routes/app-document.ts.
+      filename: 'app.html',
       // G1 (req 2.2.3): the shopify-api-key meta tag in src/index.html is
       // rendered from this parameter; the CDN app-bridge.js script reads it.
       templateParameters: {
@@ -89,7 +94,8 @@ module.exports = {
     compress: true,
     port: 3000,
     hot: true,
-    historyApiFallback: true,
+    // Matches the R6 filename above, so `/` still serves the SPA locally.
+    historyApiFallback: { index: '/app.html' },
   },
   optimization: {
     splitChunks: isProduction ? {

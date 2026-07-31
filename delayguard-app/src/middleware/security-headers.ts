@@ -1,10 +1,15 @@
 import { Context, Next } from "koa";
+import { frameAncestorsDirective } from "./frame-ancestors";
 
 /**
  * Security Headers Middleware
  * Implements comprehensive security headers following OWASP guidelines
  */
 export class SecurityHeadersMiddleware {
+  /**
+   * Everything except `frame-ancestors`, which is per-shop (R6) and so has
+   * to be computed from the request rather than baked in here.
+   */
   private static readonly CSP_POLICY = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.shopify.com https://checkout.shopify.com",
@@ -16,10 +21,6 @@ export class SecurityHeadersMiddleware {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    // Embedded Shopify app (LAUNCH_PLAN A2): the Shopify admin iframes
-    // this app, so frame-ancestors must allow the admin + merchant shop
-    // domains. 'none' (the previous value) made the app un-embeddable.
-    "frame-ancestors https://admin.shopify.com https://*.myshopify.com",
     "upgrade-insecure-requests",
   ].join("; ");
 
@@ -39,7 +40,13 @@ export class SecurityHeadersMiddleware {
       "script-src 'self' 'unsafe-inline'",
       `script-src 'self' 'nonce-${nonce}'`,
     );
-    ctx.set("Content-Security-Policy", cspWithNonce);
+    // R6: frame-ancestors names the one shop this request belongs to, which
+    // shopify.dev requires to "be different for every shop". Requests with
+    // no `shop` are not framed by the admin, so they get 'none'.
+    ctx.set(
+      "Content-Security-Policy",
+      `${cspWithNonce}; ${frameAncestorsDirective(ctx.query?.shop)}`,
+    );
 
     // Set X-Powered-By header
     ctx.set("X-Powered-By", "DelayGuard");

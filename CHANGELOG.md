@@ -2,12 +2,37 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: July 30, 2026 (v1.56 — first real merchant install: 7 defects found and fixed, R2 steps 1/3/4 proven live; new top blocker R7, Protected Customer Data approval; 2,399 passing / 0 failing)
+**Last Updated**: July 31, 2026 (v1.57 — per-shop `frame-ancestors` shipped and verified live, closing LAUNCH_PLAN §6 R6; R7 root-caused; 2,409 passing / 0 failing)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.57 (2026-07-31): Per-shop `frame-ancestors` — the framed document moves from the CDN to Koa
+
+**Test Results**: 2,409 passing of 2,434, 25 skipped, **0 failing**, 125 suites. Lint 0 errors, type-check clean, build clean.
+
+Closes LAUNCH_PLAN §6 **R6**, the last agent-side launch blocker. Shopify requires the embedded app's HTML document to send `Content-Security-Policy: frame-ancestors https://<shop>.myshopify.com https://admin.shopify.com;`, and states the directive *"must be different for every shop"*. DelayGuard satisfied neither clause: `GET /` was answered by Vercel's static CDN, so the one response that actually gets framed carried **no CSP at all**, and everywhere the middleware did run it emitted a wildcard `https://*.myshopify.com` — which would let any Shopify store frame the app.
+
+**The fix is a routing change, not a header change.** Vercel's static filesystem check wins over rewrites, so as long as the build emitted `public/index.html` nothing could put Koa on that response:
+
+| Change | Why |
+|---|---|
+| `HtmlWebpackPlugin` → `filename: 'app.html'` | frees `/` so the existing `/(.*) → /api` rewrite reaches Koa |
+| `src/routes/app-document.ts` (new) | serves the document, read once and cached; a missing bundle yields a stated message, never a blank iframe |
+| `src/middleware/frame-ancestors.ts` (new) | validates `?shop` against `^[a-z0-9][a-z0-9-]*\.myshopify\.com$` — a value with a space, `;`, CR or LF can never reach a header — else `'none'` |
+| `security-headers.ts` | `frame-ancestors` computed per request instead of baked into a constant |
+| `vercel.json` `includeFiles` → `{legal/**,public/app.html}` | the function must actually ship the document |
+| `webpack.config.js` `historyApiFallback: { index: '/app.html' }` | keeps `npm run dev` serving the SPA at `/` |
+
+**Verified against production, not the suite** — 7 probes plus 4 regression probes: the document returns `200 text/html` with `x-powered-by: DelayGuard` (Koa, not the CDN); `frame-ancestors https://delayguard-dev.myshopify.com https://admin.shopify.com`; no wildcard anywhere; a different shop yields a different directive; `?shop=evil.com; frame-ancestors *` yields `frame-ancestors 'none'` with the injected string absent; the real SPA loads with `shopify-api-key` = `99187ae8…` and both hashed bundles `200`; and B2's install redirect (`307 → /auth`), `/health`, both legal pages and unsigned-webhook rejection are all unchanged.
+
+**Two tests were changed rather than added.** `security-headers.test.ts` and `server-app.test.ts` both asserted the policy *contained* `https://*.myshopify.com` — they encoded the defect, so leaving them green would have meant shipping it. New coverage: `tests/unit/middleware/frame-ancestors.test.ts` (8 tests, including header-injection rejection) and real-app assertions in `server-app.test.ts`.
+
+**Also**: the API-index JSON that used to answer `/` was removed (`/docs` and `/api/swagger.json` already cover it). `webpack.optimized.config.js` still emits `index.html`; it is opt-in and unused by `npm run build`, and now carries a comment warning that promoting it would silently hand `/` back to the CDN.
+
+**R7 (Protected Customer Data) re-verified and re-framed, no code change.** Using the stored production token directly: `webhookSubscriptions` still `[]`, `webhookSubscriptionCreate(ORDERS_UPDATED)` still refused, while the same GraphQL session answers other queries normally — isolating the PCD grant as the sole cause. Two corrections to the plan's earlier framing: shopify.dev states dev-store installs need **no review**, so this was never an approval-latency problem; and the new Dev Dashboard has **no** API-access, distribution or PCD UI at all — a documented, still-open Shopify gap. Details and the Partner Dashboard URLs to try are in LAUNCH_PLAN §6 R7.
 
 ### v1.56 (2026-07-30): First real merchant install — 7 defects found, R2 steps 1/3/4 proven
 

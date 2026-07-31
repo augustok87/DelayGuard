@@ -27,7 +27,7 @@
 | 12 | `read_customers` scope missing; PCD never requested | Scope fixed in code (WS-C `0e034a0b`); **human** — Protected Customer Data Level 2 approval (H4) |
 | 13 | Expiring offline tokens mandatory 2027-01-01 | Post-launch fast-follow (C5); not launch-blocking |
 
-**Remainder as of 2026-07-30** — **the app is now installed and working on a real dev store** (`delayguard-dev.myshopify.com`): OAuth→`upsertShop`, a signed `orders/updated` landing in Postgres, and the embedded dashboard with a live session token are all **proven**, after seven defects found and fixed (LAUNCH_PLAN.md §6 R2). ⛔ **NEW TOP BLOCKER: Protected Customer Data approval** (§6 R7) — Shopify refuses every order-webhook subscription without it, so no merchant data can flow and the product is inert; `[HUMAN]`, has approval latency, request it first. ⛔ SendGrid account cannot send + template uncreatable (§6 R1). ⛔ No per-shop `frame-ancestors` on the framed HTML document (§6 R6 — submission-blocking, not functional). Then human gate H3 (App Pricing plans), H7 (ShipStation Advanced); then H8 screencast → H-4 AI self-review → H9 submit. See [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §6.
+**Remainder as of 2026-07-31** — **the app is now installed and working on a real dev store** (`delayguard-dev.myshopify.com`): OAuth→`upsertShop`, a signed `orders/updated` landing in Postgres, and the embedded dashboard with a live session token are all **proven**, after seven defects found and fixed (LAUNCH_PLAN.md §6 R2). ⛔ **NEW TOP BLOCKER: Protected Customer Data approval** (§6 R7) — Shopify refuses every order-webhook subscription without it, so no merchant data can flow and the product is inert; `[HUMAN]`, has approval latency, request it first. ⛔ SendGrid account cannot send + template uncreatable (§6 R1). ✅ Per-shop `frame-ancestors` shipped and verified live 2026-07-31 (§6 R6 closed — **no agent-side blocker remains on the critical path**). Then human gate H3 (App Pricing plans), H7 (ShipStation Advanced); then H8 screencast → H-4 AI self-review → H9 submit. See [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §6.
 
 ---
 
@@ -39,8 +39,8 @@
 |--------|--------|---------|
 | **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
 | **Launch Readiness** | **Deployed and live** | Production healthy at `https://delayguard-api.vercel.app`; submission pending SendGrid account + dev-store E2E + human gate (LAUNCH_PLAN.md §6) |
-| **Test Success** | **100%** | 2,399 passing of 2,424, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing — **stable**, verified 2026-07-29 by three consecutive identical full runs with coverage; +5 for the `parseScopes` install fix (§6 R2 B1) |
-| **Test Suites** | **All passing** | 124 of 126 suites pass; 2 skipped (require PostgreSQL). Five tautological stub-fixture suites (25 tests) removed 2026-07-29 — they covered no production code and caused order-dependent gate flakiness (LAUNCH_PLAN.md §6 R5) |
+| **Test Success** | **100%** | 2,409 passing of 2,434, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing as of 2026-07-31; +8 for the per-shop `frame-ancestors` guard (§6 R6), +5 for the `parseScopes` install fix (§6 R2 B1). ⚠️ The order-dependent flake of §6 R5 is **not** closed — it did not reproduce, but only one full run was made this session |
+| **Test Suites** | **All passing** | 125 of 127 suites pass; 2 skipped (require PostgreSQL). Five tautological stub-fixture suites (25 tests) removed 2026-07-29 — they covered no production code and caused order-dependent gate flakiness (LAUNCH_PLAN.md §6 R5) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
 | **Build Success** | ✅ **100%** | 0 errors, webpack bundle ~5.8 MiB |

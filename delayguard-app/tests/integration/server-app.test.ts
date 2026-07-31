@@ -74,12 +74,32 @@ describe('server.ts real app (WS-A)', () => {
   });
 
   describe('A2 — embedded-app response headers', () => {
-    it('CSP frame-ancestors allows Shopify admin framing', async() => {
-      const res = await request(callback).get('/health');
+    // R6. The framed document is `/`, and the directive must name the one
+    // shop — a wildcard would let any Shopify store frame the app.
+    it('the app document carries a shop-specific frame-ancestors', async() => {
+      const res = await request(callback).get(
+        '/?shop=delayguard-dev.myshopify.com&embedded=1',
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('text/html');
+      expect(res.headers['content-security-policy']).toContain(
+        'frame-ancestors https://delayguard-dev.myshopify.com https://admin.shopify.com',
+      );
+      expect(res.headers['content-security-policy']).not.toContain(
+        '*.myshopify.com',
+      );
+    });
+
+    it('a shop it cannot trust never reaches the header', async() => {
+      const res = await request(callback).get(
+        `/?shop=${encodeURIComponent('evil.com; frame-ancestors *')}`,
+      );
 
       expect(res.headers['content-security-policy']).toContain(
-        'frame-ancestors https://admin.shopify.com https://*.myshopify.com',
+        "frame-ancestors 'none'",
       );
+      expect(res.headers['content-security-policy']).not.toContain('evil.com');
     });
 
     it('X-Frame-Options is no longer sent', async() => {

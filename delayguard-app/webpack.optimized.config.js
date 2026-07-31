@@ -105,6 +105,10 @@ module.exports = (env, argv) => {
       
       new HtmlWebpackPlugin({
         template: './src/index.html',
+        // Opt-in config, not used by `npm run build`. If it ever becomes the
+        // production build, this must become 'app.html' — see LAUNCH_PLAN R6
+        // and the comment in webpack.config.js; index.html silently returns
+        // `/` to Vercel's CDN and drops the per-shop frame-ancestors.
         filename: 'index.html',
         minify: isProduction ? {
           removeComments: true,

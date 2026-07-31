@@ -24,6 +24,7 @@ import { appConfig as config } from './config/app-config';
 
 // Security middleware imports
 import { securityHeaders } from './middleware/security-headers';
+import { serveAppDocument } from './routes/app-document';
 // import { RateLimitingMiddleware, RateLimitPresets } from './middleware/rate-limiting'; // Available for future use
 import { CSRFProtectionMiddleware } from './middleware/csrf-protection';
 import { InputSanitizationMiddleware, SanitizationPresets } from './middleware/input-sanitization';
@@ -193,23 +194,11 @@ router.get('/api/swagger.json', async(ctx) => {
   }
 });
 
-// Main app route
-// Public root route for health check
-router.get('/', async(ctx) => {
-  ctx.body = {
-    status: 'success',
-    message: 'DelayGuard API is running',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      api: '/api',
-      webhooks: '/webhooks',
-      auth: '/auth',
-      docs: '/docs',
-      swagger: '/api/swagger.json',
-    },
-  };
-});
+// The embedded app document (LAUNCH_PLAN R6). Served from Koa rather than
+// Vercel's static CDN so security-headers.ts can attach the per-shop
+// `frame-ancestors` Shopify requires on framed HTML. The API index that
+// used to live here is available at /docs and /api/swagger.json.
+router.get('/', serveAppDocument);
 
 // Dashboard route (embedded app UI is the SPA served from /public; the
 // session-token middleware on /api/* protects all data access).

@@ -8,6 +8,7 @@ const createMockContext = (): Context => {
     get: jest.fn().mockReturnValue('https'),
     secure: true,
     path: '/api/test',
+    query: {} as Record<string, string>,
     response: {
       headers: {},
     },
@@ -76,16 +77,31 @@ describe('Security Headers Middleware', () => {
       );
     });
 
-    it('CSP frame-ancestors allows Shopify admin + merchant shop domains', async() => {
+    // R6: this replaced an assertion that the policy contained the wildcard
+    // `https://*.myshopify.com`. shopify.dev requires the directive to name
+    // the one shop and to "be different for every shop", so the wildcard was
+    // the defect, not the contract.
+    it('CSP frame-ancestors names the requesting shop, not a wildcard', async() => {
+      ctx.query.shop = 'delayguard-dev.myshopify.com';
+
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Content-Security-Policy',
         expect.stringContaining(
-          'frame-ancestors https://admin.shopify.com https://*.myshopify.com',
+          'frame-ancestors https://delayguard-dev.myshopify.com https://admin.shopify.com',
         ),
       );
       expect(ctx.set).not.toHaveBeenCalledWith(
+        'Content-Security-Policy',
+        expect.stringContaining('*.myshopify.com'),
+      );
+    });
+
+    it("CSP frame-ancestors is 'none' when the request names no shop", async() => {
+      await securityHeaders(ctx, next);
+
+      expect(ctx.set).toHaveBeenCalledWith(
         'Content-Security-Policy',
         expect.stringContaining("frame-ancestors 'none'"),
       );
