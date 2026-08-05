@@ -150,6 +150,27 @@ export async function runMigrations(): Promise<void> {
       ON delay_alerts(sendgrid_message_id);
     `);
 
+    // Access log for protected customer data (LAUNCH_PLAN R7). Shopify's
+    // Level 2 requirements say verbatim: "Keep an access log to protected
+    // customer data". Records who touched which endpoint and the outcome —
+    // never customer values, so the log cannot become a second PII store.
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS data_access_log (
+        id SERIAL PRIMARY KEY,
+        shop_domain VARCHAR(255) NOT NULL,
+        user_id VARCHAR(255),
+        path VARCHAR(255) NOT NULL,
+        method VARCHAR(10) NOT NULL,
+        status_code INTEGER NOT NULL,
+        accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_data_access_log_shop_time
+      ON data_access_log(shop_domain, accessed_at);
+    `);
+
     // Create app_settings table
     await client.query(`
       CREATE TABLE IF NOT EXISTS app_settings (

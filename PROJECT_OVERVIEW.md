@@ -39,8 +39,8 @@
 |--------|--------|---------|
 | **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
 | **Launch Readiness** | **Deployed and live** | Production healthy at `https://delayguard-api.vercel.app`; submission pending SendGrid account + dev-store E2E + human gate (LAUNCH_PLAN.md §6) |
-| **Test Success** | **100%** | 2,409 passing of 2,434, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing as of 2026-07-31; +8 for the per-shop `frame-ancestors` guard (§6 R6), +5 for the `parseScopes` install fix (§6 R2 B1). ⚠️ The order-dependent flake of §6 R5 is **not** closed — it did not reproduce, but only one full run was made this session |
-| **Test Suites** | **All passing** | 125 of 127 suites pass; 2 skipped (require PostgreSQL). Five tautological stub-fixture suites (25 tests) removed 2026-07-29 — they covered no production code and caused order-dependent gate flakiness (LAUNCH_PLAN.md §6 R5) |
+| **Test Success** | **100%** | 2,415 passing of 2,440, 25 skipped (Phase 2.6 / future-routing scaffolding), 0 failing as of 2026-08-05; +6 for the protected-customer-data access log (§6 R7), +8 for the per-shop `frame-ancestors` guard (§6 R6). ⚠️ The order-dependent flake of §6 R5 is **not** closed — it did not reproduce, but only one full run was made this session |
+| **Test Suites** | **All passing** | 126 of 128 suites pass; 2 skipped (require PostgreSQL). Five tautological stub-fixture suites (25 tests) removed 2026-07-29 — they covered no production code and caused order-dependent gate flakiness (LAUNCH_PLAN.md §6 R5) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |
 | **Build Success** | ✅ **100%** | 0 errors, webpack bundle ~5.8 MiB |

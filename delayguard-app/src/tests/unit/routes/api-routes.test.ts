@@ -337,7 +337,8 @@ describe('API Routes', () => {
       });
 
       // Auth (1) + resolveShopId (2) + SELECT (3) + seed INSERT (4)
-      expect(mockQuery).toHaveBeenCalledTimes(4);
+      // + the R7 access-log insert requireAuth appends after the handler (5).
+      expect(mockQuery).toHaveBeenCalledTimes(5);
     });
   });
 

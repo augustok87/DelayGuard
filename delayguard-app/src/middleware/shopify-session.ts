@@ -1,4 +1,5 @@
 import { Context, Next } from "koa";
+import { recordDataAccess } from "../services/access-log";
 import jwt from "jsonwebtoken";
 import { logger } from "../utils/logger";
 import { query } from "../database/connection";
@@ -203,7 +204,22 @@ export const requireAuth = async(ctx: Context, next: Next) => {
       path: ctx.path,
     });
 
-    await next();
+    // R7: Shopify's Level 2 protected-customer-data requirements mandate an
+    // access log. Every route that can read customer data is behind this
+    // middleware, so this is the one chokepoint worth instrumenting. In a
+    // `finally` so a handler that throws is still recorded — an audit trail
+    // that omits failures is the one you most want during an incident.
+    try {
+      await next();
+    } finally {
+      await recordDataAccess({
+        shopDomain,
+        userId: decoded.sub,
+        path: ctx.path,
+        method: ctx.method,
+        statusCode: ctx.status,
+      });
+    }
   } catch (error) {
     // Handle specific JWT errors
     if (error instanceof jwt.TokenExpiredError) {

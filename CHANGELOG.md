@@ -2,12 +2,39 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: July 31, 2026 (v1.57 — per-shop `frame-ancestors` shipped and verified live, closing LAUNCH_PLAN §6 R6; R7 root-caused; 2,409 passing / 0 failing)
+**Last Updated**: August 5, 2026 (v1.58 — access log for protected customer data built after Shopify refused the PCD request; 2,415 passing / 0 failing)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.58 (2026-08-05): Access log for protected customer data — Shopify refused approval, correctly
+
+**Test Results**: 2,415 passing of 2,440, 25 skipped, **0 failing**, 126 suites. Lint 0 errors, type-check clean, build clean.
+
+The Protected Customer Data request (LAUNCH_PLAN §6 R7) was finally located and completed — and Shopify **refused it**:
+
+> *"Sorry, your app isn't approved to access protected customer data at this time. To be approved, you need to confirm that you meet Shopify's requirements..."*
+
+**The refusal was right.** DelayGuard requests Name/Address/Phone/Email, which is **Level 2**, and shopify.dev's Level 2 requirements include verbatim: *"Keep an access log to protected customer data"*. There wasn't one. `services/audit-logger.ts` had existed since early development but was **dead code on every data path** — `shopify-session.ts` mentions it in a comment and never calls it. The honest answer to *"Do you log access to personal data?"* was No, so the request was blocked until the capability actually existed.
+
+**Built rather than mis-answered:**
+
+- `src/services/access-log.ts` — `recordDataAccess()`, appending one row per authenticated request
+- `data_access_log` table in `runMigrations()`, indexed on `(shop_domain, accessed_at)`; applied to production Neon and verified with `\d`
+- wired into `requireAuth`, inside a **`finally`** so a handler that throws is still recorded — an audit trail that omits failures is the one you most want during an incident
+
+Two properties the tests pin down, because they matter more than the row shape:
+
+1. **It never breaks a request.** Insert failures are caught and logged. A logging outage must degrade the audit trail, not 500 a merchant's dashboard.
+2. **It never becomes a second PII store.** The query string is stripped before the path is persisted, so a URL like `/api/orders?email=…` cannot copy customer data into the log that exists to protect it. Over-long paths truncate rather than fail the insert.
+
+6 new tests. One existing assertion changed: `api-routes.test.ts` counted queries exactly (`4`), and the access-log insert legitimately makes it 5.
+
+**Still open**: the human step of flipping that answer to Yes in the Partner Dashboard and re-checking the approval banner.
+
+**Also recorded**: the Partner Dashboard org is **`4521112`**, not the Dev Dashboard's `185109091` — the mismatch that made every hand-built PCD URL 404. Reach it via the app's **Overview → Distribution → "Manage Shopify App Store listing"** link rather than constructing URLs.
 
 ### v1.57 (2026-07-31): Per-shop `frame-ancestors` — the framed document moves from the CDN to Koa
 
