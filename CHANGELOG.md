@@ -2,7 +2,7 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 5, 2026 (v1.58 — access log for protected customer data built after Shopify refused the PCD request; 2,415 passing / 0 failing)
+**Last Updated**: August 5, 2026 (v1.58 — protected-customer-data access log built, PCD **granted**, all three webhook subscriptions live; LAUNCH_PLAN §6 R2, R6 and R7 all closed)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
@@ -32,7 +32,19 @@ Two properties the tests pin down, because they matter more than the row shape:
 
 6 new tests. One existing assertion changed: `api-routes.test.ts` counted queries exactly (`4`), and the access-log insert legitimately makes it 5.
 
-**Still open**: the human step of flipping that answer to Yes in the Partner Dashboard and re-checking the approval banner.
+**Outcome — PCD granted the same day.** With the log in place the answer became true, the refusal banner cleared, and the effect was verified by consequence rather than by the screen: `webhookSubscriptionCreate(ORDERS_UPDATED)` — refused every time since 2026-07-30 — returned `gid://shopify/WebhookSubscription/1521824628796`. All three topics were then registered over the Admin API using the stored token (**no reinstall, no browser**) and confirmed by querying Shopify:
+
+| Topic | Endpoint |
+|---|---|
+| `ORDERS_UPDATED` | `/webhooks/orders/updated` |
+| `FULFILLMENTS_UPDATE` | `/webhooks/fulfillments/updated` |
+| `ORDERS_PAID` | `/webhooks/orders/paid` |
+
+**That closes LAUNCH_PLAN §6 R2 (all four steps) and R7.** DelayGuard can receive real merchant order data for the first time.
+
+The access log was verified end to end too: one embedded dashboard load produced 8 rows in `data_access_log` on production Neon — `/api/shop`, `/api/settings` ×2, `/api/orders` ×2, `/api/alerts` ×2, `/api/analytics`, all `GET`/`200` — with no customer values anywhere in the table.
+
+**Top blocker is now R1 (SendGrid):** a delay can be detected but not delivered.
 
 **Also recorded**: the Partner Dashboard org is **`4521112`**, not the Dev Dashboard's `185109091` — the mismatch that made every hand-built PCD URL 404. Reach it via the app's **Overview → Distribution → "Manage Shopify App Store listing"** link rather than constructing URLs.
 
