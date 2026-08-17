@@ -168,7 +168,10 @@ describe("EmailService.sendDelayEmail", () => {
     expect(sendMock).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "jane@example.com",
-        from: "noreply@delayguard.app",
+        // R1: the sender is env-driven now (SENDGRID_FROM_EMAIL). This
+        // asserted `noreply@delayguard.app`, a domain the project never
+        // owned — see tests/unit/services/email-from-address.test.ts.
+        from: "noreply@delayguard.example",
         templateId: "d-delay-notification-template",
         dynamicTemplateData: expect.objectContaining({
           customerName: "Jane Doe",
@@ -280,12 +283,17 @@ describe("EmailService.sendDelayEmail", () => {
 describe("EmailService — SENDGRID_DELAY_TEMPLATE_ID resolution (Launch WS-E, task E1)", () => {
   let emailService: EmailService;
   const originalTemplateId = process.env.SENDGRID_DELAY_TEMPLATE_ID;
+  const originalFromEmail = process.env.SENDGRID_FROM_EMAIL;
   const originalNodeEnv = process.env.NODE_ENV;
 
   beforeEach(() => {
     sendMock.mockReset();
     sendMock.mockResolvedValue([{ statusCode: 202 }, {}]);
     emailService = new EmailService("test-sendgrid-key");
+    // R1: the From address is now resolved in the same object literal and
+    // also throws in production when unset. These tests are about template
+    // resolution, so pin the sender to keep the two failures independent.
+    process.env.SENDGRID_FROM_EMAIL = "noreply@delayguardapp.test";
   });
 
   afterEach(() => {
@@ -293,6 +301,11 @@ describe("EmailService — SENDGRID_DELAY_TEMPLATE_ID resolution (Launch WS-E, t
       delete process.env.SENDGRID_DELAY_TEMPLATE_ID;
     } else {
       process.env.SENDGRID_DELAY_TEMPLATE_ID = originalTemplateId;
+    }
+    if (originalFromEmail === undefined) {
+      delete process.env.SENDGRID_FROM_EMAIL;
+    } else {
+      process.env.SENDGRID_FROM_EMAIL = originalFromEmail;
     }
     process.env.NODE_ENV = originalNodeEnv;
   });

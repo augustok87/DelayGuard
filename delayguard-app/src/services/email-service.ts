@@ -30,6 +30,41 @@ function resolveDelayTemplateId(): string {
   return PLACEHOLDER_TEMPLATE_ID;
 }
 
+/**
+ * Dev/test-only stand-in. `.example` is reserved by RFC 2606, so unlike the
+ * `delayguard.app` this replaces, it can never collide with a real domain
+ * someone else owns.
+ */
+const PLACEHOLDER_FROM_ADDRESS = "noreply@delayguard.example";
+
+/**
+ * Resolve the From address from the environment (LAUNCH_PLAN R1).
+ *
+ * This was hardcoded to `noreply@delayguard.app` from the first commit,
+ * four months before that domain was registered — and it was registered by
+ * someone we cannot identify. SendGrid rejects any From address that is not
+ * a verified sender identity, and a domain you do not control cannot be
+ * verified, so the hardcoded value made the only launch-critical channel
+ * unusable.
+ *
+ * Fails loudly in production when unset, matching `resolveDelayTemplateId`:
+ * a refused send names its own cause, a silently bouncing one does not.
+ */
+export function resolveFromAddress(): string {
+  const configured = process.env.SENDGRID_FROM_EMAIL?.trim();
+  if (configured) {
+    return configured;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "SENDGRID_FROM_EMAIL is not set. Refusing to send delay emails from " +
+        "a placeholder address in production. Set it to an address on a " +
+        "domain authenticated in SendGrid (Settings → Sender Authentication).",
+    );
+  }
+  return PLACEHOLDER_FROM_ADDRESS;
+}
+
 export interface SendDelayEmailOptions {
   /**
    * Greeting name for the template's {{recipientName}} merge field.
@@ -55,7 +90,7 @@ export class EmailService {
   ): Promise<void> {
     const msg = {
       to: email,
-      from: "noreply@delayguard.app",
+      from: resolveFromAddress(),
       templateId: resolveDelayTemplateId(),
       dynamicTemplateData: {
         recipientName: options?.recipientName ?? orderInfo.customerName,
