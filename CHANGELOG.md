@@ -2,12 +2,26 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 5, 2026 (v1.58 — protected-customer-data access log built, PCD **granted**, all three webhook subscriptions live; LAUNCH_PLAN §6 R2, R6 and R7 all closed)
+**Last Updated**: August 17, 2026 (v1.59 — the From address is env-driven; `delayguard.app` was never ours)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.59 (2026-08-17): The From address was a domain we never owned
+
+**Test Results**: 2,420 passing of 2,445, 25 skipped, **0 failing**, 127 suites. Lint 0 errors, type-check clean, build clean.
+
+`EmailService` sent from a hardcoded `noreply@delayguard.app`. SendGrid rejects any From address that is not a verified sender identity, and **you cannot verify a domain you do not control** — so the app's only launch channel was unusable by construction.
+
+**The evidence that settled it.** `delayguard.app` was registered **2026-02-06**. This project's first commit is **2025-09-25**, and `noreply@delayguard.app` is *in that commit* — four months before the domain existed. It is absent from the owner's registrar account, has no purchase receipt, and serves a "Website Expired" page. The address was aspirational from day one and was mistaken for an asset ever since.
+
+**The fix** is `SENDGRID_FROM_EMAIL`, deliberately shaped like the existing `SENDGRID_DELAY_TEMPLATE_ID`: trimmed (B1 shipped a trailing newline to production once already), and **throwing in production when unset** rather than sending from an address that will bounce. A refused send names its own cause; a silently bouncing one does not.
+
+The dev/test placeholder is now `noreply@delayguard.example` — `.example` is reserved by RFC 2606, so unlike `delayguard.app` it can never collide with a real domain someone else owns. That property is the actual lesson: **a placeholder that looks real will eventually be treated as real.**
+
+**Found while verifying, and worse than the bug being fixed:** `vercel env ls production` returns exactly one SendGrid variable — `SENDGRID_API_KEY`. `SENDGRID_DELAY_TEMPLATE_ID` **has never been set**, so since WS-E shipped its production guard, every delay email has thrown before reaching SendGrid. The account problems were never even the first failure. Recorded in LAUNCH_PLAN §6 R1.
 
 ### v1.58 (2026-08-05): Access log for protected customer data — Shopify refused approval, correctly
 
