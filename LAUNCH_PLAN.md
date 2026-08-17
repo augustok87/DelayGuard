@@ -186,7 +186,16 @@ Task format: **ID — name `[TAG]`** · files · what to do · acceptance criter
 
 *Established 2026-07-29. Code and deploy are done; §§1–4 are now history. This is the whole remaining path to submission.*
 
-### R1 — SendGrid account cannot send email `[HUMAN]` — **most severe**
+### R1 — SendGrid account cannot send email `[HUMAN]` — **most severe, and now the top blocker**
+
+> **⚠️ Operational fact, learned the expensive way (2026-08-05). The SendGrid account is NOT under `augustok87@gmail.com`.**
+> Signing in with that address returns *"You are not authorized to access this account. Please contact your administrator or support for help."* — which reads like a suspension but simply means **wrong username for that account**. A support ticket was raised and closed unresolved before the real cause was found, and a full account migration was nearly started on the strength of it.
+>
+> **How to identify the owning account without guessing.** A SendGrid key is `SG.<key-id>.<secret>`; the middle segment is the **API Key ID**, and the console lists it under Settings → API Keys. The production key's ID is **`JZWkSywLQJqMdYsSIs5zNg`** — if that ID appears in an account's API Keys table, that account owns our credential. Confirmed 2026-08-05.
+>
+> **Why the API could not answer this itself:** the production key is correctly restricted to Mail Send, so `/v3/user/*`, `/v3/api_keys` and `/v3/teammates` all 403. The key ID comparison is the only identification route that works from outside.
+>
+> **The general lesson (a second instance of the same failure mode as B5 and the stale-client-ID screenshot): an authorization error names a *relationship*, not a *state*.** "Not authorized" answered *who is asking*, not *whether the account is healthy* — and the account was healthy the whole time. Before treating an auth failure as an outage, check the identity on both sides of it.
 
 Email is the **only** notification channel at launch (§5 D3 ships SMS off), so an account that cannot send means the app's entire value proposition is inert in production. Two independent problems, both verified live against the SendGrid v3 API on 2026-07-29 using the key currently in Vercel:
 
@@ -349,6 +358,21 @@ Screencast, AI self-review, submit. Gated on R2 (needs a working app to film) an
 - **⚠️ Order-dependent flakiness is NOT gone — re-opened 2026-07-30.** The resolution below was overstated. Deleting the stub-fixture suites removed *those* symptoms, but not the mechanism: `jest.config.ts` still sets `maxWorkers: 1`, so all suites share one process and Jest orders files by cached prior durations, which makes cross-suite state leakage nondeterministic. **New instance, observed this session:** a pre-commit gate run failed `tests/unit/routes/legal.test.ts` → *"GET /legal/terms-of-service returns 200"* with **404**, while the sibling privacy-policy assertions passed. It passes 15/15 in isolation, and the gate's exact command (`npm test -- --coverage --watchAll=false --passWithNoTests`) then passed twice consecutively at 2,399/2,424 — so the failure is order-dependent, not a regression.
   **Candidate mechanism for whoever fixes it:** `resolveLegalDir()` ([legal.ts:155](delayguard-app/src/routes/legal.ts#L155)) consults `process.env.LEGAL_DOCS_DIR` first and, when that override is set, returns `null` rather than falling through to the real directory. `legal.test.ts` deliberately sets that variable to `/nonexistent/legal-docs-dir` in its final describe block and restores it in `afterEach` — but `process.env` is process-global, so any ordering or failure that leaves it set poisons other suites (and the module-level `pageCache` interacts with `jest.resetModules()`). Fixing the test to pin the override explicitly would make it deterministic, at the cost of no longer exercising the default resolution path that production actually uses — worth a deliberate decision, not a reflex.
   **Do not claim the gate is trustworthy again without three consecutive clean runs, and say which command was run.**
+
+  **Third instance, 2026-08-05 — the first one caught in the act, and the most informative yet.** The pre-commit hook failed; the *identical* command (`npm test -- --coverage --watchAll=false --passWithNoTests`) then passed, failed, and passed on three consecutive manual runs. The failing run took down **six tests across four unrelated suites at once**:
+
+  | Failing test | Area |
+  |---|---|
+  | `does not consult the plan for an email-only request` | notification / billing plan-gate |
+  | `should process valid data request webhook` | GDPR |
+  | `should process valid shop redaction webhook` | GDPR |
+  | `should handle service errors gracefully` | GDPR |
+  | `should block requests exceeding limit` | rate limiting |
+  | `should handle Redis errors gracefully` | rate limiting |
+
+  **Why this matters more than the earlier sightings:** a single flaky test suggests one bad suite; *six failures across four unrelated areas in one run, all green in the next*, is shared-process state leakage — consistent with `maxWorkers: 1` plus duration-ordered scheduling. None of these paths goes through `requireAuth`, so v1.58's access-log insert is not implicated, but that was **not** proven, only observed.
+
+  **This is now a launch-quality risk, not a curiosity.** The gate is the only thing standing between a regression and production, and it currently fails roughly one run in three for reasons unrelated to the diff. Whoever picks this up: start by making the failing suites' shared state explicit (`process.env` overrides, the module-level caches, the `pg`/`ioredis` manual mocks in `__mocks__/`), or set `maxWorkers` above 1 and see whether isolation alone fixes it — a config change would beat auditing 128 suites.
 - ~~**Flaky test suites are destabilizing the pre-commit gate**~~ — ⚠️ **PARTIALLY resolved 2026-07-29 (see above — re-opened).** The five fixture-only suites and the `tests/setup/test-server.ts` stub were deleted; three consecutive full runs with coverage then produced **identical clean results: 2,385 passing / 2,410 total / 25 skipped / 0 failures / 120 suites**. The gate is trustworthy again. Diagnosis retained below as the record.
 
   Characterized 2026-07-29 across three consecutive full-suite runs, each of which failed a *different* test while passing 2,408–2,409 of 2,435:
