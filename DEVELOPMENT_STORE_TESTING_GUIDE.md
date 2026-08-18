@@ -1695,7 +1695,7 @@ psql delayguard_dev -c "
 
 **Last Updated**: November 29, 2025
 **Maintained By**: DelayGuard Development Team
-**Questions?** Open an issue on GitHub or contact support@delayguard.app
+**Questions?** Open an issue on GitHub. (There is no support mailbox yet — `support@delayguard.app` was never ours; see LAUNCH_PLAN §6 R8.)
 
 ---
 

@@ -234,7 +234,7 @@ That's it! Delay alerts begin as soon as your orders have tracking activity, and
 - API documentation (Enterprise plan)
 
 ### **Support Channels:**
-- **Email:** support@delayguard.app
+- **Email:** ⚠️ **UNSET — see LAUNCH_PLAN §6 R8.** `support@delayguard.app` was listed here but that domain is not ours and cannot receive mail. Shopify requires a working support email; do not submit until this is a real address.
 - **Priority support:** Pro & Enterprise plans
 
 ---
@@ -278,11 +278,13 @@ A: Each store needs its own DelayGuard subscription. Contact us about multi-stor
 
 ## 📞 Contact & Support
 
+> ⚠️ **The addresses below are placeholders on a domain we do not own — see LAUNCH_PLAN §6 R8.** Replace before submission.
+
 ### **Pre-Sales Questions:**
-- Email: sales@delayguard.app
+- Email: `sales@<domain-to-buy>`
 
 ### **Technical Support:**
-- Email: support@delayguard.app
+- Email: `support@<domain-to-buy>`
 - Priority support for Pro & Enterprise
 
 ---
