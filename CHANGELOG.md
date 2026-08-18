@@ -2,12 +2,22 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 17, 2026 (v1.59 — the From address is env-driven; `delayguard.app` was never ours)
+**Last Updated**: August 17, 2026 (v1.60 — test alerts no longer link merchants to a domain we don't own)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.60 (2026-08-17): The test alert linked merchants to somebody else's website
+
+**Test Results**: 2,424 passing of 2,449, 25 skipped, **0 failing**, 127 suites. Lint 0 errors, type-check clean, build clean.
+
+A doc sweep for stale `delayguard.app` references turned up a live one. `TestAlertService`'s three sample payloads carried `trackingUrl: "https://delayguard.app/test-tracking"`, and that value is **not internal** — it renders as the "Track your package" button in a real email delivered to a real merchant. Firing the dashboard's test alert sent them to a stranger's expired Squarespace site.
+
+Sample links now use `https://example.com/track/<trackingNumber>`, reserved by RFC 2606 — the same rule that put the From-address fallback on `.example` in v1.59. The production path is unaffected: it builds real carrier links via `utils/tracking-url.ts` and is already guarded against `example.com` by `delay-check`'s own tests.
+
+**Why this one hid.** v1.59 fixed the From address because a *send* failed loudly. This URL never failed anything — it was a syntactically valid link in a rendered email, and no test asserted where sample data pointed. **A wrong value that nothing validates produces no symptom at all**; it was found by grepping for the domain, not by anything going red. +4 tests now pin it.
 
 ### v1.59 (2026-08-17): The From address was a domain we never owned
 

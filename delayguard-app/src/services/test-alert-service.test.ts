@@ -14,7 +14,11 @@
  * sendgrid-webhook.ts and is correlated post-hoc).
  */
 
-import { TestAlertService, TestAlertChannel } from "./test-alert-service";
+import {
+  TestAlertService,
+  TestAlertChannel,
+  TestAlertDelayType,
+} from "./test-alert-service";
 import { EmailService } from "./email-service";
 import { SMSService } from "./sms-service";
 import {
@@ -354,5 +358,48 @@ describe("TestAlertService.dispatchTestAlert", () => {
     expect(result.channelsAttempted).toEqual(["email"]);
     expect(emailService.sendDelayEmail).toHaveBeenCalledTimes(1);
     expect(smsService.sendDelaySMS).not.toHaveBeenCalled();
+  });
+
+  describe("sample tracking URL (LAUNCH_PLAN §6 R1)", () => {
+    // The sample details shipped `https://delayguard.app/test-tracking` —
+    // a domain the project does not own (it was registered 2026-02-06 by
+    // an unidentified party and serves an expired Squarespace site). This
+    // URL is not internal: it renders as the "Track your package" link in
+    // a real email delivered to a real merchant, so clicking the test
+    // alert sent them to a stranger's website.
+    //
+    // Reserved-domain placeholders only, per RFC 2606 — the same rule
+    // that put the From-address fallback on `.example`.
+    const delayTypes: TestAlertDelayType[] = [
+      "warehouse",
+      "carrier",
+      "transit",
+    ];
+
+    it.each(delayTypes)(
+      "%s sample does not link to a domain we do not own",
+      async(delayType) => {
+        mockShopRow({});
+
+        await service.dispatchTestAlert(shopDomain, { delayType });
+
+        const [, , delayDetails] = (
+          emailService.sendDelayEmail as jest.Mock
+        ).mock.calls[0];
+        expect(delayDetails.trackingUrl).not.toContain("delayguard.app");
+      },
+    );
+
+    it("links each sample to a reserved example domain", async() => {
+      mockShopRow({});
+
+      await service.dispatchTestAlert(shopDomain, { delayType: "carrier" });
+
+      const [, , delayDetails] = (emailService.sendDelayEmail as jest.Mock)
+        .mock.calls[0];
+      expect(delayDetails.trackingUrl).toMatch(
+        /^https:\/\/example\.com\/track\//,
+      );
+    });
   });
 });

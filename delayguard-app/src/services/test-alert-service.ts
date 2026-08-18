@@ -32,25 +32,42 @@ interface ShopJoinRow {
   sms_enabled: boolean | null;
 }
 
+/**
+ * Sample tracking links for the dashboard's test alert (LAUNCH_PLAN §6 R1).
+ *
+ * These previously pointed at `https://delayguard.app/test-tracking` — a
+ * domain the project does not own. That URL is not internal: it renders as
+ * the "Track your package" link inside a real email delivered to a real
+ * merchant, so firing a test alert sent them to a stranger's expired site.
+ *
+ * `example.com` is reserved by RFC 2606, so it can never resolve to
+ * somebody's real property — the same reasoning behind the `.example`
+ * From-address fallback in email-service.ts. This is the *test* path only;
+ * the production path builds real carrier links (see utils/tracking-url.ts)
+ * and is guarded against `example.com` by delay-check's own tests.
+ */
+const sampleTrackingUrl = (trackingNumber: string): string =>
+  `https://example.com/track/${trackingNumber}`;
+
 const SAMPLE_DELAY_DETAILS: Record<TestAlertDelayType, DelayDetails> = {
   warehouse: {
     estimatedDelivery: "2026-05-22",
     trackingNumber: "TEST-WH-001",
-    trackingUrl: "https://delayguard.app/test-tracking",
+    trackingUrl: sampleTrackingUrl("TEST-WH-001"),
     delayDays: 3,
     delayReason: "WAREHOUSE_DELAY",
   },
   carrier: {
     estimatedDelivery: "2026-05-25",
     trackingNumber: "1Z999TEST00001",
-    trackingUrl: "https://delayguard.app/test-tracking",
+    trackingUrl: sampleTrackingUrl("1Z999TEST00001"),
     delayDays: 2,
     delayReason: "DELAYED_STATUS",
   },
   transit: {
     estimatedDelivery: "2026-05-28",
     trackingNumber: "1Z999TEST00002",
-    trackingUrl: "https://delayguard.app/test-tracking",
+    trackingUrl: sampleTrackingUrl("1Z999TEST00002"),
     delayDays: 7,
     delayReason: "STUCK_IN_TRANSIT",
   },

@@ -4560,7 +4560,8 @@ export async function createGorgiasTicket({
           {
             source: {
               type: 'email',
-              from: { address: 'noreply@delayguard.app' },
+              // Never hardcode a sender — see LAUNCH_PLAN §6 R1.
+              from: { address: resolveFromAddress() },
               to: [{ address: order.customerEmail }],
             },
             body_text: `

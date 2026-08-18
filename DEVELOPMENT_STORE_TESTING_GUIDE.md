@@ -92,7 +92,9 @@ SHIPENGINE_API_KEY=your_shipengine_api_key_here
 # SendGrid
 SENDGRID_API_KEY=your_sendgrid_api_key_here
 SENDGRID_WEBHOOK_SECRET=your_webhook_secret_here
-SENDGRID_FROM_EMAIL=noreply@delayguard.app
+# Must be a SendGrid-verified sender identity (domain-authenticated or
+# Single Sender Verified). NOT delayguard.app — see LAUNCH_PLAN §6 R1.
+SENDGRID_FROM_EMAIL=your_verified_sender@example.com
 
 # App Configuration
 APP_URL=https://your-ngrok-url.ngrok.io
