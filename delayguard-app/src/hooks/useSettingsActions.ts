@@ -40,7 +40,24 @@ export const useSettingsActions = () => {
           return { success: false, error: validation.errors.join(", ") };
         }
 
-        await updateSettings(settings);
+        // A createAsyncThunk that calls rejectWithValue RESOLVES with a
+        // rejected action — it does not throw — so `catch` never sees a
+        // server refusal. Inspect the action (LAUNCH_PLAN §6 R13); this
+        // matches what testDelayDetection below already does.
+        const action = (await updateSettings(settings)) as {
+          type?: string;
+          payload?: unknown;
+        } | undefined;
+
+        if (action?.type?.endsWith("/rejected")) {
+          const reason =
+            typeof action.payload === "string" && action.payload.trim() !== ""
+              ? action.payload
+              : "Failed to save settings";
+          showErrorToast(reason);
+          return { success: false, error: reason };
+        }
+
         showSaveSuccessToast();
         return { success: true };
       } catch (error) {

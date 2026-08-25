@@ -2,12 +2,33 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 25, 2026 (v1.62 — merchant contact details were never actually saved)
+**Last Updated**: August 25, 2026 (v1.63 — the success toast fired even when the server refused)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.63 (2026-08-25): The success toast fired even when the server refused
+
+**Test Results**: 2,439 passing of 2,464, 25 skipped, **0 failing**, 128 suites. Lint 0 errors, type-check clean, build clean.
+
+Found by chasing a merchant's question — *"I can't click SMS notifications, why?"* The SMS refusal itself is **correct**: SMS is Pro-gated, `currentAppInstallation.activeSubscriptions` is `[]` for the dev store, so `getCurrentPlan()` returns `free` and `PUT /api/settings` answers `403 PLAN_UPGRADE_REQUIRED`. That is the billing-leak protection working exactly as `CLAUDE.md` requires.
+
+What was wrong is that **the UI said the save succeeded anyway.** `useSettingsActions.saveSettings` did:
+
+```ts
+await updateSettings(settings);
+showSaveSuccessToast();
+```
+
+`updateSettings` returns `dispatch(saveSettingsThunk(...))`, and a `createAsyncThunk` that calls `rejectWithValue` **resolves with a rejected action — it does not throw**. So the `catch` never fired and the success toast was unconditional. Every SMS click reported "Settings saved successfully!" while the checkbox silently reverted, with no hint that a plan gate existed.
+
+It now inspects the action, and surfaces the **server's own reason** — so the merchant reads *"SMS notifications require the Pro plan or above"* instead of a false success. `testDelayDetection` in the same hook already did this correctly with `.fulfilled.match()`; the two are now consistent. First tests for this hook (3), written before the fix and confirmed failing against it.
+
+**This masked R12.** Contact details were being discarded for 26 days, and even if the server *had* errored, the merchant would still have seen "saved successfully". **A success indicator that cannot report failure is not feedback — it is decoration**, the same defect class as a test that cannot fail.
+
+**Open, not fixed here:** the SMS checkbox still looks freely clickable. A Pro badge / disabled state driven by the live plan would be better than click-then-revert-with-a-toast, but that depends on H3 (App Pricing plans), which has never been configured.
 
 ### v1.62 (2026-08-25): "Settings saved successfully!" — and nothing was saved
 
