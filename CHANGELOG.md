@@ -2,12 +2,22 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 25, 2026 (v1.64 — email never worked: `import * as` silently dropped the SendGrid SDK's methods)
+**Last Updated**: August 25, 2026 (v1.65 — the test alert now names why it failed)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.65 (2026-08-25): The test alert now names why it failed
+
+**Test Results**: 2,443 passing of 2,468, 25 skipped, **0 failing**, 129 suites. Lint 0 errors, type-check clean, build clean.
+
+**Milestone first: a DelayGuard email reached SendGrid's API for the first time.** After v1.64, the production error changed from `sgMail.setApiKey is not a function` — thrown inside our own process — to `Failed to send email: Unauthorized (401) Maximum credits exceeded`, returned by SendGrid. The template resolved, the sender resolved, the SDK bound correctly, and the request left the building. Only the expired trial now stands between the app and a delivered notification.
+
+That milestone was invisible from the dashboard, which is the defect this version fixes. `showTestErrorToast()` took no arguments and always rendered *"Delay detection test failed. Please check your configuration."* — so two completely different failures produced identical text, and both pointed the merchant at a configuration that was correct. It now shows the server's own reason: *"Test alert failed: Failed to send email: Unauthorized (401) Maximum credits exceeded."*
+
+**Same defect class as v1.63**, on the path right next to it: feedback that cannot vary carries no information. Every diagnosis so far this session has required reading Vercel logs, because the UI could not distinguish "your SDK is broken" from "your account is out of credit". +2 tests.
 
 ### v1.64 (2026-08-25): Email never worked, and the cause was an import statement
 

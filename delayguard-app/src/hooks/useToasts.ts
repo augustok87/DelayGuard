@@ -82,11 +82,22 @@ export const useToasts = () => {
     showSuccessToast("Delay detection test completed successfully!");
   }, [showSuccessToast]);
 
-  const showTestErrorToast = useCallback(() => {
-    showErrorToast(
-      "Delay detection test failed. Please check your configuration.",
-    );
-  }, [showErrorToast]);
+  /**
+   * The server's own reason when we have one. The fixed fallback used to be
+   * unconditional, and it hid two very different production failures behind
+   * the same sentence — an SDK binding error, then SendGrid's quota — while
+   * telling the merchant to check a configuration that was correct (§6 R15).
+   */
+  const showTestErrorToast = useCallback(
+    (reason?: string) => {
+      showErrorToast(
+        reason && reason.trim() !== ""
+          ? `Test alert failed: ${reason}`
+          : "Delay detection test failed. Please check your configuration.",
+      );
+    },
+    [showErrorToast],
+  );
 
   return {
     // State

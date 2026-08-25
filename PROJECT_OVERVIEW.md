@@ -39,7 +39,7 @@
 |--------|--------|---------|
 | **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
 | **Launch Readiness** | **Deployed and live** | Production healthy at `https://delayguard-api.vercel.app`; submission pending SendGrid account + dev-store E2E + human gate (LAUNCH_PLAN.md §6) |
-| **Test Success** | **100%** | 2,441 passing of 2,466, 25 skipped, 0 failing as of 2026-08-25; +4 for the save/loading separation that made the dashboard typable again (§6 R10, v1.61). ⚠️ §6 R5 is **open and re-diagnosed** — the flake is dominated by wall-clock assertions failing under machine load, reproduced on demand by running two `--coverage` suites concurrently; never run the suite in two sessions at once |
+| **Test Success** | **100%** | 2,443 passing of 2,468, 25 skipped, 0 failing as of 2026-08-25; +4 for the save/loading separation that made the dashboard typable again (§6 R10, v1.61). ⚠️ §6 R5 is **open and re-diagnosed** — the flake is dominated by wall-clock assertions failing under machine load, reproduced on demand by running two `--coverage` suites concurrently; never run the suite in two sessions at once |
 | **Test Suites** | **All passing** | 126 of 128 suites pass; 2 skipped (require PostgreSQL). Five tautological stub-fixture suites (25 tests) removed 2026-07-29 — they covered no production code and caused order-dependent gate flakiness (LAUNCH_PLAN.md §6 R5) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
 | **TypeScript** | ✅ **0 errors** | 100% type-safe |

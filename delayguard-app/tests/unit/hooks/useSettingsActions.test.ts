@@ -22,6 +22,8 @@ import { AppSettings } from '../../../src/types';
 const mockUpdateSettings = jest.fn();
 const mockShowSaveSuccessToast = jest.fn();
 const mockShowErrorToast = jest.fn();
+const mockShowTestSuccessToast = jest.fn();
+const mockShowTestErrorToast = jest.fn();
 
 jest.mock('../../../src/hooks/useSettings', () => ({
   useSettings: () => ({
@@ -43,13 +45,14 @@ jest.mock('../../../src/hooks/useToasts', () => ({
     showSaveSuccessToast: mockShowSaveSuccessToast,
     showConnectionSuccessToast: jest.fn(),
     showConnectionErrorToast: jest.fn(),
-    showTestSuccessToast: jest.fn(),
-    showTestErrorToast: jest.fn(),
+    showTestSuccessToast: mockShowTestSuccessToast,
+    showTestErrorToast: mockShowTestErrorToast,
   }),
 }));
 
+const mockDispatch = jest.fn();
 jest.mock('../../../src/store/hooks', () => ({
-  useAppDispatch: () => jest.fn(),
+  useAppDispatch: () => mockDispatch,
 }));
 
 const settings: AppSettings = {
@@ -125,5 +128,61 @@ describe('useSettingsActions.saveSettings', () => {
     expect(mockShowSaveSuccessToast).toHaveBeenCalledTimes(1);
     expect(mockShowErrorToast).not.toHaveBeenCalled();
     expect(outcome?.success).toBe(true);
+  });
+});
+
+/**
+ * Regression (LAUNCH_PLAN §6 R15).
+ *
+ * The merchant clicked Send Test Alert and read "Delay detection test
+ * failed. Please check your configuration." — a message that names no
+ * cause and points at the wrong thing: their configuration was correct,
+ * SendGrid's account was over quota.
+ *
+ * The server already returns the real reason; the hook discarded it and
+ * substituted a fixed string. Two production causes it hid, in order:
+ * `sgMail.setApiKey is not a function` (R14) and then
+ * `Maximum credits exceeded`. An error message that cannot vary tells the
+ * merchant nothing and sends the developer to the logs every time.
+ */
+describe('useSettingsActions.testDelayDetection', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('surfaces the server reason instead of a fixed string', async() => {
+    mockDispatch.mockResolvedValue({
+      type: 'settings/testDelayDetection/rejected',
+      payload: 'Failed to send email: Unauthorized (401) Maximum credits exceeded',
+      error: { message: 'Rejected' },
+      meta: { rejectedWithValue: true },
+    });
+
+    const { result } = renderHook(() => useSettingsActions());
+
+    await act(async() => {
+      await result.current.testDelayDetection();
+    });
+
+    expect(mockShowTestErrorToast).toHaveBeenCalledWith(
+      expect.stringContaining('Maximum credits exceeded'),
+    );
+  });
+
+  it('still reports success when the alert dispatches', async() => {
+    mockDispatch.mockResolvedValue({
+      type: 'settings/testDelayDetection/fulfilled',
+      payload: { channelsAttempted: ['email'] },
+      meta: {},
+    });
+
+    const { result } = renderHook(() => useSettingsActions());
+
+    await act(async() => {
+      await result.current.testDelayDetection();
+    });
+
+    expect(mockShowTestSuccessToast).toHaveBeenCalled();
+    expect(mockShowTestErrorToast).not.toHaveBeenCalled();
   });
 });

@@ -108,7 +108,11 @@ export const useSettingsActions = () => {
         showTestSuccessToast();
         return { success: true };
       }
-      showTestErrorToast();
+      const reason =
+        typeof result.payload === "string" && result.payload.trim() !== ""
+          ? result.payload
+          : undefined;
+      showTestErrorToast(reason);
       return {
         success: false,
         error:
