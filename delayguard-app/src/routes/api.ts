@@ -13,6 +13,7 @@ import {
   TestAlertService,
   TestAlertChannel,
   TestAlertDelayType,
+  NotificationDispatchError,
 } from "../services/test-alert-service";
 import { EmailService } from "../services/email-service";
 import { SMSService } from "../services/sms-service";
@@ -86,6 +87,15 @@ function respondWithServiceError(
     ctx.body = { error: "Alert not found" };
     return;
   }
+  // A provider refusal is the merchant's problem to act on (out of credit,
+  // unverified sender), so it is reported rather than flattened into the
+  // generic 500 below. The message is sanitised at the throw site (§6 R16).
+  if (error instanceof NotificationDispatchError) {
+    ctx.status = 502;
+    ctx.body = { error: error.message, code: "NOTIFICATION_DISPATCH_FAILED" };
+    return;
+  }
+
   if (error instanceof MerchantApiValidationError) {
     ctx.status = 400;
     ctx.body = { error: error.message, code: error.code };

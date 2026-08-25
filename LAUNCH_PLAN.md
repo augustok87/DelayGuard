@@ -333,6 +333,14 @@ after   Failed to send email: Unauthorized (401) Maximum credits exceeded   (Sen
 
 **This is the proof that layers 1–3 are genuinely closed**: the template ID resolved, the From address resolved, the SDK bound, and an HTTPS request left the process carrying a real message. **R1 is now, at last, actually one purchase.** Buy the plan and re-fire `/api/test-alert`; a delivered email closes R1 and unblocks H8's screencast.
 
+### ~~R16 — The test alert could not report the provider's refusal~~ `[AGENT]` — ✅ **FIXED 2026-08-25 (v1.66)**
+
+With R15 fixed the toast could carry a reason, but the reason was the route's generic fallback: *"Test alert failed: Failed to dispatch test alert"*, while the log held `Unauthorized (401) Maximum credits exceeded`.
+
+`respondWithServiceError` returns only `fallbackMessage` for unrecognised errors — correct as a default. But this endpoint exists **so a merchant can diagnose their own notification setup**, so provider refusals are the one class that must be reported. `NotificationDispatchError` now wraps them and the route answers `502 NOTIFICATION_DISPATCH_FAILED` with its message.
+
+Sanitised at the throw site: one line, trailing `null`s stripped, capped at 300 chars, and **`SG.*` / `SK…` key patterns replaced with `[redacted]`** — pinned by a test, so a provider that echoes a credential can never surface it in a merchant's browser.
+
 ### ~~R15 — The test alert's failure message could not vary~~ `[AGENT]` — ✅ **FIXED 2026-08-25 (v1.65)**
 
 `showTestErrorToast()` took no arguments and always rendered *"Delay detection test failed. Please check your configuration."* Two very different production failures — an SDK binding error and SendGrid's quota — produced identical text, and both blamed a merchant configuration that was correct. It now shows the server's reason.

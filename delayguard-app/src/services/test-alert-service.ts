@@ -49,6 +49,40 @@ interface ShopJoinRow {
 const sampleTrackingUrl = (trackingNumber: string): string =>
   `https://example.com/track/${trackingNumber}`;
 
+/**
+ * Raised when a notification provider (SendGrid / Twilio) refuses a test
+ * dispatch. Carries a merchant-readable reason.
+ *
+ * The test alert exists so a merchant can diagnose their own notification
+ * setup, so this is a deliberate, narrow exception to the route's
+ * don't-leak-internals default (§6 R16): only provider refusals are
+ * surfaced, and only after sanitising.
+ */
+export class NotificationDispatchError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotificationDispatchError";
+  }
+}
+
+/** Provider errors stringify with padding, newlines and trailing `null`s. */
+export function sanitizeProviderReason(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+
+  const cleaned = raw
+    // Never echo a credential back to the merchant, whatever the provider said.
+    .replace(/SG\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, "[redacted]")
+    .replace(/\bSK[a-f0-9]{32}\b/gi, "[redacted]")
+    .replace(/\s*\bnull\b\s*$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const withoutTrailingNulls = cleaned.replace(/(?:\s*null)+$/i, "").trim();
+  const reason = withoutTrailingNulls || "the provider rejected the request";
+
+  return reason.length > 300 ? `${reason.slice(0, 297)}...` : reason;
+}
+
 const SAMPLE_DELAY_DETAILS: Record<TestAlertDelayType, DelayDetails> = {
   warehouse: {
     estimatedDelivery: "2026-05-22",
@@ -192,7 +226,20 @@ export class TestAlertService {
       }
     }
 
-    await Promise.all(dispatches);
+    // Provider refusals must reach the merchant, not vanish into the route's
+    // generic 500. This is the one endpoint whose entire purpose is telling
+    // them why their notifications don't work (§6 R16).
+    try {
+      await Promise.all(dispatches);
+    } catch (error) {
+      const reason = sanitizeProviderReason(error);
+      logger.error(
+        "Test alert dispatch failed at the provider",
+        error instanceof Error ? error : new Error(String(error)),
+        { shopDomain, channelsAttempted },
+      );
+      throw new NotificationDispatchError(reason);
+    }
 
     logger.info("Test alert dispatched", {
       shopDomain,

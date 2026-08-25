@@ -2,12 +2,24 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 25, 2026 (v1.65 — the test alert now names why it failed)
+**Last Updated**: August 25, 2026 (v1.66 — the test alert reports the provider's actual refusal)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.66 (2026-08-25): The test alert reports the provider's actual refusal
+
+**Test Results**: 2,446 passing of 2,471, 25 skipped, **0 failing**, 129 suites. Lint 0 errors, type-check clean, build clean.
+
+v1.65 made the toast able to carry a reason; this makes the reason worth carrying. The merchant still saw *"Test alert failed: Failed to dispatch test alert"* — the route's generic 500 fallback — while the log held the answer: `Unauthorized (401) Maximum credits exceeded`.
+
+`respondWithServiceError` returns only a fixed `fallbackMessage` for unrecognised errors, which is the right default: internal failures must not leak to a merchant. But **the test alert's entire purpose is telling a merchant why their notifications don't work**, so a provider refusal is exactly the case that should be reported.
+
+`NotificationDispatchError` now wraps provider failures, and the route answers `502 NOTIFICATION_DISPATCH_FAILED` with its message — a deliberate, narrow exception rather than a general loosening. The reason is sanitised at the throw site: whitespace collapsed to one line, trailing `null`s stripped, length capped, and **any SendGrid or Twilio key pattern replaced with `[redacted]`** so a provider echoing a credential can never surface it in a merchant's browser (pinned by its own test).
+
+The merchant now reads *"Test alert failed: Failed to send email: Unauthorized (401) Maximum credits exceeded"* and knows to top up the account — no Vercel logs required. +3 tests.
 
 ### v1.65 (2026-08-25): The test alert now names why it failed
 

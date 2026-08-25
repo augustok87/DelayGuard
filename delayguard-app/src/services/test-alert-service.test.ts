@@ -18,6 +18,7 @@ import {
   TestAlertService,
   TestAlertChannel,
   TestAlertDelayType,
+  NotificationDispatchError,
 } from "./test-alert-service";
 import { EmailService } from "./email-service";
 import { SMSService } from "./sms-service";
@@ -400,6 +401,72 @@ describe("TestAlertService.dispatchTestAlert", () => {
       expect(delayDetails.trackingUrl).toMatch(
         /^https:\/\/example\.com\/track\//,
       );
+    });
+  });
+
+  /**
+   * Regression (LAUNCH_PLAN §6 R16).
+   *
+   * The whole point of the test alert is to let a merchant diagnose their
+   * own notification setup. It could not: any provider failure surfaced as
+   * the route's generic 500 fallback, "Failed to dispatch test alert", so
+   * an SDK crash, an unverified sender and an out-of-credit account were
+   * indistinguishable from the dashboard.
+   *
+   * Provider failures now raise NotificationDispatchError carrying a
+   * single-line, sanitised reason the route can hand to the merchant —
+   * a deliberate, narrow exception to respondWithServiceError's
+   * don't-leak-internals default, not a general loosening.
+   */
+  describe("provider failures are reportable to the merchant", () => {
+    it("raises NotificationDispatchError carrying the provider's reason", async() => {
+      mockShopRow({});
+      (emailService.sendDelayEmail as jest.Mock).mockRejectedValue(
+        new Error(
+          "Failed to send email: Unauthorized (401)   Maximum credits exceeded     null     null",
+        ),
+      );
+
+      await expect(
+        service.dispatchTestAlert(shopDomain, { delayType: "warehouse" }),
+      ).rejects.toBeInstanceOf(NotificationDispatchError);
+    });
+
+    it("collapses the reason to one readable line", async() => {
+      mockShopRow({});
+      (emailService.sendDelayEmail as jest.Mock).mockRejectedValue(
+        new Error(
+          "Failed to send email: Unauthorized (401)   Maximum credits exceeded     null     null",
+        ),
+      );
+
+      const error = (await service
+        .dispatchTestAlert(shopDomain, { delayType: "warehouse" })
+        .then(
+          () => null,
+          (e: unknown) => e,
+        )) as NotificationDispatchError;
+
+      expect(error.message).toContain("Maximum credits exceeded");
+      expect(error.message).not.toMatch(/\s{2,}/);
+      expect(error.message.split("\n")).toHaveLength(1);
+    });
+
+    it("never echoes an API key back to the merchant", async() => {
+      mockShopRow({});
+      (emailService.sendDelayEmail as jest.Mock).mockRejectedValue(
+        new Error("Bad key SG.AbCdEfGhIjKlMnOpQr.SeCrEtVaLuE rejected"),
+      );
+
+      const error = (await service
+        .dispatchTestAlert(shopDomain, { delayType: "warehouse" })
+        .then(
+          () => null,
+          (e: unknown) => e,
+        )) as NotificationDispatchError;
+
+      expect(error.message).not.toContain("SeCrEtVaLuE");
+      expect(error.message).toContain("[redacted]");
     });
   });
 });
