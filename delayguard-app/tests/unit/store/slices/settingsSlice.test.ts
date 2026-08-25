@@ -53,6 +53,7 @@ describe('settingsSlice', () => {
           language: 'en',
         },
         loading: false,
+        saving: false,
         error: null,
         lastSaved: null,
       });
@@ -161,7 +162,7 @@ describe('settingsSlice', () => {
       store.dispatch({ type: saveSettings.pending.type });
       
       const state = store.getState().settings;
-      expect(state.loading).toBe(true);
+      expect(state.saving).toBe(true);
       expect(state.error).toBeNull();
     });
 
@@ -186,7 +187,7 @@ describe('settingsSlice', () => {
       });
       
       const state = store.getState().settings;
-      expect(state.loading).toBe(false);
+      expect(state.saving).toBe(false);
       expect(state.data).toEqual(mockSettings);
       expect(state.lastSaved).toBe(mockDate);
     });
@@ -199,7 +200,7 @@ describe('settingsSlice', () => {
       });
       
       const state = store.getState().settings;
-      expect(state.loading).toBe(false);
+      expect(state.saving).toBe(false);
       expect(state.error).toBe(errorMessage);
     });
   });
@@ -209,7 +210,7 @@ describe('settingsSlice', () => {
       store.dispatch({ type: testDelayDetection.pending.type });
       
       const state = store.getState().settings;
-      expect(state.loading).toBe(true);
+      expect(state.saving).toBe(true);
       expect(state.error).toBeNull();
     });
 
@@ -220,7 +221,7 @@ describe('settingsSlice', () => {
       });
       
       const state = store.getState().settings;
-      expect(state.loading).toBe(false);
+      expect(state.saving).toBe(false);
     });
 
     it('should handle testDelayDetection.rejected', () => {
@@ -231,7 +232,7 @@ describe('settingsSlice', () => {
       });
       
       const state = store.getState().settings;
-      expect(state.loading).toBe(false);
+      expect(state.saving).toBe(false);
       expect(state.error).toBe(errorMessage);
     });
   });
@@ -417,6 +418,73 @@ describe('settingsSlice', () => {
       expect(state.data.smsNotifications).toBe(true);
       expect(state.data.theme).toBe('dark');
       expect(state.data.language).toBe('es');
+    });
+  });
+
+  /**
+   * Regression: a *mutation* must not flip the same `loading` flag that gates
+   * the dashboard's initial render.
+   *
+   * RefactoredApp.optimized combines `settingsLoading` into one `loading` prop
+   * that DashboardTab uses to swap the form for a loading state. Because
+   * saveSettings.pending set `loading = true`, and NotificationPreferences
+   * saves on every keystroke, each typed character unmounted and remounted the
+   * whole tab — the field lost focus and the view snapped back to the first
+   * card. Typing a merchant email was impossible; only a paste worked.
+   *
+   * `loading` now means "doing the initial fetch"; `saving` means "a write is
+   * in flight" and never gates rendering.
+   */
+  describe('a write in flight must not gate the initial-render loading flag', () => {
+    it('saveSettings.pending sets saving, and leaves loading false', () => {
+      store.dispatch({ type: saveSettings.pending.type });
+
+      const state = store.getState().settings;
+      expect(state.saving).toBe(true);
+      expect(state.loading).toBe(false);
+    });
+
+    it('testDelayDetection.pending sets saving, and leaves loading false', () => {
+      store.dispatch({ type: testDelayDetection.pending.type });
+
+      const state = store.getState().settings;
+      expect(state.saving).toBe(true);
+      expect(state.loading).toBe(false);
+    });
+
+    it('fetchSettings.pending still sets loading — the initial load may gate render', () => {
+      store.dispatch({ type: fetchSettings.pending.type });
+
+      const state = store.getState().settings;
+      expect(state.loading).toBe(true);
+      expect(state.saving).toBe(false);
+    });
+
+    it('clears saving when a save settles, either way', () => {
+      const saved: AppSettings = {
+        delayThreshold: 3,
+        notificationTemplate: 'default',
+        emailNotifications: true,
+        smsNotifications: false,
+        autoResolveDays: 7,
+        enableAnalytics: true,
+        theme: 'light',
+        language: 'en',
+      };
+
+      store.dispatch({ type: saveSettings.pending.type });
+      store.dispatch({
+        type: saveSettings.fulfilled.type,
+        payload: saved,
+      });
+      expect(store.getState().settings.saving).toBe(false);
+
+      store.dispatch({ type: saveSettings.pending.type });
+      store.dispatch({
+        type: saveSettings.rejected.type,
+        payload: 'nope',
+      });
+      expect(store.getState().settings.saving).toBe(false);
     });
   });
 });

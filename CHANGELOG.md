@@ -2,12 +2,38 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 17, 2026 (v1.60 — test alerts no longer link merchants to a domain we don't own)
+**Last Updated**: August 25, 2026 (v1.61 — a save no longer unmounts the form it was typed into)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.61 (2026-08-25): Typing in the dashboard was impossible — a save disabled the field mid-keystroke
+
+**Test Results**: 2,430 passing of 2,455, 25 skipped, **0 failing**, 127 suites. Lint 0 errors, type-check clean, build clean.
+
+Reported from the live dashboard: *"Everytime I enter a letter it autosaves and takes me back to Delay Detection Rules."*
+
+Every input in `NotificationPreferences` is `disabled={loading}`, and the component persists on **every** `onChange` with no debounce. `saveSettings.pending` set `settings.loading = true`, which `RefactoredApp.optimized` folds into the single `loading` prop the form receives. So each character did this:
+
+```
+keystroke → saveSettings() → loading = true → the input becomes DISABLED
+          → the browser drops focus from a disabled element
+          → fulfilled → loading = false → input re-enabled, focus gone
+```
+
+The merchant was thrown out of the field on every character. Typing an email was impossible; only a **paste** worked, because a paste is a single change event.
+
+**Root cause: a mutation was flipping the flag that means "the initial fetch is running".** `SettingsState` now separates them — `loading` is the initial fetch and may gate interactivity; `saving` is a write in flight and never does. `saveSettings` and `testDelayDetection` moved onto `saving`; `fetchSettings` keeps `loading`.
+
+**Six existing tests were changed, not added** — they asserted `loading` on the mutation thunks, i.e. they encoded the defect exactly as the wildcard-CSP tests did in R6. New coverage pins both halves of the contract, including a **seam test** that takes `loading` from a real store during a real write and asserts the field stays enabled. It was verified against the broken code first: it fails there and passes here.
+
+**Why a 2,449-test suite missed it.** Every assertion lived on one side of the seam or the other — reducer state was correct, and the component correctly disabled itself when told to. The defect was only in the *mapping* between them. **A unit test cannot see a bug that exists between two units.**
+
+**A correction worth recording:** the first diagnosis of this bug — published in the initial v1.61 commit message — claimed `loading` caused the form to *unmount and remount*. That was wrong. `loading` is only ever used for `disabled=`; nothing unmounts. The fix is unchanged, because both stories share the same trigger, but the mechanism was asserted before `DashboardTab`'s actual use of the prop had been read. **A plausible mechanism that explains the symptom is not the same as the one that produces it.**
+
+Still open, deliberately not fixed here (LAUNCH_PLAN §6 R10): the per-keystroke write itself. `SettingsCard` debounces at 1 s; `NotificationPreferences` does not, so typing a 20-character email still fires ~20 `PUT /api/settings` calls and ~20 `data_access_log` rows. The reported symptom is gone; the waste is not.
 
 ### v1.60 (2026-08-17): The test alert linked merchants to somebody else's website
 

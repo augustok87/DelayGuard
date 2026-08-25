@@ -60,7 +60,14 @@ export interface OrderFilters {
 // Settings State
 export interface SettingsState {
   data: AppSettings;
+  /** True only during the initial fetch. May gate rendering. */
   loading: boolean;
+  /**
+   * True while a write (save / test-alert) is in flight. Deliberately
+   * separate from `loading`: a mutation must never blank the form it was
+   * dispatched from. See settingsSlice for the regression this prevents.
+   */
+  saving: boolean;
   error: string | null;
   lastSaved: string | null;
 }

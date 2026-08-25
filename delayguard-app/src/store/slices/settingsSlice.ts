@@ -20,6 +20,7 @@ const defaultSettings: AppSettings = {
 const initialState: SettingsState = {
   data: defaultSettings,
   loading: false,
+  saving: false,
   error: null,
   lastSaved: null,
 };
@@ -119,30 +120,32 @@ const settingsSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Save settings
+      // Save settings — `saving`, never `loading`. NotificationPreferences
+      // writes on every keystroke, and `loading` gates whether DashboardTab
+      // renders the form at all; using it here unmounted the form mid-type.
       .addCase(saveSettings.pending, (state) => {
-        state.loading = true;
+        state.saving = true;
         state.error = null;
       })
       .addCase(saveSettings.fulfilled, (state, action) => {
-        state.loading = false;
+        state.saving = false;
         state.data = action.payload;
         state.lastSaved = new Date().toISOString();
       })
       .addCase(saveSettings.rejected, (state, action) => {
-        state.loading = false;
+        state.saving = false;
         state.error = action.payload as string;
       })
-      // Test delay detection
+      // Test delay detection — a write too; same reasoning as above.
       .addCase(testDelayDetection.pending, (state) => {
-        state.loading = true;
+        state.saving = true;
         state.error = null;
       })
       .addCase(testDelayDetection.fulfilled, (state) => {
-        state.loading = false;
+        state.saving = false;
       })
       .addCase(testDelayDetection.rejected, (state, action) => {
-        state.loading = false;
+        state.saving = false;
         state.error = action.payload as string;
       });
   },

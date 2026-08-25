@@ -9,6 +9,11 @@ import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent, createMockSettings } from '../../setup/test-utils';
 import { NotificationPreferences } from '../../../src/components/tabs/DashboardTab/NotificationPreferences';
+import { configureStore } from '@reduxjs/toolkit';
+import settingsReducer, {
+  saveSettings,
+  fetchSettings,
+} from '../../../src/store/slices/settingsSlice';
 
 describe('NotificationPreferences Component', () => {
   const mockSettings = createMockSettings({
@@ -686,6 +691,57 @@ describe('NotificationPreferences Component', () => {
         const warningIcon = container.querySelector('[class*="alertIcon"] svg');
         expect(warningIcon).toBeInTheDocument();
       });
+    });
+  });
+
+  /**
+   * Regression (LAUNCH_PLAN §6 R10, v1.61).
+   *
+   * Every text input here is `disabled={loading}`. `saveSettings.pending`
+   * used to set `settings.loading = true`, and the component persists on
+   * every keystroke — so each character disabled the field mid-type, the
+   * browser dropped focus from the now-disabled element, and the merchant
+   * was thrown out of the input. Typing an email was impossible; only a
+   * paste worked, because a paste is a single change event.
+   *
+   * These tests cross the seam the bug lived at: they take `loading` from a
+   * REAL store during a real write, rather than asserting reducer state on
+   * one side and a prop on the other. A unit test on either side alone
+   * stayed green throughout the defect.
+   */
+  describe('a write in flight must not disable the field being typed into', () => {
+    const makeStore = () => configureStore({ reducer: { settings: settingsReducer } });
+
+    it('keeps Merchant Email enabled while a save is in flight', () => {
+      const store = makeStore();
+      store.dispatch({ type: saveSettings.pending.type });
+
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          onSettingsChange={mockOnSettingsChange}
+          loading={store.getState().settings.loading}
+        />,
+      );
+
+      expect(screen.getByLabelText('Merchant Email')).not.toBeDisabled();
+    });
+
+    // Kept even though it passes in both states: it pins the *other* half of
+    // the contract, guarding an over-correction that drops `loading` entirely.
+    it('still disables the field during the INITIAL fetch — loading keeps that meaning', () => {
+      const store = makeStore();
+      store.dispatch({ type: fetchSettings.pending.type });
+
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          onSettingsChange={mockOnSettingsChange}
+          loading={store.getState().settings.loading}
+        />,
+      );
+
+      expect(screen.getByLabelText('Merchant Email')).toBeDisabled();
     });
   });
 });
