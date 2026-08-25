@@ -31,6 +31,14 @@ For a bug fix, "see it fail" is not satisfied by writing the test before the fix
 
 Keep a test that passes in both states only when it pins the *other* half of a contract (guarding an over-correction) — and say so in a comment.
 
+## Never mock a third-party SDK without one unmocked binding test (R14)
+
+`email-service.test.ts` mocked `@sendgrid/mail` and asserted against a hand-written object with `setApiKey`/`send` as own properties. It was green for months while **every production send threw `sgMail.setApiKey is not a function`**: the real module exports a `MailService` *instance*, its methods live on the prototype, and `import * as` (→ `__importStar`) copies only own properties.
+
+For every third-party SDK the app calls, keep **one deliberately unmocked test** that constructs the real binding and asserts the methods it uses are callable — see `tests/unit/services/email-service-sdk-binding.test.ts`. It needs no network: `new EmailService(key)` alone reproduced the failure.
+
+**Prefer `import x from` over `import * as x` for CommonJS packages that export an instance or a class.** `import * as` is for true namespace modules (`fs`, `path`, `dotenv`).
+
 ## Unit tests are blind to seams (R10, R12)
 
 Two 2026-08 defects made the dashboard unusable while a 2,449-test suite stayed green, because **every assertion sat on one side of a boundary**:

@@ -2,12 +2,42 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 25, 2026 (v1.63 — the success toast fired even when the server refused)
+**Last Updated**: August 25, 2026 (v1.64 — email never worked: `import * as` silently dropped the SendGrid SDK's methods)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.64 (2026-08-25): Email never worked, and the cause was an import statement
+
+**Test Results**: 2,441 passing of 2,466, 25 skipped, **0 failing**, 129 suites. Lint 0 errors, type-check clean, build clean.
+
+The merchant clicked **Send Test Alert** and got *"Delay detection test failed."* Production logs gave the cause verbatim, and it was not the SendGrid account:
+
+```
+ERROR: Failed to dispatch test alert   Error: sgMail.setApiKey is not a function
+ERROR: Error processing notification   Error: sgMail.setApiKey is not a function
+ERROR: Notification sweep failed for alert 4 {"alertId":4,"orderId":1}
+```
+
+`email-service.ts` opened with `import * as sgMail from "@sendgrid/mail"`. Under `module: commonjs` + `esModuleInterop`, that compiles to `__importStar`, which copies only a module's **own** enumerable properties. `@sendgrid/mail` exports an **instance of `MailService`**, so `setApiKey` and `send` live on the *prototype* — and were dropped. Demonstrated directly:
+
+```
+own props:                    [ 'client', 'substitutionWrappers', 'secretRules', 'MailService' ]
+setApiKey own?                false
+setApiKey on prototype?       function
+after __importStar:           setApiKey undefined | send undefined
+after __importDefault:        setApiKey function
+```
+
+Fixed by using a default import. One line.
+
+**This changes the R1 story.** The plan had concluded that the expired SendGrid trial was the last obstacle to sending mail. It was never even reached: **every send has been throwing inside our own process, before any HTTP request left the building.** That is now the *third* layer of failure discovered in front of the account — first the never-set template env var, then the sender address, now the SDK binding. Each was found only by making the previous one observable.
+
+**Why 2,439 tests never caught it.** `email-service.test.ts` does `jest.mock("@sendgrid/mail")` and asserts against a hand-written object that has `setApiKey` and `send` as own properties. It was green throughout, because it was testing the mock's shape, not the module's. **A mocked boundary cannot tell you the shape of the thing on the other side** — the same lesson R2 recorded for `query` and `registerWebhooks`, now paid for a third time. The new `email-service-sdk-binding.test.ts` is deliberately **unmocked** and fails against the old import with the exact production error.
+
+**It also affected the real pipeline, not just the test button.** The cron notification sweep was failing on the same error for `delay_alerts` row 4 — a genuine alert, generated from real order data, that could never have been delivered.
 
 ### v1.63 (2026-08-25): The success toast fired even when the server refused
 

@@ -1,4 +1,9 @@
-import * as sgMail from "@sendgrid/mail";
+// Default import, NOT `import * as`. @sendgrid/mail exports an instance of
+// MailService, so setApiKey/send live on the prototype. Under
+// `module: commonjs`, `import * as` compiles to __importStar, which copies
+// only OWN enumerable properties and silently drops both — every send then
+// threw "sgMail.setApiKey is not a function" in production (§6 R14).
+import sgMail from "@sendgrid/mail";
 import { OrderInfo, DelayDetails } from "../types";
 import { PingResult, PING_TIMEOUT_MS } from "./ping-result";
 
