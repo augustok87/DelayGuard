@@ -45,4 +45,10 @@ All emoji icons have been migrated to Lucide SVG (v1.31–v1.35). Don't reintrod
 
 ---
 
-For workflow basics (TDD-first, lint, type-check) see the root [CLAUDE.md](CLAUDE.md).
+For workflow basics (TDD-first, lint, type-check) see the root [CLAUDE.md](CLAUDE.md). **TDD is mandatory here too** — and for a bug fix, RED means the test fails against the *broken* component, not merely that it was written first; see [tests.md](.claude/rules/tests.md).
+
+**Redux loading flags:** `loading` means *the initial fetch*, and may gate interactivity. A write in flight is `saving`, and must never disable or hide the control that triggered it. Conflating them made every input in `NotificationPreferences` disable itself mid-keystroke (v1.61, LAUNCH_PLAN §6 R10).
+
+**Inputs the merchant types into must debounce their persist call** (~1s, `useDebouncedCallback`) with local state for instant feedback. Saving per `onChange` cost one PUT, one `data_access_log` row and one toast *per character* (v1.62).
+
+**Adding a field to a settings form? Verify it reaches Postgres, not just that the request returned 200.** `PUT /api/settings` carries only the four `app_settings` columns; merchant contact details go to `PUT /api/merchant-settings` (camelCase). Sending them to the wrong one returns success and writes nothing (§6 R12).

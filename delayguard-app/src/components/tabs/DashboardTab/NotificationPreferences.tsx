@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { AppSettings } from '../../../types';
+import { useDebouncedCallback } from '../../../hooks/useDebounce';
 import styles from './SettingsCard.module.css'; // Reuse same styles
 
 interface NotificationPreferencesProps {
@@ -26,6 +27,48 @@ export function NotificationPreferences({
   onSave: _onSave,
   onTest,
 }: NotificationPreferencesProps) {
+  /**
+   * Contact fields are typed into, so they are debounced the way
+   * SettingsCard's threshold already was (LAUNCH_PLAN §6 R10).
+   *
+   * Persisting on every `onChange` fired one PUT, one `data_access_log`
+   * row and one success toast *per character* — ~20 of each for an email
+   * address. Local state keeps typing instant; the write lands once the
+   * merchant pauses.
+   */
+  const [contact, setContact] = useState({
+    merchantEmail: settings.merchantEmail ?? '',
+    merchantPhone: settings.merchantPhone ?? '',
+    merchantName: settings.merchantName ?? '',
+  });
+
+  // Re-sync when the persisted values change underneath us (initial fetch,
+  // or a save resolving with server-normalised values).
+  useEffect(() => {
+    setContact({
+      merchantEmail: settings.merchantEmail ?? '',
+      merchantPhone: settings.merchantPhone ?? '',
+      merchantName: settings.merchantName ?? '',
+    });
+  }, [settings.merchantEmail, settings.merchantPhone, settings.merchantName]);
+
+  const debouncedSave = useDebouncedCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (...args: any[]) => {
+      onSettingsChange(args[0] as AppSettings);
+    },
+    1000,
+  ) as (newSettings: AppSettings) => void;
+
+  const handleContactChange = (
+    field: 'merchantEmail' | 'merchantPhone' | 'merchantName',
+    value: string,
+  ) => {
+    const next = { ...contact, [field]: value };
+    setContact(next); // instant feedback
+    debouncedSave({ ...settings, ...next }); // one write per pause
+  };
+
   // Handle notification changes
   const handleEmailToggle = () => {
     onSettingsChange({ ...settings, emailNotifications: !settings.emailNotifications });
@@ -104,8 +147,8 @@ export function NotificationPreferences({
                 id="merchant-email"
                 type="email"
                 className={styles.input}
-                value={settings.merchantEmail || ''}
-                onChange={(e) => onSettingsChange({ ...settings, merchantEmail: e.target.value })}
+                value={contact.merchantEmail}
+                onChange={(e) => handleContactChange('merchantEmail', e.target.value)}
                 placeholder="merchant@yourstore.com"
                 disabled={loading}
               />
@@ -122,8 +165,8 @@ export function NotificationPreferences({
                 id="merchant-phone"
                 type="tel"
                 className={styles.input}
-                value={settings.merchantPhone || ''}
-                onChange={(e) => onSettingsChange({ ...settings, merchantPhone: e.target.value })}
+                value={contact.merchantPhone}
+                onChange={(e) => handleContactChange('merchantPhone', e.target.value)}
                 placeholder="+1-555-1234"
                 disabled={loading}
               />
@@ -140,8 +183,8 @@ export function NotificationPreferences({
                 id="merchant-name"
                 type="text"
                 className={styles.input}
-                value={settings.merchantName || ''}
-                onChange={(e) => onSettingsChange({ ...settings, merchantName: e.target.value })}
+                value={contact.merchantName}
+                onChange={(e) => handleContactChange('merchantName', e.target.value)}
                 placeholder="Shop Owner"
                 disabled={loading}
               />

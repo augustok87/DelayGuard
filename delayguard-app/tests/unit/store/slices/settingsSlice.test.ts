@@ -15,12 +15,14 @@ jest.mock('../../../../src/utils/api-client', () => ({
   apiClient: {
     getSettings: jest.fn(),
     updateSettings: jest.fn(),
+    updateMerchantSettings: jest.fn(),
     testAlert: jest.fn(),
   },
 }));
 const mockedGetSettings = apiClient.getSettings as jest.Mock;
 const mockedUpdateSettings = apiClient.updateSettings as jest.Mock;
 const mockedTestAlert = apiClient.testAlert as jest.Mock;
+const mockedUpdateMerchantSettings = apiClient.updateMerchantSettings as jest.Mock;
 
 // Mock store setup
 const createMockStore = () => {
@@ -485,6 +487,78 @@ describe('settingsSlice', () => {
         payload: 'nope',
       });
       expect(store.getState().settings.saving).toBe(false);
+    });
+  });
+
+  /**
+   * Regression (LAUNCH_PLAN §6 R12).
+   *
+   * The dashboard's Merchant Email / Phone / Name fields reported
+   * "Settings saved successfully!" on every keystroke and persisted
+   * NOTHING: `shops.merchant_email` stayed empty and `shops.updated_at`
+   * did not move for 26 days.
+   *
+   * Cause: `settingsToWire` emits only the four app_settings columns, and
+   * `PUT /api/settings` reads only those. The contact fields have their own
+   * endpoint — `PUT /api/merchant-settings`, camelCase body — which the
+   * frontend never called, because `apiClient` had no method for it.
+   * Server-side `updateMerchantSettings` gates its `UPDATE shops` on
+   * `hasContactUpdates`, so absent fields meant no statement ran at all
+   * and 200 was still returned.
+   */
+  describe('merchant contact fields actually persist', () => {
+    const baseSettings: AppSettings = {
+      delayThreshold: 2,
+      notificationTemplate: 'default',
+      emailNotifications: true,
+      smsNotifications: false,
+      autoResolveDays: 7,
+      enableAnalytics: true,
+      theme: 'light',
+      language: 'en',
+    };
+
+    beforeEach(() => {
+      mockedUpdateSettings.mockResolvedValue({ success: true, data: {} });
+      mockedUpdateMerchantSettings.mockResolvedValue({ success: true, data: {} });
+    });
+
+    it('PUTs the contact fields to /api/merchant-settings', async() => {
+      const withContact: AppSettings = {
+        ...baseSettings,
+        merchantEmail: 'owner@example.com',
+        merchantPhone: '+1 (208) 757 3934',
+        merchantName: 'Joonie',
+      };
+
+      await store.dispatch(saveSettings(withContact) as never);
+
+      expect(mockedUpdateMerchantSettings).toHaveBeenCalledWith(
+        expect.objectContaining({
+          merchantEmail: 'owner@example.com',
+          merchantPhone: '+1 (208) 757 3934',
+          merchantName: 'Joonie',
+        }),
+      );
+    });
+
+    it('does not call the contact endpoint when no contact field is set', async() => {
+      await store.dispatch(saveSettings(baseSettings) as never);
+
+      expect(mockedUpdateMerchantSettings).not.toHaveBeenCalled();
+    });
+
+    it('still PUTs the app_settings columns to /api/settings', async() => {
+      const withContact: AppSettings = {
+        ...baseSettings,
+        merchantEmail: 'owner@example.com',
+      };
+
+      await store.dispatch(saveSettings(withContact) as never);
+
+      expect(mockedUpdateSettings).toHaveBeenCalledWith(
+        expect.objectContaining({ delay_threshold_days: expect.anything() }),
+      );
     });
   });
 });

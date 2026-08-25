@@ -2,12 +2,37 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 25, 2026 (v1.61 — a save no longer unmounts the form it was typed into)
+**Last Updated**: August 25, 2026 (v1.62 — merchant contact details were never actually saved)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.62 (2026-08-25): "Settings saved successfully!" — and nothing was saved
+
+**Test Results**: 2,436 passing of 2,461, 25 skipped, **0 failing**, 127 suites. Lint 0 errors, type-check clean, build clean.
+
+Two defects, found because v1.61 finally made the field typable and the *next* thing was checked: did the value actually land?
+
+**R12 — the contact fields never persisted, and said they did.** After ~12 "Settings saved successfully!" toasts, production `shops.merchant_email` was still empty and `shops.updated_at` had not moved in **26 days**. `data_access_log` showed 82 rows, so the requests were real, authenticated and returning 200.
+
+The chain, verified end to end rather than inferred:
+
+| Layer | What it did |
+|---|---|
+| `settingsToWire` | emits only the four `app_settings` columns — **drops** `merchantEmail`/`Phone`/`Name` |
+| `PUT /api/settings` | reads only those four (plus `custom_message`) — never looks for contact fields |
+| `updateMerchantSettings` | gates its `UPDATE shops` on `hasContactUpdates`; with no fields present, **no statement runs** |
+| response | `200 { success: true }` |
+
+The contact fields have their own working endpoint — `PUT /api/merchant-settings`, camelCase — which the frontend **never called**, because `apiClient` had no method for it. Added `updateMerchantSettings` + `contactToWire`, and `saveSettings` now persists contact details separately, skipping the call when there is nothing to write.
+
+**A silent success is the most expensive kind of bug**: every layer behaved correctly in isolation, the UI confirmed success, and the data was discarded. Only querying Postgres exposed it.
+
+**R10's second half — one save per keystroke.** Reported as *"It saves everytime I type, that's a horrible UX."* Typing a 20-character email fired ~20 `PUT`s, ~20 `data_access_log` rows and stacked ~20 success toasts. `NotificationPreferences` now debounces at 1 s with local state for instant feedback, matching what `SettingsCard` already did. Three pre-existing tests asserted the synchronous save — the defective behaviour — and were updated to flush the timer.
+
+**TDD note:** both fixes were driven by failing tests, and each new regression test was then run against the *broken* code to confirm it fails there. That check earned its keep in v1.61, where it exposed a test that passed in both states and was deleted rather than kept. `.claude/rules/tests.md` and `frontend.md` now carry this as a standing rule, along with the seam lesson: a suite of 2,449 unit tests stayed green through both defects because every assertion sat on one side of a boundary.
 
 ### v1.61 (2026-08-25): Typing in the dashboard was impossible — a save disabled the field mid-keystroke
 

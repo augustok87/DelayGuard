@@ -7,7 +7,7 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, createMockSettings } from '../../setup/test-utils';
+import { render, screen, fireEvent, act, createMockSettings } from '../../setup/test-utils';
 import { NotificationPreferences } from '../../../src/components/tabs/DashboardTab/NotificationPreferences';
 import { configureStore } from '@reduxjs/toolkit';
 import settingsReducer, {
@@ -23,8 +23,27 @@ describe('NotificationPreferences Component', () => {
 
   const mockOnSettingsChange = jest.fn();
 
+  /**
+   * Contact fields debounce their persist call (LAUNCH_PLAN §6 R10, v1.62).
+   * Tests that assert the save must flush that timer first — before v1.62
+   * the call was synchronous, which is precisely the defect.
+   */
+  const flushDebounce = () => {
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
+    // File-wide: the contact inputs debounce, so every test in here needs a
+    // clock it can advance. Harmless for the render-only assertions.
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
   });
 
   describe('Email Notifications', () => {
@@ -417,6 +436,7 @@ describe('NotificationPreferences Component', () => {
 
       const emailInput = screen.getByLabelText('Merchant Email');
       fireEvent.change(emailInput, { target: { value: 'newemail@store.com' } });
+      flushDebounce();
 
       expect(mockOnSettingsChange).toHaveBeenCalledWith({
         ...settingsWithContact,
@@ -434,6 +454,7 @@ describe('NotificationPreferences Component', () => {
 
       const phoneInput = screen.getByLabelText('Merchant Phone');
       fireEvent.change(phoneInput, { target: { value: '+1-555-9999' } });
+      flushDebounce();
 
       expect(mockOnSettingsChange).toHaveBeenCalledWith({
         ...settingsWithContact,
@@ -451,6 +472,7 @@ describe('NotificationPreferences Component', () => {
 
       const nameInput = screen.getByLabelText('Merchant Name');
       fireEvent.change(nameInput, { target: { value: 'New Owner' } });
+      flushDebounce();
 
       expect(mockOnSettingsChange).toHaveBeenCalledWith({
         ...settingsWithContact,
@@ -742,6 +764,72 @@ describe('NotificationPreferences Component', () => {
       );
 
       expect(screen.getByLabelText('Merchant Email')).toBeDisabled();
+    });
+  });
+
+  /**
+   * Regression (LAUNCH_PLAN §6 R10, second half).
+   *
+   * Reported from the live dashboard: "It saves everytime I type, that's a
+   * horrible UX." Typing a 20-character email fired ~20 `PUT /api/settings`
+   * calls, ~20 `data_access_log` rows, and stacked ~20 success toasts on
+   * screen. `SettingsCard` already debounced at 1 s; this component did not.
+   *
+   * The contract: the field updates immediately (so typing feels normal),
+   * but the persist call happens once, after the merchant stops typing.
+   */
+  describe('typing is debounced — one save per pause, not per keystroke', () => {
+    it('does not persist on every keystroke', () => {
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      const input = screen.getByLabelText('Merchant Email');
+      for (const value of ['o', 'ow', 'own', 'owne', 'owner']) {
+        fireEvent.change(input, { target: { value } });
+      }
+
+      expect(mockOnSettingsChange).not.toHaveBeenCalled();
+    });
+
+    it('persists once, with the final value, after typing stops', () => {
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      const input = screen.getByLabelText('Merchant Email');
+      for (const value of ['o', 'ow', 'own', 'owne', 'owner']) {
+        fireEvent.change(input, { target: { value } });
+      }
+
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+
+      expect(mockOnSettingsChange).toHaveBeenCalledTimes(1);
+      expect(mockOnSettingsChange).toHaveBeenCalledWith(
+        expect.objectContaining({ merchantEmail: 'owner' }),
+      );
+    });
+
+    it('shows what was typed immediately, without waiting for the save', () => {
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      const input = screen.getByLabelText('Merchant Email') as HTMLInputElement;
+      fireEvent.change(input, { target: { value: 'typed@example.com' } });
+
+      expect(input.value).toBe('typed@example.com');
     });
   });
 });

@@ -2,7 +2,11 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { SettingsState } from '../../types/store';
 import { AppSettings } from '../../types';
 import { apiClient } from '../../utils/api-client';
-import { mapSettingsRow, settingsToWire } from '../../utils/api-mappers';
+import {
+  mapSettingsRow,
+  settingsToWire,
+  contactToWire,
+} from '../../utils/api-mappers';
 
 // Default settings
 const defaultSettings: AppSettings = {
@@ -52,6 +56,22 @@ export const saveSettings = createAsyncThunk(
       if (!response.success) {
         return rejectWithValue(response.error || 'Failed to save settings');
       }
+
+      // Contact details live on `shops`, not `app_settings`, and have their
+      // own endpoint. PUT /api/settings reads neither, so sending them there
+      // reported success and wrote nothing (LAUNCH_PLAN §6 R12). Only call
+      // it when there is something to write — the server gates its
+      // `UPDATE shops` on at least one contact field being present.
+      const contact = contactToWire(settings);
+      if (contact) {
+        const contactResponse = await apiClient.updateMerchantSettings(contact);
+        if (!contactResponse.success) {
+          return rejectWithValue(
+            contactResponse.error || 'Failed to save contact details',
+          );
+        }
+      }
+
       return settings;
     } catch {
       return rejectWithValue('Failed to save settings');

@@ -218,6 +218,23 @@ class ApiClient {
   }
 
   /**
+   * PUT /api/merchant-settings
+   * Update merchant contact details (and Phase 2.6 delay-type toggles).
+   *
+   * Deliberately a SEPARATE call from `updateSettings`: `PUT /api/settings`
+   * reads only the four `app_settings` columns and silently ignores contact
+   * fields, so routing them there reported success and persisted nothing
+   * (LAUNCH_PLAN §6 R12). Body is camelCase — unlike /settings, which is
+   * snake_case — matching the route's own parsing.
+   */
+  async updateMerchantSettings(settings: Record<string, unknown>) {
+    return this.request<unknown>("/merchant-settings", {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    });
+  }
+
+  /**
    * PUT /api/alerts/:id/status
    * Persist the merchant's triage status for one alert
    * (active | resolved | dismissed). Backs the dashboard resolve/dismiss

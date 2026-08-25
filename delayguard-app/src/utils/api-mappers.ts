@@ -238,6 +238,29 @@ export function settingsToWire(settings: AppSettings): UnknownRecord {
 }
 
 /**
+ * Serialize the merchant contact fields to the PUT /api/merchant-settings
+ * body — **camelCase**, unlike /settings.
+ *
+ * Returns `null` when the merchant has set none of them, so the caller can
+ * skip the request entirely rather than PUT an empty object.
+ */
+export function contactToWire(settings: AppSettings): UnknownRecord | null {
+  const contact: UnknownRecord = {};
+
+  if (settings.merchantEmail !== undefined && settings.merchantEmail !== null) {
+    contact.merchantEmail = settings.merchantEmail;
+  }
+  if (settings.merchantPhone !== undefined && settings.merchantPhone !== null) {
+    contact.merchantPhone = settings.merchantPhone;
+  }
+  if (settings.merchantName !== undefined && settings.merchantName !== null) {
+    contact.merchantName = settings.merchantName;
+  }
+
+  return Object.keys(contact).length > 0 ? contact : null;
+}
+
+/**
  * Map the /api/analytics summary (Postgres string counts, possibly `{}`
  * for a fresh shop) to StatsData. Only real, derivable numbers — no
  * fabricated metrics (listing req 4.3.3).

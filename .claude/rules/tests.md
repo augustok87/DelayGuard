@@ -22,6 +22,26 @@ Write tests **first**, run them, see them fail (RED), then write the implementat
 
 Pattern: for `delayguard-app/src/services/Foo.ts`, the sibling test is `Foo.test.ts` next to it (or under `src/tests/unit/services/Foo.test.ts`).
 
+## Fixing a bug? RED means failing against the *broken* code (v1.61/v1.62)
+
+For a bug fix, "see it fail" is not satisfied by writing the test before the fix. **Re-introduce the defect and confirm the test fails**, then restore. Both dashboard fixes did this, and it paid twice:
+
+- The seam test for R10 failed against the broken reducer — a real check.
+- A sibling test in the same commit passed in **both** states: `fireEvent.change` fires on a `disabled` input in jsdom, so it never detected the bug it was named after. **It was deleted, not kept for appearances.** A test that cannot fail is worse than no test — it reads as proof (global rule #11).
+
+Keep a test that passes in both states only when it pins the *other* half of a contract (guarding an over-correction) — and say so in a comment.
+
+## Unit tests are blind to seams (R10, R12)
+
+Two 2026-08 defects made the dashboard unusable while a 2,449-test suite stayed green, because **every assertion sat on one side of a boundary**:
+
+- **R10** — the reducer correctly set `loading`; the component correctly disabled itself when told to. Only the *mapping* was wrong (a save flipped the flag meaning "initial fetch"), so every input disabled itself mid-keystroke.
+- **R12** — the client PUT valid settings and the server correctly ignored fields it was never sent. Contact details reported "saved successfully" and persisted nothing for 26 days.
+
+When a change spans store → props → DOM, or client → wire → route → SQL, **add one test that crosses the seam** — e.g. derive the prop from a real store dispatch and assert the rendered result. Mocking both sides proves only that each side matches your assumption about the other.
+
+**Corollary:** a passing check is not evidence until you know what it is wired to. `monitoring-service`'s health test passes only because a global `fetch` mock hides three real network calls that all return non-2xx; the boot env validator "reported no problem" with the SendGrid vars it never reads.
+
 ## No placeholder tests (v1.20 incident)
 
 `expect(true).toBe(true)` and similar tautological stubs are **forbidden** in non-WIP branches. They previously masked unfinished work because CI passed and reviewers couldn't tell stubs from real coverage.
