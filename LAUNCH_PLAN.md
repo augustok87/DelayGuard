@@ -347,6 +347,58 @@ Sanitised at the throw site: one line, trailing `null`s stripped, capped at 300 
 
 **Same class as R13**, on the adjacent path: a message that cannot vary carries no information. Every diagnosis this session required reading Vercel logs because the dashboard could not distinguish *"your code is broken"* from *"your account is out of credit"*. For a published app that gap is worse than cosmetic — a merchant seeing it has no next action.
 
+### 🎉 R1 — **CLOSED 2026-08-25. The first delivered notification in the project's history.**
+
+Proven three ways, none of them a UI claim:
+
+| Evidence | Value |
+|---|---|
+| SendGrid Email Logs | **Delivered**, response `250 2.0.0 OK` |
+| Recipient | `augustok87@gmail.com` — **primary inbox, not spam**, on the domain's first-ever send |
+| From | `noreply@delayguardapp.com` — authenticated domain, DKIM keys resolving |
+| Postgres | `delay_alerts.notification_sent_at` stamped `2026-08-25 19:51:05` |
+
+**It came from the real cron pipeline, not the test button.** The delivered mail matched `delay_alerts` row 4 exactly (`delay_days = 23`, `WAREHOUSE_DELAY`, order `#DG1001`) — an alert that had been failing since 2026-08-22. The test-alert samples are `TEST-001` / `Sample Customer` / 3 days, and did not match. So what R1 finally proved is the **production notification path**, which is strictly better than proving the demo path.
+
+Purchases made: SendGrid **Essentials 50K** ($19.95/mo) and **`delayguardapp.com`** ($10.46/yr, Cloudflare). Domain authenticated with 5 CNAMEs + DMARC `p=none`; both `_domainkey` CNAMEs verified by `dig` to resolve to real RSA public keys before the plan was confirmed.
+
+**Sub-problem tally, final:** the account plan was the **fourth** gate, not the first. In order of discovery: unset `SENDGRID_DELAY_TEMPLATE_ID` → unowned sender domain → **SDK binding lost to CommonJS interop (R14)** → expired trial. Every one was invisible until the one in front of it was cleared.
+
+### R17 — One send marks EVERY alert on the order as delivered `[AGENT]` — **new 2026-08-25, highest-value open bug**
+
+Found by reading the database after R1's first delivery, not from any failure:
+
+```
+id | delay_days | email_sent |    notification_sent_at
+ 1 |          2 | t          | 2026-08-25 19:51:05.955614
+ 2 |          9 | t          | 2026-08-25 19:51:05.955614
+ 3 |         16 | t          | 2026-08-25 19:51:05.955614
+ 4 |         23 | t          | 2026-08-25 19:51:05.955614
+```
+
+**Four alerts, one email, one timestamp to the microsecond.** `queue/processors/notification.ts:167` marks completion with:
+
+```sql
+UPDATE delay_alerts SET email_sent = TRUE, notification_sent_at = COALESCE(...)
+WHERE order_id = $1        -- not WHERE id = <the alert being sent>
+```
+
+The read at `:79` has the same granularity error — `SELECT email_sent … WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1` reads the *newest* alert for the order regardless of which one is being processed. The processor is order-scoped throughout; `notification-sweep.ts` selects **per alert**. The two disagree.
+
+**Consequence in production: a merchant whose order slips repeatedly receives ONE email.** Every later delay on that order is suppressed and recorded as delivered. For a delay-notification product this is the worst failure mode available — customers stop being told, and the database reports success. It is also strictly worse than the known non-atomic dedupe already tracked in `CLAUDE.md`, because it discards notifications that were never attempted.
+
+**Not caught by 2,446 tests** because the processor's tests mock `query` and assert the statement is *issued*, never that it touched one row. The guard that would catch it is an assertion on affected row count against a real schema.
+
+### R18 — The delivered email renders three merchant-visible defects `[AGENT]` — **new 2026-08-25**
+
+From the actual delivered message, not a preview:
+
+1. **`Order ##DG1001`** — the template emits `#{{orderNumber}}` while `orders.order_number` already stores `#DG1001`. Double hash on every real order.
+2. **"New estimated delivery:" renders empty** — the real order has no estimated-delivery value and the template has no fallback, so the merchant reads a label with nothing after the colon.
+3. **No tracking number and no "Track your package" button** — both are `{{#if}}`-guarded and the order carries neither value, so the email's primary CTA silently vanishes.
+
+None of these were visible while the send path was broken. **The first real email is the first real test of the template** — every prior check was against sample data engineered to populate every field.
+
 ### R9 — The agent can no longer authenticate to Shopify, or read any Vercel secret `[HUMAN]` — **new 2026-08-25**
 
 Two operational facts this plan asserted as ground truth are **false as of today**, and together they block all agent-side verification of authenticated endpoints:

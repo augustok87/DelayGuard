@@ -2,12 +2,26 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 25, 2026 (v1.66 — the test alert reports the provider's actual refusal)
+**Last Updated**: August 25, 2026 (R1 CLOSED — the first delivered notification; R17/R18 opened by reading it)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### 2026-08-25 — 🎉 R1 CLOSED: the first delivered notification
+
+Not a version bump — a milestone. **DelayGuard delivered an email.** SendGrid logged `Delivered` / `250 2.0.0 OK` to `augustok87@gmail.com`, landing in the **primary inbox** on the sending domain's first-ever message.
+
+**It came from the real cron pipeline, not the test button.** The delivered mail matched `delay_alerts` row 4 exactly — `delay_days = 23`, `WAREHOUSE_DELAY`, order `#DG1001` — an alert that had been failing since 2026-08-22. The test-alert samples (`TEST-001` / `Sample Customer` / 3 days) did not match. R1 therefore proved the **production** path, which is strictly better than proving the demo path.
+
+Purchases: SendGrid **Essentials 50K** and **`delayguardapp.com`** (Cloudflare, $10.46/yr), authenticated with 5 CNAMEs + DMARC `p=none`. Both `_domainkey` chains were verified with `dig` to return real RSA public keys before the plan was confirmed — the screen said "It worked!", but that was checked rather than believed.
+
+**The account plan turned out to be the fourth gate, not the first.** In order of discovery: unset `SENDGRID_DELAY_TEMPLATE_ID` → a sender domain we never owned → the SDK binding lost to CommonJS interop (v1.64) → the expired trial. Each was invisible until the one ahead of it was cleared, which is why this took four sessions rather than one purchase.
+
+**And the first real email immediately exposed two new defects** — logged as §6 R17 and R18. R17 is the serious one: `notification.ts` marks completion with `WHERE order_id = $1` instead of the alert's own id, so **one send marked all four alerts delivered, to the same microsecond**. In production a merchant whose order slips repeatedly would get one email and have every later delay silently suppressed. R18 covers three merchant-visible rendering faults in the delivered message (`##DG1001`, an empty "New estimated delivery:" label, and a vanished tracking CTA).
+
+**The lesson: the first real send is the first real test.** Every prior check ran against sample data engineered to populate every field, so nothing had ever rendered the template against a real order that was missing values. Two of today's three findings came from *reading the delivered artifact*, not from anything going red.
 
 ### v1.66 (2026-08-25): The test alert reports the provider's actual refusal
 
