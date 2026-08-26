@@ -468,6 +468,32 @@ The contract chosen for defect 1 matters: **the renderer owns the `#`, the data 
 
 Eight tests; the six that pin defective behaviour were run against the broken renderers first and failed there. Two pass in both states by design and say so — they guard the over-correction (a real ETA must still pass through untouched; a real tracking URL must still appear).
 
+### R21 — Remote CI has been red on every push for days, so it is not a gate `[AGENT]` — **new 2026-08-26, not submission-blocking**
+
+Found by verifying the push rather than assuming it was fine. Both GitHub workflows fail on the pushed head — **and on every prior head going back at least to 2026-08-25**:
+
+```
+failure  1591d167  08-26T19:30  test: say why the two both-states tests are kept
+failure  91385357  08-26T17:52  docs(launch): truth pass on the docs
+failure  9b9a4025  08-25T20:02  docs(launch): R1 CLOSED
+failure  974adc98  08-25T17:35  fix(test-alert): report the provider's refusal
+…  (every push in the window is `failure`)
+```
+
+So this is **not** caused by the v1.67–v1.70 work; the local pre-commit gate passed 7/7 on every one of those commits. But a check that has failed continuously for days is worth exactly as much as one that has never failed — **nobody can see a real regression in it.** That is rule #11 in its mirror image, and it matters more than usual right now: the project is about to be submitted for external review with no working remote gate.
+
+**Three independent causes, all pre-existing:**
+
+| Job | Failure | Cause |
+|---|---|---|
+| `Database Schema Tests` | `SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string` | Connection-config problem in the schema-suite job. The workflow *does* set a valid `DATABASE_URL`, so something is overriding or bypassing it — not yet root-caused |
+| `Unit & Integration Tests` | `input-sanitization` "large objects" + "exponential backoff for retries" | **§6 R5 exactly** — wall-clock assertions. GitHub's shared runners are slower and noisier than a dev laptop, so R5 fires there almost every run |
+| `Unit & Integration Tests` | `monitoring-service` `performHealthChecks` / `getSystemStatus` | The already-known "a mock hides a real network call" problem recorded in `CLAUDE.md`: `checkExternalAPIs` reaches the public internet unless `jest.setup.ts` intercepts it, and on CI those calls behave differently |
+
+**This is also the strongest evidence yet for R5's re-diagnosis.** Locally R5 is intermittent — three full runs on 2026-08-26 gave 1 failure, 1 *different* failure, then 0. On a consistently-loaded CI runner it is close to deterministic. That is what a wall-clock-under-load defect looks like, and it is not what order-dependent state leakage looks like.
+
+**Fix direction (not started):** make the four offenders assert behaviour instead of elapsed milliseconds — call counts and fake timers for the backoff test, an injected clock or a generous-but-documented budget for the perf tests, and a properly injected `fetch` for `monitoring-service` so the health checks never depend on the internet. Closing this closes R5 as a side effect.
+
 ### R20 — The listing sold SMS on both paid plans, and SMS cannot send at all `[AGENT]` — **new 2026-08-26, listing fixed same session (v1.70)**
 
 Found by asking Twilio instead of assuming, in the same spirit as R1's SendGrid account. Every answer is disqualifying:
@@ -763,7 +789,8 @@ Screencast, AI self-review, submit. Gated on R2 (needs a working app to film) an
 | **Real webhook ingest** | ⛔ **still never observed**, six weeks on. `orders` holds exactly **1** row, the synthetic `9900112233`. One real order closes it — and would give R18 its first test against an order that *has* tracking |
 | **R9 — agent can't authenticate** | ⛔ `[HUMAN]`, unchanged. `shopify app env show` 403s; every `/api/*` check is still a browser action |
 | **H8 → H-4 → H9** | ⛔ `[HUMAN]`. Screencast, AI self-review, submit |
-| **R5 — test flake** | ⚠️ open, **characterised further**: three full runs today gave 1 failure, 1 *different* failure, then 0 — each failing test green in isolation |
+| **R5 — test flake** | ⚠️ open, **characterised further**: 3 local runs → 1 failure, 1 *different* failure, then 0. On CI it is near-deterministic (see R21) |
+| **R21 — remote CI permanently red** | ⚠️ `[AGENT]`, new, **not submission-blocking**. Both workflows have failed on *every* push for days, predating this session. Three causes: a schema-job SASL config error, R5's wall-clock assertions, and `monitoring-service`'s real network calls. **The repo currently has no working remote gate** |
 | R1 / R2 / R4-H4 / R6 / R7 | ✅ closed, evidence in §6 |
 
 **Critical path — the agent column is nearly empty now, which is the point:**
