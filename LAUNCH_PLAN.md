@@ -69,7 +69,7 @@ Estimated ~1–2 hours of dashboard work. Sessions cannot do these; everything e
 - [x] **H1. Pick pricing** — §5 D1. Recommended taken: **Free + $7 Pro + $25 Enterprise** (matches code, most credible for a zero-review app; raiseable later — 8 public plans now allowed). Applied to all listing copy in `eb20d745`. *Decision made; the Partner-Dashboard configuration of these plans is H3 and is still open.*
 - [x] **H2. Partner Dashboard:** app exists, App URL + OAuth redirect set to `https://delayguard-api.vercel.app`. **Evidence:** `shopify app deploy` released `delayguard-3` against `client_id = e9d96cad62c5e6db0a67e6752a23d0ea` (`shopify.app.toml`, commit `87f8aa4f`), and prod serves the app at that domain. ⚠️ *Still unconfirmed: whether the app was created before 2026-04-01, which sets the expiring-token deadline (see C5).*
 - [ ] **H3. Configure Shopify App Pricing plans** (Partner Dashboard → Pricing): free + paid tiers per H1. No Billing API code needed — this replaces the stub entirely. **← OPEN. Blocks revenue: `/api/plan` and every SMS/paid gate fail closed to `free` until these plans exist.**
-- [ ] **H4. Request Protected Customer Data access (Level 2)** — app reads customer name/email/phone. State per-field use reasons (delay notifications + customer-intelligence display), complete the questionnaire. *Without approval, PII fields return null in prod.* **← OPEN. Has approval latency — submit early.**
+- [x] **H4. Request Protected Customer Data access (Level 2)** — ✅ **GRANTED 2026-08-05** (see §6 R7). — app reads customer name/email/phone. State per-field use reasons (delay notifications + customer-intelligence display), complete the questionnaire. *Without approval, PII fields return null in prod.* ~~**← OPEN.**~~ Closed: the form lives in the **Partner** dashboard, and approval required building the Level 2 access log (v1.58).
 - [x] **H5. Secrets into Vercel env** — `DATABASE_URL`, `REDIS_URL`, `SHOPIFY_API_KEY/SECRET`, `SHOPIFY_SCOPES`, `SHOPIFY_APP_URL`, `CRON_SECRET` all confirmed working. **Evidence:** `/health` reports Postgres + Redis healthy; the `CRON_SECRET`-guarded endpoints 401 without a secret and 200 from the GitHub-Actions workflow. ⚠️ *Unverified from here: `SHIPENGINE_API_KEY`, `SENDGRID_API_KEY`, `TWILIO_*` — no probe exercises them without a merchant session. `SENDGRID_DELAY_TEMPLATE_ID` is definitely NOT set (§6 R1).*
 - [x] **H6. Run `shopify auth login`** — done; `shopify app deploy` succeeded on 2026-07-28.
 - [ ] **H7. ShipStation API plan:** confirm the Advanced plan is active (tracking-any-parcel requires it — verified: sold as 1,000/5,000/10,000 calls per endpoint/month). **← OPEN/unverified. Without Advanced, tracking third-party parcels — the app's core input — silently fails.**
@@ -186,7 +186,9 @@ Task format: **ID — name `[TAG]`** · files · what to do · acceptance criter
 
 *Established 2026-07-29. Code and deploy are done; §§1–4 are now history. This is the whole remaining path to submission.*
 
-### R1 — SendGrid account cannot send email `[HUMAN]` — **top blocker, 2 of 4 sub-problems now closed**
+### ~~R1 — SendGrid account cannot send email~~ `[HUMAN]` — ✅ **CLOSED 2026-08-25 — one real email delivered**
+
+*Closure evidence is at the end of this section ("R1 — CLOSED"). Everything between here and there is the four-gate history, kept because each gate hid the next one. Read it only if you are debugging email again.*
 
 > **STATUS 2026-08-17 — sub-problems 2 and 3 are resolved; the plan and the template remain.**
 >
@@ -231,20 +233,10 @@ Email is the **only** notification channel at launch (§5 D3 ships SMS off), so 
    **⚠️ This is a deliberate stopgap, not the launch answer.** `gmail.com` publishes `v=DMARC1; p=none; sp=quarantine`, so SendGrid mail bearing a Gmail From fails both SPF and DKIM alignment. `p=none` means it will not be rejected outright, but spam placement is likely — and a buyer reading *"Your order is delayed"* from a stranger's personal Gmail has every reason to treat it as phishing. **Buy a domain before submission** (~$10/yr; `delayguardapp.com`, `getdelayguard.com`, `usedelayguard.com`, `trydelayguard.com`, `delayguardhq.com` and `delayguard.dev` all had no NS records on 2026-08-17). Switching is now **one env var, no code change** — which is the entire point of the v1.59 refactor.
 
 **To unblock, in order:**
-1. ⛔ **Resolve the account plan** in SendGrid — the trial expired 2025-11-26 (paid-plan decision, the COGS line alongside ShipStation). **Expect this to be the gate that actually fails a send:** sender verification is an account setting and succeeds regardless, so a 401/403 on the first real send is the *plan*, not the identity. Do not go re-debugging the sender.
+1. ✅ ~~**Resolve the account plan** in SendGrid~~ **Done 2026-08-25 — Essentials 50K purchased.** Original note: — the trial expired 2025-11-26 (paid-plan decision, the COGS line alongside ShipStation). **Expect this to be the gate that actually fails a send:** sender verification is an account setting and succeeds regardless, so a 401/403 on the first real send is the *plan*, not the identity. Do not go re-debugging the sender.
 2. ✅ ~~Settle the sender identity.~~ **Done 2026-08-17** — see above.
 3. ✅ ~~**Create the template.**~~ **Done 2026-08-25** — `d-5755ad471bd64f15bf2bd61f8b848ad0`, set in Vercel and deployed; temporary key deleted. Evidence table below.
-4. ⛔ **Verify end-to-end** by firing `/api/test-alert` from the dashboard (E1's actual acceptance criterion). **Still not done** — blocked agent-side by R9 (no session token) and blocked in the browser by R10 until v1.61 deploys. No delay email has ever been successfully sent.
-
-### R8 — No working support mailbox, and the listing claims one `[HUMAN]` — **submission-blocking**
-
-*Opened 2026-08-17, found by the same sweep that produced v1.60.*
-
-`SHOPIFY_APP_STORE_LISTING.md` advertised **`support@delayguard.app`** (twice) and **`sales@delayguard.app`** as the app's contact addresses. Shopify's listing requirements include a working support contact, and **`delayguard.app` is not ours** (§6 R1 records the four checks) — the domain has **no MX records at all**, so those addresses cannot receive mail even in principle. Submitting with them means either a review rejection or, worse, an approval that leaves paying merchants with a support address that silently discards everything they send.
-
-Both listing entries are now marked as unset rather than left looking plausible, because **the failure mode here is a value that reads as correct**. Nothing in the repo validates a support address; the only thing that would have caught it is someone trying to send mail to it.
-
-**This is the same purchase as R1's sending domain — one domain resolves both.** Buy it, then: point `SENDGRID_FROM_EMAIL` at `noreply@<domain>`, create `support@` and `sales@` forwarding to a real inbox, and fill the two placeholders in `SHOPIFY_APP_STORE_LISTING.md`. **Accept:** send a message to `support@<domain>` from an unrelated account and confirm it arrives — the check that was never run on the old address.
+4. ✅ ~~**Verify end-to-end**~~ **Done 2026-08-25 — better than the stated criterion: the proof came from the real cron pipeline, not `/api/test-alert`.** Original note: (E1's actual acceptance criterion). **Still not done** — blocked agent-side by R9 (no session token) and blocked in the browser by R10 until v1.61 deploys. No delay email has ever been successfully sent.
 
 **✅ SUB-PROBLEM 4 CLOSED 2026-08-25 — the template now exists, and the account was verified before it was used.**
 
@@ -266,6 +258,55 @@ Sequence, each step verified rather than assumed:
 **Remaining for R1: the expired trial, and nothing else.** Re-verified live 2026-08-25: a sandbox `POST /v3/mail/send` still returns `401 {"errors":[{"message":"Maximum credits exceeded"}]}`. Sub-problems 2, 3 and 4 are closed, so **the next failure a send hits will be the plan** — do not go re-debugging the sender or the template when it 401s.
 
 ⚠️ **Not yet observed: a successful send.** The template resolves and the env is live, but no delay email has ever left the building. `/api/test-alert` could not be fired agent-side (see R9), and the dashboard route was blocked by R10 until it was fixed. **Nothing here is proven end-to-end until one email is actually received.**
+
+### 🎉 R1 — **A send reached SendGrid for the first time, 2026-08-25**
+
+After v1.64, the production error changed from our own process to SendGrid's account:
+
+```
+before  Error: sgMail.setApiKey is not a function                     (our code, never reached the network)
+after   Failed to send email: Unauthorized (401) Maximum credits exceeded   (SendGrid, over quota)
+```
+
+**This is the proof that layers 1–3 are genuinely closed**: the template ID resolved, the From address resolved, the SDK bound, and an HTTPS request left the process carrying a real message. **R1 is now, at last, actually one purchase.** Buy the plan and re-fire `/api/test-alert`; a delivered email closes R1 and unblocks H8's screencast.
+
+### 🎉 R1 — **CLOSED 2026-08-25. The first delivered notification in the project's history.**
+
+Proven three ways, none of them a UI claim:
+
+| Evidence | Value |
+|---|---|
+| SendGrid Email Logs | **Delivered**, response `250 2.0.0 OK` |
+| Recipient | `augustok87@gmail.com` — **primary inbox, not spam**, on the domain's first-ever send |
+| From | `noreply@delayguardapp.com` — authenticated domain, DKIM keys resolving |
+| Postgres | `delay_alerts.notification_sent_at` stamped `2026-08-25 19:51:05` |
+
+**It came from the real cron pipeline, not the test button.** The delivered mail matched `delay_alerts` row 4 exactly (`delay_days = 23`, `WAREHOUSE_DELAY`, order `#DG1001`) — an alert that had been failing since 2026-08-22. The test-alert samples are `TEST-001` / `Sample Customer` / 3 days, and did not match. So what R1 finally proved is the **production notification path**, which is strictly better than proving the demo path.
+
+Purchases made: SendGrid **Essentials 50K** ($19.95/mo) and **`delayguardapp.com`** ($10.46/yr, Cloudflare). Domain authenticated with 5 CNAMEs + DMARC `p=none`; both `_domainkey` CNAMEs verified by `dig` to resolve to real RSA public keys before the plan was confirmed.
+
+**Sub-problem tally, final:** the account plan was the **fourth** gate, not the first. In order of discovery: unset `SENDGRID_DELAY_TEMPLATE_ID` → unowned sender domain → **SDK binding lost to CommonJS interop (R14)** → expired trial. Every one was invisible until the one in front of it was cleared.
+
+### R8 — No working support mailbox, and the listing claims one `[HUMAN]` — **submission-blocking**
+
+*Opened 2026-08-17, found by the same sweep that produced v1.60.*
+
+`SHOPIFY_APP_STORE_LISTING.md` advertised **`support@delayguard.app`** (twice) and **`sales@delayguard.app`** as the app's contact addresses. Shopify's listing requirements include a working support contact, and **`delayguard.app` is not ours** (§6 R1 records the four checks) — the domain has **no MX records at all**, so those addresses cannot receive mail even in principle. Submitting with them means either a review rejection or, worse, an approval that leaves paying merchants with a support address that silently discards everything they send.
+
+Both listing entries are now marked as unset rather than left looking plausible, because **the failure mode here is a value that reads as correct**. Nothing in the repo validates a support address; the only thing that would have caught it is someone trying to send mail to it.
+
+**This is the same purchase as R1's sending domain — one domain resolves both.** Buy it, then: point `SENDGRID_FROM_EMAIL` at `noreply@<domain>`, create `support@` and `sales@` forwarding to a real inbox, and fill the two placeholders in `SHOPIFY_APP_STORE_LISTING.md`. **Accept:** send a message to `support@<domain>` from an unrelated account and confirm it arrives — the check that was never run on the old address.
+
+**⚠️ UPDATE 2026-08-25 — half of this is now done, and the remaining half is ~10 minutes.** The domain purchase happened for R1: **`delayguardapp.com`** is ours, on Cloudflare DNS, and already authenticated for *sending* (5 SendGrid CNAMEs + DMARC `p=none`; `SENDGRID_FROM_EMAIL=noreply@delayguardapp.com` is live and has delivered mail).
+
+**Sending is not receiving.** The domain has SendGrid CNAMEs, but **no MX records and no mailbox** — so `support@delayguardapp.com` today fails exactly the same way `support@delayguard.app` did. What is left, in order:
+
+1. Cloudflare → `delayguardapp.com` → **Email → Email Routing** → enable. Cloudflare adds the MX + SPF records itself.
+2. Add two custom addresses, `support@` and `sales@`, both forwarding to `augustok87@gmail.com`. Verify the destination address (Cloudflare emails it a confirmation link).
+3. ⚠️ **Cloudflare's Email Routing setup replaces the zone's SPF record.** After enabling, re-check that SendGrid's `em*`/`s1._domainkey`/`s2._domainkey` CNAMEs are still intact and still DNS-only (grey cloud), and re-send a test alert. A broken sending domain would be a *worse* outcome than an unrouted mailbox.
+4. **Accept (unchanged, and still the only check that matters):** send a message to `support@delayguardapp.com` **from an unrelated account** and confirm it arrives. Then, and only then, fill the two fields in `SHOPIFY_APP_STORE_LISTING.md` — they are currently marked UNSET on purpose.
+
+*A stale `- [x] Support email ✓ support@delayguard.app` was also found and un-ticked in `app-store-assets/README.md` on 2026-08-25 — the checklist had been asserting the broken address was done.*
 
 ### ~~R12 — Merchant contact details reported "saved" and persisted nothing~~ `[AGENT]` — ✅ **FIXED 2026-08-25 (v1.62)**
 
@@ -322,17 +363,6 @@ The expired trial is still real (`Maximum credits exceeded`, re-verified), but i
 
 **Also hit the real pipeline**, not just the test button: the cron sweep was failing identically on `delay_alerts` row 4 — a real alert from real order data that could never have been delivered.
 
-### 🎉 R1 — **A send reached SendGrid for the first time, 2026-08-25**
-
-After v1.64, the production error changed from our own process to SendGrid's account:
-
-```
-before  Error: sgMail.setApiKey is not a function                     (our code, never reached the network)
-after   Failed to send email: Unauthorized (401) Maximum credits exceeded   (SendGrid, over quota)
-```
-
-**This is the proof that layers 1–3 are genuinely closed**: the template ID resolved, the From address resolved, the SDK bound, and an HTTPS request left the process carrying a real message. **R1 is now, at last, actually one purchase.** Buy the plan and re-fire `/api/test-alert`; a delivered email closes R1 and unblocks H8's screencast.
-
 ### ~~R16 — The test alert could not report the provider's refusal~~ `[AGENT]` — ✅ **FIXED 2026-08-25 (v1.66)**
 
 With R15 fixed the toast could carry a reason, but the reason was the route's generic fallback: *"Test alert failed: Failed to dispatch test alert"*, while the log held `Unauthorized (401) Maximum credits exceeded`.
@@ -346,23 +376,6 @@ Sanitised at the throw site: one line, trailing `null`s stripped, capped at 300 
 `showTestErrorToast()` took no arguments and always rendered *"Delay detection test failed. Please check your configuration."* Two very different production failures — an SDK binding error and SendGrid's quota — produced identical text, and both blamed a merchant configuration that was correct. It now shows the server's reason.
 
 **Same class as R13**, on the adjacent path: a message that cannot vary carries no information. Every diagnosis this session required reading Vercel logs because the dashboard could not distinguish *"your code is broken"* from *"your account is out of credit"*. For a published app that gap is worse than cosmetic — a merchant seeing it has no next action.
-
-### 🎉 R1 — **CLOSED 2026-08-25. The first delivered notification in the project's history.**
-
-Proven three ways, none of them a UI claim:
-
-| Evidence | Value |
-|---|---|
-| SendGrid Email Logs | **Delivered**, response `250 2.0.0 OK` |
-| Recipient | `augustok87@gmail.com` — **primary inbox, not spam**, on the domain's first-ever send |
-| From | `noreply@delayguardapp.com` — authenticated domain, DKIM keys resolving |
-| Postgres | `delay_alerts.notification_sent_at` stamped `2026-08-25 19:51:05` |
-
-**It came from the real cron pipeline, not the test button.** The delivered mail matched `delay_alerts` row 4 exactly (`delay_days = 23`, `WAREHOUSE_DELAY`, order `#DG1001`) — an alert that had been failing since 2026-08-22. The test-alert samples are `TEST-001` / `Sample Customer` / 3 days, and did not match. So what R1 finally proved is the **production notification path**, which is strictly better than proving the demo path.
-
-Purchases made: SendGrid **Essentials 50K** ($19.95/mo) and **`delayguardapp.com`** ($10.46/yr, Cloudflare). Domain authenticated with 5 CNAMEs + DMARC `p=none`; both `_domainkey` CNAMEs verified by `dig` to resolve to real RSA public keys before the plan was confirmed.
-
-**Sub-problem tally, final:** the account plan was the **fourth** gate, not the first. In order of discovery: unset `SENDGRID_DELAY_TEMPLATE_ID` → unowned sender domain → **SDK binding lost to CommonJS interop (R14)** → expired trial. Every one was invisible until the one in front of it was cleared.
 
 ### R17 — One send marks EVERY alert on the order as delivered `[AGENT]` — **new 2026-08-25, highest-value open bug**
 
@@ -483,7 +496,7 @@ The app had never completed a real merchant install. **It has now** — dev stor
 - **Production Postgres is reachable from a session** with the pulled `DATABASE_URL` (Neon, PostgreSQL 17.10). All 8 tables present (`shops`, `app_settings`, `orders`, `fulfillments`, `order_line_items`, `delay_alerts`, `tracking_events`, `customer_intelligence`), confirming D3.
 - **⛔ Blocked here: no Shopify account on this machine can reach the app's organization.** `shopify app info` against the `client_id` in `shopify.app.toml` returns **403 "You are not a member of the requested organization"**, and `shopify organization list` shows only `Foundry - Forge` (129012989) plus two empty `SINGLETON_ORG_*` orgs — DelayGuard is in none of them. The browser hits the same wall (403 on `dev.shopify.com/dashboard/185109091`). `shopify app deploy` worked from this repo on 2026-07-28, so the owning account exists; the CLI/browser are simply logged into a different one. **`[HUMAN]` — log in as the account that owns DelayGuard, identify its org, and confirm (or create) a development store in that org.** The install cannot proceed until then: an unpublished app installs onto development stores in its own organization.
 
-### R7 — Protected Customer Data approval blocks ALL order webhooks `[HUMAN]` — **new, now the top blocker**
+### ~~R7 — Protected Customer Data approval blocks ALL order webhooks~~ `[HUMAN]` — ✅ **GRANTED 2026-08-05** (history below; do not re-verify)
 
 Proven live 2026-07-30. `webhookSubscriptionCreate` returns, verbatim, for **every** functional topic:
 
@@ -566,9 +579,9 @@ Found 2026-07-29 (b) while verifying the embedded-load path. Shopify's iframe-pr
 
 **Still open, deliberately not done here:** B2's install bootstrap does not yet verify the OAuth query HMAC server-side. Koa now owns `/`, so the hook exists — but the redirect happens at Vercel's edge before Koa runs, so adding it is its own change, not a free rider on this one.
 
-### R3 — Human dashboard gate: H3, H4, H7 `[HUMAN]`
+### R3 — Human dashboard gate: H3, H7 `[HUMAN]` — **H4 closed 2026-08-05**
 
-H3 (App Pricing plans) blocks all revenue. H4 (Protected Customer Data) has approval latency — submit it first, today. H7 (ShipStation Advanced plan) gates tracking third-party parcels, the app's core data input.
+**H3 (App Pricing plans) blocks all revenue** — `/api/plan` and every SMS/paid gate fail closed to `free` until the plans exist in the Partner Dashboard, so the app cannot charge anyone. **H7 (ShipStation Advanced plan)** gates tracking third-party parcels, the app's core data input. ~~H4 (Protected Customer Data)~~ was **granted 2026-08-05** — see R7.
 
 ### R4 — Listing submission: H8 → H-4 → H9 `[HUMAN]`
 
@@ -640,40 +653,58 @@ Screencast, AI self-review, submit. Gated on R2 (needs a working app to film) an
 
 ## 7. Next-session kickoff (keep this current — rewrite it at the end of every session)
 
-*Rewritten 2026-08-25. **R1 is down to one purchase.** The template exists, the sender is set, both are deployed — but **no email has ever actually been delivered**, and two new blockers (R9, R10) landed on the way to proving it.*
+*Rewritten 2026-08-26. **R1 is closed — the product delivered its core artifact for the first time.** What is left is one serious code bug, one 10-minute DNS task, and the Partner-Dashboard work that has been open since day one. The goal this session is **submission**.*
 
 **State at handoff:**
 
 | | Status |
 |---|---|
-| **R1 — SendGrid** | ⛔ `[HUMAN]`, **3 of 4 sub-problems closed.** Template `d-5755ad471bd64f15bf2bd61f8b848ad0` created, verified server-side, set in Vercel, deployed. Sender `augustok87@gmail.com` now live. **Remaining: the expired trial** — a sandbox send still returns `Maximum credits exceeded` |
-| **A delivered email** | ⛔ **never observed.** This is the real acceptance test and it has not been run. Everything else in R1 is infrastructure |
-| **R9 — agent can't authenticate** | ⛔ `[HUMAN]`, new. `shopify app env show` → 403; every Vercel secret is `Sensitive`, so `env pull` masks it. **No session can mint a session token**, so `/api/*` and `/api/cron/*` are human-only until `shopify auth login` is redone |
-| **R10 — dashboard unusable** | ✅ fixed in **v1.61**, ⚠️ **not deployed**. Typing any character unmounted the form. Workaround until deployed: paste, don't type |
-| **R11 — env validator gap** | ⛔ `[AGENT]`, new, small. The boot validator never checks the two SendGrid vars — the ones that broke email for three weeks |
-| **R8 — support mailbox** | ⛔ `[HUMAN]`, submission-blocking. Closed by the same domain purchase as R1's sending domain |
-| H3 / H7 `[HUMAN]` | ⛔ App Pricing plans (blocks all revenue) and ShipStation Advanced |
-| **Real webhook ingest** | ⛔ still unproven. `orders` holds exactly **1** row, the synthetic `9900112233`. All 3 subscriptions are live and correct — **any new row is the proof** |
-| R2 / R6 / R7 | ✅ closed, evidence in §6 |
-| **R5 — test flake** | ⚠️ open, but **re-diagnosed**: dominated by wall-clock assertions failing under load, not order-dependent state leakage. Reproduced on demand by running two `--coverage` suites at once |
+| **R1 — SendGrid** | ✅ **CLOSED 2026-08-25.** `Delivered` / `250 2.0.0 OK`, primary inbox, from `noreply@delayguardapp.com`, out of the **real cron pipeline**. Essentials 50K + `delayguardapp.com` purchased |
+| **R17 — one send marks every alert delivered** | ⛔ `[AGENT]`, **new, do this first.** `notification.ts` completes `WHERE order_id = $1`. Four alerts, one email, one timestamp to the microsecond. A repeatedly-delayed order notifies **once**, then goes silent while the DB reports success |
+| **R18 — three defects in the delivered email** | ⛔ `[AGENT]`, new. `Order ##DG1001`, an empty "New estimated delivery:", and a vanished tracking CTA. All merchant-visible, all in the artifact a reviewer will see |
+| **R8 — support mailbox** | ⛔ `[HUMAN]`, **submission-blocking, ~10 min.** The domain is ours now; it just has no MX. Cloudflare Email Routing → `support@` + `sales@` → verify by receiving |
+| **R11 — env validator gap** | ⛔ `[AGENT]`, small. The boot validator still ignores the two SendGrid vars that broke email for three weeks |
+| **R9 — agent can't authenticate** | ⛔ `[HUMAN]`. `shopify app env show` → 403; secrets are `Sensitive`, so `env pull` masks them. **No session can mint a session token** — every `/api/*` check is a browser action until `shopify auth login` is redone |
+| **Real webhook ingest** | ⛔ **still never observed.** `orders` holds exactly **1** row, the synthetic `9900112233`. All 3 subscriptions are live and correct — **any new row is the proof**, and it costs one test order on the dev store |
+| **H3 / H7** | ⛔ `[HUMAN]`. App Pricing plans (**blocks all revenue** — every paid gate fails closed to `free` without them) and ShipStation Advanced |
+| **H8 → H-4 → H9** | ⛔ `[HUMAN]`. Screencast, AI self-review, submit. Gated on the above |
+| R2 / R4-H4 / R6 / R7 | ✅ closed, evidence in §6 |
+| **R5 — test flake** | ⚠️ open, **re-diagnosed**: wall-clock assertions failing under machine load, not order-dependent leakage. Reproduced on demand by two concurrent `--coverage` runs. **Never run `npm test` in two sessions at once** |
+
+**The honest read on "release today."** *Submitting* today is achievable — the critical path below is roughly a half-day of human dashboard work plus a few hours of agent work, and they run in parallel. *Being live on the App Store* today is not: Shopify's review is theirs to schedule and historically takes days to weeks. Plan for **submitted today, approved later**, and treat anything that would cause a rejection as more expensive than it looks — a rejection costs another full review cycle, which is why R17 and R8 are worth the hours they take.
+
+**Critical path — run the two columns in parallel:**
+
+| `[HUMAN]` — browser, in this order | `[AGENT]` — repo, in this order |
+|---|---|
+| 1. **R8** — Cloudflare Email Routing, then *receive* a test message | 1. **R17** — per-alert id on both the read and the write, with a row-count assertion against a real schema |
+| 2. **H3** — configure App Pricing plans (Free / $7 Pro / $25 Enterprise) | 2. **R18** — three template/data fixes, checked against a real order that is *missing* values |
+| 3. **Place one real order** on `delayguard-dev.myshopify.com` and fulfil it with tracking | 3. **R11** — both SendGrid vars into the boot validator |
+| 4. **H7** — confirm ShipStation Advanced is active | 4. Re-verify §6 R5 with one clean full-suite run; close it or record why not |
+| 5. **H8** — record the screencast *after* R17/R18 deploy | 5. Deploy (`npx vercel --prod --yes`) and prove each fix against production |
+| 6. **H-4** AI self-review → **H9** submit | 6. Rewrite §7, update `PROJECT_OVERVIEW.md` + `CHANGELOG.md` |
 
 **Paste this as the opening prompt:**
 
-> You are executing DelayGuard's launch plan. Read `LAUNCH_PLAN.md` **§6** and **§7** first — the app is live at `https://delayguard-api.vercel.app` and installed on a real dev store, so §§1–4 are history and Appendix A is ground truth you must not re-audit. Follow `CLAUDE.md` and `.claude/rules/*.md`: TDD, and the local CI gate (`npm test && npm run lint && npm run type-check && npm run build` from `delayguard-app/`). Never `--no-verify`.
+> You are executing DelayGuard's launch plan, and the goal today is **App Store submission**. Read `LAUNCH_PLAN.md` **§7** then **§6** — the app is live at `https://delayguard-api.vercel.app`, installed on `delayguard-dev.myshopify.com`, and as of 2026-08-25 it has **delivered its first real notification email**. §§1–4 are history. **Appendix A is ground truth: do not re-audit it.** Do not re-verify Appendix B, do not re-verify R1/R2/R6/R7, do not start C5.
 >
-> **Operational facts — two of which this plan got wrong, so check before relying on them:** deploys are **not** git-triggered; ship with `npx vercel --prod --yes` from `delayguard-app/`. Migrations do **not** run at startup; schema changes need `npm run migrate:vercel`. ⚠️ **`shopify app env show` currently returns 403 and every Vercel secret is typed `Sensitive`, so you cannot mint a session token or read `CRON_SECRET` (§6 R9)** — authenticated verification is a human browser action until that is fixed. Production Postgres *is* still reachable, because `DATABASE_URL` is typed Non-sensitive. **Never run `npm test` while another session is running it** — that reliably manufactures R5's flake.
+> **Division of labor: I drive the browser and any purchase; you drive the diagnosis.** Tell me exactly what to click, then verify each step yourself against Vercel logs, the production DB, and the Shopify/SendGrid APIs rather than taking my word for it. **Treat a silent success as suspicious** — the last four blockers were each hiding behind the one in front of it, and two of them were found by reading a delivered artifact rather than by anything going red.
 >
-> **R2, R6, R7 and R1's sub-problems 2–4 are closed — do not re-verify them.** Do **not** try to domain-authenticate `delayguard.app`; it is not ours. Do not re-debug the sender or the template when a send 401s — that is the expired trial, and it is the only thing left in R1.
+> **Work R17 first.** `queue/processors/notification.ts` marks completion with `WHERE order_id = $1` on both the read (`:79`) and the write (`:167`), so one send marks every alert on that order as delivered — a merchant whose order slips repeatedly gets one email and the database reports success for the rest. It is the worst failure mode this product has. The 2,446-test suite missed it because the processor's tests mock `query` and assert the statement was *issued*, never that it touched one row: **the guard that catches it is an affected-row-count assertion against a real schema.** Then R18 (the three defects in the delivered email), then R11 (the env validator).
 >
-> **The single most valuable thing you can do: get one real email delivered, and one real webhook into Postgres.** Both are one human action away and neither has ever happened. In priority order: **(1)** after the trial is paid, fire `/api/test-alert` from the dashboard and confirm an email actually arrives — then, and only then, is R1 closable. **(2)** Have a real order placed on `delayguard-dev.myshopify.com` and prove a *Shopify-delivered* webhook lands in `orders` (baseline: exactly 1 synthetic row). **(3)** Deploy v1.61 — the dashboard is unusable without it. **(4)** R11, the env-validator gap (small, TDD-able). **(5)** B2's missing server-side OAuth query-HMAC check. **(6)** the non-atomic notification dedupe in `CLAUDE.md`. **(7)** debounce `NotificationPreferences` (§6 R10's open half).
+> **Follow `CLAUDE.md` and the matching `.claude/rules/*.md`. TDD is not optional:** write the test, run it against the *broken* code, watch it fail, then fix. A test that passes in both states gets deleted, not kept. Local CI gate before any commit — `npm test && npm run lint && npm run type-check && npm run build` from `delayguard-app/`. **Never `--no-verify`.** ⚠️ **Never run `npm test` in two sessions at once** — §6 R5's flake is wall-clock assertions under machine load, and concurrent runs reproduce it on demand.
 >
-> **Do not** re-audit Appendix A, re-verify Appendix B, or start C5 (post-launch).
+> **Operational facts (do not rediscover):** deploys are **not** git-triggered — ship with `npx vercel --prod --yes` from `delayguard-app/`. Migrations: `npm run migrate:vercel`. **`vercel env pull` masks every `Sensitive` value and normalizes trailing whitespace — verify env through the running deployment, never through the export.** `shopify app env show` currently 403s (§6 R9), so **you cannot mint a session token**: any `/api/*` check is a browser action you must ask me to perform. `DATABASE_URL` *is* readable, so production Postgres is your best evidence source — use it. The sending domain is **`delayguardapp.com`**; `delayguard.app` is **not ours** — never try to authenticate it.
 >
-> Document as you go: `LAUNCH_PLAN.md` (§6 status, Session Log, and rewrite §7), `PROJECT_OVERVIEW.md`, `CHANGELOG.md` — same commits as the work. New blockers go in §6 **with the evidence that proves them**.
+> **Blocked on me, and worth telling me early so it runs in parallel:** R8 (Cloudflare Email Routing for `support@delayguardapp.com` — the domain has no MX yet), H3 (App Pricing plans, which blocks all revenue), H7 (ShipStation Advanced), one real test order on the dev store, and finally H8 → H-4 → H9. **The webhook-ingest proof is still outstanding after five weeks** — `orders` holds exactly one synthetic row, and one real order closes it.
+>
+> **Document as you go** — `LAUNCH_PLAN.md` (§6 status, Session Log, and rewrite §7), `PROJECT_OVERVIEW.md`, `CHANGELOG.md` — in the same commits as the work. New blockers go in §6 with the evidence that proves them, not the reasoning that suggests them.
+>
+> **Carried lesson, and it has paid for itself four times now: when you form a belief about the world outside the repo, write down what would falsify it and go observe that.** "Consistent with" is not "proven." An authorization error names a relationship, not a state. And a check that has never failed is not a check.
 
-**Why this order:** every remaining code item is small. What is not small is that **the product has still never delivered its core artifact** — an email to a merchant about a delayed order. Three weeks were spent on SendGrid account theory; the actual first failure turned out to be an unset env var, and even now the send has not been observed working. Prove the two live paths before writing another line of code.
+**Why this order.** R17 is first because it is the only open item that would *silently harm real merchants* — everything else is either cosmetic, operational, or caught by a human. R18 is second because the delivered email is an artifact a Shopify reviewer can see, and `Order ##DG1001` next to an empty delivery date reads as an unfinished product. R8 is on the human column's top line because it is ten minutes of DNS that is currently **submission-blocking**, and because it has a trap in it: Cloudflare's Email Routing setup rewrites the zone's SPF, which could break the sending path R1 just spent four sessions earning.
 
-**The lesson 2026-08-25 added.** Twice this session a *check that could not fail* was nearly reported as evidence. The startup log showed no warning about the SendGrid variables, which looked like proof the deploy had taken — until `environment.ts` turned out never to check them. And a green `monitoring-service` suite looked like proof the health checks worked — until a HEAD probe showed all three external APIs return non-2xx, and the suite passes only because a global `fetch` mock hides it. **Before believing a passing signal, confirm it is wired to the thing you think it measures.** The corollary, from R10: a 2,449-test suite missed a bug that made the dashboard unusable, because every test asserted reducer state and the reducer was correct — **the defect lived at the seam between two units, where no unit test looks.** And from R9: "the CLI is authenticated" was recorded as a verified operational fact, then silently stopped being true. **Facts about the world outside the repo decay; re-check them at the start of the session that depends on them.**
+**The lesson 2026-08-25 added, and it is the one to carry into submission.** Two of the three findings that closed this session came from **reading the artifact the system produced**, not from a failing check: the email arrived, and reading it revealed `##DG1001`; the database was queried afterwards, and revealed four alerts marked delivered by one send. Nothing was red at any point. The 2,446-test suite was green throughout. **Before submitting, look at what the product actually produces — the email, the dashboard, the database rows — rather than at the checks that say it works.**
 
 ## Appendix A — Verified ground truth (do not re-verify; evidence @ `55cb3e66`, shopify.dev fetched 2026-07-21)
 
@@ -740,3 +771,6 @@ Re-run against `https://delayguard-api.vercel.app` on 2026-07-29. Every probe me
 | 2026-08-17 (b) | Doc sweep found a live defect | Test alerts | **A stale-reference sweep is not a documentation task.** Grepping for `delayguard.app` across the repo turned up three live ones in `test-alert-service.ts`: every sample payload carried `trackingUrl: "https://delayguard.app/test-tracking"`, which is **not internal** — it renders as the "Track your package" button in a real email sent to a real merchant, so the dashboard's own test feature pointed them at a stranger's expired website. Fixed to RFC-2606 `https://example.com/track/<number>` (v1.60, +4 tests); production links are unaffected and still built by `utils/tracking-url.ts`. **Why v1.59 missed it:** that fix was driven by a *failing send*, and this value never failed anything — a syntactically valid link that no test asserted the destination of. **A wrong value that nothing validates produces no symptom.** Also refreshed the stale references the sweep was actually looking for: `DEVELOPMENT_STORE_TESTING_GUIDE` (its `SENDGRID_FROM_EMAIL` example named the dead domain), `IMPLEMENTATION_PLAN`'s hardcoded-sender code sample, §5 E1's stale line reference, and the project memory (which still listed R2 and PCD as open). Gate 2,424 / 2,449 / 25 skipped / 0 failing / 127 suites — a **fourth** consecutive clean full run. **Also opened R8:** the App Store listing advertised `support@delayguard.app` and `sales@delayguard.app` — same un-owned domain, and it has **no MX**, so a merchant emailing support would have been silently discarded. Submission-blocking, and closed by the same single domain purchase as R1's sending domain. **The through-line of both findings: one wrong value in the first commit propagated into the sender, the test alert, and the public support contact — and every copy looked plausible.** |
 | 2026-08-25 | R1 template closed; a dashboard bug that blocked its own test | SendGrid + frontend | **The template exists at last — and the account was verified before it was trusted.** The pasted temp key carried a **doubled `SG.` prefix**; both forms were tested against `/v3/scopes` (as-pasted `401`, de-duplicated `200`) rather than assuming which was right. Key verified (69 bytes, id `IyZGiWJ6TU630ncnWgXPMA`, 206 scopes), account confirmed to hold **0 templates in both generations** — the "never existed" claim proven directly for the first time instead of inferred from a 403. Created `d-5755ad471bd64f15bf2bd61f8b848ad0`, **read it back from SendGrid** (dynamic, 1 active version, correct subject) and set-matched its 8 merge fields against `EmailService.dynamicTemplateData`. Set `SENDGRID_DELAY_TEMPLATE_ID` in Vercel, deployed (also activating `SENDGRID_FROM_EMAIL`, set 8 days earlier but never live); temp key deleted and confirmed dead. **R1 is now one purchase — the trial, still `Maximum credits exceeded`.** Then the acceptance test itself was blocked twice: **R9** (`shopify app env show` now 403s and every Vercel secret is `Sensitive`, so no session can mint a session token — two "verified operational facts" falsified) and **R10** (every keystroke in the dashboard unmounted the form: `saveSettings.pending` set the same `loading` flag that gates the initial render, so typing a merchant email was impossible). R10 fixed in **v1.61** by splitting `saving` from `loading`; **six existing tests encoded the defect** and were changed, not added. Also opened **R11** (the boot validator never checks the two SendGrid vars — its silence had briefly been mistaken for evidence the deploy worked) and **re-diagnosed R5**: the flake is dominated by **wall-clock assertions failing under load**, reproduced on demand by running two `--coverage` suites concurrently, not by order-dependent state leakage. Gate 2,430 passing / 2,455, 25 skipped, 0 failing, 127 suites; lint 0 errors, type-check + build clean. **Still unproven: a single successfully delivered email.** |
 | 2026-08-25 (b) | Two dashboard defects the merchant found by using it | Frontend + settings API | **v1.61 made the field typable; v1.62 made it save.** The merchant reported typing was impossible — every keystroke threw focus out of the field. First diagnosis (form unmounting) was **wrong and was retracted before push**: `loading` is used only for `disabled=`, and the browser drops focus from a disabled element. Fixed by splitting `saving` from `loading`; six existing tests encoded the defect and were changed. Then, with the field finally typable, the next question — *did it persist?* — exposed **R12**: after ~12 success toasts, `shops.merchant_email` was still empty and `updated_at` had not moved in 26 days. `settingsToWire` drops the contact fields, `PUT /api/settings` never reads them, and the server's `UPDATE shops` is gated on their presence — so **200 was returned and no statement ran**. The working endpoint (`PUT /api/merchant-settings`) had no `apiClient` method. Also closed R10's second half (debounce: ~20 PUTs/toasts per email typed → 1). Every regression test was run against the **broken** code to confirm it fails there; one was deleted for passing in both states (`fireEvent.change` fires on a disabled input). TDD lessons written into `.claude/rules/tests.md` + `frontend.md`. Gate 2,436 passing / 2,461, 25 skipped, 0 failing, 127 suites; lint 0, type-check + build clean. Then **R13**, found by chasing *"why can't I click SMS?"*: the refusal is correct (live `activeSubscriptions` is `[]` → free plan → 403), but `saveSettings` showed the success toast regardless, because a `rejectWithValue` thunk resolves rather than throws. Fixed to surface the server's reason; 3 new tests, hook previously untested. **This had masked R12 all along.** Final gate 2,439 passing / 2,464, 128 suites. Then the test alert was fired and produced **R14**, the biggest finding of the day: `sgMail.setApiKey is not a function` — `import * as` had been dropping the SendGrid SDK's prototype methods all along, so **no send has ever left the process**, cron sweep included (real `delay_alerts` row 4 was failing identically). One-line fix; **R1's "only the trial remains" conclusion is retracted** — the account was the fourth gate, not the first. Gate 2,441 passing / 2,466, 129 suites. **Then the milestone: re-firing the test alert produced `401 Maximum credits exceeded` — SendGrid's own refusal, not ours. A DelayGuard email reached the SendGrid API for the first time in the project's history**, proving the template, sender and SDK all resolve. R1 is now genuinely one purchase. **R15** fixed alongside: the test-alert toast could not vary its message, so it had reported both the SDK crash and the quota refusal as "check your configuration". Final gate 2,443 passing / 2,468, 129 suites. |
+| 2026-08-25 (c) | **R1 CLOSED — the first delivered notification** | SendGrid + email pipeline | **DelayGuard sent an email, and it was the fourth gate that finally fell.** Order of discovery, each invisible until the one ahead of it cleared: unset `SENDGRID_DELAY_TEMPLATE_ID` → a sender domain we never owned → **the SDK binding lost to CommonJS interop (v1.64)** → the expired trial. `import * as sgMail` compiles to `__importStar`, which copies only *own* enumerable properties; `@sendgrid/mail` exports a `MailService` **instance** with its methods on the prototype, so `setApiKey` and `send` were silently dropped and **no send had ever left the process**. Purchases: SendGrid Essentials 50K + `delayguardapp.com` (Cloudflare), authenticated with 5 CNAMEs + DMARC `p=none`; both `_domainkey` chains `dig`-verified to return real RSA keys before the plan was confirmed. Result: `Delivered` / `250 2.0.0 OK`, **primary inbox**, and it matched `delay_alerts` row 4 — so it came from the **real cron pipeline**, not the test button. Four further defects fixed en route (v1.63 false success toast, v1.65/v1.66 unreportable failures). Commits `2b4d873e`, `b80917d1`, `51b0cd70`, `974adc98`, `9b9a4025`. |
+| 2026-08-25 (d) | Reading the delivered artifact opened two new blockers | Notification pipeline | **Nothing failed; two bugs surfaced anyway.** Reading the email itself gave R18 (`Order ##DG1001` from `#{{orderNumber}}` over an `order_number` that already carries the `#`, an empty "New estimated delivery:", a vanished tracking CTA). Querying Postgres afterwards gave **R17**: four alerts, one email, `notification_sent_at` identical **to the microsecond**, because `notification.ts` completes `WHERE order_id = $1` instead of the alert's own id — a repeatedly-delayed order would notify once and record success for every suppressed delay after it. 2,446 tests missed it because the processor's tests mock `query` and assert the statement is *issued*, never that it touched one row. **The first real send is the first real test of the template**, and the first real read of the database is the first real test of the writes. |
+| 2026-08-26 | Documentation truth pass; §7 rewritten for submission | Docs | R1's four scattered blocks consolidated into one section (they had been appended across four sessions, one of them stranded *inside* R8). R7 and H4 un-staled — both closed 2026-08-05 but still labelled open. R8 rewritten: the domain purchase closed half of it, and the remaining half is Cloudflare Email Routing plus a trap — **enabling it rewrites the zone's SPF**, which could break the sending path R1 just earned. A stale `- [x] Support email ✓ support@delayguard.app` was un-ticked in `app-store-assets/README.md`; the listing's contact fields now name `delayguardapp.com` but stay **UNSET until a message is actually received**. `PROJECT_OVERVIEW.md` reconciled (its submission section still claimed "1–2 days, only screenshots remaining" and 14 env vars). §7 rewritten as a two-column parallel critical path to submission. |

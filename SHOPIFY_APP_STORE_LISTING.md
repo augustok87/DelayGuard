@@ -234,7 +234,7 @@ That's it! Delay alerts begin as soon as your orders have tracking activity, and
 - API documentation (Enterprise plan)
 
 ### **Support Channels:**
-- **Email:** ⚠️ **UNSET — see LAUNCH_PLAN §6 R8.** `support@delayguard.app` was listed here but that domain is not ours and cannot receive mail. Shopify requires a working support email; do not submit until this is a real address.
+- **Email:** ⚠️ **UNSET, but no longer blocked on a purchase — see LAUNCH_PLAN §6 R8.** The intended value is **`support@delayguardapp.com`** (we bought that domain on 2026-08-25 and it is on Cloudflare DNS). It is written here as UNSET on purpose: **nothing has ever been received at that address.** Create the Cloudflare Email Routing rule, send it a message from an unrelated account, confirm arrival — *then* replace this line. Shopify requires a working support email, and the failure mode of this field is a value that reads as correct.
 - **Priority support:** Pro & Enterprise plans
 
 ---
@@ -278,13 +278,13 @@ A: Each store needs its own DelayGuard subscription. Contact us about multi-stor
 
 ## 📞 Contact & Support
 
-> ⚠️ **The addresses below are placeholders on a domain we do not own — see LAUNCH_PLAN §6 R8.** Replace before submission.
+> ⚠️ **The addresses below are unrouted — see LAUNCH_PLAN §6 R8.** The domain (`delayguardapp.com`) is ours as of 2026-08-25, but no mailbox or forwarding rule exists on it yet. Replace only after a test message has actually arrived.
 
 ### **Pre-Sales Questions:**
-- Email: `sales@<domain-to-buy>`
+- Email: `sales@delayguardapp.com` ⚠️ *not yet routed — see R8*
 
 ### **Technical Support:**
-- Email: `support@<domain-to-buy>`
+- Email: `support@delayguardapp.com` ⚠️ *not yet routed — see R8*
 - Priority support for Pro & Enterprise
 
 ---

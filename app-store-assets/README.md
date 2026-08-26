@@ -212,7 +212,7 @@ shipping automation
 - [x] Full description ✓ See above
 - [x] Category selection ✓ Shipping & Fulfillment + Customer Service
 - [x] Keywords/tags ✓ 10 SEO-optimized keywords ready
-- [x] Support email ✓ support@delayguard.app
+- [ ] Support email ⚠️ **was wrongly ticked** — `support@delayguard.app` is on a domain we never owned and has no MX record, so it could never receive mail. Intended value `support@delayguardapp.com`, **not yet routed**. See LAUNCH_PLAN §6 R8.
 - [ ] Privacy policy URL ⏳ Served at /legal/privacy-policy once backend deploys
 - [ ] Terms of service URL ⏳ Served at /legal/terms-of-service once backend deploys
 

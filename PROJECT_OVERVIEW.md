@@ -1,8 +1,8 @@
 # DelayGuard - Project Overview & Roadmap
 
-**Last Updated**: July 25, 2026 (WS-I docs truth pass on `launch/integration`)
+**Last Updated**: August 26, 2026 (R1 closed — the first delivered notification; R17/R18 opened by reading it)
 **Current Phase**: 🚀 **Deployed to production 2026-07-28** — live and healthy at `https://delayguard-api.vercel.app`. Phase 1 + Audit Waves 1-7 + launch integration (WS-A..H) complete; all 13 production blockers resolved and shipped (see Production wiring status). Phase 2.1.a–e shipped 2026-05-15; Phase 2.1.f (customer-intelligence UI) landed with WS-G. **Remaining work is not code** — see [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §6.
-**Latest Update**: v1.53 — launch integration: real backend deploy path, serverless cron processing, Shopify `2026-07` + OAuth, prod schema source-of-truth, App-Pricing plan-gate, notification routing, real dashboard data, hosted legal + sanitized listing, plus cross-workstream integration fixes (see CHANGELOG.md v1.53 and LAUNCH_PLAN.md Session Log)
+**Latest Update**: **2026-08-25 — DelayGuard delivered its first notification email** (`Delivered` / `250 2.0.0 OK`, primary inbox, from `noreply@delayguardapp.com`, out of the **real cron pipeline**). Closing it took v1.61–v1.66 plus two purchases; see CHANGELOG.md and LAUNCH_PLAN.md §6 R1. ⚠️ Reading the delivered email then opened **R17** (one send marks every alert on the order as delivered — the highest-value open bug) and **R18** (three merchant-visible rendering defects). Prior: v1.53 — launch integration: real backend deploy path, serverless cron processing, Shopify `2026-07` + OAuth, prod schema source-of-truth, App-Pricing plan-gate, notification routing, real dashboard data, hosted legal + sanitized listing, plus cross-workstream integration fixes (see CHANGELOG.md v1.53 and LAUNCH_PLAN.md Session Log)
 **Document Purpose**: Single consolidated view of current state, readiness, and future roadmap
 
 ---
@@ -21,13 +21,27 @@
 | 6 | API pinned `2024-01`; customer query used removed fields | Fixed in code — bumped to `2026-07`, query rewritten (WS-C `0e034a0b`) |
 | 7 | Prod DB schema never created | ✅ **Live** — schema single-source-of-truth (WS-D `3e56dd7c`); `npm run migrate:vercel` run against prod Neon 2026-07-28, all 8 tables present (D3 done) |
 | 8 | Billing was a stub | Fixed in code — App-Pricing plan-gate, fails closed to free (WS-F `3e56dd7c`); plan config is human (H3) |
-| 9 | Notification details (placeholder template, example.com, routing) | Fixed in code — real tracking URLs + merchant/customer routing (WS-E `a88eac24`). ⛔ **E1 BLOCKED on the SendGrid account** (verified 2026-07-29): the account returns `Maximum credits exceeded` on send, and the production key is Mail-Send-only so the template API 403s. Email is the only launch channel — see LAUNCH_PLAN.md §6 R1 |
+| 9 | Notification details (placeholder template, example.com, routing) | ✅ **PROVEN END-TO-END 2026-08-25** — an email was delivered to a real inbox from the production cron pipeline. Four gates had to fall, in this order: unset `SENDGRID_DELAY_TEMPLATE_ID` → a sender domain we never owned → **the SDK binding lost to CommonJS interop (v1.64 — `import * as` dropped `setApiKey`/`send`, so no send had ever left the process)** → the expired trial. Now: SendGrid Essentials 50K, `delayguardapp.com` domain-authenticated (5 CNAMEs + DMARC `p=none`), template `d-5755ad471bd64f15bf2bd61f8b848ad0` live. ⚠️ **But the delivered email exposed two defects — LAUNCH_PLAN.md §6 R17 (one send marks every alert on the order delivered) and R18 (rendering).** History: ⛔ E1 was blocked on the SendGrid account from 2026-07-29 |
 | 10 | Dashboard rendered mock data; apiClient unmounted | Fixed in code — real API thunks + apiClient mounted (WS-G `fdc03f82`) |
 | 11 | Listing assets violated current rules | Fixed in code — testimonials/stats removed, pricing reconciled, feature media (WS-H `eb20d745`); **human** — listing submission (H-4) |
 | 12 | `read_customers` scope missing; PCD never requested | ✅ **RESOLVED 2026-08-05** — scope fixed in code (WS-C `0e034a0b`); PCD Level 2 **granted** after building the missing access log (v1.58). See LAUNCH_PLAN.md §6 R7 |
 | 13 | Expiring offline tokens mandatory 2027-01-01 | Post-launch fast-follow (C5); not launch-blocking |
 
-**Remainder as of 2026-08-05** — **the app is installed, working, and now receiving real order webhooks** on `delayguard-dev.myshopify.com`. LAUNCH_PLAN §6 **R2, R6 and R7 are all closed**: OAuth→`upsertShop`, three live webhook subscriptions confirmed by Shopify, signed `orders/updated`→Postgres, embedded dashboard on real data, per-shop `frame-ancestors`, and a Level 2 protected-customer-data access log. ⛔ **TOP BLOCKER is now R1 (SendGrid)** — no credits, a Mail-Send-only key, and `delayguard.app` has no MX or domain-auth records, so a detected delay still cannot reach a buyer. Then human gate H3 (App Pricing plans), H7 (ShipStation Advanced); then H8 screencast → H-4 AI self-review → H9 submit. See [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §6.
+**Remainder as of 2026-08-26** — **the app is installed, receiving real order webhooks, and has now delivered a real notification email.** LAUNCH_PLAN §6 **R1, R2, R6 and R7 are all closed**, which means the product's core promise — detect a delay, tell the buyer — has been observed working in production for the first time.
+
+⛔ **What actually blocks submission now:**
+
+| Item | Owner | Why it blocks |
+|---|---|---|
+| **R17** — one send marks *every* alert on the order as delivered | `[AGENT]` | `notification.ts` completes `WHERE order_id = $1`. A repeatedly-delayed order notifies **once**; every later delay is suppressed and recorded as sent. Worst available failure mode for a delay-notification product |
+| **R18** — three defects in the delivered email | `[AGENT]` | `Order ##DG1001`, an empty "New estimated delivery:", a missing tracking CTA. A reviewer sees this artifact |
+| **R8** — no support mailbox | `[HUMAN]` | Listing requires a working support address. Domain is ours; it has **no MX**. ~10 min of Cloudflare Email Routing |
+| **H3** — App Pricing plans | `[HUMAN]` | **Blocks all revenue** — every paid gate fails closed to `free` until the plans exist |
+| **H7** — ShipStation Advanced | `[HUMAN]` | Tracking third-party parcels, the app's core data input |
+| **Real webhook → Postgres** | `[HUMAN]` | Never observed. `orders` holds one synthetic row; one real test order closes it |
+| **H8 → H-4 → H9** | `[HUMAN]` | Screencast, AI self-review, submit |
+
+⚠️ **R9** also blocks agent-side verification: `shopify app env show` 403s and every Vercel secret is `Sensitive`, so no session can mint a session token — **every `/api/*` check is a browser action** until `shopify auth login` is redone. See [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §6 and §7.
 
 ---
 
@@ -38,7 +52,7 @@
 | Metric | Status | Details |
 |--------|--------|---------|
 | **Phase Completion** | ✅ Phase 1 + Audit Waves 1-7 (largely closed) | Phase 2.1.a–e shipped 2026-05-15 (v1.48–v1.52): ingestion + priority score + financial breakdown + shipping address + test-alert endpoint; Phase 2.1.f (customer-intelligence UI) pending |
-| **Launch Readiness** | **Deployed and live** | Production healthy at `https://delayguard-api.vercel.app`; submission pending SendGrid account + dev-store E2E + human gate (LAUNCH_PLAN.md §6) |
+| **Launch Readiness** | **Live, and the core loop is proven** | Production healthy at `https://delayguard-api.vercel.app`; a real delay email was delivered from the cron pipeline 2026-08-25. Submission now pends **R17 + R18** (code), **R8 + H3 + H7** (human dashboard), and H8→H-4→H9. See LAUNCH_PLAN.md §7 for the parallel critical path |
 | **Test Success** | **100%** | 2,446 passing of 2,471, 25 skipped, 0 failing as of 2026-08-25; +4 for the save/loading separation that made the dashboard typable again (§6 R10, v1.61). ⚠️ §6 R5 is **open and re-diagnosed** — the flake is dominated by wall-clock assertions failing under machine load, reproduced on demand by running two `--coverage` suites concurrently; never run the suite in two sessions at once |
 | **Test Suites** | **All passing** | 126 of 128 suites pass; 2 skipped (require PostgreSQL). Five tautological stub-fixture suites (25 tests) removed 2026-07-29 — they covered no production code and caused order-dependent gate flakiness (LAUNCH_PLAN.md §6 R5) |
 | **Code Quality** | **100%** | 0 errors, 0 warnings (production-ready) |
@@ -342,35 +356,36 @@
 
 ## 🚀 Shopify App Store Submission Readiness
 
-### ✅ **Code-complete for launch** (submission pending human dashboard gate + deploy)
+**Rewritten 2026-08-26.** The previous version of this section said *"Estimated Time to Submission: 1-2 days — only screenshot capture + asset resizing remaining."* It had said that since before the app was deployed, through five weeks in which seven blockers were found and closed. **It was not a status; it was a hope.** This version lists only things that have been observed.
 
-**What's Complete:**
-- ✅ All 4 Phase 1 requirements implemented and tested
-- ✅ Serverless architecture optimized for Vercel production
-- ✅ Auto-save UX improvements (modern user experience)
-- ✅ GDPR webhooks (3 endpoints: customers/data_request, customers/redact, shop/redact)
-- ✅ Billing system (Free/Pro/Enterprise tiers)
-- ✅ OAuth 2.0 authentication with session tokens
-- ✅ Security: A- rating (HMAC verification, CSRF protection, rate limiting)
-- ✅ 14 environment variables configured in Vercel
-- ✅ Legal documentation (privacy policy, terms of service)
-- ✅ API documentation (OpenAPI 3.0)
-- ✅ 100% test success rate (2,400 passing — see CHANGELOG.md v1.53)
+### ✅ Observed working in production
 
-**What Remains:**
-- ⚠️ App Store Assets (1-2 days)
-  - [ ] 5-10 screenshots at 1600x1200
-    - ✅ **Demo data seeded** (6 orders with varied priorities, products, tracking events)
-    - ✅ **Dev server running** at http://localhost:3000
-    - 🎬 **Ready for screenshot capture** on all 3 tabs (Settings, Alerts, Orders)
-  - [ ] Feature media (1600x900 image or 2-3 min video)
-  - [ ] App icon resized to 1200x1200
-- ⚠️ Shopify Partner Dashboard Configuration (2-3 hours)
-  - [ ] Configure OAuth URLs and scopes
-  - [ ] Register all webhooks
-  - [ ] Upload app listing and assets
+| Capability | How it was proven |
+|---|---|
+| Deployed and healthy | `/health` green from Koa — Postgres 3ms, Redis 2ms |
+| Real merchant install | OAuth round-trip on `delayguard-dev.myshopify.com`, `upsertShop` wrote the row |
+| Webhook subscriptions | All three functional topics confirmed **by querying Shopify**, after PCD Level 2 was granted |
+| Signed webhook → Postgres | A signed `orders/updated` reached the DB (⚠️ synthetic, not Shopify-delivered — see below) |
+| Embedded dashboard | Loads inside Shopify admin on real data, with per-shop `frame-ancestors` |
+| GDPR + legal endpoints | All 401 unsigned; legal pages 200 |
+| **Delay email delivered** | **2026-08-25** — SendGrid `Delivered` / `250 2.0.0 OK`, primary inbox, from the **real cron pipeline** |
 
-**Estimated Time to Submission**: 1-2 days (demo data ready, only screenshot capture + asset resizing remaining)
+### ⛔ Not yet true
+
+- **R17 / R18** — code defects found by reading the first delivered email and the rows behind it. R17 suppresses every notification after the first on a given order.
+- **R8** — no working support mailbox. The listing cannot claim one until a message has actually arrived at it.
+- **H3 / H7** — App Pricing plans (blocks all revenue) and ShipStation Advanced.
+- **A Shopify-delivered webhook** — every ingest proven so far was self-signed. `orders` holds exactly one synthetic row.
+- **H8 → H-4 → H9** — screencast, AI self-review, submit.
+- **R9** — the agent cannot authenticate to Shopify or read Vercel secrets, so authenticated verification is a human browser action.
+
+### ⚠️ Known and accepted at launch
+
+- **Non-atomic notification dedupe** — `delay_alerts` has no unique constraint backing its `ON CONFLICT DO NOTHING`, so `email_sent` is not yet a hard dedupe. Tracked in `CLAUDE.md`; **R17 is strictly worse and must be fixed first.**
+- **Test-suite flake (§6 R5)** — wall-clock threshold assertions fail under machine load. Never run `npm test` in two sessions at once.
+- **Expiring offline tokens** — mandatory 2027-01-01, post-launch fast-follow (C5).
+
+**Estimated time to submission:** a half-day of human dashboard work and a few hours of agent work, **run in parallel** — see [LAUNCH_PLAN.md](LAUNCH_PLAN.md) §7 for the two-column critical path. **Approval is a separate clock and it is Shopify's**, historically days to weeks. Plan for *submitted today, approved later*.
 
 ---
 
