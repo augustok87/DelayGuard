@@ -219,6 +219,10 @@ describe('processDelayCheck — notification routing matrix (E3, v1.19 rules)', 
 
     expect(mockAddNotificationJob).toHaveBeenCalledTimes(1);
     expect(mockAddNotificationJob).toHaveBeenCalledWith({
+      // §6 R17: the job names the delay_alerts row it completes. Without it
+      // the processor falls back to "newest alert on the order" and one send
+      // marks every alert on that order delivered.
+      alertId: 55,
       orderId: 101,
       delayDetails: {
         estimatedDelivery: '2026-07-30',
@@ -245,6 +249,10 @@ describe('processDelayCheck — notification routing matrix (E3, v1.19 rules)', 
 
     expect(mockAddNotificationJob).toHaveBeenCalledTimes(1);
     expect(mockAddNotificationJob).toHaveBeenCalledWith({
+      // §6 R17: the job names the delay_alerts row it completes. Without it
+      // the processor falls back to "newest alert on the order" and one send
+      // marks every alert on that order delivered.
+      alertId: 55,
       orderId: 101,
       delayDetails: {
         estimatedDelivery: '2026-08-01',

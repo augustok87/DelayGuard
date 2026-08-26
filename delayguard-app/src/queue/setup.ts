@@ -220,6 +220,8 @@ export async function addDelayCheckJob(data: {
 }
 
 export async function addNotificationJob(data: {
+  /** The delay_alerts row this notification completes (§6 R17). */
+  alertId?: number;
   orderId: number;
   delayDetails: unknown;
   shopDomain: string;
@@ -236,7 +238,9 @@ export async function addNotificationJob(data: {
   }
 
   await notificationQueue.add("send-notification", data, {
-    jobId: `notification-${data.orderId}-${Date.now()}`,
+    // Alert-scoped identity (§6 R17): one order can owe several notifications,
+    // so an order-scoped job id names the wrong thing in queue diagnostics.
+    jobId: `notification-${data.orderId}-${data.alertId ?? "na"}-${Date.now()}`,
   });
 }
 

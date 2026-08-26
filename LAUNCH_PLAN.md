@@ -377,7 +377,7 @@ Sanitised at the throw site: one line, trailing `null`s stripped, capped at 300 
 
 **Same class as R13**, on the adjacent path: a message that cannot vary carries no information. Every diagnosis this session required reading Vercel logs because the dashboard could not distinguish *"your code is broken"* from *"your account is out of credit"*. For a published app that gap is worse than cosmetic — a merchant seeing it has no next action.
 
-### R17 — One send marks EVERY alert on the order as delivered `[AGENT]` — **new 2026-08-25, highest-value open bug**
+### ~~R17 — One send marks EVERY alert on the order as delivered~~ `[AGENT]` — ✅ **FIXED 2026-08-26 (v1.67)**
 
 Found by reading the database after R1's first delivery, not from any failure:
 
@@ -401,6 +401,30 @@ The read at `:79` has the same granularity error — `SELECT email_sent … WHER
 **Consequence in production: a merchant whose order slips repeatedly receives ONE email.** Every later delay on that order is suppressed and recorded as delivered. For a delay-notification product this is the worst failure mode available — customers stop being told, and the database reports success. It is also strictly worse than the known non-atomic dedupe already tracked in `CLAUDE.md`, because it discards notifications that were never attempted.
 
 **Not caught by 2,446 tests** because the processor's tests mock `query` and assert the statement is *issued*, never that it touched one row. The guard that would catch it is an assertion on affected row count against a real schema.
+
+**Fix (v1.67).** `NotificationJobData` now carries `alertId`, and both statements are keyed on it — the read selects `WHERE id = $1`, the write updates `WHERE id = $1`. The sweep already selected per alert (`da.id AS alert_id`) and now passes it; `delay-check.ts` threads the id out of `storeDelayAlert` so the enqueued job names the row that triggered it. A payload without `alertId` (a job enqueued before this field existed) resolves the newest pending alert once and is then treated identically — **every completion write is single-row in all cases.**
+
+**The guard, and why it is a real one.** `__mocks__/pg.js` answers *every* `UPDATE` with `rowCount: 1` regardless of the statement, which is the mechanical reason 2,446 tests were blind: a statement that flips four rows is indistinguishable from one that flips the intended one. `src/tests/integration/notification-alert-scope.test.ts` therefore replaces `pg` with **pg-mem, a real SQL engine**, and builds the schema by running the production `runMigrations()` against it — so the tables are the deployed ones, not a transcription. Its five assertions are about database state after the fact, not statement text. **All five were run against the broken processor first and all five failed**, the first one reproducing production exactly: one send, alerts `1,2,3,4` flipped.
+
+Schema fidelity was verified column-for-column against production `orders`, `delay_alerts` and `fulfillments`. Two narrow gaps are documented in the harness: pg-mem has no plpgsql, so `DO $$` blocks are shimmed by executing the `ALTER TABLE … ADD COLUMN` statements they guard; and one `UPDATE … FROM (subquery)` backfill is skipped (DML only — a failing *DDL* statement still throws).
+
+**Three existing tests encoded the defect** — two asserted the UPDATE's parameter was `[101]`, the *order* id — and were changed, not worked around. Same pattern as R6's wildcard-CSP tests and R10's `loading` assertions.
+
+### R19 — The processor never selects the shop's domain, so SMS is dead on every plan `[AGENT]` — **new 2026-08-26, fixed same session (v1.67)**
+
+Found while fixing R17, from the real-schema run's own output rather than from a failure: the email call showed `shopDomain: undefined`.
+
+`orders` has **no `shop_domain` column** (verified against production). The processor's `SELECT o.*, …` named three columns from the `shops` join — `merchant_email`, `merchant_phone`, `merchant_name` — and not that one, so `order.shop_domain` was `undefined` on every notification. It is then passed to the SMS plan gate:
+
+```ts
+const plan = await billingService.getCurrentPlan(order.shop_domain);  // undefined
+```
+
+`getCurrentPlan` looks the shop up by domain, finds nothing, and **fails closed to `"free"`**, so `isSmsAllowed` is false for every shop on every tier. **SMS is therefore a paid feature that could never fire** — not a billing leak (the fail-closed contract held and did exactly its job), but a Pro/Enterprise entitlement that silently does nothing. It would have become merchant-visible the moment H3's pricing plans went live.
+
+Fixed by selecting `s.shop_domain` explicitly. Two tests, both run against the broken code first: one asserts the plan gate receives the real domain, one asserts the domain reaches the email envelope. Both returned `undefined` before the fix.
+
+**Why the existing tests could not see it:** they hand-build the order row that the mocked `query` returns, so the fixture supplied a `shop_domain` the real SELECT never fetches. **A mock that returns the row you wish the query returned cannot tell you the query is wrong** — only a real schema can.
 
 ### R18 — The delivered email renders three merchant-visible defects `[AGENT]` — **new 2026-08-25**
 

@@ -9,6 +9,22 @@
 
 ## VERSION HISTORY
 
+### v1.67 (2026-08-26): One send no longer marks every alert on the order delivered (R17 + R19)
+
+**Test Results**: 2,473 passing of 2,499, 25 skipped, 0 failing (one R5 wall-clock flake per full run, a different suite each time, green in isolation), 135 suites. Lint 0 errors, type-check clean, build clean.
+
+**R17 — the worst failure mode this product had.** `queue/processors/notification.ts` completed a notification with `UPDATE delay_alerts … WHERE order_id = $1` and read prior state with `SELECT … WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1`. Both are order-scoped; alerts are not. In production, order 1 carried four alerts and one send marked all four `email_sent = TRUE` with `notification_sent_at` identical **to the microsecond** — so a merchant whose order slips repeatedly is notified once, and every later delay is suppressed *and recorded as delivered*.
+
+`NotificationJobData` now carries `alertId`; the read and the write are both keyed `WHERE id = $1`. `notification-sweep.ts` already selected per alert and now passes the id; `delay-check.ts` returns the id from `storeDelayAlert` and threads it into the enqueued job. Legacy payloads without `alertId` resolve the newest pending alert once and are then treated identically — every completion write is single-row.
+
+**The guard is a real SQL engine, not a stricter mock.** `__mocks__/pg.js` answers every `UPDATE` with `rowCount: 1` regardless of the statement — the mechanical reason 2,446 tests were blind to this. The new `src/tests/integration/notification-alert-scope.test.ts` swaps `pg` for **pg-mem** (new devDependency) and builds the schema by running the production `runMigrations()` against it, so the tables under test are the deployed ones. **All five assertions were run against the broken processor first and all five failed**, the first reproducing production exactly: one send, alerts `1,2,3,4` flipped. Schema verified column-for-column against production `orders` / `delay_alerts` / `fulfillments`.
+
+**R19, found by the same harness.** The processor's `SELECT o.*, …` never asked for `s.shop_domain`, and `orders` has no such column — so `order.shop_domain` was `undefined` on every notification and the SMS plan gate resolved the tier for a shop that does not exist. `getCurrentPlan` fails closed to `"free"`, so **SMS was a paid feature that could never fire on any plan** — no billing leak, but a dead entitlement that H3's pricing plans would have made merchant-visible. One column added to the SELECT; two tests, both `undefined` before the fix.
+
+**Three existing tests encoded the R17 defect** (two asserting the UPDATE parameter was the *order* id) and were changed, not worked around — the same pattern as R6's wildcard-CSP tests and R10's `loading` assertions.
+
+**The lesson.** A mock that returns the row you wish the query returned cannot tell you the query is wrong, and a driver stub that reports `rowCount: 1` cannot tell you a statement touched four rows. Both defects were invisible to unit tests by construction and both fell out of one real schema.
+
 ### 2026-08-25 — 🎉 R1 CLOSED: the first delivered notification
 
 Not a version bump — a milestone. **DelayGuard delivered an email.** SendGrid logged `Delivered` / `250 2.0.0 OK` to `augustok87@gmail.com`, landing in the **primary inbox** on the sending domain's first-ever message.

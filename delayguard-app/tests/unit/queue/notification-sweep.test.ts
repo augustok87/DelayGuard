@@ -106,6 +106,10 @@ describe('processNotificationSweep (B1)', () => {
     expect(mockProcess).toHaveBeenCalledWith(
       expect.objectContaining({
         data: {
+          // §6 R17: the sweep has always selected per alert; the payload now
+          // says WHICH one, so the processor completes that row alone instead
+          // of every alert on the order.
+          alertId: 7,
           orderId: 101,
           delayDetails: {
             estimatedDelivery: '2026-08-01T00:00:00.000Z',

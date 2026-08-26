@@ -7,6 +7,20 @@ import { query } from '../../database/connection';
 // import { AppConfig } from '../../types'; // Available for future use
 
 interface NotificationJobData {
+  /**
+   * The delay_alerts row this job completes (LAUNCH_PLAN §6 R17).
+   *
+   * A single order accumulates one alert per detected delay, and each alert
+   * owes its own notification. Completion must therefore be scoped to the
+   * alert, never to the order: `WHERE order_id = $1` marked all four alerts on
+   * production order 1 as delivered from one send, suppressing every later
+   * delay on that order while recording success.
+   *
+   * Optional only for jobs enqueued before this field existed; those resolve
+   * to the newest pending alert on the order at :90 and are then treated
+   * identically. Every write below is keyed on a single alert id.
+   */
+  alertId?: number;
   orderId: number;
   delayDetails: {
     estimatedDelivery: string;
@@ -40,10 +54,17 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
 
     // Get order and shop details (incl. merchant contact for E3 routing).
     // Schema truth: email_enabled / sms_enabled / notification_template live
-    // on app_settings (see runMigrations); shops only carries the merchant
-    // contact columns.
+    // on app_settings (see runMigrations); shops carries shop_domain plus the
+    // merchant contact columns.
+    //
+    // §6 R19: shop_domain must be selected explicitly. `orders` has no such
+    // column, so `o.*` does not supply it — leaving it out made
+    // `order.shop_domain` undefined, which resolved the SMS plan gate for a
+    // shop that does not exist. getCurrentPlan fails closed, so SMS was
+    // suppressed on every plan rather than leaked.
     const orderResult = await query(
       `SELECT o.*, st.email_enabled, st.sms_enabled, st.notification_template,
+              s.shop_domain,
               s.merchant_email, s.merchant_phone, s.merchant_name
        FROM orders o
        JOIN shops s ON o.shop_id = s.id
@@ -74,17 +95,33 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
       merchant_name: string | null;
     };
 
-    // Check if notifications are already sent
+    // Resolve WHICH alert this job completes, then read that alert's own
+    // sent-flags (§6 R17). Reading "the newest alert on the order" concluded
+    // there was nothing to do whenever any later alert had already been sent,
+    // silently dropping notifications that were never attempted.
     const alertResult = await query(
-      `SELECT email_sent, sms_sent FROM delay_alerts WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1`,
-      [orderId],
+      job.data.alertId !== undefined
+        ? `SELECT id, email_sent, sms_sent FROM delay_alerts WHERE id = $1`
+        : `SELECT id, email_sent, sms_sent FROM delay_alerts
+           WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [job.data.alertId ?? orderId],
     );
 
     if (alertResult.length === 0) {
-      throw new Error(`No delay alert found for order ${orderId}`);
+      throw new Error(
+        job.data.alertId !== undefined
+          ? `Delay alert ${job.data.alertId} not found`
+          : `No delay alert found for order ${orderId}`,
+      );
     }
 
-    const alert = alertResult[0] as { email_sent: boolean; sms_sent: boolean };
+    const alert = alertResult[0] as {
+      id: number;
+      email_sent: boolean;
+      sms_sent: boolean;
+    };
+    // From here on every completion write is keyed on this one row.
+    const alertId = alert.id;
 
     // Initialize services
     const sendgridKey = process.env.SENDGRID_API_KEY;
@@ -167,10 +204,10 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
               `UPDATE delay_alerts
                SET email_sent = TRUE,
                    notification_sent_at = COALESCE(notification_sent_at, CURRENT_TIMESTAMP)
-               WHERE order_id = $1`,
-              [orderId],
+               WHERE id = $1`,
+              [alertId],
             );
-            logger.info(`✅ Email sent for order ${orderId}`);
+            logger.info(`✅ Email sent for alert ${alertId} (order ${orderId})`);
           })
           .catch(error => {
             logger.error('Error sending email notification', error as Error);
@@ -209,10 +246,10 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
               `UPDATE delay_alerts
                SET sms_sent = TRUE,
                    notification_sent_at = COALESCE(notification_sent_at, CURRENT_TIMESTAMP)
-               WHERE order_id = $1`,
-              [orderId],
+               WHERE id = $1`,
+              [alertId],
             );
-            logger.info(`✅ SMS sent for order ${orderId}`);
+            logger.info(`✅ SMS sent for alert ${alertId} (order ${orderId})`);
           })
           .catch(error => {
             logger.error('Error sending SMS notification', error as Error);

@@ -73,6 +73,8 @@ interface OrderRow {
 }
 
 interface AlertRow {
+  /** §6 R17: completion is keyed on the alert's own id, not the order's. */
+  id: number;
   email_sent: boolean;
   sms_sent: boolean;
 }
@@ -98,11 +100,14 @@ function makeOrderRow(overrides: Partial<OrderRow> = {}): OrderRow {
   };
 }
 
+const ALERT_ID = 55;
+
 function makeAlertRow(overrides: Partial<AlertRow> = {}): AlertRow {
-  return { email_sent: false, sms_sent: false, ...overrides };
+  return { id: ALERT_ID, email_sent: false, sms_sent: false, ...overrides };
 }
 
 interface NotificationPayload {
+  alertId?: number;
   orderId: number;
   delayDetails: {
     estimatedDelivery: string;
@@ -129,6 +134,7 @@ function makeJob(
 ): Job<NotificationPayload> {
   return {
     data: {
+      alertId: ALERT_ID,
       orderId: 101,
       delayDetails: {
         estimatedDelivery: '2026-05-12',
@@ -294,12 +300,20 @@ describe('processNotification — error propagation (BullMQ retry surface)', () 
     );
   });
 
-  it('re-throws when no delay_alert row exists for the order', async() => {
+  it('re-throws naming the missing alert when the job identifies one (§6 R17)', async() => {
     wireQuery(makeOrderRow(), null);
 
     await expect(processNotification(makeJob())).rejects.toThrow(
-      /No delay alert found/,
+      /Delay alert 55 not found/,
     );
+  });
+
+  it('re-throws for the order when a legacy payload carries no alertId', async() => {
+    wireQuery(makeOrderRow(), null);
+
+    await expect(
+      processNotification(makeJob({ alertId: undefined })),
+    ).rejects.toThrow(/No delay alert found for order 101/);
   });
 
   it('re-throws when email dispatch fails (must propagate so BullMQ retries)', async() => {
@@ -384,7 +398,12 @@ describe('processNotification — DB write side-effects (v1.19 field-population 
       typeof sql === 'string' && sql.includes('email_sent = TRUE'),
     );
     expect(emailUpdate).toBeDefined();
-    expect(emailUpdate?.[1]).toEqual([101]);
+    // §6 R17: keyed on the ALERT (55), not the order (101). The previous
+    // assertion expected [101] and so encoded the defect: one send marked
+    // every alert on the order delivered. Row-count proof of the fix lives in
+    // tests/integration/notification-alert-scope.test.ts, against real SQL.
+    expect(emailUpdate?.[0]).toContain('WHERE id = $1');
+    expect(emailUpdate?.[1]).toEqual([ALERT_ID]);
   });
 
   it('marks sms_sent=TRUE on the delay_alerts row after a successful SMS send', async() => {
@@ -399,7 +418,8 @@ describe('processNotification — DB write side-effects (v1.19 field-population 
       typeof sql === 'string' && sql.includes('sms_sent = TRUE'),
     );
     expect(smsUpdate).toBeDefined();
-    expect(smsUpdate?.[1]).toEqual([101]);
+    expect(smsUpdate?.[0]).toContain('WHERE id = $1');
+    expect(smsUpdate?.[1]).toEqual([ALERT_ID]);
   });
 
   it('passes the full delayDetails envelope through to sendDelayEmail (every field, v1.19 rule)', async() => {
@@ -590,7 +610,12 @@ describe('processNotification — merchant-vs-customer routing (Launch WS-E task
       sql.includes('email_sent = TRUE'),
     );
     expect(emailUpdate).toBeDefined();
-    expect(emailUpdate?.[1]).toEqual([101]);
+    // §6 R17: keyed on the ALERT (55), not the order (101). The previous
+    // assertion expected [101] and so encoded the defect: one send marked
+    // every alert on the order delivered. Row-count proof of the fix lives in
+    // tests/integration/notification-alert-scope.test.ts, against real SQL.
+    expect(emailUpdate?.[0]).toContain('WHERE id = $1');
+    expect(emailUpdate?.[1]).toEqual([ALERT_ID]);
   });
 
   it('customer route passes the customer name as recipientName (field-population)', async() => {

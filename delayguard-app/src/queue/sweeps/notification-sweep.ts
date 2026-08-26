@@ -15,11 +15,8 @@
  *   - finally discards the redundant BullMQ notification jobs (each one
  *     corresponds to a delay_alerts row this sweep already covers).
  *
- * processNotification re-checks email_sent/sms_sent itself, so
- * overlapping cron ticks cannot double-send.
- *
- * The processor module (processors/notification.ts) is owned by another
- * workstream and is treated as READ-ONLY: called, never modified.
+ * processNotification re-checks email_sent/sms_sent itself — for the specific
+ * alert named by alertId — so overlapping cron ticks cannot double-send.
  */
 import { query } from "../../database/connection";
 import { logger } from "../../utils/logger";
@@ -144,6 +141,9 @@ export async function processNotificationSweep(): Promise<NotificationSweepStats
       try {
         await processNotification(
           asJob({
+            // §6 R17: this sweep has always selected per alert; the processor
+            // completed per ORDER. Passing the id is what makes the two agree.
+            alertId: alert.alert_id,
             orderId: alert.order_id,
             delayDetails: {
               estimatedDelivery: alert.estimated_delivery_date

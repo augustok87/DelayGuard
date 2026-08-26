@@ -77,6 +77,10 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
 
     let delayDetected = false;
     let triggeredDelayResult: { delayDays?: number; delayReason?: string; estimatedDelivery?: string; originalDelivery?: string } | null = null;
+    // §6 R17: the notification job must name the alert row it completes, not
+    // just the order. Three rules can each store an alert on the same order in
+    // one pass, so the id has to travel with the result that wins.
+    let triggeredAlertId: number | undefined;
     let trackingInfo: Awaited<ReturnType<typeof CarrierService.prototype.getTrackingInfo>> | null = null;
     let delayType: 'WAREHOUSE_DELAY' | 'CARRIER_DELAY' | 'TRANSIT_DELAY' | null = null;
 
@@ -94,9 +98,10 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
 
       if (warehouseDelayResult.isDelayed) {
         logger.info(`⚠️ RULE 1 TRIGGERED: Warehouse delay detected (${warehouseDelayResult.delayDays} days)`);
-        await storeDelayAlert(parseInt(order.id), warehouseDelayResult);
+        const alertId = await storeDelayAlert(parseInt(order.id), warehouseDelayResult);
         delayDetected = true;
         triggeredDelayResult = warehouseDelayResult;
+        triggeredAlertId = alertId;
         delayType = 'WAREHOUSE_DELAY';
       }
     } else {
@@ -119,11 +124,12 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
 
         if (carrierDelayResult.isDelayed) {
           logger.info(`⚠️ RULE 2 TRIGGERED: Carrier delay detected (${carrierDelayResult.delayReason})`);
-          await storeDelayAlert(parseInt(order.id), carrierDelayResult);
+          const alertId = await storeDelayAlert(parseInt(order.id), carrierDelayResult);
           delayDetected = true;
           // Only override if warehouse delay wasn't already triggered
           if (!triggeredDelayResult) {
             triggeredDelayResult = carrierDelayResult;
+            triggeredAlertId = alertId;
             delayType = 'CARRIER_DELAY';
           }
         }
@@ -145,11 +151,12 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
 
         if (transitDelayResult.isDelayed) {
           logger.info(`⚠️ RULE 3 TRIGGERED: Stuck in transit delay detected (${transitDelayResult.delayDays} days)`);
-          await storeDelayAlert(parseInt(order.id), transitDelayResult);
+          const alertId = await storeDelayAlert(parseInt(order.id), transitDelayResult);
           delayDetected = true;
           // Only override if no other delay was triggered
           if (!triggeredDelayResult) {
             triggeredDelayResult = transitDelayResult;
+            triggeredAlertId = alertId;
             delayType = 'TRANSIT_DELAY';
           }
         }
@@ -181,6 +188,7 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
       );
 
       await addNotificationJob({
+        alertId: triggeredAlertId,
         orderId: parseInt(order.id),
         delayDetails: {
           estimatedDelivery: triggeredDelayResult.estimatedDelivery || '',
@@ -228,7 +236,7 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
  * outside this slice's scope). Phase 2.2.c will introduce a re-score job
  * triggered at the end of customer-sync.ts to heal unscored alerts.
  */
-async function storeDelayAlert(orderId: number, delayResult: { delayDays?: number; delayReason?: string; originalDelivery?: string; estimatedDelivery?: string }): Promise<void> {
+async function storeDelayAlert(orderId: number, delayResult: { delayDays?: number; delayReason?: string; originalDelivery?: string; estimatedDelivery?: string }): Promise<number | undefined> {
   const rows = await query<{ id: number }>(
     `INSERT INTO delay_alerts (
       order_id,
@@ -253,7 +261,7 @@ async function storeDelayAlert(orderId: number, delayResult: { delayDays?: numbe
   );
 
   const newAlertId = rows[0]?.id;
-  if (newAlertId === undefined) return;
+  if (newAlertId === undefined) return undefined;
 
   try {
     const priorityScoreService = new PriorityScoreService();
@@ -267,4 +275,6 @@ async function storeDelayAlert(orderId: number, delayResult: { delayDays?: numbe
       },
     );
   }
+
+  return newAlertId;
 }
