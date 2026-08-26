@@ -4,6 +4,10 @@ import Redis from "ioredis";
 import { logger } from "../utils/logger";
 import { Pool } from "pg";
 import { AppConfig } from "../types";
+import { CarrierService } from "./carrier-service";
+import { EmailService } from "./email-service";
+import { SMSService } from "./sms-service";
+import { PingResult } from "./ping-result";
 
 export interface HealthCheck {
   name: string;
@@ -86,6 +90,7 @@ export interface Alert {
 }
 
 export class MonitoringService {
+  private config: AppConfig;
   private redis: Redis;
   private db: Pool;
   private alerts: Map<string, Alert> = new Map();
@@ -93,6 +98,7 @@ export class MonitoringService {
   private readonly maxMetricsHistory = 1000;
 
   constructor(config: AppConfig) {
+    this.config = config;
     this.redis = new Redis(config.redis.url);
     this.db = new Pool({ connectionString: config.database.url });
   }
@@ -306,41 +312,65 @@ export class MonitoringService {
     }
   }
 
+  /**
+   * Vendor liveness, delegated to each service's own authenticated probe
+   * (LAUNCH_PLAN §6 R23).
+   *
+   * This used to send an unauthenticated `HEAD` to
+   * `https://api.sendgrid.com/v3/mail/send` and friends and grade
+   * `response.ok`. Those are authenticated POST/GET endpoints: a bare HEAD
+   * answers 401/403/405 and can never be 2xx, so all three vendors were graded
+   * "degraded" on every call and `/monitoring/health` returned **503
+   * permanently** in production — verified live on 2026-08-26.
+   *
+   * It also had no timeout, in violation of the third-party invariant in
+   * CLAUDE.md, and it hand-rolled probes that already existed: `CarrierService`,
+   * `EmailService` and `SMSService` each expose `ping()`, which authenticates
+   * properly, carries `PING_TIMEOUT_MS`, and never throws.
+   *
+   * `PingResult`'s three states map 1:1 onto HealthCheck's, and that mapping is
+   * the point: "the vendor rejected our credentials" (degraded) is a different
+   * fact from "we could not reach the vendor" (unhealthy). The HEAD probe
+   * collapsed both into one permanent falsehood.
+   */
   private async checkExternalAPIs(): Promise<HealthCheck[]> {
-    const checks: HealthCheck[] = [];
-    const apis = [
-      { name: "ShipEngine", url: "https://api.shipengine.com/v1/rates" },
-      { name: "SendGrid", url: "https://api.sendgrid.com/v3/mail/send" },
-      { name: "Twilio", url: "https://api.twilio.com/2010-04-01/Accounts" },
+    const probes: { name: string; ping: () => Promise<PingResult> }[] = [
+      {
+        name: "ShipEngine",
+        ping: () => new CarrierService(this.config.shipengine.apiKey).ping(),
+      },
+      {
+        name: "SendGrid",
+        ping: () => new EmailService(this.config.sendgrid.apiKey).ping(),
+      },
+      {
+        name: "Twilio",
+        ping: () =>
+          new SMSService(
+            this.config.twilio.accountSid,
+            this.config.twilio.authToken,
+            this.config.twilio.phoneNumber,
+          ).ping(),
+      },
     ];
 
-    for (const api of apis) {
-      const start = Date.now();
-
-      try {
-        // Simple HEAD request to check availability
-        const response = await fetch(api.url, { method: "HEAD" });
-        const responseTime = Date.now() - start;
-
-        checks.push({
-          name: api.name,
-          status: response.ok && responseTime < 5000 ? "healthy" : "degraded",
-          responseTime,
+    const results = await Promise.all(
+      probes.map(async({ name, ping }) => {
+        const result = await ping();
+        const check: HealthCheck = {
+          name,
+          status: result.status,
+          responseTime: result.latencyMs,
           lastChecked: new Date(),
-          details: { status: response.status },
-        });
-      } catch (error) {
-        checks.push({
-          name: api.name,
-          status: "unhealthy",
-          responseTime: Date.now() - start,
-          lastChecked: new Date(),
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
-    }
+        };
+        if (result.status !== "healthy") {
+          check.error = result.error;
+        }
+        return check;
+      }),
+    );
 
-    return checks;
+    return results;
   }
 
   private async checkApplication(): Promise<HealthCheck> {

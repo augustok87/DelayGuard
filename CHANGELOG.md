@@ -9,6 +9,26 @@
 
 ## VERSION HISTORY
 
+### v1.73 (2026-08-26): `/monitoring/health` stops returning 503 forever (R23)
+
+**Test Results**: 2,486 passing of 2,511, 25 skipped, 0 failing, 136 suites. Lint 0 errors, type-check clean.
+
+Found by probing the live endpoint after deploying v1.72 rather than assuming the deploy was enough. The good news came first — `Application: healthy`, confirming R22 — and then the rest of the payload:
+
+```
+ShipEngine=degraded   SendGrid=degraded   Twilio=degraded   → HTTP 503
+```
+
+`checkExternalAPIs` sent an **unauthenticated `HEAD`** to `api.sendgrid.com/v3/mail/send`, `api.shipengine.com/v1/rates` and `api.twilio.com/2010-04-01/Accounts` and graded `response.ok`. Those are authenticated endpoints: a bare HEAD answers 401/403/405 and **can never be 2xx**, so all three vendors were degraded on every call and the route mapped degraded → 503, permanently, in production.
+
+It had two more problems in the same twenty lines: **no timeout**, violating the third-party invariant in `CLAUDE.md`, and it **hand-rolled probes that already existed**. `CarrierService`, `EmailService` and `SMSService` each expose `ping()` — authenticated, `PING_TIMEOUT_MS`-bounded, and contractually non-throwing.
+
+Now delegated to those, running concurrently. `PingResult`'s three states map 1:1 onto `HealthCheck`'s, and preserving that mapping is the point: *"the vendor rejected our credentials"* is a different fact from *"we could not reach the vendor"*, and the HEAD probe collapsed both into one permanent falsehood.
+
+Four tests, all red against the broken probe first; two pin the mechanism (a rejected credential must grade **degraded, not unhealthy**; the path must **never touch `global.fetch`**), each verified by reintroducing exactly that defect.
+
+⚠️ **The duplicate-test-file trap bit a third time** — `tests/unit/monitoring-service.test.ts` stubbed `global.fetch` in ten places, all inert once `fetch` left the path. Caught by the local gate this time rather than by CI. The two overlapping monitoring test files are real debt and should be collapsed post-launch.
+
 ### v1.72 (2026-08-26): The Application health check measured heap against the wrong denominator (R22)
 
 **Test Results**: 2,483 passing of 2,508, 25 skipped, 0 failing, 136 suites. Lint 0 errors, type-check clean.

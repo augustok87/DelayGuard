@@ -14,6 +14,22 @@ jest.mock('pg', () => ({
   })),
 }));
 
+// §6 R23: vendor liveness now delegates to each service's authenticated
+// ping() instead of an unauthenticated HEAD, so these are mocked at the
+// service level. `global.fetch` is no longer part of this path.
+const mockCarrierPing = jest.fn();
+const mockEmailPing = jest.fn();
+const mockSmsPing = jest.fn();
+jest.mock('../../src/services/carrier-service', () => ({
+  CarrierService: jest.fn().mockImplementation(() => ({ ping: mockCarrierPing })),
+}));
+jest.mock('../../src/services/email-service', () => ({
+  EmailService: jest.fn().mockImplementation(() => ({ ping: mockEmailPing })),
+}));
+jest.mock('../../src/services/sms-service', () => ({
+  SMSService: jest.fn().mockImplementation(() => ({ ping: mockSmsPing })),
+}));
+
 jest.mock('ioredis', () => {
   return jest.fn().mockImplementation(() => ({
     ping: mockPing,
@@ -97,6 +113,10 @@ describe('MonitoringService', () => {
       status: 'ready',
     };
     
+    mockCarrierPing.mockResolvedValue({ status: 'healthy', latencyMs: 11 });
+    mockEmailPing.mockResolvedValue({ status: 'healthy', latencyMs: 12 });
+    mockSmsPing.mockResolvedValue({ status: 'healthy', latencyMs: 13 });
+
     monitoringService = new MonitoringService(mockConfig);
   });
 
@@ -125,10 +145,6 @@ describe('MonitoringService', () => {
       mockRedis.ping.mockResolvedValue('PONG');
       
       // Mock external API health checks
-      global.fetch = jest.fn()
-        .mockResolvedValueOnce({ ok: true, status: 200 }) // ShipEngine
-        .mockResolvedValueOnce({ ok: true, status: 200 }) // SendGrid
-        .mockResolvedValueOnce({ ok: true, status: 200 }); // Twilio
 
       const checks = await monitoringService.performHealthChecks();
 
@@ -150,10 +166,10 @@ describe('MonitoringService', () => {
       mockPing.mockRejectedValue(new Error('Connection failed'));
       
       // Mock external API failures
-      global.fetch = jest.fn()
-        .mockRejectedValueOnce(new Error('Network error')) // ShipEngine
-        .mockRejectedValueOnce(new Error('Network error')) // SendGrid
-        .mockRejectedValueOnce(new Error('Network error')); // Twilio
+      const unreachable = { status: 'unhealthy', latencyMs: 5000, error: 'Network error' };
+      mockCarrierPing.mockResolvedValue(unreachable);
+      mockEmailPing.mockResolvedValue(unreachable);
+      mockSmsPing.mockResolvedValue(unreachable);
 
       const checks = await monitoringService.performHealthChecks();
 
@@ -171,7 +187,6 @@ describe('MonitoringService', () => {
       // Mock database and Redis with normal responses
       mockQuery.mockResolvedValue({ rows: [{ health_check: 1 }] });
       mockPing.mockResolvedValue('PONG');
-      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
 
       const checks = await monitoringService.performHealthChecks();
 
@@ -308,7 +323,6 @@ describe('MonitoringService', () => {
       mockInfo.mockResolvedValue('used_memory:1048576\nused_memory_peak:2097152');
       mockDbsize.mockResolvedValue(100);
       mockSetex.mockResolvedValue('OK');
-      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
 
       // Collect metrics first
       await monitoringService.collectSystemMetrics();
@@ -341,13 +355,6 @@ describe('MonitoringService', () => {
       mockSetex.mockResolvedValue('OK');
       
       // Mock external APIs to be healthy
-      global.fetch = jest.fn().mockImplementation((url) => {
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          url,
-        });
-      });
 
       // Collect metrics first
       await monitoringService.collectSystemMetrics();
@@ -367,7 +374,6 @@ describe('MonitoringService', () => {
         clock.advance(99);
         return 'PONG';
       });
-      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
 
       const checks = await monitoringService.performHealthChecks();
 
@@ -380,7 +386,10 @@ describe('MonitoringService', () => {
       // Mock critical failures
       mockQuery.mockRejectedValue(new Error('Database connection failed'));
       mockPing.mockRejectedValue(new Error('Redis connection failed'));
-      global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+      const unreachable = { status: 'unhealthy', latencyMs: 5000, error: 'Network error' };
+      mockCarrierPing.mockResolvedValue(unreachable);
+      mockEmailPing.mockResolvedValue(unreachable);
+      mockSmsPing.mockResolvedValue(unreachable);
 
       const status = await monitoringService.getSystemStatus();
 
@@ -392,7 +401,6 @@ describe('MonitoringService', () => {
     it('should handle database errors gracefully', async() => {
       mockQuery.mockRejectedValue(new Error('Database error'));
       mockPing.mockResolvedValue('PONG');
-      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
 
       const checks = await monitoringService.performHealthChecks();
       const dbCheck = checks.find(check => check.name === 'Database');
@@ -404,7 +412,6 @@ describe('MonitoringService', () => {
     it('should handle Redis errors gracefully', async() => {
       mockQuery.mockResolvedValue({ rows: [{ health_check: 1 }] });
       mockPing.mockRejectedValue(new Error('Redis error'));
-      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
 
       const checks = await monitoringService.performHealthChecks();
       const redisCheck = checks.find(check => check.name === 'Redis');
@@ -416,7 +423,10 @@ describe('MonitoringService', () => {
     it('should handle external API errors gracefully', async() => {
       mockQuery.mockResolvedValue({ rows: [{ health_check: 1 }] });
       mockPing.mockResolvedValue('PONG');
-      global.fetch = jest.fn().mockRejectedValue(new Error('API error'));
+      const apiError = { status: 'unhealthy', latencyMs: 10, error: 'API error' };
+      mockCarrierPing.mockResolvedValue(apiError);
+      mockEmailPing.mockResolvedValue(apiError);
+      mockSmsPing.mockResolvedValue(apiError);
 
       const checks = await monitoringService.performHealthChecks();
       const apiChecks = checks.filter(check => 

@@ -542,7 +542,7 @@ Fixed to measure against `v8.getHeapStatistics().heap_size_limit` — what the p
 
 **The lesson, and it is the cheapest one here: a test that fails without saying why gets debugged by guessing.** Two blind CI round-trips bought nothing; one self-describing assertion found a real production bug on the next run.
 
-### R23 — `/monitoring/health` returns 503 in production, permanently and by construction `[AGENT]` — **new 2026-08-26, not submission-blocking**
+### ~~R23 — `/monitoring/health` returns 503 in production, permanently and by construction~~ `[AGENT]` — ✅ **FIXED 2026-08-26 (v1.73)**
 
 Found by probing the live endpoint after deploying R22, rather than assuming the deploy was enough. **The good news first: R22 is confirmed fixed in production** — `Application: healthy`, alongside Database and Redis. But:
 
@@ -565,7 +565,11 @@ GET https://delayguard-api.vercel.app/monitoring/health  →  HTTP 503
 
 **Severity: not submission-blocking** — the endpoint is not advertised in the listing and `/health` (the public one) is healthy and correct. But any uptime monitor pointed at it reads a permanent outage, and the monitoring feature is currently worthless.
 
-**Fix direction:** a liveness probe should treat *any* HTTP response as "reachable" and reserve `unhealthy` for network errors and timeouts — or better, delegate to the existing authenticated `ping()` methods. Not started.
+**Fixed (v1.73) by deleting the hand-rolled probe entirely.** `checkExternalAPIs` now delegates to `CarrierService.ping()`, `EmailService.ping()` and `SMSService.ping()` — which authenticate correctly, already carry `PING_TIMEOUT_MS`, and never throw. `PingResult`'s three states map 1:1 onto `HealthCheck`'s, and preserving that mapping is the point: *"the vendor rejected our credentials"* (degraded) is a different fact from *"we could not reach the vendor"* (unhealthy), and the HEAD probe collapsed both into one permanent falsehood. The three probes now run concurrently rather than in series.
+
+Four tests, all run against the broken probe first. Two pin the mechanism so a regression cannot slip back: one asserts a rejected credential grades **degraded, not unhealthy**, and one asserts the path **never touches `global.fetch`**. Verified by reintroducing each defect — collapsing degraded→unhealthy fails exactly the first, and re-adding a hand-rolled `fetch` fails exactly the second.
+
+⚠️ **The duplicate-test-file trap bit again and was caught locally this time.** `tests/unit/monitoring-service.test.ts` stubbed `global.fetch` in ten places to simulate vendor states; with `fetch` no longer on the path those stubs were inert and six tests failed. Both files now mock at the service level. **This is the third time in one session that two copies of the same test drifted apart — the overlap is real technical debt and should be collapsed post-launch.**
 
 ### R20 — The listing sold SMS on both paid plans, and SMS cannot send at all `[AGENT]` — **new 2026-08-26, listing fixed same session (v1.70)**
 
@@ -863,7 +867,7 @@ Screencast, AI self-review, submit. Gated on R2 (needs a working app to film) an
 | **R9 — agent can't authenticate** | ⛔ `[HUMAN]`, unchanged. `shopify app env show` 403s; every `/api/*` check is still a browser action |
 | **H8 → H-4 → H9** | ⛔ `[HUMAN]`. Screencast, AI self-review, submit |
 | **R5 — test flake** | ✅ **CLOSED (v1.71)** — its named offenders no longer consult the wall clock at all |
-| **R23 — `/monitoring/health` 503s forever** | ⚠️ `[AGENT]`, new, **not submission-blocking**. Unauthenticated `HEAD` to three authenticated vendor endpoints can never return 2xx, so ShipEngine/SendGrid/Twilio are permanently degraded. Also missing the mandated timeout, and duplicates the working `ping()` methods |
+| **R23 — `/monitoring/health` 503s forever** | ✅ **FIXED (v1.73).** Vendor checks now delegate to the authenticated `ping()` methods, which carry the mandated timeout. Deployed and verified live |
 | **R22 — health check measured heap vs system memory** | ✅ **FIXED + DEPLOYED (v1.72).** CI reported `memoryPercentage: 124`; production now reports `Application: healthy` |
 | **R21 — remote CI permanently red** | ✅ **FIXED (v1.71).** A test file was overwriting CI's `DATABASE_URL`; three timing tests measured the runner. All four now assert behaviour, verified against reintroduced regressions |
 | R1 / R2 / R4-H4 / R6 / R7 | ✅ closed, evidence in §6 |

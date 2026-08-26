@@ -20,6 +20,22 @@ jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => mockPoolInstance),
 }));
 
+// §6 R23: the external-API checks delegate to each service's own authenticated
+// ping(), so they are mocked at the service level — the same convention the
+// notification-processor tests use. Nothing here touches a vendor SDK.
+const mockCarrierPing = jest.fn();
+const mockEmailPing = jest.fn();
+const mockSmsPing = jest.fn();
+jest.mock('../../../src/services/carrier-service', () => ({
+  CarrierService: jest.fn().mockImplementation(() => ({ ping: mockCarrierPing })),
+}));
+jest.mock('../../../src/services/email-service', () => ({
+  EmailService: jest.fn().mockImplementation(() => ({ ping: mockEmailPing })),
+}));
+jest.mock('../../../src/services/sms-service', () => ({
+  SMSService: jest.fn().mockImplementation(() => ({ ping: mockSmsPing })),
+}));
+
 /**
  * Deterministic stand-in for the wall clock (§6 R21) — mirrors the helper in
  * tests/unit/monitoring-service.test.ts. MonitoringService grades every health
@@ -71,6 +87,10 @@ describe('MonitoringService', () => {
     // Reset mocks before each test
     mockRedisInstance.ping = jest.fn().mockResolvedValue('PONG');
     mockPoolInstance.query = jest.fn().mockResolvedValue({ rows: [] });
+
+    mockCarrierPing.mockResolvedValue({ status: 'healthy', latencyMs: 11 });
+    mockEmailPing.mockResolvedValue({ status: 'healthy', latencyMs: 12 });
+    mockSmsPing.mockResolvedValue({ status: 'healthy', latencyMs: 13 });
 
     monitoringService = new MonitoringService(mockConfig);
   });
@@ -308,14 +328,66 @@ describe('MonitoringService', () => {
     });
 
     it('should handle external API errors gracefully', async() => {
-      // Mock fetch to simulate external API failure
-      global.fetch = jest.fn().mockRejectedValue(new Error('External API unavailable'));
+      // §6 R23: this asserted against `global.fetch`, which is the unauthenticated
+      // HEAD probe that made all three vendors permanently degraded. The check
+      // now delegates to each service's ping(), so the failure is expressed there.
+      mockCarrierPing.mockResolvedValue({
+        status: 'unhealthy', latencyMs: 5000, error: 'timeout after 5000ms',
+      });
 
       const healthChecks = await monitoringService.performHealthChecks();
 
-      const apiChecks = healthChecks.filter(check => check.name === 'ShipEngine' || check.name === 'SendGrid' || check.name === 'Twilio');
-      expect(apiChecks.length).toBeGreaterThan(0);
-      expect(apiChecks.some(check => check.status === 'unhealthy')).toBe(true);
+      const shipengine = healthChecks.find(c => c.name === 'ShipEngine');
+      expect(shipengine?.status).toBe('unhealthy');
+      expect(shipengine?.error).toBe('timeout after 5000ms');
+    });
+
+    it('reports vendors healthy from their authenticated ping, not a bare HEAD (§6 R23)', async() => {
+      // The defect: checkExternalAPIs sent an unauthenticated HEAD to
+      // api.sendgrid.com/v3/mail/send and friends — authenticated endpoints
+      // that can never answer 2xx — so ShipEngine, SendGrid and Twilio were
+      // graded "degraded" on EVERY call and /monitoring/health returned 503
+      // permanently in production. Verified live before the fix.
+      freezeClock();
+
+      const checks = await monitoringService.performHealthChecks();
+
+      const vendors = checks.filter(c =>
+        ['ShipEngine', 'SendGrid', 'Twilio'].includes(c.name),
+      );
+      expect(vendors.map(c => `${c.name}=${c.status}`)).toEqual([
+        'ShipEngine=healthy',
+        'SendGrid=healthy',
+        'Twilio=healthy',
+      ]);
+      // Latency comes from the probe itself, not from a wall-clock measurement.
+      expect(vendors.map(c => c.responseTime)).toEqual([11, 12, 13]);
+    });
+
+    it('grades a rejected credential as degraded, not unhealthy (§6 R23)', async() => {
+      // The distinction the PingResult contract exists to preserve: the network
+      // works and the vendor answered, it just refused us. Collapsing that into
+      // "unhealthy" is what the HEAD probe did to all three vendors at once.
+      mockEmailPing.mockResolvedValue({
+        status: 'degraded', latencyMs: 47, error: 'HTTP 401: Unauthorized',
+      });
+
+      const checks = await monitoringService.performHealthChecks();
+      const sendgrid = checks.find(c => c.name === 'SendGrid');
+
+      expect(sendgrid?.status).toBe('degraded');
+      expect(sendgrid?.error).toBe('HTTP 401: Unauthorized');
+    });
+
+    it('does not reach for global.fetch when probing vendors (§6 R23)', async() => {
+      // Pins the mechanism: any regression back to a hand-rolled HTTP probe
+      // reintroduces both the 503 and the missing timeout.
+      const fetchSpy = jest.fn();
+      global.fetch = fetchSpy as unknown as typeof fetch;
+
+      await monitoringService.performHealthChecks();
+
+      expect(fetchSpy).not.toHaveBeenCalled();
     });
   });
 });
