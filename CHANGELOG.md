@@ -11,7 +11,9 @@
 
 ### v1.69 (2026-08-26): The boot validator finally checks the variables that broke email (R11)
 
-**Test Results**: 2,492 passing of 2,518, 25 skipped, 0 failing, 137 suites. Lint 0 errors, type-check clean, build clean.
+**Test Results**: pre-commit quality gate 7/7. +6 tests. **Session total: 2,474 passing of 2,499, 25 skipped, 0 failing, 135 suites** (+28 tests over the 2,446 baseline), lint 0 errors, type-check clean, build clean.
+
+**R5 datapoint from three full runs today:** run 1 failed one test (`server-app` legal route), run 2 failed one different test (`monitoring-service`), run 3 was completely clean — and each failing test passed in isolation. That is R5's wall-clock-under-load signature, and it also corrected a wrong inference made mid-session: a single clean-tree pass had briefly been read as proof that a change had *caused* the first failure. One pass is not evidence of determinism.
 
 `config/environment.ts`'s optional list was exactly `SENTRY_DSN`, `CSRF_SECRET`, `JWT_SECRET`. It never looked at `SENDGRID_DELAY_TEMPLATE_ID` or `SENDGRID_FROM_EMAIL` — the two variables whose absence silently broke every production delay email for three weeks. A session once read the startup log, saw no warning about them, and took the silence as confirmation the deploy had picked them up. **It was not evidence: the validator never read them, so it could not have warned.**
 
@@ -23,7 +25,7 @@ Six tests, all run against the old validator first.
 
 ### v1.68 (2026-08-26): The delivered email stops rendering three defects (R18)
 
-**Test Results**: 2,486 passing of 2,512, 25 skipped, 0 failing, 136 suites. Lint 0 errors, type-check clean, build clean.
+**Test Results**: pre-commit quality gate 7/7. +8 tests. (Cumulative counts recorded under v1.69.)
 
 The first real delivered email exposed three merchant-visible faults, none of which any prior check could see because every prior check ran against sample data engineered to populate every field. **The same three exist in the SMS body** from the same cause; they had never been observed only because SMS has never fired (R19).
 
@@ -37,7 +39,7 @@ Six of eight tests failed against the broken renderers first. The other two pass
 
 ### v1.67 (2026-08-26): One send no longer marks every alert on the order delivered (R17 + R19)
 
-**Test Results**: 2,473 passing of 2,499, 25 skipped, 0 failing (one R5 wall-clock flake per full run, a different suite each time, green in isolation), 135 suites. Lint 0 errors, type-check clean, build clean.
+**Test Results**: pre-commit quality gate 7/7 (build, type-check, tests, bundle, required files, lint, no-placeholder). Cumulative suite state after v1.67–v1.69 measured at the end of the session: **2,474 passing of 2,499, 25 skipped, 0 failing, 135 suites** — a clean full run. Lint 0 errors, type-check clean, build clean.
 
 **R17 — the worst failure mode this product had.** `queue/processors/notification.ts` completed a notification with `UPDATE delay_alerts … WHERE order_id = $1` and read prior state with `SELECT … WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1`. Both are order-scoped; alerts are not. In production, order 1 carried four alerts and one send marked all four `email_sent = TRUE` with `notification_sent_at` identical **to the microsecond** — so a merchant whose order slips repeatedly is notified once, and every later delay is suppressed *and recorded as delivered*.
 

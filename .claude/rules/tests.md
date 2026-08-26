@@ -50,6 +50,24 @@ When a change spans store → props → DOM, or client → wire → route → SQ
 
 **Corollary:** a passing check is not evidence until you know what it is wired to. `monitoring-service`'s health test passes only because a global `fetch` mock hides three real network calls that all return non-2xx; the boot env validator "reported no problem" with the SendGrid vars it never reads.
 
+## The `pg` mock cannot see what a statement did (R17)
+
+`jest.config.ts` maps `^pg$` to [`__mocks__/pg.js`](delayguard-app/__mocks__/pg.js), whose `MockClient.query` returns **`rowCount: 1` for every `UPDATE`** — it never reads the statement, let alone the `WHERE` clause. So a write that flips four rows is indistinguishable from one that flips the intended row.
+
+That is not hypothetical. `processNotification` completed notifications with `UPDATE delay_alerts … WHERE order_id = $1`; in production one send marked **all four** alerts on an order delivered with one timestamp to the microsecond, and **2,446 tests were green throughout**, because the processor's tests assert the statement was *issued*, never what it touched.
+
+**Rule: any assertion about what a statement DID — rows affected, which row, whether a column was even selected — must run against a real schema.** Use [`src/tests/helpers/pg-mem-schema.ts`](delayguard-app/src/tests/helpers/pg-mem-schema.ts):
+
+```ts
+jest.mock('pg', () => require('../helpers/pg-mem-schema').createMemPg());
+import { applyProductionSchema, selectRows, execSql } from '../helpers/pg-mem-schema';
+beforeAll(applyProductionSchema);
+```
+
+It swaps in pg-mem (a real SQL engine) and builds the schema by running the **production `runMigrations()`**, so the tables are the deployed ones rather than a transcription that drifts. Assert on rows read back from the database, not on `mockQuery.mock.calls`. `jest.mock('pg', factory)` does override `moduleNameMapper`.
+
+**Corollary, and it found a second bug the same day (R19):** a hand-built fixture row can supply a column the real `SELECT` never fetches. `order.shop_domain` was `undefined` in production for every notification — `orders` has no such column and the query didn't select it from `shops` — while every test happily returned a fixture containing it. **A mock that returns the row you wish the query returned cannot tell you the query is wrong.**
+
 ## No placeholder tests (v1.20 incident)
 
 `expect(true).toBe(true)` and similar tautological stubs are **forbidden** in non-WIP branches. They previously masked unfinished work because CI passed and reviewers couldn't tell stubs from real coverage.
