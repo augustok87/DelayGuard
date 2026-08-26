@@ -520,6 +520,28 @@ CI's credentialed `postgresql://postgres:postgres@localhost:5432/delayguard_test
 
 **The lesson: "I fixed the failing test" is a claim about a file, not about the suite.** Verifying against CI rather than declaring victory is what caught it — the same discipline that this plan keeps having to relearn. *(The duplicate-monitoring-test-file overlap is real and unaddressed; a future cleanup, not a launch item.)*
 
+### R22 — The Application health check measured heap against the wrong denominator `[AGENT]` — **new 2026-08-26, fixed same session (v1.72)**
+
+**Found by instrumenting a test instead of guessing at it a third time.** Two hypotheses for R21's last red test (the clock, then the unstubbed `fetch`) were each partly right and neither sufficient, and `expect(checks.every(c => c.status === 'healthy')).toBe(true)` reports *"expected true, received false"* — naming nothing. The assertion was rewritten to list the offending checks with name, status, duration and details. The next CI run answered immediately:
+
+```
+Application=unhealthy rt=0 err=- details={"uptime":45.7,"memoryPercentage":124,...}
+```
+
+**`memoryPercentage: 124`.** A share of total system memory cannot exceed 100, so the formula was wrong, not the machine:
+
+```ts
+const memoryPercentage = (memoryUsage.heapUsed / require("os").totalmem()) * 100;
+```
+
+It compares a **V8 heap** number against **system** memory — not the quantity the check is about, and not even an upper bound: on a cgroup-constrained host `totalmem()` can report *less* than the heap the process legitimately holds. Above 90 the check reports `unhealthy`.
+
+**This is a production defect, not a test artefact.** `routes/monitoring.ts` calls `performHealthChecks()` and `getSystemStatus()` on four separate paths, so a Vercel function could report itself unhealthy on a meaningless ratio — in front of a Shopify reviewer or an uptime monitor.
+
+Fixed to measure against `v8.getHeapStatistics().heap_size_limit` — what the process actually runs out of, and bounded by construction. Two tests, both run against the broken code first: the CI shape (2 GB heap, 1 GB reported total) must read **25 %** of an 8 GB limit and be healthy — it read **200 %** before — and a genuinely exhausted heap (3.8 GB of a 4 GB limit) must still report `unhealthy`, so the fix cannot make the check unfailable.
+
+**The lesson, and it is the cheapest one here: a test that fails without saying why gets debugged by guessing.** Two blind CI round-trips bought nothing; one self-describing assertion found a real production bug on the next run.
+
 ### R20 — The listing sold SMS on both paid plans, and SMS cannot send at all `[AGENT]` — **new 2026-08-26, listing fixed same session (v1.70)**
 
 Found by asking Twilio instead of assuming, in the same spirit as R1's SendGrid account. Every answer is disqualifying:

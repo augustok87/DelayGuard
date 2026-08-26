@@ -111,6 +111,67 @@ describe('MonitoringService', () => {
       ).toEqual([]);
     });
 
+    it('measures heap against the V8 heap limit, not total system memory (§6 R21)', async() => {
+      // CI produced `memoryPercentage: 124` — impossible as a share of system
+      // memory, and it made the Application check report "unhealthy" on a
+      // perfectly healthy process. Cause: heapUsed / os.totalmem(), which
+      // compares a V8 heap number against a system (or cgroup-limited) total.
+      // On a constrained runner the denominator can be SMALLER than the heap
+      // the process legitimately holds.
+      //
+      // This is not merely a test problem: /monitoring calls
+      // performHealthChecks in production, so a Vercel function could report
+      // itself unhealthy on a meaningless ratio.
+      //
+      // The right denominator for "is this app running out of heap" is V8's
+      // heap_size_limit, which bounds the result by construction.
+      freezeClock();
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+
+      // A process holding 2 GB of heap on a box that reports only 1 GB total —
+      // exactly the shape CI hit.
+      jest.spyOn(process, 'memoryUsage').mockReturnValue({
+        rss: 2_400_000_000,
+        heapTotal: 2_200_000_000,
+        heapUsed: 2_000_000_000,
+        external: 0,
+        arrayBuffers: 0,
+      } as NodeJS.MemoryUsage);
+      jest.spyOn(require('os'), 'totalmem').mockReturnValue(1_000_000_000);
+      jest
+        .spyOn(require('v8'), 'getHeapStatistics')
+        .mockReturnValue({ heap_size_limit: 8_000_000_000 } as never);
+
+      const checks = await monitoringService.performHealthChecks();
+      const app = checks.find(c => c.name === 'Application');
+
+      // 2 GB of an 8 GB heap limit = 25%, healthy. The old formula gave 200%.
+      expect((app?.details as { memoryPercentage: number }).memoryPercentage).toBe(25);
+      expect(app?.status).toBe('healthy');
+    });
+
+    it('still reports unhealthy when the heap really is nearly exhausted', async() => {
+      // The other half: the fix must not make the check unfailable.
+      freezeClock();
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+
+      jest.spyOn(process, 'memoryUsage').mockReturnValue({
+        rss: 4_000_000_000,
+        heapTotal: 3_900_000_000,
+        heapUsed: 3_800_000_000,
+        external: 0,
+        arrayBuffers: 0,
+      } as NodeJS.MemoryUsage);
+      jest
+        .spyOn(require('v8'), 'getHeapStatistics')
+        .mockReturnValue({ heap_size_limit: 4_000_000_000 } as never);
+
+      const checks = await monitoringService.performHealthChecks();
+      const app = checks.find(c => c.name === 'Application');
+
+      expect(app?.status).toBe('unhealthy'); // 95% of the heap limit
+    });
+
     it('should detect unhealthy services', async() => {
       // Mock Redis connection failure
       mockRedisInstance.ping = jest.fn().mockRejectedValue(new Error('Connection failed'));

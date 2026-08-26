@@ -9,6 +9,30 @@
 
 ## VERSION HISTORY
 
+### v1.72 (2026-08-26): The Application health check measured heap against the wrong denominator (R22)
+
+**Test Results**: 2,483 passing of 2,508, 25 skipped, 0 failing, 136 suites. Lint 0 errors, type-check clean.
+
+R21's last red test resisted two plausible fixes, so the assertion was rewritten to **name the failing check** instead of reporting `expected true, received false`. The next CI run answered in one line:
+
+```
+Application=unhealthy rt=0 err=- details={"memoryPercentage":124,...}
+```
+
+A percentage of total system memory cannot exceed 100 — so the formula was wrong, not the runner:
+
+```ts
+const memoryPercentage = (memoryUsage.heapUsed / require("os").totalmem()) * 100;
+```
+
+That compares a **V8 heap** figure against **system** memory. It is not the quantity the check is about and not even an upper bound: on a cgroup-constrained host `totalmem()` can report less than the heap the process legitimately holds. Past 90 the check declares the application `unhealthy`.
+
+**This was reaching production.** `routes/monitoring.ts` calls `performHealthChecks()` / `getSystemStatus()` on four paths, so a Vercel function could report itself unhealthy on a meaningless ratio — in front of a Shopify reviewer or an uptime monitor.
+
+Now measured against `v8.getHeapStatistics().heap_size_limit`: what the process actually runs out of, bounded by construction. Two tests, both run against the broken code first — the exact CI shape (2 GB heap, 1 GB reported total) must read 25% of an 8 GB limit and be healthy, where it previously read 200%; and a genuinely exhausted heap must still report `unhealthy`, so the fix cannot make the check unfailable.
+
+**The lesson: a test that fails without saying why gets debugged by guessing.** Two blind CI round-trips bought nothing; one self-describing assertion found a real production bug on the next run.
+
 ### v1.71 (2026-08-26): Make CI a real gate again (R21, closes R5)
 
 **Test Results**: 2,481 passing of 2,506, 25 skipped, **0 failing**, 136 suites — and the suite is **8 seconds faster** (35.5s → 27.4s) because two real sleeps are gone. Lint 0 errors, type-check clean, build clean.

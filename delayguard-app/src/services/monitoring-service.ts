@@ -352,8 +352,22 @@ export class MonitoringService {
       await new Promise((resolve) => setTimeout(resolve, 1));
       const responseTime = Date.now() - start;
       const memoryUsage = process.memoryUsage();
-      const memoryPercentage =
-        (memoryUsage.heapUsed / require("os").totalmem()) * 100;
+      // Measure the heap against V8's heap limit, NOT os.totalmem() (§6 R21).
+      //
+      // The old denominator compared a V8 heap number against system memory,
+      // which is not the quantity this check is about and is not even an upper
+      // bound: on a cgroup-constrained host `totalmem()` can report LESS than
+      // the heap the process legitimately holds. CI observed
+      // `memoryPercentage: 124` and reported a healthy process as unhealthy —
+      // and /monitoring calls this in production, so a Vercel function could
+      // do the same on a meaningless ratio.
+      //
+      // heap_size_limit is what the process actually runs out of, and it
+      // bounds the percentage by construction.
+      const heapLimit = (
+        require("v8") as { getHeapStatistics: () => { heap_size_limit: number } }
+      ).getHeapStatistics().heap_size_limit;
+      const memoryPercentage = (memoryUsage.heapUsed / heapLimit) * 100;
 
       let status: "healthy" | "degraded" | "unhealthy" = "healthy";
       if (memoryPercentage > 90) {
