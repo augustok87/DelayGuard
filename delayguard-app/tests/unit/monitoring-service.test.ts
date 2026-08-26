@@ -53,6 +53,25 @@ const mockConfig: AppConfig = {
   },
 };
 
+/**
+ * Deterministic stand-in for the wall clock (§6 R21).
+ *
+ * MonitoringService grades each health check on `Date.now()` deltas, so any
+ * test asserting a health STATUS is really asserting how fast the machine is
+ * unless the clock is controlled. Returns a handle whose `advance()` moves
+ * time by an exact amount, letting a test place a duration on one specific
+ * check and leave every other check at zero.
+ */
+function freezeClock(startMs = 1_700_000_000_000): { advance: (ms: number) => void } {
+  let now = startMs;
+  jest.spyOn(Date, 'now').mockImplementation(() => now);
+  return {
+    advance: (ms: number) => {
+      now += ms;
+    },
+  };
+}
+
 describe('MonitoringService', () => {
   let monitoringService: MonitoringService;
   let mockDb: any;
@@ -83,10 +102,22 @@ describe('MonitoringService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    // freezeClock() installs a Date.now spy; without this it leaks into the
+    // next test and every duration reads 0 there too.
+    jest.restoreAllMocks();
   });
 
   describe('performHealthChecks', () => {
     it('should perform all health checks successfully', async() => {
+      // §6 R21: the health checks grade themselves on REAL elapsed time
+      // (Redis is "degraded" at >100 ms), so asserting "everything healthy"
+      // against a live clock only passes on a fast, idle machine. It failed on
+      // essentially every CI run. Freezing Date.now makes every measured
+      // duration 0, so this test asserts what its name claims — that all six
+      // checks run and aggregate — instead of how quick the runner is.
+      // The threshold logic itself is covered deterministically below.
+      freezeClock();
+
       // Mock database health check
       mockDb.query.mockResolvedValue({ rows: [{ health_check: 1 }] });
       
@@ -287,14 +318,18 @@ describe('MonitoringService', () => {
     });
 
     it('should return degraded status when some checks fail', async() => {
-      // Mock some healthy, some degraded checks (Redis slow)
-      jest.useFakeTimers();
+      // §6 R21: this used to sleep a real 150 ms to push Redis past its
+      // threshold, which meant the OTHER checks were still racing the runner's
+      // real clock and could tip the aggregate to unhealthy on CI. Now the
+      // stub clock advances by exactly 150 ms inside the Redis ping and by
+      // nothing anywhere else, so Redis is degraded and every other check is
+      // healthy — by construction, on any machine.
+      const clock = freezeClock();
       mockQuery.mockResolvedValue({ rows: [{ health_check: 1 }] });
-      mockPing.mockImplementation(() => 
-        new Promise(resolve => {
-          setTimeout(() => resolve('PONG'), 150);
-        }),
-      );
+      mockPing.mockImplementation(async() => {
+        clock.advance(150);
+        return 'PONG';
+      });
       mockInfo.mockResolvedValue('used_memory:1048576\nused_memory_peak:2097152');
       mockDbsize.mockResolvedValue(100);
       mockSetex.mockResolvedValue('OK');
@@ -309,14 +344,30 @@ describe('MonitoringService', () => {
       });
 
       // Collect metrics first
-      const metricsPromise = monitoringService.collectSystemMetrics();
-      jest.runAllTimers();
-      jest.useRealTimers();
-      await metricsPromise;
+      await monitoringService.collectSystemMetrics();
 
       const status = await monitoringService.getSystemStatus();
 
       expect(status.status).toBe('degraded');
+    });
+
+    it('reports Redis healthy when it answers inside its threshold', async() => {
+      // The other half of the contract: proves the degraded result above comes
+      // from the threshold and not from something incidental. Neither test can
+      // pass if `responseTime < 100` is dropped from checkRedis.
+      const clock = freezeClock();
+      mockQuery.mockResolvedValue({ rows: [{ health_check: 1 }] });
+      mockPing.mockImplementation(async() => {
+        clock.advance(99);
+        return 'PONG';
+      });
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+
+      const checks = await monitoringService.performHealthChecks();
+
+      const redis = checks.find(c => c.name === 'Redis');
+      expect(redis?.status).toBe('healthy');
+      expect(redis?.responseTime).toBe(99);
     });
 
     it('should return unhealthy status when critical checks fail', async() => {

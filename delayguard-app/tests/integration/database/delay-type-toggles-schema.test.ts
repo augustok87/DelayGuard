@@ -16,8 +16,18 @@ import { query, pool, setupDatabase, runMigrations } from '../../../src/database
 // Load environment variables for database connection
 dotenv.config();
 
-// Override test DATABASE_URL to use dev database (which has migrations)
-process.env.DATABASE_URL = 'postgresql://localhost:5432/delayguard_dev';
+// Honour whatever DATABASE_URL the environment supplies — CI provides a
+// credentialed one for its `postgres:15` service container — and fall back to
+// the local dev database only when nothing is configured (§6 R21).
+//
+// This line used to assign unconditionally, which silently discarded CI's
+// connection string and reconnected passwordless. The CI server requires
+// SCRAM, so every run died with "client password must be a string" and the
+// schema job had been red for days. It also made the suite untrustworthy
+// locally: pointed at a database that does not exist, it still passed 11/11,
+// because the value under test was never the value used.
+process.env.DATABASE_URL =
+  process.env.DATABASE_URL || 'postgresql://localhost:5432/delayguard_dev';
 
 describe('Delay Type Toggle Schema', () => {
   beforeAll(async() => {

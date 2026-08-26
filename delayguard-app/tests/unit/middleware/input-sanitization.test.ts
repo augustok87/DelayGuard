@@ -386,7 +386,7 @@ describe('Input Sanitization Middleware', () => {
   });
 
   describe('Performance', () => {
-    it('should handle large objects efficiently', async() => {
+    it('sanitizes a large object in one linear pass, and does so correctly', async() => {
       const middleware = InputSanitizationMiddleware.create(SanitizationPresets.USER_INPUT);
       
       // Create a large object with many properties
@@ -397,12 +397,33 @@ describe('Input Sanitization Middleware', () => {
       
       ctx.request.body = largeObject;
 
-      const start = Date.now();
-      await middleware(ctx, next);
-      const end = Date.now();
+      // §6 R21: this used to assert `end - start < 120`, which measures the
+      // MACHINE, not the middleware — it failed on essentially every CI run
+      // while passing on an idle laptop, and it could never have distinguished
+      // "correct and linear" from "fast today".
+      //
+      // What the test actually wants to know is that the sanitizer makes ONE
+      // pass: exactly one sanitizeString call per key and one per value.
+      // 1000 properties => 2000 calls, verified empirically. An accidentally
+      // quadratic or double-walking implementation explodes this number, on
+      // any machine, deterministically.
+      const sanitizeString = jest.spyOn(
+        InputSanitizationMiddleware.prototype as unknown as {
+          sanitizeString: (input: string) => string;
+        },
+        'sanitizeString',
+      );
 
-      // Should complete within reasonable time (less than 120ms)
-      expect(end - start).toBeLessThan(120);
+      await middleware(ctx, next);
+
+      expect(sanitizeString).toHaveBeenCalledTimes(2000);
+
+      // …and the pass has to actually sanitize: correctness is not implied by
+      // the call count alone.
+      const body = ctx.request.body as Record<string, string>;
+      expect(Object.keys(body)).toHaveLength(1000);
+      expect(Object.values(body).some(v => v.includes('<script>'))).toBe(false);
+
       expect(next).toHaveBeenCalledTimes(1);
     });
   });

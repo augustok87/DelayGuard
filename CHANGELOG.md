@@ -9,6 +9,24 @@
 
 ## VERSION HISTORY
 
+### v1.71 (2026-08-26): Make CI a real gate again (R21, closes R5)
+
+**Test Results**: 2,481 passing of 2,506, 25 skipped, **0 failing**, 136 suites — and the suite is **8 seconds faster** (35.5s → 27.4s) because two real sleeps are gone. Lint 0 errors, type-check clean, build clean.
+
+Remote CI had failed on **every push for days**, predating this session — the local pre-commit gate passed 7/7 throughout. A check that always fails is worth exactly as much as one that never fails, and the project was about to be submitted for external review with no working remote gate.
+
+**The schema job: a test file was overwriting CI's configuration.** Both schema suites carried an unconditional module-scope `process.env.DATABASE_URL = 'postgresql://localhost:5432/delayguard_dev'`, discarding the credentialed URL the workflow supplies and reconnecting passwordless — which the `postgres:15` service rejects with SCRAM. The workflow was correct all along.
+
+The proof is the alarming part: **pointed at a database that does not exist, the suite passed 11/11**, because the value under test was never the value used. After the fix (`|| <dev fallback>`) the same probe correctly errors, and both paths pass locally.
+
+**The three timing/network tests now assert behaviour, not the machine.** `monitoring-service` asserted health *status* while the checks grade themselves on real elapsed time (Redis is "degraded" past 100 ms) — a stub clock now makes every duration exact, with a new test pinning 99 ms → healthy. `input-sanitization` replaced `end - start < 120` with the real contract: exactly one `sanitizeString` call per key and per value, **2000 for 1000 properties**, measured rather than assumed. The backoff test replaced a real 3-second sleep and a `duration > 3000` coin-flip with the *requested* schedule `[1000, 2000]`, plus a new test pinning the 5000 ms cap.
+
+**Every replacement was verified against a deliberately reintroduced regression** — and they are strictly stronger than what they replace: a double-walking sanitizer is now caught (4000 calls vs 2000), which the old wall-clock check would likely have passed on a fast machine.
+
+**R5 is closed by this.** Its named offenders were exactly these tests, the mechanism was always wall-clock-under-load, and they no longer consult the wall clock.
+
+**The lesson: a permanently-red check and a check that can never fail are the same bug wearing different clothes.** Both were present here at once — CI red for days, and a schema suite that passed against a nonexistent database.
+
 ### v1.70 (2026-08-26): Stop selling SMS the app cannot send (R20)
 
 **Test Results**: pre-commit quality gate 7/7. +5 tests.

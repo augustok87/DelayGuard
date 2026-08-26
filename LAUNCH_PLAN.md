@@ -468,7 +468,7 @@ The contract chosen for defect 1 matters: **the renderer owns the `#`, the data 
 
 Eight tests; the six that pin defective behaviour were run against the broken renderers first and failed there. Two pass in both states by design and say so — they guard the over-correction (a real ETA must still pass through untouched; a real tracking URL must still appear).
 
-### R21 — Remote CI has been red on every push for days, so it is not a gate `[AGENT]` — **new 2026-08-26, not submission-blocking**
+### ~~R21 — Remote CI has been red on every push for days, so it is not a gate~~ `[AGENT]` — ✅ **FIXED 2026-08-26 (v1.71); closes R5**
 
 Found by verifying the push rather than assuming it was fine. Both GitHub workflows fail on the pushed head — **and on every prior head going back at least to 2026-08-25**:
 
@@ -492,7 +492,29 @@ So this is **not** caused by the v1.67–v1.70 work; the local pre-commit gate p
 
 **This is also the strongest evidence yet for R5's re-diagnosis.** Locally R5 is intermittent — three full runs on 2026-08-26 gave 1 failure, 1 *different* failure, then 0. On a consistently-loaded CI runner it is close to deterministic. That is what a wall-clock-under-load defect looks like, and it is not what order-dependent state leakage looks like.
 
-**Fix direction (not started):** make the four offenders assert behaviour instead of elapsed milliseconds — call counts and fake timers for the backoff test, an injected clock or a generous-but-documented budget for the perf tests, and a properly injected `fetch` for `monitoring-service` so the health checks never depend on the internet. Closing this closes R5 as a side effect.
+**Fixed (v1.71). Each cause was root-caused, not silenced.**
+
+**1. The schema job — a test file was overwriting CI's configuration.** Both suites carried a module-scope line:
+
+```ts
+process.env.DATABASE_URL = 'postgresql://localhost:5432/delayguard_dev';   // unconditional
+```
+
+CI's credentialed `postgresql://postgres:postgres@localhost:5432/delayguard_test` was discarded and pg reconnected **passwordless**, which the `postgres:15` service rejects with SCRAM — hence "client password must be a string". The workflow was correct the whole time.
+
+**Proven before fixing, and the proof is the alarming part:** pointed at `postgresql://localhost:5432/definitely_not_a_real_db`, the suite **passed 11/11**. It could not fail, because the value under test was never the value used. Now `process.env.DATABASE_URL = process.env.DATABASE_URL || <dev fallback>`; the same probe correctly errors *"database does not exist"*, and both paths pass locally (51 tests: credentialed CI-shaped URL, and unset → dev fallback).
+
+**2–4. The three timing/network tests now assert behaviour, not the machine.**
+
+| Test | Was | Now |
+|---|---|---|
+| `monitoring-service` × 2 | Asserted health *status* while the checks grade themselves on real elapsed time (`responseTime < 100` for Redis) — so it asserted how fast the runner is | A stub clock (`freezeClock()`) makes every duration exact. Redis is pushed to 150 ms *by construction* for the degraded case, and a **new** test pins 99 ms → healthy |
+| `input-sanitization` "large objects" | `expect(end - start).toBeLessThan(120)` | One `sanitizeString` call per key and per value — **exactly 2000 for 1000 properties**, measured, plus a correctness assertion |
+| `optimized-database` backoff | Slept a **real 3 s** and asserted `duration > 3000`, against an implementation sleeping exactly 1000+2000 | Asserts the *requested* schedule: `[1000, 2000]`, plus a **new** test pinning the 5000 ms cap: `[1000, 2000, 4000, 5000]` |
+
+**Every replacement was verified against a deliberately reintroduced regression:** a double-walking sanitizer is caught (4000 calls vs 2000 — the old timing check would likely have passed it on a fast machine); dropping `responseTime < 100` fails the degraded test; constant backoff fails both backoff tests; removing only the cap fails only the cap test. **The new checks are strictly stronger than the ones they replace**, and the suite got 8 s faster (35.5 s → 27.4 s) because two real sleeps are gone.
+
+**R5 is closed by this.** Its remaining named offenders were exactly these; the mechanism was always wall-clock-under-load, and the tests no longer consult the wall clock.
 
 ### R20 — The listing sold SMS on both paid plans, and SMS cannot send at all `[AGENT]` — **new 2026-08-26, listing fixed same session (v1.70)**
 
@@ -789,8 +811,8 @@ Screencast, AI self-review, submit. Gated on R2 (needs a working app to film) an
 | **Real webhook ingest** | ⛔ **still never observed**, six weeks on. `orders` holds exactly **1** row, the synthetic `9900112233`. One real order closes it — and would give R18 its first test against an order that *has* tracking |
 | **R9 — agent can't authenticate** | ⛔ `[HUMAN]`, unchanged. `shopify app env show` 403s; every `/api/*` check is still a browser action |
 | **H8 → H-4 → H9** | ⛔ `[HUMAN]`. Screencast, AI self-review, submit |
-| **R5 — test flake** | ⚠️ open, **characterised further**: 3 local runs → 1 failure, 1 *different* failure, then 0. On CI it is near-deterministic (see R21) |
-| **R21 — remote CI permanently red** | ⚠️ `[AGENT]`, new, **not submission-blocking**. Both workflows have failed on *every* push for days, predating this session. Three causes: a schema-job SASL config error, R5's wall-clock assertions, and `monitoring-service`'s real network calls. **The repo currently has no working remote gate** |
+| **R5 — test flake** | ✅ **CLOSED (v1.71)** — its named offenders no longer consult the wall clock at all |
+| **R21 — remote CI permanently red** | ✅ **FIXED (v1.71).** A test file was overwriting CI's `DATABASE_URL`; three timing tests measured the runner. All four now assert behaviour, verified against reintroduced regressions |
 | R1 / R2 / R4-H4 / R6 / R7 | ✅ closed, evidence in §6 |
 
 **Critical path — the agent column is nearly empty now, which is the point:**

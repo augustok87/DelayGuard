@@ -199,12 +199,71 @@ describe('OptimizedDatabase', () => {
         .mockRejectedValueOnce(new Error('Connection timeout'))
         .mockResolvedValueOnce(mockResult);
 
-      const startTime = Date.now();
-      await database.query('SELECT * FROM test', [], { retries: 2 });
-      const duration = Date.now() - startTime;
+      // §6 R21: this used to sleep a REAL three seconds and assert
+      // `duration > 3000`, with the implementation sleeping exactly
+      // 1000 + 2000. That is a coin-flip against timer coalescing and it
+      // failed on CI while passing locally — and it cost three seconds of
+      // every single test run, on every machine, forever.
+      //
+      // Assert the schedule instead of the stopwatch: the delays the code
+      // ASKS for are the actual contract (1000, then 2000 — exponential,
+      // capped at 5000). This cannot be flaky and cannot be slow.
+      const scheduled: number[] = [];
+      const realSetTimeout = global.setTimeout;
+      const timeoutSpy = jest
+        .spyOn(global, 'setTimeout')
+        .mockImplementation(((fn: () => void, ms?: number) => {
+          scheduled.push(ms ?? 0);
+          // Run the continuation immediately: we are testing the requested
+          // backoff, not the passage of time.
+          return realSetTimeout(fn, 0);
+        }) as unknown as typeof global.setTimeout);
 
-      // Should have waited for backoff (at least 1000ms + 2000ms = 3000ms)
-      expect(duration).toBeGreaterThan(3000);
+      try {
+        await database.query('SELECT * FROM test', [], { retries: 2 });
+      } finally {
+        timeoutSpy.mockRestore();
+      }
+
+      expect(scheduled).toEqual([1000, 2000]);
+
+      // NOTE for the next reader: each attempt issues `SET statement_timeout`
+      // BEFORE the real query, so the queued rejections above are consumed by
+      // the SET, not by the SELECT. The retry/backoff contract is unaffected —
+      // it is what this test asserts — but do not assert an exact
+      // mockClient.query call count here expecting one call per attempt.
+    });
+
+    it('caps the exponential backoff at 5000ms', async() => {
+      // The other half of the contract — Math.min(…, 5000). Without this,
+      // removing the cap would go unnoticed: attempt 3 alone would ask for
+      // 8000ms and no existing test looks at it.
+      const mockResult: QueryResult = {
+        rows: [], rowCount: 0, command: 'SELECT', oid: 0, fields: [],
+      };
+      mockClient.query
+        .mockRejectedValueOnce(new Error('Connection timeout'))
+        .mockRejectedValueOnce(new Error('Connection timeout'))
+        .mockRejectedValueOnce(new Error('Connection timeout'))
+        .mockRejectedValueOnce(new Error('Connection timeout'))
+        .mockResolvedValueOnce(mockResult);
+
+      const scheduled: number[] = [];
+      const realSetTimeout = global.setTimeout;
+      const timeoutSpy = jest
+        .spyOn(global, 'setTimeout')
+        .mockImplementation(((fn: () => void, ms?: number) => {
+          scheduled.push(ms ?? 0);
+          return realSetTimeout(fn, 0);
+        }) as unknown as typeof global.setTimeout);
+
+      try {
+        await database.query('SELECT * FROM test', [], { retries: 4 });
+      } finally {
+        timeoutSpy.mockRestore();
+      }
+
+      expect(scheduled).toEqual([1000, 2000, 4000, 5000]);
     });
 
     it('should throw error after all retries exhausted', async() => {
