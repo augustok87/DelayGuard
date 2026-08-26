@@ -9,6 +9,18 @@
 
 ## VERSION HISTORY
 
+### v1.74 (2026-08-26): A carrier failure no longer discards an already-detected delay (R25)
+
+**Test Results**: 2,489 passing of 2,514, 25 skipped, 0 failing, 136 suites. Lint 0 errors, type-check clean.
+
+Found by asking what R24 does to the *code* rather than only to the feature. `processDelayCheck` runs RULE 1 (warehouse) first — it needs no carrier data, and its `delay_alerts` row is persisted before RULES 2–3 begin. The carrier fetch then sat unguarded in the middle of the function, and `getTrackingInfo` turns a ShipEngine 401 into a thrown `"Invalid API key"`, so the throw sailed past both `addNotificationJob(…)` and the `orders.updated_at` write at the end.
+
+**An already-detected, already-persisted warehouse delay was thrown away.** And it is live: R24 proves ShipEngine refuses `/v1/tracking` on the current plan, so every order carrying a tracking number aborts its whole delay check — masked only because production held a single *unfulfilled* order, and it would have fired the moment `#1001` was fulfilled.
+
+Fixed with a narrow boundary around the carrier call alone: a failure warns, sets `trackingInfo = null`, and skips RULE 2 for that tick. RULE 3 is unaffected (it reads `orders.tracking_status`, not the live fetch), and database/scoring failures still propagate so BullMQ retries them. Skipping RULE 2 for one tick costs latency in detection, never a lost detection.
+
+Three tests pin both sides, each verified against the matching mistake — removing the boundary fails two, widening it to swallow everything fails the third. `delay-check.test.ts` previously contained **zero** rejection cases: the entire carrier-failure path was untested.
+
 ### v1.73 (2026-08-26): `/monitoring/health` stops returning 503 forever (R23)
 
 **Test Results**: 2,486 passing of 2,511, 25 skipped, 0 failing, 136 suites. Lint 0 errors, type-check clean.

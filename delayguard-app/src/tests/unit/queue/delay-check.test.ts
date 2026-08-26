@@ -514,3 +514,54 @@ describe('processDelayCheck — settings columns come from app_settings, not sho
     }
   });
 });
+
+/**
+ * LAUNCH_PLAN §6 R25 — a carrier outage must not discard a delay that was
+ * already detected without the carrier.
+ *
+ * RULE 1 (warehouse) needs no carrier data at all: it compares the order's own
+ * age against a threshold. RULES 2 and 3 need ShipEngine. But the tracking
+ * fetch sat unguarded in the middle of the processor, so any ShipEngine
+ * failure threw past the notification dispatch at the end — discarding a
+ * warehouse alert that had *already been detected and persisted* moments
+ * earlier, and leaving `orders.updated_at` unmoved.
+ *
+ * This is not hypothetical: §6 R24 proves ShipEngine currently refuses
+ * `/v1/tracking` outright on this account's plan ("You must upgrade your
+ * billing plan"), and `getTrackingInfo` turns that 401 into a thrown
+ * "Invalid API key". So the moment any order carries a tracking number, every
+ * delay check on it aborts — including the one rule that would still work.
+ */
+describe('processDelayCheck — a carrier failure must not discard RULE 1 (§6 R25)', () => {
+  beforeEach(() => {
+    getTrackingInfoMock.mockRejectedValue(new Error('Invalid API key'));
+  });
+
+  it('still dispatches the warehouse alert when ShipEngine refuses', async() => {
+    mockCheckWarehouseDelay.mockResolvedValue(WAREHOUSE_RESULT);
+    wireQuery(makeOrderRow(), [{ tracking_url: null }]);
+
+    await processDelayCheck(makeJob());
+
+    expect(mockAddNotificationJob).toHaveBeenCalledTimes(1);
+    expect(mockAddNotificationJob.mock.calls[0][0]).toMatchObject({
+      delayType: 'WAREHOUSE_DELAY',
+    });
+  });
+
+  it('does not fail the job — the order is checked again next sweep', async() => {
+    mockCheckWarehouseDelay.mockResolvedValue(NOT_DELAYED);
+    wireQuery(makeOrderRow(), [{ tracking_url: null }]);
+
+    await expect(processDelayCheck(makeJob())).resolves.toBeUndefined();
+  });
+
+  it('still propagates failures that are NOT the carrier call', async() => {
+    // Guards the over-correction: the new boundary must be narrow. A database
+    // failure still has to reach BullMQ so attempts:3 retries it.
+    mockCheckWarehouseDelay.mockRejectedValue(new Error('Postgres is down'));
+    wireQuery(makeOrderRow(), [{ tracking_url: null }]);
+
+    await expect(processDelayCheck(makeJob())).rejects.toThrow(/Postgres is down/);
+  });
+});

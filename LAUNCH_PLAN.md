@@ -602,6 +602,27 @@ Same for USPS. The key authenticates fine — `GET /v1/carriers` returns 4 conne
 
 **Fourth instance of the same failure mode this project keeps paying for** — SendGrid trial → Twilio trial → SendGrid key scopes → ShipEngine plan. **The third-party account tier is invisible from inside the repo, and no amount of correct code substitutes for it.** Ask the vendor what it will let you do.
 
+### R25 — A carrier failure discarded a delay that had already been detected without the carrier `[AGENT]` — **new 2026-08-26, fixed same session (v1.74)**
+
+Found by asking what R24 will do to the *code*, not just to the feature — specifically, what happens the moment an order carries a tracking number.
+
+`processDelayCheck` runs RULE 1 (warehouse) first, which needs **no carrier data at all**: it compares the order's own age against a threshold, and by the time RULES 2–3 begin, its `delay_alerts` row is already persisted. The carrier fetch then sat **unguarded** in the middle of the function:
+
+```ts
+trackingInfo = await carrierService.getTrackingInfo(trackingNumber, carrierCode);   // throws
+…
+if (delayDetected && …) { await addNotificationJob({…}); }                          // never reached
+await query(`UPDATE orders SET updated_at = …`);                                    // never reached
+```
+
+`getTrackingInfo` converts a ShipEngine 401 into `throw new Error("Invalid API key")` (`carrier-service.ts:90`), and the processor's outer `catch` rethrows. **So an already-detected, already-persisted warehouse delay was thrown away, and `orders.updated_at` never moved.**
+
+**This is live, not hypothetical.** R24 proves ShipEngine refuses `/v1/tracking` on the current plan, so **every order carrying a tracking number aborts its entire delay check — including the one rule that would still have worked.** It has been masked only because production contained a single *unfulfilled* synthetic order; it would have fired the moment order `#1001` was fulfilled with tracking.
+
+**Fixed with a deliberately narrow boundary** around the carrier call only. A failure logs a warning, sets `trackingInfo = null`, and RULE 2 is skipped for that tick; **RULE 3 is unaffected** because it reads `orders.tracking_status` / `last_tracking_update` rather than the live fetch. Database and scoring failures still propagate so BullMQ's `attempts: 3` retries them. Carrier data is re-fetched next sweep, so skipping RULE 2 for one tick costs *latency in detection, never a lost detection*.
+
+Three tests pin **both** sides of the contract, and each was verified against the matching mistake: removing the boundary fails the two R25 tests; widening it to swallow every error fails the third (a Postgres failure must still reach BullMQ). Notably `delay-check.test.ts` contained **zero** `mockRejected` cases before this — the entire carrier-failure path was untested.
+
 ### R20 — The listing sold SMS on both paid plans, and SMS cannot send at all `[AGENT]` — **new 2026-08-26, listing fixed same session (v1.70)**
 
 Found by asking Twilio instead of assuming, in the same spirit as R1's SendGrid account. Every answer is disqualifying:

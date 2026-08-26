@@ -114,11 +114,47 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
       const carrierService = new CarrierService();
       const delayDetectionService = new DelayDetectionService(order.carrier_delay_days || 1);
 
-      // Get tracking information from carrier
-      trackingInfo = await carrierService.getTrackingInfo(trackingNumber, carrierCode);
+      // Get tracking information from carrier.
+      //
+      // §6 R25: this call is the ONLY part of the processor that needs a
+      // carrier, and RULES 2 and 3 are the only rules that need it. RULE 1
+      // (warehouse) compares the order's own age against a threshold and is
+      // already complete by this point — its alert row is persisted. An
+      // unguarded throw here sailed past the dispatch at the end of the
+      // function and discarded that result.
+      //
+      // Not hypothetical: §6 R24 proves ShipEngine currently refuses
+      // /v1/tracking on this account's plan, and getTrackingInfo turns the
+      // 401 into a thrown "Invalid API key" — so every order carrying a
+      // tracking number aborted its whole delay check, including the one rule
+      // that would still have worked.
+      //
+      // The boundary is deliberately narrow: it wraps the carrier call ONLY.
+      // A database or scoring failure still propagates so BullMQ's attempts:3
+      // retries it. Carrier data is re-fetched on the next sweep anyway, so
+      // skipping RULES 2-3 for one tick costs a delay in detection, never a
+      // lost detection.
+      try {
+        trackingInfo = await carrierService.getTrackingInfo(trackingNumber, carrierCode);
+      } catch (trackingError) {
+        logger.warn(
+          `⚠️ Carrier tracking unavailable for order ${orderId} — skipping RULES 2 and 3 this tick`,
+          {
+            orderId,
+            trackingNumber,
+            carrierCode,
+            error:
+              trackingError instanceof Error
+                ? trackingError.message
+                : String(trackingError),
+          },
+        );
+        trackingInfo = null;
+      }
 
-      // RULE 2: Check for Carrier Reported Delays - only if enabled
-      if (order.carrier_delays_enabled) {
+      // RULE 2: Check for Carrier Reported Delays - only if enabled AND the
+      // carrier actually answered (§6 R25).
+      if (trackingInfo && order.carrier_delays_enabled) {
         logger.info(`🚚 Checking Rule 2: Carrier Reported Delays (threshold: ${order.carrier_delay_days} days)`);
         const carrierDelayResult = await delayDetectionService.checkForDelays(trackingInfo);
 
