@@ -20,6 +20,22 @@ jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => mockPoolInstance),
 }));
 
+/**
+ * Deterministic stand-in for the wall clock (§6 R21) — mirrors the helper in
+ * tests/unit/monitoring-service.test.ts. MonitoringService grades every health
+ * check on `Date.now()` deltas, so a test asserting a health STATUS is really
+ * asserting how fast the machine is unless the clock is controlled.
+ */
+function freezeClock(startMs = 1_700_000_000_000): { advance: (ms: number) => void } {
+  let now = startMs;
+  jest.spyOn(Date, 'now').mockImplementation(() => now);
+  return {
+    advance: (ms: number) => {
+      now += ms;
+    },
+  };
+}
+
 describe('MonitoringService', () => {
   let monitoringService: MonitoringService;
   let mockConfig: AppConfig;
@@ -59,8 +75,28 @@ describe('MonitoringService', () => {
     monitoringService = new MonitoringService(mockConfig);
   });
 
+  afterEach(() => {
+    // freezeClock() installs a Date.now spy; without this it leaks into the
+    // next test and every measured duration reads 0 there too.
+    jest.restoreAllMocks();
+  });
+
   describe('performHealthChecks', () => {
     it('should perform all health checks successfully', async() => {
+      // §6 R21. Two hidden dependencies made this the last red test on CI.
+      //
+      // 1. The health checks grade themselves on REAL elapsed time — Redis is
+      //    "degraded" past 100 ms — so asserting "all healthy" against a live
+      //    clock asserts how fast the runner is. freezeClock() makes every
+      //    measured duration exactly 0.
+      // 2. It never stubbed `fetch`, so it passed only because
+      //    tests/setup/jest.setup.ts installs a global one. That is the hazard
+      //    CLAUDE.md already records: checkExternalAPIs reaches the public
+      //    internet without it, and the test's name claims coverage it does
+      //    not own. Stub it here so the test states its own preconditions.
+      freezeClock();
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+
       const healthChecks = await monitoringService.performHealthChecks();
 
       expect(healthChecks).toHaveLength(6); // database, redis, 3 external APIs, application

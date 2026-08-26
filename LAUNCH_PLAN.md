@@ -516,6 +516,10 @@ CI's credentialed `postgresql://postgres:postgres@localhost:5432/delayguard_test
 
 **R5 is closed by this.** Its remaining named offenders were exactly these; the mechanism was always wall-clock-under-load, and the tests no longer consult the wall clock.
 
+⚠️ **It took two pushes, and the reason is worth recording.** The first attempt fixed three of four and CI stayed red — because **there are two `monitoring-service` test files**, `tests/unit/monitoring-service.test.ts` (423 lines) and `tests/unit/services/monitoring-service.test.ts` (215 lines), and only one was patched. The second file had *two* hidden dependencies rather than one: the same wall-clock problem, **and** it never stubbed `fetch`, so it passed only because `tests/setup/jest.setup.ts` installs a global one — the precise hazard `CLAUDE.md` already records for `checkExternalAPIs`. Both are now fixed and the second stubs `fetch` itself.
+
+**The lesson: "I fixed the failing test" is a claim about a file, not about the suite.** Verifying against CI rather than declaring victory is what caught it — the same discipline that this plan keeps having to relearn. *(The duplicate-monitoring-test-file overlap is real and unaddressed; a future cleanup, not a launch item.)*
+
 ### R20 — The listing sold SMS on both paid plans, and SMS cannot send at all `[AGENT]` — **new 2026-08-26, listing fixed same session (v1.70)**
 
 Found by asking Twilio instead of assuming, in the same spirit as R1's SendGrid account. Every answer is disqualifying:

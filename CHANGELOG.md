@@ -25,6 +25,8 @@ The proof is the alarming part: **pointed at a database that does not exist, the
 
 **R5 is closed by this.** Its named offenders were exactly these tests, the mechanism was always wall-clock-under-load, and they no longer consult the wall clock.
 
+⚠️ **It took two pushes.** The first fixed three of four and CI stayed red, because **there are two `monitoring-service` test files** and only one was patched. The second had two hidden dependencies rather than one — the same clock problem, plus it never stubbed `fetch` and passed only because `jest.setup.ts` installs a global one, the exact hazard `CLAUDE.md` records for `checkExternalAPIs`. **"I fixed the failing test" is a claim about a file, not about the suite** — verifying against CI instead of declaring victory is what caught it.
+
 **The lesson: a permanently-red check and a check that can never fail are the same bug wearing different clothes.** Both were present here at once — CI red for days, and a schema suite that passed against a nonexistent database.
 
 ### v1.70 (2026-08-26): Stop selling SMS the app cannot send (R20)
