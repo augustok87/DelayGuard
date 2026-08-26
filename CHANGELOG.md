@@ -9,6 +9,18 @@
 
 ## VERSION HISTORY
 
+### v1.70 (2026-08-26): Stop selling SMS the app cannot send (R20)
+
+**Test Results**: pre-commit quality gate 7/7. +5 tests.
+
+Checked Twilio directly rather than trusting the config, and found the account is a **trial that owns no phone numbers**. The `TWILIO_PHONE_NUMBER` set in Vercel production is not on the account at all, so every send would fail with Twilio **21606** before the trial's verified-recipient rule even applied. Zero messages have ever been sent. **R19 is why this stayed hidden:** SMS could never reach Twilio, so the broken credentials were never exercised — two faults stacked in one channel, the outer hiding the inner, exactly like R1's four gates.
+
+Meanwhile the App Store listing advertised SMS in five places including both paid tiers, and `billing-service.ts` listed *"Email and SMS notifications"* on Pro and Enterprise. A reviewer subscribing to Pro to test a $7 feature that silently does nothing is a rejection, and a rejection costs a full review cycle.
+
+**Resolved by aligning the copy to LAUNCH_PLAN decision D3**, which already said SMS is off at launch (email-only, avoiding the A2P 10DLC wait) — the schema agreed via `sms_enabled DEFAULT FALSE`; only the merchant-facing copy never got the memo. SMS removed from the listing, the plan feature lists and the asset README; **kept gated in code** so re-enabling is a config change, not a rewrite. `billing-plan-claims.test.ts` holds the line and is explicitly marked for deletion once SMS is real.
+
+**The lesson, for the third time this project:** the provider account is a gate, and it is invisible from inside the repo. R1 was four gates deep before an email sent; this is the same failure in the second channel, found the same way — by asking the provider what is true instead of reading what we configured.
+
 ### v1.69 (2026-08-26): The boot validator finally checks the variables that broke email (R11)
 
 **Test Results**: pre-commit quality gate 7/7. +6 tests. **Session total: 2,474 passing of 2,499, 25 skipped, 0 failing, 135 suites** (+28 tests over the 2,446 baseline), lint 0 errors, type-check clean, build clean.

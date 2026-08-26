@@ -72,7 +72,7 @@ DelayGuard is your 24/7 shipping watchdog. Its delay detection system monitors y
 ### **⚡ Instant Action Tools**
 - **One-click resolution**: mark delays resolved with automatic customer notification
 - **Bulk actions**: handle multiple delays at once during busy seasons
-- **Custom notification templates**: send branded emails and SMS to customers
+- **Custom notification templates**: send branded emails to customers
 - **Integrated tracking**: view carrier tracking without leaving the app
 
 **Benefit:** Spend less time firefighting and more time running your store.
@@ -81,7 +81,7 @@ DelayGuard is your 24/7 shipping watchdog. Its delay detection system monitors y
 
 ### **💬 Proactive Customer Communication**
 - **Automatic delay notifications**: keep customers informed before they reach out
-- **Email & SMS support**: reach customers on their preferred channel
+- **Reliable email delivery**: notifications sent from your own authenticated sending domain
 - **Branded templates**: professional messages that match your store's voice
 - **Tracking link integration**: customers track packages directly from notifications
 
@@ -130,6 +130,8 @@ DelayGuard is your 24/7 shipping watchdog. Its delay detection system monitors y
 ## 💰 Pricing Plans
 
 > Pricing decision D1 (LAUNCH_PLAN): Free + Pro + Enterprise. These amounts are the single source of truth for all listing copy and assets.
+>
+> **SMS is deliberately absent from this listing (LAUNCH_PLAN decision D3 + §6 R20).** SMS ships as plan-gated code but is OFF at launch — `app_settings.sms_enabled` defaults to FALSE, and the Twilio account is a trial that owns no phone number, so no SMS can currently be delivered. Advertising a paid feature the app cannot perform is a rejection risk. Re-add SMS to this copy only after the Twilio account is upgraded, an SMS-capable number is purchased, and A2P 10DLC brand + campaign registration is approved.
 
 ### **Free** - $0/month
 **Perfect for getting started**
@@ -144,7 +146,6 @@ DelayGuard is your 24/7 shipping watchdog. Its delay detection system monitors y
 **For growing brands**
 - Unlimited delay alerts
 - Everything in Free, plus:
-- SMS notifications
 - Advanced analytics
 - Unlimited custom templates
 - Priority email support
@@ -211,7 +212,7 @@ That's it! Delay alerts begin as soon as your orders have tracking activity, and
 ### **Integrations:**
 - ✅ Shopify Orders API
 - ✅ Major shipping carriers (UPS, FedEx, DHL, USPS, Canada Post, Royal Mail, and more via ShipEngine)
-- ✅ Email and SMS notifications (SendGrid & Twilio infrastructure)
+- ✅ Email notifications (SendGrid infrastructure, domain-authenticated sending)
 
 ### **Performance:**
 - ⚡ Fast, responsive dashboard
@@ -254,7 +255,7 @@ A: You set a custom threshold (e.g., "alert me if an order hasn't shipped within
 A: Yes! As long as your 3PL provides tracking numbers to Shopify (which most do), DelayGuard will monitor those orders automatically. No special setup needed.
 
 ### **Q: Can I customize the notification messages?**
-A: Absolutely. You can create custom email and SMS templates (Pro plan and above) with your brand voice, logo, and messaging. We provide ready-made templates to start with.
+A: Absolutely. You can create custom email templates (Pro plan and above) with your brand voice, logo, and messaging. We provide ready-made templates to start with.
 
 ### **Q: What happens when I hit my free-plan alert limit?**
 A: We'll let you know before you hit your limit. You can upgrade anytime with one click, with no data loss or service interruption. No surprise charges—ever.

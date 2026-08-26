@@ -132,7 +132,6 @@ Detects delays based on:
 
 ✅ **Multi-Channel Notifications**
 - Professional email templates
-- SMS alerts (Pro and Enterprise plans)
 - Customizable branding and messaging
 
 ✅ **Analytics Dashboard**
@@ -155,7 +154,7 @@ Detects delays based on:
 
 **Pro Plan** - $7/month
 - Unlimited delay alerts
-- Email + SMS notifications
+- Email notifications
 - Advanced analytics
 - Custom templates
 - 14-day free trial

@@ -468,6 +468,28 @@ The contract chosen for defect 1 matters: **the renderer owns the `#`, the data 
 
 Eight tests; the six that pin defective behaviour were run against the broken renderers first and failed there. Two pass in both states by design and say so — they guard the over-correction (a real ETA must still pass through untouched; a real tracking URL must still appear).
 
+### R20 — The listing sold SMS on both paid plans, and SMS cannot send at all `[AGENT]` — **new 2026-08-26, listing fixed same session (v1.70)**
+
+Found by asking Twilio instead of assuming, in the same spirit as R1's SendGrid account. Every answer is disqualifying:
+
+| Check (Twilio REST API, 2026-08-26) | Result |
+|---|---|
+| Account type | **Trial** |
+| Phone numbers owned (`IncomingPhoneNumbers`) | **NONE** |
+| `TWILIO_PHONE_NUMBER` in Vercel production | `+13188273941` — **not on this account** |
+| Verified destinations (a trial can send ONLY to these) | one Argentine number |
+| Messages ever sent (`Messages`) | **0** |
+
+Because the configured From number does not belong to the account, every send fails with Twilio **21606** before the trial's verified-recipient restriction even applies. **R19 explains why this never surfaced:** SMS could not reach Twilio at all, so the broken credentials were never exercised. Two independent faults stacked in the same channel, and the outer one hid the inner one — the same shape as R1's four gates.
+
+**Why it was submission-blocking:** `SHOPIFY_APP_STORE_LISTING.md` advertised SMS in five places, including the **Pro ($7)** and **Enterprise ($25)** feature lists, and `billing-service.ts` listed *"Email and SMS notifications"* on both paid tiers. A reviewer who subscribes to Pro and enables SMS gets silence. Rejection costs a full review cycle.
+
+**Resolution: align the copy to the decision this plan already made.** §5 **D3** says *"SMS at launch → Off (email-only). Avoids A2P 10DLC wait; SMS stays a paid-tier feature to enable later."* The schema already agreed (`sms_enabled BOOLEAN DEFAULT FALSE`); only the merchant-facing copy never got the memo. SMS is removed from the listing, the plan feature lists, and the asset README — **but stays gated in code**, so re-enabling is a config change rather than a rewrite.
+
+`src/tests/unit/services/billing-plan-claims.test.ts` pins the invariant and is explicitly marked for deletion once SMS is real. It failed on both paid tiers before the fix.
+
+**Reopening SMS requires, in order:** upgrade the Twilio account off trial → buy an SMS-capable number → **A2P 10DLC brand + campaign registration** (carrier approval takes days to weeks) → restore the copy → prove one real delivery. Do not restore the copy before that last step.
+
 ### R9 — The agent can no longer authenticate to Shopify, or read any Vercel secret `[HUMAN]` — **new 2026-08-25**
 
 Two operational facts this plan asserted as ground truth are **false as of today**, and together they block all agent-side verification of authenticated endpoints:
@@ -734,6 +756,7 @@ Screencast, AI self-review, submit. Gated on R2 (needs a working app to film) an
 | **R17 — one send marked every alert delivered** | ✅ **FIXED + PROVEN IN PRODUCTION (v1.67).** Three alerts, three sends, three `notification_sent_at` ~20 ms apart; alert 4 untouched. Guard is a real SQL engine (pg-mem) running the production `runMigrations()` — all five assertions failed against the broken code first |
 | **R19 — SMS dead on every plan** | ✅ **FIXED (v1.67), new this session.** The processor never selected `s.shop_domain`, so the plan gate resolved an undefined shop and failed closed to `free`. Not a leak — a paid entitlement that could never fire. **Would have become merchant-visible the moment H3 goes live** |
 | **R18 — three defects in the delivered email** | ⚠️ **2 of 3 FIXED + DEPLOYED (v1.68).** `#DG1001` and the empty delivery-date label are data-side and live now. **Defect 3 (no CTA) is template-side and is NOT live** — see the human column |
+| **R20 — listing sold SMS the app cannot send** | ✅ **LISTING FIXED (v1.70), new this session.** Twilio is a *trial account owning no phone number*; the configured From number isn't on the account and 0 messages have ever been sent. Copy aligned to decision D3 (email-only at launch); SMS stays gated in code. **Reopening it needs A2P 10DLC — days to weeks** |
 | **R11 — env validator gap** | ✅ **FIXED + DEPLOYED (v1.69).** And it repaid immediately: `/health` `200` on the new deployment *proves* both SendGrid vars are present and non-empty in production — through variables no session can read |
 | **R8 — support mailbox** | ⛔ `[HUMAN]`, **submission-blocking, ~10 min.** Still no MX. ⚠️ **This plan's own SPF warning was wrong and is corrected in §6** — the zone has *no* SPF, so Cloudflare will add one rather than rewrite one |
 | **H3 / H7** | ⛔ `[HUMAN]`. App Pricing plans (**blocks all revenue**) and ShipStation Advanced. H3 is now more urgent than it looks: R19's fix means SMS will genuinely start working the moment a paid plan exists |
@@ -752,6 +775,7 @@ Screencast, AI self-review, submit. Gated on R2 (needs a working app to film) an
 | 3. **Place one real order** on `delayguard-dev.myshopify.com` and fulfil it with tracking | 3. Prove the webhook landed in Postgres, and read the resulting email — the first one with a real tracking CTA |
 | 4. **R18 defect 3** — mint a temporary **Full-Access** SendGrid key so the template can be pushed | 4. Run `npm run sendgrid:create-template`, set the new `d-…` id, redeploy, close R18 |
 | 5. **H7** — confirm ShipStation Advanced | 5. Close or re-scope R5 |
+| 6. *(post-launch)* Twilio: upgrade off trial, buy an SMS-capable number, register A2P 10DLC — then restore the SMS copy | 6. Delete `billing-plan-claims.test.ts` only after one real SMS is delivered |
 | 6. **H8** screencast → **H-4** AI self-review → **H9** submit | 6. Rewrite §7 |
 
 **The one thing that is easy to get wrong next session.** `src/scripts/create-sendgrid-template.ts` is now **ahead of the template deployed in SendGrid** — it has the `{{else}}` no-tracking branch, `d-5755ad471bd64f15bf2bd61f8b848ad0` does not. The repo is not the source of truth for what merchants receive until that push happens, and **the script CREATES a new template rather than versioning the existing one**, so the id changes and `SENDGRID_DELAY_TEMPLATE_ID` must be updated with it. Also note the production key is Restricted-Access `mail.send` only — `/v3/templates` and `/v3/whitelabel/domains` both 403, so no session can inspect or push templates without a temporary key.

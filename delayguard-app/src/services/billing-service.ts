@@ -10,6 +10,12 @@
  *     GraphQL API (`currentAppInstallation.activeSubscriptions`).
  *   - `meetsPlan` / `isSmsAllowed` gate paid features (SMS is Pro+).
  *
+ * ⚠️ SMS is gated in CODE but deliberately absent from the advertised plan
+ * features (LAUNCH_PLAN decision D3 + §6 R20): the Twilio account is a trial
+ * that owns no phone number, so no SMS can currently be delivered, and
+ * advertising a paid feature the app cannot perform is a rejection risk.
+ * `billing-plan-claims.test.ts` holds that line; delete it when SMS is real.
+ *
  * FAIL-CLOSED CONTRACT: any failure (shop missing, DB error, Shopify API
  * error, unrecognized plan name) resolves to the free tier. Never throw a
  * merchant into a paid tier on ambiguity.
@@ -73,7 +79,7 @@ export class BillingService {
         trial_days: 14,
         features: [
           "Unlimited delay alerts",
-          "Email and SMS notifications",
+          "Email notifications",
           "Advanced analytics",
           "Custom templates",
           "Priority email support",
@@ -85,7 +91,7 @@ export class BillingService {
         trial_days: 14,
         features: [
           "Unlimited delay alerts",
-          "Email and SMS notifications",
+          "Email notifications",
           "Advanced analytics with custom reports",
           "White-label notifications",
           "API access",
