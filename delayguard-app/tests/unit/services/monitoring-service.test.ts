@@ -100,7 +100,15 @@ describe('MonitoringService', () => {
       const healthChecks = await monitoringService.performHealthChecks();
 
       expect(healthChecks).toHaveLength(6); // database, redis, 3 external APIs, application
-      expect(healthChecks.every(check => check.status === 'healthy')).toBe(true);
+
+      // Report WHICH check is unhealthy and why. `every(...) === true` fails
+      // with "expected true, received false" and names nothing, which cost two
+      // blind CI round-trips (§6 R21).
+      expect(
+        healthChecks
+          .filter(c => c.status !== 'healthy')
+          .map(c => `${c.name}=${c.status} rt=${c.responseTime} err=${c.error ?? '-'} details=${JSON.stringify(c.details ?? {})}`),
+      ).toEqual([]);
     });
 
     it('should detect unhealthy services', async() => {

@@ -133,7 +133,13 @@ describe('MonitoringService', () => {
       const checks = await monitoringService.performHealthChecks();
 
       expect(checks).toHaveLength(6); // Database, Redis, 3 external APIs, Application
-      expect(checks.every(check => check.status === 'healthy')).toBe(true);
+
+      // Report WHICH check is unhealthy and why (§6 R21).
+      expect(
+        checks
+          .filter(c => c.status !== 'healthy')
+          .map(c => `${c.name}=${c.status} rt=${c.responseTime} err=${c.error ?? '-'} details=${JSON.stringify(c.details ?? {})}`),
+      ).toEqual([]);
     });
 
     it('should detect unhealthy services', async() => {
