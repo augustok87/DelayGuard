@@ -122,6 +122,9 @@ describe('SMSService body — §6 R18 (same defects, second channel)', () => {
     expect(await body()).not.toContain('Track: .');
   });
 
+  // Passes in both the broken and fixed states, deliberately (tests.md): it
+  // pins the OTHER half of the contract, so the "drop the dangling Track:"
+  // fix cannot quietly drop real tracking links too.
   it('still includes the tracking link when the order has one', async() => {
     const withTracking = await body(
       sparseDelay({ trackingUrl: 'https://ups.com/track?t=1Z999' }),

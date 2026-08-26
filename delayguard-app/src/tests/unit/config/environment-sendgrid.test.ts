@@ -60,6 +60,12 @@ describe('environment validator — SendGrid delivery variables (§6 R11)', () =
     expect(result.errors.join('\n')).toContain('SENDGRID_FROM_EMAIL');
   });
 
+  // Passes in both the broken and fixed states, deliberately (tests.md): it is
+  // the false-positive guard, and it is NOT a check that cannot fail — an
+  // earlier draft of this validator rejected any id not matching
+  // /^d-[0-9a-f]{32}$/, and this test is what caught it. Production calls
+  // process.exit(1) on a failed validation, so a rule that is merely too
+  // narrow is an outage.
   it('passes production validation when both are present', () => {
     process.env.NODE_ENV = 'production';
     process.env.SENDGRID_DELAY_TEMPLATE_ID = 'd-4a91c0f2b7e34d5a8c1f60b92e7d3a58';
