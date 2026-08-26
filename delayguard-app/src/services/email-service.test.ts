@@ -65,14 +65,22 @@ describe("EmailService.ping", () => {
     expect(result.latencyMs).toBeGreaterThanOrEqual(0);
   });
 
-  it("targets the lightest SendGrid liveness endpoint with the API key in the Authorization header", async() => {
+  it("probes a scope-free endpoint so a Restricted-Access key still passes (§6 R23)", async() => {
+    // This probed /v3/user/profile, which requires a scope the PRODUCTION key
+    // does not have: it is Restricted-Access `mail.send` only. Verified live
+    // 2026-08-26 — /v3/user/profile returns 403, /v3/scopes returns 200 with
+    // the same key. So the probe reported SendGrid "degraded" forever and
+    // /monitoring/health returned 503 on a perfectly working integration.
+    //
+    // /v3/scopes answers for ANY valid key, which is exactly the question a
+    // liveness probe is asking: is this credential live?
     fetchMock.mockResolvedValue({ ok: true, status: 200, statusText: "OK" });
 
     await emailService.ping();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.sendgrid.com/v3/user/profile");
+    expect(url).toBe("https://api.sendgrid.com/v3/scopes");
     expect(init.headers).toMatchObject({
       Authorization: "Bearer test-sendgrid-key",
     });

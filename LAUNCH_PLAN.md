@@ -569,6 +569,8 @@ GET https://delayguard-api.vercel.app/monitoring/health  →  HTTP 503
 
 Four tests, all run against the broken probe first. Two pin the mechanism so a regression cannot slip back: one asserts a rejected credential grades **degraded, not unhealthy**, and one asserts the path **never touches `global.fetch`**. Verified by reintroducing each defect — collapsing degraded→unhealthy fails exactly the first, and re-adding a hand-rolled `fetch` fails exactly the second.
 
+**One more layer underneath (v1.73b).** Deploying the delegation turned ShipEngine and Twilio healthy but left **SendGrid degraded — now for a true reason.** `EmailService.ping()` probed `/v3/user/profile`, which requires a scope the production key does not have: it is Restricted-Access `mail.send` only. Verified live with that key: **`/v3/user/profile` → 403, `/v3/scopes` → 200.** The check was reporting honestly; the *probe target* was wrong, testing a scope the app never needs instead of whether the credential is live. Repointed at `/v3/scopes`, which answers for any valid key.
+
 ⚠️ **The duplicate-test-file trap bit again and was caught locally this time.** `tests/unit/monitoring-service.test.ts` stubbed `global.fetch` in ten places to simulate vendor states; with `fetch` no longer on the path those stubs were inert and six tests failed. Both files now mock at the service level. **This is the third time in one session that two copies of the same test drifted apart — the overlap is real technical debt and should be collapsed post-launch.**
 
 ### R20 — The listing sold SMS on both paid plans, and SMS cannot send at all `[AGENT]` — **new 2026-08-26, listing fixed same session (v1.70)**

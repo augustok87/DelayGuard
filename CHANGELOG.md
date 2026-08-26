@@ -27,6 +27,8 @@ Now delegated to those, running concurrently. `PingResult`'s three states map 1:
 
 Four tests, all red against the broken probe first; two pin the mechanism (a rejected credential must grade **degraded, not unhealthy**; the path must **never touch `global.fetch`**), each verified by reintroducing exactly that defect.
 
+**One more layer underneath.** Deploying the delegation turned ShipEngine and Twilio healthy and left **SendGrid degraded for a true reason**: `EmailService.ping()` probed `/v3/user/profile`, which needs a scope the production key lacks (Restricted-Access `mail.send` only). Verified live with that key — `/v3/user/profile` → **403**, `/v3/scopes` → **200**. The check was honest; the probe target was wrong, testing a scope the app never needs instead of whether the credential is live. Repointed at `/v3/scopes`.
+
 ⚠️ **The duplicate-test-file trap bit a third time** — `tests/unit/monitoring-service.test.ts` stubbed `global.fetch` in ten places, all inert once `fetch` left the path. Caught by the local gate this time rather than by CI. The two overlapping monitoring test files are real debt and should be collapsed post-launch.
 
 ### v1.72 (2026-08-26): The Application health check measured heap against the wrong denominator (R22)

@@ -138,7 +138,13 @@ export class EmailService {
     const timeoutHandle = setTimeout(() => controller.abort(), PING_TIMEOUT_MS);
 
     try {
-      const response = await fetch("https://api.sendgrid.com/v3/user/profile", {
+      // /v3/scopes, not /v3/user/profile (§6 R23). The production key is
+      // Restricted-Access `mail.send` only, so it gets 403 from /v3/user/profile
+      // — a real rejection, which graded SendGrid "degraded" forever and made
+      // /monitoring/health return 503 on a working integration. /v3/scopes
+      // answers for any valid key, which is the question a liveness probe is
+      // actually asking. Verified live: 403 vs 200 with the same key.
+      const response = await fetch("https://api.sendgrid.com/v3/scopes", {
         headers: { Authorization: `Bearer ${this.apiKey}` },
         signal: controller.signal,
       });
