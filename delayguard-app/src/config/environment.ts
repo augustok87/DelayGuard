@@ -31,6 +31,11 @@ interface EnvironmentConfig {
   TWILIO_AUTH_TOKEN: string;
   TWILIO_PHONE_NUMBER: string;
 
+  // Email delivery (LAUNCH_PLAN §6 R1/R11). Required in production: the send
+  // path refuses to run without them, and for three weeks nothing ever sent.
+  SENDGRID_DELAY_TEMPLATE_ID?: string;
+  SENDGRID_FROM_EMAIL?: string;
+
   // Monitoring
   SENTRY_DSN?: string;
 
@@ -44,6 +49,12 @@ interface ValidationResult {
   errors: string[];
   warnings: string[];
 }
+
+/**
+ * EmailService's dev-only stand-in (see services/email-service.ts). Kept in
+ * sync by environment-sendgrid.test.ts, which imports both.
+ */
+const PLACEHOLDER_DELAY_TEMPLATE_ID = "d-delay-notification-template";
 
 class EnvironmentValidator {
   private config: Partial<EnvironmentConfig> = {};
@@ -92,6 +103,7 @@ class EnvironmentValidator {
     this.validatePort();
     this.validateNodeEnv();
     this.validateApiKeys();
+    this.validateSendGridDelivery();
 
     // Check for optional but recommended variables
     this.checkOptionalVariables();
@@ -161,6 +173,75 @@ class EnvironmentValidator {
       if (value && value.includes("your_") && value.includes("_here")) {
         this.errors.push(`${key} appears to be a placeholder value`);
       }
+    }
+  }
+
+  /**
+   * SendGrid delivery variables (§6 R11).
+   *
+   * These are what actually make a delay email leave the building, and their
+   * absence is invisible: EmailService throws only on the send path, so a
+   * deployment with neither set looks perfectly healthy until a notification
+   * is owed. Boot is the right place to find out.
+   *
+   * ABSENCE is fatal in production (module load calls process.exit(1)): a
+   * deployment that cannot deliver its only product should not pretend to be
+   * healthy, and absence is unambiguous.
+   *
+   * FORMAT problems only ever warn. The production values are Sensitive Vercel
+   * variables that no session can read, so a format rule that turned out to be
+   * too narrow — a `Name <addr@host>` From, an id shape SendGrid also accepts —
+   * would take the whole app down on a working deployment. Reject what is
+   * known-bad; never guess at what is known-good.
+   *
+   * Outside production everything warns, so local dev still boots against
+   * EmailService's dev placeholders.
+   */
+  private validateSendGridDelivery(): void {
+    const isProduction = process.env.NODE_ENV === "production";
+    const missing = (message: string): void => {
+      if (isProduction) {
+        this.errors.push(message);
+      } else {
+        this.warnings.push(message);
+      }
+    };
+    const suspect = (message: string): void => {
+      this.warnings.push(message);
+    };
+
+    const templateId = process.env.SENDGRID_DELAY_TEMPLATE_ID?.trim();
+    if (!templateId) {
+      missing(
+        "SENDGRID_DELAY_TEMPLATE_ID is not set — delay emails cannot be sent. " +
+          "Create the template with `npm run sendgrid:create-template` and set the printed d-… id.",
+      );
+    } else if (templateId === PLACEHOLDER_DELAY_TEMPLATE_ID) {
+      // Reject the value we KNOW is wrong rather than pattern-matching the
+      // ones we think are right: the production id is a Sensitive Vercel
+      // variable no session can read, so a format guess that turned out to be
+      // too narrow would fail boot on a perfectly good deployment.
+      suspect(
+        "SENDGRID_DELAY_TEMPLATE_ID is still EmailService's dev placeholder — " +
+          "SendGrid will reject the send. Set the real d-… id.",
+      );
+    } else {
+      this.config.SENDGRID_DELAY_TEMPLATE_ID = templateId;
+    }
+
+    const fromEmail = process.env.SENDGRID_FROM_EMAIL?.trim();
+    if (!fromEmail) {
+      missing(
+        "SENDGRID_FROM_EMAIL is not set — delay emails cannot be sent. " +
+          "Set it to an address on a domain authenticated in SendGrid.",
+      );
+    } else if (!/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(fromEmail)) {
+      suspect(
+        `SENDGRID_FROM_EMAIL does not look like a bare email address (got "${fromEmail}") — ` +
+          "SendGrid rejects any From that is not a verified sender identity.",
+      );
+    } else {
+      this.config.SENDGRID_FROM_EMAIL = fromEmail;
     }
   }
 

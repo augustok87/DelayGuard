@@ -483,13 +483,27 @@ Chain: every input in `NotificationPreferences` is `disabled={loading}`, and the
 
 **Workaround while the fix is undeployed:** paste the value instead of typing it — a paste is a single change event.
 
-### R11 — The boot-time env validator does not check the variables that broke email `[AGENT]` — **new 2026-08-25**
+### ~~R11 — The boot-time env validator does not check the variables that broke email~~ `[AGENT]` — ✅ **FIXED 2026-08-26 (v1.69)**
 
 `config/environment.ts`'s optional-variable list is exactly `SENTRY_DSN`, `CSRF_SECRET`, `JWT_SECRET`. It does **not** check `SENDGRID_DELAY_TEMPLATE_ID` or `SENDGRID_FROM_EMAIL` — the two variables whose absence silently broke every production delay email for three weeks (R1).
 
 This was found by trying to use the startup log as evidence that the deploy had picked up the new values: the log showed no warning about them, which looked like confirmation. **It was not — the validator never looks at them, so its silence is not evidence.** A check that cannot fail proves nothing (global rule #11).
 
-`resolveDelayTemplateId()` and `resolveFromAddress()` do throw in production, but only on the send path, and nothing ever sent. Adding both to the validator would have surfaced R1 at the first cold start. Small, TDD-able, not yet done.
+`resolveDelayTemplateId()` and `resolveFromAddress()` do throw in production, but only on the send path, and nothing ever sent. Adding both to the validator would have surfaced R1 at the first cold start.
+
+**Fix (v1.69), with one deliberate constraint.** `validateSendGridDelivery()` now checks both. But module load calls **`process.exit(1)`** on an invalid production environment (`config/environment.ts:314`) — so a false positive here is not a noisy log, it is a **total outage of every serverless function that imports the module**, including `/health`. The checks are therefore split:
+
+| Condition | Production | Elsewhere | Why |
+|---|---|---|---|
+| Variable **absent** | ❌ error (fatal) | ⚠️ warning | Unambiguous, and a deployment that cannot deliver its only product should not report itself healthy |
+| Template id is EmailService's dev placeholder | ⚠️ warning | ⚠️ warning | Known-bad value, but not worth an outage |
+| From-address doesn't look like a bare email | ⚠️ warning | ⚠️ warning | See below |
+
+**The format checks never kill production, on purpose.** The first draft rejected any template id not matching `^d-[0-9a-f]{32}$`. That regex was a *belief about SendGrid's id format that this session could not verify* — the production value is a `Sensitive` Vercel variable no session can read (R9). Same for the From address: SendGrid also accepts `Name <addr@host>`, which the pattern would reject. Either rule, if merely too narrow, would have taken down a perfectly working deployment. **Reject what is known-bad; never guess at what is known-good.**
+
+The new fatal condition is safe to ship because it is strictly implied by an event that already happened: the send path *already* refuses to run in production without both variables, and a real email was delivered from production on 2026-08-25. Both are therefore present and non-empty.
+
+Six tests, all run against the old validator first.
 
 ### ~~R2 — End-to-end verification on a real dev store~~ `[HUMAN]` + `[AGENT]` — ✅ **ALL 4 STEPS PROVEN, 2026-08-05**
 

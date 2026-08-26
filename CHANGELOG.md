@@ -9,6 +9,18 @@
 
 ## VERSION HISTORY
 
+### v1.69 (2026-08-26): The boot validator finally checks the variables that broke email (R11)
+
+**Test Results**: 2,492 passing of 2,518, 25 skipped, 0 failing, 137 suites. Lint 0 errors, type-check clean, build clean.
+
+`config/environment.ts`'s optional list was exactly `SENTRY_DSN`, `CSRF_SECRET`, `JWT_SECRET`. It never looked at `SENDGRID_DELAY_TEMPLATE_ID` or `SENDGRID_FROM_EMAIL` — the two variables whose absence silently broke every production delay email for three weeks. A session once read the startup log, saw no warning about them, and took the silence as confirmation the deploy had picked them up. **It was not evidence: the validator never read them, so it could not have warned.**
+
+**The interesting part is what was deliberately NOT done.** Module load calls `process.exit(1)` on an invalid production environment, so a false positive here is a total outage of every function importing the module — `/health` included. The first draft rejected any template id not matching `^d-[0-9a-f]{32}$`; that regex was a *belief about SendGrid's format this session could not verify*, because the production value is a `Sensitive` Vercel variable no session can read (R9). Same for the From address, which SendGrid also accepts as `Name <addr@host>`.
+
+So the checks are split: **absence is fatal in production; every format check only ever warns.** Reject what is known-bad, never guess at what is known-good. The fatal rule is safe to ship because it is strictly implied by an event that already happened — the send path already refuses to run without both variables, and production delivered a real email on 2026-08-25.
+
+Six tests, all run against the old validator first.
+
 ### v1.68 (2026-08-26): The delivered email stops rendering three defects (R18)
 
 **Test Results**: 2,486 passing of 2,512, 25 skipped, 0 failing, 136 suites. Lint 0 errors, type-check clean, build clean.
