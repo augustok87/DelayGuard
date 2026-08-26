@@ -103,6 +103,19 @@ export function buildDelayTemplateHtml(): string {
                   </td>
                 </tr>
               </table>
+              {{else}}
+              <!-- No tracking yet (warehouse delay on an unfulfilled order):
+                   the guarded CTA above collapses, so say what happens next
+                   rather than ending on nothing (§6 R18 defect 3). -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+                <tr>
+                  <td align="center" style="background-color:#f1f5f9; border-radius:6px; padding:16px 24px;">
+                    <p style="margin:0; color:#0f172a; font-size:14px; line-height:1.6;">
+                      This order hasn't shipped yet — we'll send tracking details as soon as it does.
+                    </p>
+                  </td>
+                </tr>
+              </table>
               {{/if}}
               <p style="margin:28px 0 0; color:#64748b; font-size:13px; line-height:1.6;">
                 We're sorry for the inconvenience and are keeping an eye on this shipment.
@@ -137,7 +150,7 @@ export function buildDelayTemplatePlainText(): string {
     "New estimated delivery: {{newDeliveryDate}}",
     "Reason: {{delayReason}}",
     "{{#if trackingNumber}}Tracking number: {{trackingNumber}}{{/if}}",
-    "{{#if trackingUrl}}Track your package: {{trackingUrl}}{{/if}}",
+    "{{#if trackingUrl}}Track your package: {{trackingUrl}}{{else}}This order hasn't shipped yet — we'll send tracking details as soon as it does.{{/if}}",
     "",
     "We're sorry for the inconvenience and are keeping an eye on this shipment.",
     "",

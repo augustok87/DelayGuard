@@ -44,6 +44,14 @@ describe("buildDelayTemplateHtml", () => {
     expect(html).toContain("{{/if}}");
   });
 
+  it("still tells the reader what happens next when there is no tracking (§6 R18 defect 3)", () => {
+    // The first real delivered email was a warehouse delay on an unfulfilled
+    // order: no tracking number and no tracking URL, so BOTH guarded blocks
+    // collapsed and the message ended with no call to action at all.
+    expect(html).toContain("{{else}}");
+    expect(html).toMatch(/tracking details as soon as/i);
+  });
+
   it("uses the Anchour brand palette (navy #1e3a5f, gold #f59e0b)", () => {
     expect(html).toContain("#1e3a5f");
     expect(html).toContain("#f59e0b");

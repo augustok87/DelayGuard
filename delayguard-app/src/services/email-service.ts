@@ -6,6 +6,7 @@
 import sgMail from "@sendgrid/mail";
 import { OrderInfo, DelayDetails } from "../types";
 import { PingResult, PING_TIMEOUT_MS } from "./ping-result";
+import { formatOrderNumber } from "../utils/order-number";
 
 /**
  * Dev/test-only stand-in. Production must set SENDGRID_DELAY_TEMPLATE_ID to
@@ -70,6 +71,17 @@ export function resolveFromAddress(): string {
   return PLACEHOLDER_FROM_ADDRESS;
 }
 
+/**
+ * Shown when the order has no estimated delivery date (§6 R18 defect 2).
+ *
+ * The live template renders `<strong>New estimated delivery:</strong>
+ * {{newDeliveryDate}}` unconditionally, so an empty value leaves the merchant
+ * reading a label with nothing after it — which is what the first real
+ * delivered email did. Warehouse delays on unfulfilled orders legitimately
+ * have no ETA, so the honest answer is to say so rather than invent a date.
+ */
+const NO_DELIVERY_ESTIMATE = "Not yet available";
+
 export interface SendDelayEmailOptions {
   /**
    * Greeting name for the template's {{recipientName}} merge field.
@@ -100,8 +112,12 @@ export class EmailService {
       dynamicTemplateData: {
         recipientName: options?.recipientName ?? orderInfo.customerName,
         customerName: orderInfo.customerName,
-        orderNumber: orderInfo.orderNumber,
-        newDeliveryDate: delayDetails.estimatedDelivery,
+        // The template renders `#{{orderNumber}}`; orders.order_number already
+        // carries Shopify's `#` prefix (§6 R18 defect 1).
+        orderNumber: formatOrderNumber(orderInfo.orderNumber),
+        newDeliveryDate: delayDetails.estimatedDelivery?.trim()
+          ? delayDetails.estimatedDelivery
+          : NO_DELIVERY_ESTIMATE,
         trackingNumber: delayDetails.trackingNumber,
         trackingUrl: delayDetails.trackingUrl,
         delayDays: delayDetails.delayDays,

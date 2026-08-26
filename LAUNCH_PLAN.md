@@ -426,7 +426,7 @@ Fixed by selecting `s.shop_domain` explicitly. Two tests, both run against the b
 
 **Why the existing tests could not see it:** they hand-build the order row that the mocked `query` returns, so the fixture supplied a `shop_domain` the real SELECT never fetches. **A mock that returns the row you wish the query returned cannot tell you the query is wrong** — only a real schema can.
 
-### R18 — The delivered email renders three merchant-visible defects `[AGENT]` — **new 2026-08-25**
+### ~~R18 — The delivered email renders three merchant-visible defects~~ `[AGENT]` — ⚠️ **2 of 3 FIXED AND DEPLOYABLE 2026-08-26 (v1.68); defect 3 needs a SendGrid template push `[HUMAN]`**
 
 From the actual delivered message, not a preview:
 
@@ -435,6 +435,22 @@ From the actual delivered message, not a preview:
 3. **No tracking number and no "Track your package" button** — both are `{{#if}}`-guarded and the order carries neither value, so the email's primary CTA silently vanishes.
 
 None of these were visible while the send path was broken. **The first real email is the first real test of the template** — every prior check was against sample data engineered to populate every field.
+
+**The same three defects exist in the SMS body**, from the same cause — `sms-service.ts` interpolates `order #${orderNumber}`, `New ETA: ${estimatedDelivery}` and `Track: ${trackingUrl}` with no guards, so a real order renders `order ##DG1001 … New ETA: . Track: `. Never observed in production only because SMS has never fired (see R19).
+
+**Fix (v1.68) — deliberately data-side, so it works against the template that is already live.** The production SendGrid API key is Restricted-Access with `mail.send` only (verified this session: `GET /v3/scopes` returns exactly `mail.send` + batch + scheduled-send; `/v3/templates` and `/v3/whitelabel/domains` both 403). **No session can push a template.**
+
+| # | Defect | Fix | Live without a template push? |
+|---|---|---|---|
+| 1 | `Order ##DG1001` | `formatOrderNumber()` strips the prefix Shopify already stored; the renderer keeps its `#`. Applied to **both** channels | ✅ yes |
+| 2 | Empty "New estimated delivery:" | `"Not yet available"` fallback in both channels — honest, not a fabricated date | ✅ yes |
+| 3 | No tracking number and no CTA | Template gains an `{{else}}` branch: *"This order hasn't shipped yet — we'll send tracking details as soon as it does."* SMS drops the `Track:` clause entirely rather than dangling it | ❌ **email needs a push**; SMS half is live |
+
+The contract chosen for defect 1 matters: **the renderer owns the `#`, the data carries the bare number.** That is what the deployed template already does (`#{{orderNumber}}`), so the template needed no change for this defect and the fix stays correct if the template is later re-pushed from source.
+
+⚠️ **`src/scripts/create-sendgrid-template.ts` is now AHEAD of the template deployed in SendGrid** (it has the `{{else}}` branch; `d-5755ad471bd64f15bf2bd61f8b848ad0` does not). Closing defect 3 needs a temporary Full-Access SendGrid key, `npm run sendgrid:create-template`, then the new `d-…` id into `SENDGRID_DELAY_TEMPLATE_ID` and a redeploy — the same loop the 2026-08-25 session ran. **Note the script CREATES a new template rather than versioning the existing one**, so the id changes.
+
+Eight tests; the six that pin defective behaviour were run against the broken renderers first and failed there. Two pass in both states by design and say so — they guard the over-correction (a real ETA must still pass through untouched; a real tracking URL must still appear).
 
 ### R9 — The agent can no longer authenticate to Shopify, or read any Vercel secret `[HUMAN]` — **new 2026-08-25**
 

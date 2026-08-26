@@ -9,6 +9,20 @@
 
 ## VERSION HISTORY
 
+### v1.68 (2026-08-26): The delivered email stops rendering three defects (R18)
+
+**Test Results**: 2,486 passing of 2,512, 25 skipped, 0 failing, 136 suites. Lint 0 errors, type-check clean, build clean.
+
+The first real delivered email exposed three merchant-visible faults, none of which any prior check could see because every prior check ran against sample data engineered to populate every field. **The same three exist in the SMS body** from the same cause; they had never been observed only because SMS has never fired (R19).
+
+1. **`Order ##DG1001`** — the template renders `#{{orderNumber}}` and `orders.order_number` already stores Shopify's `#DG1001`. New `formatOrderNumber()` establishes the contract that **the renderer owns the `#` and the data carries the bare number**, applied to both channels. Chosen deliberately over changing the template, because it is correct against the template that is already deployed *and* stays correct if the template is re-pushed.
+2. **Empty "New estimated delivery:"** — a warehouse delay on an unfulfilled order legitimately has no ETA, so both channels now render `"Not yet available"` rather than a label with nothing after it. No fabricated dates.
+3. **No tracking number, no CTA** — both `{{#if}}`-guarded blocks collapsed and the email ended on nothing. The template source gains an `{{else}}` branch; SMS drops its `Track:` clause instead of dangling it.
+
+**Defects 1 and 2 are live on deploy; defect 3 is not.** The production SendGrid key is Restricted-Access `mail.send` only (verified: `/v3/scopes` returns exactly that; `/v3/templates` 403s), so no session can push a template. `create-sendgrid-template.ts` is therefore **ahead of the deployed template** — closing defect 3 needs a temporary Full-Access key, a re-run, the new `d-…` id into `SENDGRID_DELAY_TEMPLATE_ID`, and a redeploy.
+
+Six of eight tests failed against the broken renderers first. The other two pass in both states **by design and say so** — they guard the over-correction, pinning that a real ETA and a real tracking URL still pass through untouched.
+
 ### v1.67 (2026-08-26): One send no longer marks every alert on the order delivered (R17 + R19)
 
 **Test Results**: 2,473 passing of 2,499, 25 skipped, 0 failing (one R5 wall-clock flake per full run, a different suite each time, green in isolation), 135 suites. Lint 0 errors, type-check clean, build clean.

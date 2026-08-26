@@ -1,6 +1,7 @@
 const twilio = require("twilio");
 import { OrderInfo, DelayDetails } from "../types";
 import { PingResult, PING_TIMEOUT_MS } from "./ping-result";
+import { formatOrderNumber } from "../utils/order-number";
 
 export interface SendDelaySMSOptions {
   /**
@@ -29,6 +30,9 @@ interface TwilioClient {
   };
 }
 
+/** Mirrors email-service's fallback so both channels say the same thing. */
+const NO_DELIVERY_ESTIMATE = "Not yet available";
+
 export class SMSService {
   private client: TwilioClient;
   private phoneNumber: string;
@@ -46,12 +50,24 @@ export class SMSService {
     delayDetails: DelayDetails,
     options?: SendDelaySMSOptions,
   ): Promise<void> {
+    // §6 R18: the same three defects the first real delivered EMAIL exposed
+    // live here too, because a real order carries a `#`-prefixed number and,
+    // when it is unfulfilled, neither an ETA nor tracking. Interpolating those
+    // blanks produced `order ##DG1001 … New delivery: . Track: `.
+    const orderNumber = formatOrderNumber(orderInfo.orderNumber);
+    const eta = delayDetails.estimatedDelivery?.trim() || NO_DELIVERY_ESTIMATE;
+    // No tracking URL means there is nothing to link to — drop the clause
+    // rather than send a dangling `Track: `. Never fabricate a link.
+    const tracking = delayDetails.trackingUrl?.trim()
+      ? ` Track: ${delayDetails.trackingUrl.trim()}`
+      : "";
+
     // Merchant-routed alerts (warehouse delays, WS-E task E3) get operational
     // copy about the customer's order; customers get second-person copy.
     const message =
       options?.audience === "merchant"
-        ? `DelayGuard: order #${orderInfo.orderNumber} for ${orderInfo.customerName} is delayed (${delayDetails.delayReason}). New ETA: ${delayDetails.estimatedDelivery}. Track: ${delayDetails.trackingUrl}`
-        : `Hi ${orderInfo.customerName}, your order #${orderInfo.orderNumber} is delayed. New delivery: ${delayDetails.estimatedDelivery}. Track: ${delayDetails.trackingUrl}`;
+        ? `DelayGuard: order #${orderNumber} for ${orderInfo.customerName} is delayed (${delayDetails.delayReason}). New ETA: ${eta}.${tracking}`
+        : `Hi ${orderInfo.customerName}, your order #${orderNumber} is delayed. New delivery: ${eta}.${tracking}`;
 
     try {
       await this.client.messages.create({
