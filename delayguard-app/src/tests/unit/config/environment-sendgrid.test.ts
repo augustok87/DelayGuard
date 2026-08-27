@@ -20,7 +20,7 @@ const REQUIRED_BASE = {
   SHOPIFY_SCOPES: 'write_orders',
   DATABASE_URL: 'postgresql://user:pass@host:5432/db',
   REDIS_URL: 'redis://host:6379',
-  SHIPENGINE_API_KEY: 'se',
+  EASYPOST_API_KEY: 'se',
   SENDGRID_API_KEY: 'SG.key',
   TWILIO_ACCOUNT_SID: 'AC',
   TWILIO_AUTH_TOKEN: 'tok',

@@ -213,13 +213,13 @@ export class HealthCheckService {
       }
     });
 
-    this.registerCheck("shipengine-api", async() => {
+    this.registerCheck("easypost-api", async() => {
       const start = Date.now();
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        const response = await fetch("https://api.shipengine.com/health", {
+        const response = await fetch("https://api.easypost.com/v2/api_keys", {
           signal: controller.signal,
         });
 
@@ -227,14 +227,14 @@ export class HealthCheckService {
         const responseTime = Date.now() - start;
 
         return {
-          name: "shipengine-api",
+          name: "easypost-api",
           status: response.ok ? "healthy" : "degraded",
           responseTime,
           lastChecked: new Date(),
         };
       } catch (error) {
         return {
-          name: "shipengine-api",
+          name: "easypost-api",
           status: "unhealthy",
           error: (error as Error).message,
           lastChecked: new Date(),

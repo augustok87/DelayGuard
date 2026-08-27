@@ -66,7 +66,7 @@
  *             redis:
  *               type: boolean
  *               description: Redis connectivity
- *             shipengine:
+ *             carrier:
  *               type: boolean
  *               description: ShipEngine API connectivity
  *             sendgrid:

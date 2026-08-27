@@ -336,8 +336,8 @@ export class MonitoringService {
   private async checkExternalAPIs(): Promise<HealthCheck[]> {
     const probes: { name: string; ping: () => Promise<PingResult> }[] = [
       {
-        name: "ShipEngine",
-        ping: () => new CarrierService(this.config.shipengine.apiKey).ping(),
+        name: "EasyPost",
+        ping: () => new CarrierService(this.config.easypost.apiKey).ping(),
       },
       {
         name: "SendGrid",

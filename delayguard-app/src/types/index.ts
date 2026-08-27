@@ -299,7 +299,7 @@ export interface AppConfig {
   redis: {
     url: string;
   };
-  shipengine: {
+  easypost: {
     apiKey: string;
   };
   sendgrid: {

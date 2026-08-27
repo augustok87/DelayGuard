@@ -28,7 +28,7 @@ const mockConfig: AppConfig = {
   redis: {
     url: 'redis://localhost:6379',
   },
-  shipengine: {
+  easypost: {
     apiKey: 'test-shipengine-key',
   },
   sendgrid: {

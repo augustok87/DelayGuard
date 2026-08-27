@@ -2,26 +2,86 @@ import axios, { AxiosInstance } from "axios";
 import { logger } from "../utils/logger";
 import {
   TrackingInfo,
+  CarrierTrackingEvent,
   CarrierService as ICarrierService,
   ExternalServiceError,
 } from "../types";
 import { PingResult, PING_TIMEOUT_MS } from "./ping-result";
+
+/**
+ * EasyPost carrier names keyed by the carrier codes DelayGuard stores on
+ * orders. An unmapped code is sent as no carrier at all, which asks EasyPost
+ * to auto-detect from the tracking number — better than guessing wrong.
+ */
+const EASYPOST_CARRIER_BY_CODE: Record<string, string> = {
+  ups: "UPS",
+  usps: "USPS",
+  fedex: "FedEx",
+  dhl_express: "DHLExpress",
+  dhl_global_mail: "DHLGlobalMail",
+  canada_post: "CanadaPost",
+  ontrac: "OnTrac",
+  lasership: "LaserShip",
+};
+
+// EasyPost reports "the parcel is late" in status_detail, never in status.
+const DELAY_STATUS_DETAILS = new Set(["delayed", "weather_delay"]);
+
+const EXCEPTION_STATUS_DETAILS = new Set([
+  "delivery_exception",
+  "transit_exception",
+  "damaged",
+  "lost",
+  "missorted",
+  "refused",
+  "address_correction",
+]);
+
+// A parcel that has arrived is not late, whatever happened en route, so these
+// two statuses are resolved before status_detail is consulted at all.
+const TERMINAL_STATUSES = new Set(["delivered", "out_for_delivery"]);
+
+const INTERNAL_STATUS_BY_EASYPOST_STATUS: Record<string, string> = {
+  delivered: "DELIVERED",
+  out_for_delivery: "OUT_FOR_DELIVERY",
+  available_for_pickup: "OUT_FOR_DELIVERY",
+  in_transit: "IN_TRANSIT",
+  pre_transit: "ACCEPTED",
+  failure: "EXCEPTION",
+  error: "EXCEPTION",
+  cancelled: "EXCEPTION",
+  return_to_sender: "EXCEPTION",
+  unknown: "UNKNOWN",
+};
+
+interface EasyPostTrackingDetail {
+  datetime: string;
+  status?: string;
+  status_detail?: string;
+  message?: string;
+  description?: string;
+  tracking_location?: {
+    city?: string | null;
+    state?: string | null;
+  };
+}
 
 export class CarrierService implements ICarrierService {
   private client: AxiosInstance;
   private apiKey: string;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.SHIPENGINE_API_KEY || "";
+    this.apiKey = apiKey || process.env.EASYPOST_API_KEY || "";
 
     if (!this.apiKey) {
-      throw new Error("ShipEngine API key is required");
+      throw new Error("EasyPost API key is required");
     }
 
     this.client = axios.create({
-      baseURL: "https://api.shipengine.com",
+      baseURL: "https://api.easypost.com/v2",
+      // EasyPost authenticates with HTTP Basic: key as username, no password.
+      auth: { username: this.apiKey, password: "" },
       headers: {
-        "API-Key": this.apiKey,
         "Content-Type": "application/json",
       },
       timeout: 10000,
@@ -37,41 +97,26 @@ export class CarrierService implements ICarrierService {
         `🔍 Fetching tracking info for ${trackingNumber} via ${carrierCode}`,
       );
 
-      const response = await this.client.get("/v1/tracking", {
-        params: {
-          tracking_number: trackingNumber,
-          carrier_code: carrierCode,
+      const easyPostCarrier = EASYPOST_CARRIER_BY_CODE[carrierCode];
+      const response = await this.client.post("/trackers", {
+        tracker: {
+          tracking_code: trackingNumber,
+          ...(easyPostCarrier ? { carrier: easyPostCarrier } : {}),
         },
       });
 
-      const data = response.data;
+      const tracker = response.data;
 
-      // Map ShipEngine response to our TrackingInfo interface
       const trackingInfo: TrackingInfo = {
-        trackingNumber: data.tracking_number,
-        carrierCode: data.carrier_code,
-        status: this.mapStatus(data.status_code),
-        estimatedDeliveryDate: data.estimated_delivery_date,
-        originalEstimatedDeliveryDate: data.original_estimated_delivery_date,
-        events:
-          data.events?.map((event: unknown) => {
-            const shipEngineEvent = event as {
-              occurred_at: string;
-              status_code: string;
-              city_locality?: string;
-              state_province?: string;
-              description?: string;
-            };
-            return {
-              timestamp: shipEngineEvent.occurred_at,
-              status: this.mapStatus(shipEngineEvent.status_code),
-              location: shipEngineEvent.city_locality
-                ? `${shipEngineEvent.city_locality}, ${shipEngineEvent.state_province}`
-                : undefined,
-              description:
-                shipEngineEvent.description || shipEngineEvent.status_code,
-            };
-          }) || [],
+        trackingNumber: tracker.tracking_code,
+        carrierCode,
+        status: this.mapStatus(tracker.status, tracker.status_detail),
+        estimatedDeliveryDate: tracker.est_delivery_date,
+        // EasyPost exposes only the CURRENT estimate. The original is derived
+        // on ingest from the first estimate we ever saw for the order.
+        originalEstimatedDeliveryDate: undefined,
+        trackingUrl: tracker.public_url,
+        events: this.mapEvents(tracker.tracking_details),
       };
 
       logger.info(`✅ Tracking info retrieved: ${trackingInfo.status}`);
@@ -87,34 +132,55 @@ export class CarrierService implements ICarrierService {
           throw new Error(`Tracking number ${trackingNumber} not found`);
         } else if (error.response?.status === 429) {
           throw new Error("Rate limit exceeded. Please try again later.");
-        } else if (error.response?.status === 401) {
+        } else if (
+          error.response?.status === 401 ||
+          error.response?.status === 403
+        ) {
+          // EasyPost answers 403 APIKEY.INACTIVE for a revoked or wrong key,
+          // and 401 when no credential is presented at all.
           throw new Error("Invalid API key");
         }
       }
 
       throw new ExternalServiceError(
-        "ShipEngine",
+        "EasyPost",
         error instanceof Error ? error.message : "Unknown error",
       );
     }
   }
 
-  private mapStatus(shipEngineStatus: string): string {
-    // Map ShipEngine status codes to our internal status codes
-    const statusMap: { [key: string]: string } = {
-      AC: "ACCEPTED",
-      AT: "IN_TRANSIT",
-      DE: "DELIVERED",
-      DL: "DELAYED",
-      EX: "EXCEPTION",
-      IT: "IN_TRANSIT",
-      OD: "OUT_FOR_DELIVERY",
-      PU: "PICKED_UP",
-      SE: "SHIPPED",
-      UN: "UNKNOWN",
-    };
+  private mapEvents(
+    trackingDetails: EasyPostTrackingDetail[] | undefined,
+  ): CarrierTrackingEvent[] {
+    return (trackingDetails ?? []).map((detail) => {
+      const city = detail.tracking_location?.city;
+      return {
+        timestamp: detail.datetime,
+        status: this.mapStatus(detail.status, detail.status_detail),
+        location: city
+          ? `${city}, ${detail.tracking_location?.state}`
+          : undefined,
+        description: detail.message || detail.description || "",
+      };
+    });
+  }
 
-    return statusMap[shipEngineStatus] || shipEngineStatus;
+  private mapStatus(status?: string, statusDetail?: string): string {
+    if (status && TERMINAL_STATUSES.has(status)) {
+      return INTERNAL_STATUS_BY_EASYPOST_STATUS[status];
+    }
+
+    if (statusDetail && DELAY_STATUS_DETAILS.has(statusDetail)) {
+      return "DELAYED";
+    }
+
+    if (statusDetail && EXCEPTION_STATUS_DETAILS.has(statusDetail)) {
+      return "EXCEPTION";
+    }
+
+    return (
+      (status && INTERNAL_STATUS_BY_EASYPOST_STATUS[status]) || "UNKNOWN"
+    );
   }
 
   async validateTrackingNumber(
@@ -132,7 +198,9 @@ export class CarrierService implements ICarrierService {
   async ping(): Promise<PingResult> {
     const startTime = Date.now();
     try {
-      await this.client.get("/v1/carriers", { timeout: PING_TIMEOUT_MS });
+      // Read-only and free. Probing /trackers would bill a tracker creation
+      // on every health check.
+      await this.client.get("/carrier_accounts", { timeout: PING_TIMEOUT_MS });
       return { status: "healthy", latencyMs: Date.now() - startTime };
     } catch (error) {
       const latencyMs = Date.now() - startTime;
@@ -156,7 +224,7 @@ export class CarrierService implements ICarrierService {
         return {
           status: "unhealthy",
           latencyMs,
-          error: error.message || "Unknown ShipEngine error",
+          error: error.message || "Unknown EasyPost error",
         };
       }
       return {
@@ -169,16 +237,16 @@ export class CarrierService implements ICarrierService {
 
   async getCarrierList(): Promise<Array<{ code: string; name: string }>> {
     try {
-      const response = await this.client.get("/v1/carriers");
+      const response = await this.client.get("/carrier_accounts");
 
-      return response.data.carriers.map((carrier: unknown) => {
-        const shipEngineCarrier = carrier as {
-          carrier_code: string;
-          friendly_name: string;
+      return response.data.map((carrierAccount: unknown) => {
+        const account = carrierAccount as {
+          type: string;
+          readable: string;
         };
         return {
-          code: shipEngineCarrier.carrier_code,
-          name: shipEngineCarrier.friendly_name,
+          code: account.type,
+          name: account.readable,
         };
       });
     } catch (error) {

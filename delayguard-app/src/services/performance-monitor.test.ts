@@ -57,7 +57,7 @@ const TEST_CONFIG: AppConfig = {
   shopify: { apiKey: "k", apiSecret: "s", scopes: ["read_orders"] },
   sendgrid: { apiKey: "sg" },
   twilio: { accountSid: "tw", authToken: "t", phoneNumber: "+1234567890" },
-  shipengine: { apiKey: "se" },
+  easypost: { apiKey: "se" },
 };
 
 describe("PerformanceMonitor", () => {

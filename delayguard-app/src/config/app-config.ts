@@ -84,8 +84,8 @@ export const appConfig: AppConfig = {
   redis: {
     url: requireEnvDev("REDIS_URL", "redis://localhost:6379"),
   },
-  shipengine: {
-    apiKey: requireEnvDev("SHIPENGINE_API_KEY", "dev_shipengine_key"),
+  easypost: {
+    apiKey: requireEnvDev("EASYPOST_API_KEY", "dev_easypost_key"),
   },
   sendgrid: {
     apiKey: requireEnvDev("SENDGRID_API_KEY", "dev_sendgrid_key"),

@@ -2,12 +2,33 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 25, 2026 (R1 CLOSED — the first delivered notification; R17/R18 opened by reading it)
+**Last Updated**: August 26, 2026 (R24 — carrier tracking moved off ShipEngine to EasyPost)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.75 (2026-08-26): Carrier tracking moved off ShipEngine to EasyPost (R24)
+
+**The blocker.** ShipEngine refuses `/v1/tracking` on this account's Free plan — proven twice, on UPS *and* USPS, both connected carriers, both `401 "You must upgrade your billing plan"`. RULES 2 and 3 had therefore never fired: production held 4 `WAREHOUSE_DELAY` alerts and **0** `tracking_events`. It is a plan entitlement, not a credential or a carrier gap.
+
+**Why not just upgrade.** ShipStation Advanced is **$75/mo** against a $7/mo Pro tier — roughly 11 subscribers to break even, at zero. EasyPost is $0.01–0.03 per shipment, so the cost scales with revenue rather than ahead of it (decision D4).
+
+**What changed.**
+- `CarrierService` now creates EasyPost trackers (`POST /v2/trackers`, HTTP Basic with the key as username). Same `ICarrierService` contract, so all call sites and the monitoring ping are untouched.
+- **Delay detection got strictly better.** EasyPost reports lateness in `status_detail` — `delayed`, `weather_delay`, `delivery_exception`, `transit_exception`, `lost`, `damaged` — which ShipEngine never exposed at all. These map onto the existing internal `DELAYED` / `EXCEPTION` vocabulary, so `delay-detection.ts` needed no change.
+- **Precedence rule:** a terminal `delivered` / `out_for_delivery` resolves *before* `status_detail`. Without it every parcel that hit an exception mid-route and then arrived would re-alert on delivery.
+- **`original_eta` is now derived, not copied.** EasyPost exposes only the current estimate, so both writers would have written NULL on every refresh and silently disabled the `DATE_DELAY` rule. Both now `COALESCE(original_eta, $1)`, freezing the first estimate ever seen. Covered by pg-mem tests against the real schema — the `pg` mock cannot see a value that was never stored.
+- `403 APIKEY.INACTIVE` maps to "Invalid API key" alongside 401. Found by probing the live API unauthenticated, which also confirmed the endpoints exist and the Basic-auth scheme is right.
+- `ping()` deliberately probes `/carrier_accounts`, never `/trackers` — a health check must not bill a tracker creation. Pinned by a test.
+- Env `SHIPENGINE_API_KEY` → `EASYPOST_API_KEY`; config key `shipengine` → `easypost`; `/health`'s `shipengine` field → `carrier`; the observability probe no longer pings a vendor we do not use.
+
+**Gate**: 2,525 passing / 2,550, 25 skipped, 0 failing, 137 suites. Lint 0 errors, type-check clean, build green.
+
+**⚠️ Not yet deployed.** Boot validation requires `EASYPOST_API_KEY`; deploying before it is set in Vercel would fail fast by design. Wire shape (`{tracker: {...}}`, response field names) is verified against EasyPost's published docs and the live 401/403 behaviour, but **not yet against a real key** — that verification is pending.
+
+---
 
 ### v1.74 (2026-08-26): A carrier failure no longer discards an already-detected delay (R25)
 

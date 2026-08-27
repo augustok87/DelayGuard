@@ -25,7 +25,7 @@ interface EnvironmentConfig {
   REDIS_URL: string;
 
   // External APIs
-  SHIPENGINE_API_KEY: string;
+  EASYPOST_API_KEY: string;
   SENDGRID_API_KEY: string;
   TWILIO_ACCOUNT_SID: string;
   TWILIO_AUTH_TOKEN: string;
@@ -80,7 +80,7 @@ class EnvironmentValidator {
       "SHOPIFY_SCOPES",
       "DATABASE_URL",
       "REDIS_URL",
-      "SHIPENGINE_API_KEY",
+      "EASYPOST_API_KEY",
       "SENDGRID_API_KEY",
       "TWILIO_ACCOUNT_SID",
       "TWILIO_AUTH_TOKEN",
@@ -162,7 +162,7 @@ class EnvironmentValidator {
     const apiKeys = [
       "SHOPIFY_API_KEY",
       "SHOPIFY_API_SECRET",
-      "SHIPENGINE_API_KEY",
+      "EASYPOST_API_KEY",
       "SENDGRID_API_KEY",
       "TWILIO_ACCOUNT_SID",
       "TWILIO_AUTH_TOKEN",

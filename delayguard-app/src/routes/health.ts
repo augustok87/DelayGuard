@@ -23,7 +23,7 @@ interface HealthStatus {
     database: ServiceStatus;
     redis: ServiceStatus;
     external_apis: {
-      shipengine: ServiceStatus;
+      carrier: ServiceStatus;
       sendgrid: ServiceStatus;
       twilio: ServiceStatus;
     };
@@ -127,7 +127,7 @@ class HealthChecker {
       externalApisStatus.status === "fulfilled"
         ? externalApisStatus.value
         : {
-            shipengine: {
+            carrier: {
               status: "unhealthy" as const,
               error: "Failed to check",
               last_check: timestamp,
@@ -238,7 +238,7 @@ class HealthChecker {
    * the others; per-call 5s budget * 3 = 15s, under the Vercel 30s cap.
    */
   private async checkExternalApis(): Promise<{
-    shipengine: ServiceStatus;
+    carrier: ServiceStatus;
     sendgrid: ServiceStatus;
     twilio: ServiceStatus;
   }> {
@@ -247,7 +247,7 @@ class HealthChecker {
     const email = this.tryConstructEmail();
     const sms = this.tryConstructSms();
 
-    const [shipenginePing, sendgridPing, twilioPing] = await Promise.allSettled(
+    const [carrierPing, sendgridPing, twilioPing] = await Promise.allSettled(
       [
         carrier instanceof Error ? Promise.reject(carrier) : carrier.ping(),
         email instanceof Error ? Promise.reject(email) : email.ping(),
@@ -256,7 +256,7 @@ class HealthChecker {
     );
 
     return {
-      shipengine: pingSettledToServiceStatus(shipenginePing, timestamp),
+      carrier: pingSettledToServiceStatus(carrierPing, timestamp),
       sendgrid: pingSettledToServiceStatus(sendgridPing, timestamp),
       twilio: pingSettledToServiceStatus(twilioPing, timestamp),
     };

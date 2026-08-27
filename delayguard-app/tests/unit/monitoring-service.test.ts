@@ -56,7 +56,7 @@ const mockConfig: AppConfig = {
   redis: {
     url: 'redis://localhost:6379',
   },
-  shipengine: {
+  easypost: {
     apiKey: 'test-shipengine-key',
   },
   sendgrid: {
@@ -176,7 +176,7 @@ describe('MonitoringService', () => {
       expect(checks).toHaveLength(6);
       const dbCheck = checks.find(c => c.name === 'Database');
       const redisCheck = checks.find(c => c.name === 'Redis');
-      const apiChecks = checks.filter(c => ['ShipEngine', 'SendGrid', 'Twilio'].includes(c.name));
+      const apiChecks = checks.filter(c => ['EasyPost', 'SendGrid', 'Twilio'].includes(c.name));
       
       expect(dbCheck?.status).toBe('unhealthy');
       expect(redisCheck?.status).toBe('unhealthy');
@@ -430,7 +430,7 @@ describe('MonitoringService', () => {
 
       const checks = await monitoringService.performHealthChecks();
       const apiChecks = checks.filter(check => 
-        ['ShipEngine', 'SendGrid', 'Twilio'].includes(check.name),
+        ['EasyPost', 'SendGrid', 'Twilio'].includes(check.name),
       );
 
       expect(apiChecks.every(check => check.status === 'unhealthy')).toBe(true);

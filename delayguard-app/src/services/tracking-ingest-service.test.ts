@@ -156,7 +156,7 @@ describe("TrackingIngestService", () => {
       const [updateSql, updateParams] = mockQuery.mock.calls[lastCallIndex];
 
       expect(updateSql).toMatch(/UPDATE\s+orders\s+SET/i);
-      expect(updateSql).toMatch(/original_eta\s*=\s*\$1/i);
+      expect(updateSql).toMatch(/original_eta\s*=\s*COALESCE\(original_eta,\s*\$1\)/i);
       expect(updateSql).toMatch(/current_eta\s*=\s*\$2/i);
       expect(updateSql).toMatch(/tracking_status\s*=\s*\$3/i);
       expect(updateSql).toMatch(/last_tracking_update\s*=\s*\$4/i);

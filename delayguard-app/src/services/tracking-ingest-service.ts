@@ -105,15 +105,21 @@ export class TrackingIngestService {
       );
 
       await query(
+        // original_eta is seeded from the first estimate we ever see and then
+        // frozen — EasyPost reports only the current estimate, so writing $1
+        // unconditionally would blank it on every refresh and leave
+        // DATE_DELAY (current_eta > original_eta) permanently unable to fire.
         `UPDATE orders
-         SET original_eta = $1,
+         SET original_eta = COALESCE(original_eta, $1),
              current_eta = $2,
              tracking_status = $3,
              last_tracking_update = $4,
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $5`,
         [
-          trackingInfo.originalEstimatedDeliveryDate ?? null,
+          trackingInfo.originalEstimatedDeliveryDate ??
+            trackingInfo.estimatedDeliveryDate ??
+            null,
           trackingInfo.estimatedDeliveryDate ?? null,
           trackingInfo.status,
           lastTrackingUpdate,

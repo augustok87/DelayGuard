@@ -163,16 +163,21 @@ export async function processTrackingRefresh(): Promise<TrackingRefreshStats> {
 
         await query(
           `
+          -- original_eta is frozen at the first estimate ever seen. EasyPost
+          -- reports only the current one, so an unguarded write would blank
+          -- this column on every tick and leave DATE_DELAY unable to fire.
           UPDATE orders
           SET
-            original_eta = $1,
+            original_eta = COALESCE(original_eta, $1),
             current_eta = $2,
             tracking_status = $3,
             updated_at = CURRENT_TIMESTAMP
           WHERE id = $4
         `,
           [
-            trackingInfo.originalEstimatedDeliveryDate || null,
+            trackingInfo.originalEstimatedDeliveryDate ||
+              trackingInfo.estimatedDeliveryDate ||
+              null,
             trackingInfo.estimatedDeliveryDate || null,
             trackingInfo.status,
             order.id,

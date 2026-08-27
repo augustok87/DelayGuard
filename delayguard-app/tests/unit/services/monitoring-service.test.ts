@@ -79,7 +79,7 @@ describe('MonitoringService', () => {
         authToken: 'test',
         phoneNumber: '+1234567890',
       },
-      shipengine: {
+      easypost: {
         apiKey: 'test',
       },
     };
@@ -337,15 +337,15 @@ describe('MonitoringService', () => {
 
       const healthChecks = await monitoringService.performHealthChecks();
 
-      const shipengine = healthChecks.find(c => c.name === 'ShipEngine');
-      expect(shipengine?.status).toBe('unhealthy');
-      expect(shipengine?.error).toBe('timeout after 5000ms');
+      const easypost = healthChecks.find(c => c.name === 'EasyPost');
+      expect(easypost?.status).toBe('unhealthy');
+      expect(easypost?.error).toBe('timeout after 5000ms');
     });
 
     it('reports vendors healthy from their authenticated ping, not a bare HEAD (§6 R23)', async() => {
       // The defect: checkExternalAPIs sent an unauthenticated HEAD to
       // api.sendgrid.com/v3/mail/send and friends — authenticated endpoints
-      // that can never answer 2xx — so ShipEngine, SendGrid and Twilio were
+      // that can never answer 2xx — so EasyPost, SendGrid and Twilio were
       // graded "degraded" on EVERY call and /monitoring/health returned 503
       // permanently in production. Verified live before the fix.
       freezeClock();
@@ -353,10 +353,10 @@ describe('MonitoringService', () => {
       const checks = await monitoringService.performHealthChecks();
 
       const vendors = checks.filter(c =>
-        ['ShipEngine', 'SendGrid', 'Twilio'].includes(c.name),
+        ['EasyPost', 'SendGrid', 'Twilio'].includes(c.name),
       );
       expect(vendors.map(c => `${c.name}=${c.status}`)).toEqual([
-        'ShipEngine=healthy',
+        'EasyPost=healthy',
         'SendGrid=healthy',
         'Twilio=healthy',
       ]);
