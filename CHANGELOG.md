@@ -2,12 +2,32 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: August 26, 2026 (R24 — carrier tracking moved off ShipEngine to EasyPost)
+**Last Updated**: September 16, 2026 (R24 — delay detection works with no carrier API)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.76 (2026-09-16): Delay detection no longer needs a carrier API at all (R24)
+
+**The problem.** EasyPost has sat in anti-fraud manual review since 2026-08-26 — three weeks with no API key and no committed date. R24 stayed submission-blocking the whole time: RULES 2 and 3 had never fired, and the listing sells carrier tracking as its headline feature.
+
+**The find.** Shopify already pushes `shipment_status` on every `fulfillments/updated` webhook — a field `FulfillmentWebhookPayload` has declared since the webhook was registered, and that `upsertFulfillment` silently discarded. Shopify polls its supported carriers itself, so this is carrier tracking with no vendor, no account, no key and no cost.
+
+**What changed.**
+- `mapShopifyShipmentStatus()` maps Shopify's nine `shipment_status` values onto the existing internal vocabulary. `attempted_delivery` and `failure` become `EXCEPTION`; the rest map to `DELIVERED` / `OUT_FOR_DELIVERY` / `IN_TRANSIT` / `ACCEPTED`.
+- `TrackingIngestService.ingestShopifyStatus()` writes `orders.tracking_status` and `orders.last_tracking_update` — the two columns RULE 3's STUCK_IN_TRANSIT check measures — plus a `tracking_events` row so the timeline is not empty.
+- Wired into `processFulfillmentSide` **before** the early return, because a fulfillment can carry a `shipment_status` with no tracking number.
+- **An unrecognised or absent status writes nothing.** That is what makes it safe to run ahead of the carrier ingest: it can never blank a richer status the carrier supplied.
+- **`EASYPOST_API_KEY` is no longer required to boot** — it warns instead. It was in `requiredVars`, and production holds `SHIPENGINE_API_KEY`, so deploying v1.75 would have failed at cold start: a degraded feature traded for a dead app.
+- **`CarrierService` is now built lazily.** Its constructor throws without a key and `TrackingIngestService` built one eagerly, so the fulfillment webhook would have thrown *before* reaching the Shopify write — 500ing the webhook in precisely the case the fallback exists for. Caught by a test that deliberately leaves `CarrierService` unmocked, because a mocked constructor cannot throw and would have passed against the broken code.
+
+**The honest limit.** Shopify's value set has no `delayed` member, so this source never produces `DELAYED`. RULE 2's `DELAYED_STATUS` branch and the ETA-based `DATE_DELAY` rule stay dark without a carrier API; lateness is caught by RULE 3's time-based check. A test pins that so nobody later assumes otherwise.
+
+**Gate**: 2,554 passing / 2,579, 25 skipped, 0 failing, 141 suites. Lint 0 errors, type-check clean, build green.
+
+---
 
 ### v1.75 (2026-08-26): Carrier tracking moved off ShipEngine to EasyPost (R24)
 

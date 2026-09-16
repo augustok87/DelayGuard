@@ -23,6 +23,7 @@
 import { CarrierService } from "./carrier-service";
 import { query } from "../database/connection";
 import { logger } from "../utils/logger";
+import { mapShopifyShipmentStatus } from "../utils/shopify-shipment-status";
 import type { TrackingInfo, CarrierTrackingEvent } from "../types";
 
 function pickMostRecentEventTimestamp(
@@ -37,10 +38,39 @@ function pickMostRecentEventTimestamp(
 }
 
 export class TrackingIngestService {
-  private readonly carrierService: CarrierService;
+  private readonly injectedCarrierService?: CarrierService;
+  private resolvedCarrierService: CarrierService | null | undefined;
 
   constructor(carrierService?: CarrierService) {
-    this.carrierService = carrierService ?? new CarrierService();
+    this.injectedCarrierService = carrierService;
+  }
+
+  /**
+   * Built on demand, never in the constructor (§6 R24).
+   *
+   * CarrierService throws when no API key is configured, and this service also
+   * owns ingestShopifyStatus — the carrier-independent path that must keep
+   * working when there is no carrier account. Constructing eagerly meant the
+   * fulfillments/updated webhook threw before reaching that write, 500ing the
+   * webhook in exactly the case the fallback exists for.
+   *
+   * @returns null when no carrier is configured, which callers treat the same
+   * way they already treat an unreachable carrier.
+   */
+  private resolveCarrierService(): CarrierService | null {
+    if (this.injectedCarrierService) {
+      return this.injectedCarrierService;
+    }
+
+    if (this.resolvedCarrierService === undefined) {
+      try {
+        this.resolvedCarrierService = new CarrierService();
+      } catch {
+        this.resolvedCarrierService = null;
+      }
+    }
+
+    return this.resolvedCarrierService;
   }
 
   async ingestTracking(
@@ -48,9 +78,19 @@ export class TrackingIngestService {
     trackingNumber: string,
     carrierCode: string,
   ): Promise<void> {
+    const carrierService = this.resolveCarrierService();
+    if (!carrierService) {
+      logger.warn(
+        "No carrier API configured — skipping carrier tracking fetch; " +
+          "Shopify shipment_status remains the delay source",
+        { orderId, trackingNumber, carrierCode },
+      );
+      return;
+    }
+
     let trackingInfo: TrackingInfo;
     try {
-      trackingInfo = await this.carrierService.getTrackingInfo(
+      trackingInfo = await carrierService.getTrackingInfo(
         trackingNumber,
         carrierCode,
       );
@@ -131,6 +171,72 @@ export class TrackingIngestService {
         "Failed to persist tracking ingest",
         error instanceof Error ? error : new Error(String(error)),
         { orderId, trackingNumber, carrierCode },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Persist the carrier status Shopify itself reports, with no carrier API
+   * involved (LAUNCH_PLAN §6 R24).
+   *
+   * Shopify polls its supported carriers and pushes the result as
+   * `shipment_status` on fulfillments/updated — a field we already receive and
+   * previously discarded. It is the only writer of orders.tracking_status when
+   * the carrier API is unavailable, which is what lets RULE 3's
+   * STUCK_IN_TRANSIT check work at all.
+   *
+   * An unrecognised or absent status writes NOTHING, so running this ahead of
+   * the carrier ingest can never blank a richer status the carrier supplied.
+   */
+  async ingestShopifyStatus(
+    orderId: number,
+    shipmentStatus: string | undefined | null,
+  ): Promise<void> {
+    const status = mapShopifyShipmentStatus(shipmentStatus);
+    if (!status) {
+      return;
+    }
+
+    const observedAt = new Date();
+
+    try {
+      await query(
+        `UPDATE orders
+         SET tracking_status = $1,
+             last_tracking_update = $2,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3`,
+        [status, observedAt, orderId],
+      );
+
+      await query(
+        `INSERT INTO tracking_events (
+           order_id,
+           timestamp,
+           status,
+           description,
+           carrier_status
+         ) VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (order_id, timestamp)
+         DO UPDATE SET
+           status = EXCLUDED.status,
+           description = EXCLUDED.description,
+           carrier_status = EXCLUDED.carrier_status,
+           updated_at = CURRENT_TIMESTAMP`,
+        [
+          orderId,
+          observedAt,
+          status,
+          `Shopify reported shipment status: ${shipmentStatus}`,
+          "shopify",
+        ],
+      );
+    } catch (error) {
+      logger.error(
+        "Failed to persist Shopify shipment status",
+        error instanceof Error ? error : new Error(String(error)),
+        { orderId, shipmentStatus },
       );
       throw error;
     }

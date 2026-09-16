@@ -80,7 +80,6 @@ class EnvironmentValidator {
       "SHOPIFY_SCOPES",
       "DATABASE_URL",
       "REDIS_URL",
-      "EASYPOST_API_KEY",
       "SENDGRID_API_KEY",
       "TWILIO_ACCOUNT_SID",
       "TWILIO_AUTH_TOKEN",
@@ -103,6 +102,7 @@ class EnvironmentValidator {
     this.validatePort();
     this.validateNodeEnv();
     this.validateApiKeys();
+    this.validateCarrierKey();
     this.validateSendGridDelivery();
 
     // Check for optional but recommended variables
@@ -156,6 +156,30 @@ class EnvironmentValidator {
     } else if (nodeEnv) {
       this.config.NODE_ENV = nodeEnv as EnvironmentConfig["NODE_ENV"];
     }
+  }
+
+  /**
+   * The carrier API key degrades a feature; it does not gate the app (§6 R24).
+   *
+   * Delay detection has a carrier-independent source — Shopify's own
+   * `shipment_status` drives orders.tracking_status, which is what RULE 3
+   * measures — so a missing key costs carrier ETAs and the DATE_DELAY rule,
+   * not the deployment. Requiring it at boot would trade a degraded feature
+   * for a dead app.
+   */
+  private validateCarrierKey(): void {
+    const carrierKey = process.env.EASYPOST_API_KEY;
+
+    if (!carrierKey) {
+      this.warnings.push(
+        "EASYPOST_API_KEY not set — carrier tracking is unavailable; delay " +
+          "detection falls back to Shopify shipment_status only (no ETAs, " +
+          "no DATE_DELAY rule)",
+      );
+      return;
+    }
+
+    this.config.EASYPOST_API_KEY = carrierKey;
   }
 
   private validateApiKeys(): void {

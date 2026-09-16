@@ -71,6 +71,16 @@ async function processFulfillmentSide(
 ): Promise<void> {
   await fulfillmentService.upsertFulfillment(orderId, fulfillment);
 
+  // Shopify's own carrier tracking, persisted before anything that depends on
+  // a carrier API (§6 R24). This runs ahead of the early return below because
+  // a fulfillment can carry a shipment_status with no tracking number, and it
+  // is the only source of orders.tracking_status when the carrier API is
+  // unavailable — which is what keeps RULE 3 alive.
+  await getTrackingIngestService().ingestShopifyStatus(
+    orderId,
+    fulfillment.shipment_status,
+  );
+
   const trackingNumber = fulfillment.tracking_info?.number;
   const carrierCode = fulfillment.tracking_info?.company;
   if (!trackingNumber || !carrierCode) return;
