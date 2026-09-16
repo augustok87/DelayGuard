@@ -22,11 +22,17 @@ const monitoringService = new MonitoringService(config);
 router.get("/health", async(ctx) => {
   try {
     const checks = await monitoringService.performHealthChecks();
-    const overallStatus = checks.every((c) => c.status === "healthy")
-      ? "healthy"
-      : "degraded";
+    const overallStatus = checks.some((c) => c.status === "unhealthy")
+      ? "unhealthy"
+      : checks.some((c) => c.status === "degraded")
+        ? "degraded"
+        : "healthy";
 
-    ctx.status = overallStatus === "healthy" ? 200 : 503;
+    // 503 has to keep meaning "unavailable". A degraded dependency — a
+    // deliberately unconfigured carrier API, say — leaves the app serving
+    // every request, and reporting that as 503 makes the endpoint
+    // permanently red, which is the same bug as a check that cannot fail.
+    ctx.status = overallStatus === "unhealthy" ? 503 : 200;
     ctx.body = {
       status: overallStatus,
       timestamp: new Date().toISOString(),

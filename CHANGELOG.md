@@ -9,6 +9,18 @@
 
 ## VERSION HISTORY
 
+### v1.77 (2026-09-16): /monitoring/health stops returning 503 for a degraded dependency
+
+Deploying v1.76 turned `/monitoring/health` permanently red. The body read `"status": "degraded"` with **one** degraded check — the deliberately unconfigured carrier API — while Database, Redis, SendGrid, Twilio and the application were all healthy, and the route served it as **HTTP 503**.
+
+The mapping was `checks.every(healthy) ? 200 : 503`, which was harmless only while every dependency was healthy. An unconfigured carrier is now the steady state until an EasyPost key exists, so the endpoint would have stayed red indefinitely — the same bug as a check that can never fail (R21).
+
+`503` now means what it says: any check **unhealthy** → 503; otherwise 200, with the body still reporting `healthy` or `degraded`. This matches `/health`, which already mapped degraded to 200. Four route tests pin both halves, including that unhealthy wins over degraded when both are present.
+
+**Gate**: 2,558 passing / 2,583, 25 skipped, 0 failing, 142 suites. Lint 0 errors, type-check clean.
+
+---
+
 ### v1.76 (2026-09-16): Delay detection no longer needs a carrier API at all (R24)
 
 **The problem.** EasyPost has sat in anti-fraud manual review since 2026-08-26 — three weeks with no API key and no committed date. R24 stayed submission-blocking the whole time: RULES 2 and 3 had never fired, and the listing sells carrier tracking as its headline feature.
