@@ -211,7 +211,7 @@ shipping automation
 - [x] Full description ✓ See above
 - [x] Category selection ✓ Shipping & Fulfillment + Customer Service
 - [x] Keywords/tags ✓ 10 SEO-optimized keywords ready
-- [ ] Support email ⚠️ **was wrongly ticked** — `support@delayguard.app` is on a domain we never owned and has no MX record, so it could never receive mail. Intended value `support@delayguardapp.com`, **not yet routed**. See LAUNCH_PLAN §6 R8.
+- [x] Support email — `support@delayguardapp.com`, routed through Cloudflare Email Routing and **proven by receipt** on 2026-09-16 (external sender → Inbox). Ticked only because a message was actually received; the previous tick asserted an address that could never receive mail. ⚠️ `sales@` is still unrouted — see LAUNCH_PLAN §6 R8.
 - [ ] Privacy policy URL ⏳ Served at /legal/privacy-policy once backend deploys
 - [ ] Terms of service URL ⏳ Served at /legal/terms-of-service once backend deploys
 

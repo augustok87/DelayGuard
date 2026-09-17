@@ -235,7 +235,7 @@ That's it! Delay alerts begin as soon as your orders have tracking activity, and
 - API documentation (Enterprise plan)
 
 ### **Support Channels:**
-- **Email:** ⚠️ **UNSET, but no longer blocked on a purchase — see LAUNCH_PLAN §6 R8.** The intended value is **`support@delayguardapp.com`** (we bought that domain on 2026-08-25 and it is on Cloudflare DNS). It is written here as UNSET on purpose: **nothing has ever been received at that address.** Create the Cloudflare Email Routing rule, send it a message from an unrelated account, confirm arrival — *then* replace this line. Shopify requires a working support email, and the failure mode of this field is a value that reads as correct.
+- **Email:** `support@delayguardapp.com` — ✅ **routed and proven by receipt 2026-09-16.** Cloudflare Email Routing forwards it to a monitored inbox; a message from an unrelated sender arrived in the Inbox, not Spam. MX, SPF and both SendGrid `_domainkey` chains `dig`-verified the same day. See LAUNCH_PLAN §6 R8.
 - **Priority support:** Pro & Enterprise plans
 
 ---
@@ -282,10 +282,10 @@ A: Each store needs its own DelayGuard subscription. Contact us about multi-stor
 > ⚠️ **The addresses below are unrouted — see LAUNCH_PLAN §6 R8.** The domain (`delayguardapp.com`) is ours as of 2026-08-25, but no mailbox or forwarding rule exists on it yet. Replace only after a test message has actually arrived.
 
 ### **Pre-Sales Questions:**
-- Email: `sales@delayguardapp.com` ⚠️ *not yet routed — see R8*
+- Email: `sales@delayguardapp.com` ⚠️ **still unrouted — no Email Routing rule exists for it.** Add the address or remove this line before submitting; see R8.
 
 ### **Technical Support:**
-- Email: `support@delayguardapp.com` ⚠️ *not yet routed — see R8*
+- Email: `support@delayguardapp.com` ✅ *routed and receipt-proven 2026-09-16*
 - Priority support for Pro & Enterprise
 
 ---
