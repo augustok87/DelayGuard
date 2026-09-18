@@ -211,7 +211,7 @@ That's it! Delay alerts begin as soon as your orders have tracking activity, and
 
 ### **Integrations:**
 - ✅ Shopify Orders API
-- ✅ Major shipping carriers (UPS, FedEx, DHL, USPS, Canada Post, Royal Mail, and more via ShipEngine)
+- ✅ Carrier tracking through Shopify's own shipment status (UPS, FedEx, DHL, USPS, Canada Post, Royal Mail, and the other carriers Shopify tracks)
 - ✅ Email notifications (SendGrid infrastructure, domain-authenticated sending)
 
 ### **Performance:**
@@ -246,7 +246,7 @@ That's it! Delay alerts begin as soon as your orders have tracking activity, and
 A: No. Installation is one click, and the setup wizard guides you through a few simple configuration steps. Setup typically takes just a few minutes.
 
 ### **Q: Which shipping carriers do you support?**
-A: Major carriers including UPS, FedEx, DHL, USPS, Canada Post, Royal Mail, and Australia Post, plus many regional carriers through our ShipEngine integration. If we don't support your carrier, let us know—we'll look into adding it.
+A: DelayGuard reads the carrier status Shopify itself reports on your fulfillments, so any carrier Shopify tracks is supported — including UPS, FedEx, DHL, USPS, Canada Post, Royal Mail and Australia Post. If your carrier isn't among them, let us know and we'll look into adding it.
 
 ### **Q: How do you calculate delay alerts?**
 A: You set a custom threshold (e.g., "alert me if an order hasn't shipped within 2 days"). DelayGuard monitors carrier tracking data and alerts you the moment this threshold is crossed.

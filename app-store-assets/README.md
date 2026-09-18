@@ -115,7 +115,7 @@ DelayGuard automatically monitors your shipments across major carriers, detects 
 DelayGuard proactively notifies customers about delays, so they hear it from you first instead of writing to your support inbox.
 
 **Multi-Carrier Tracking**
-Supports major carriers including USPS, UPS, FedEx, and DHL through the ShipEngine API integration.
+Supports major carriers including USPS, UPS, FedEx and DHL, read from the carrier status Shopify reports on each fulfillment.
 
 **Smart Delay Detection**
 Detects delays based on:
