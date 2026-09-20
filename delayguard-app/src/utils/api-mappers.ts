@@ -271,11 +271,17 @@ export function mapAnalyticsToStats(data: unknown): StatsData {
   const orders = asRecord(record?.orders) ?? {};
 
   const totalAlerts = toCount(alerts.total_alerts);
+  const resolvedAlerts = toCount(alerts.resolved_alerts);
+  const dismissedAlerts = toCount(alerts.dismissed_alerts);
 
+  // `pending_alerts` and `sent_alerts` describe the DISPATCH lifecycle, not the
+  // merchant's workflow, and delay_alerts.status carries both vocabularies in
+  // one column. mapAlertStatus() treats every dispatch state as active, so the
+  // header has to agree or it contradicts the alerts tab rendered beside it.
   return {
     totalAlerts,
-    activeAlerts: toCount(alerts.pending_alerts),
-    resolvedAlerts: toCount(alerts.sent_alerts),
+    activeAlerts: Math.max(0, totalAlerts - resolvedAlerts - dismissedAlerts),
+    resolvedAlerts,
     totalOrders: toCount(orders.total_orders),
     delayedOrders: totalAlerts,
   };

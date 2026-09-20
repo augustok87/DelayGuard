@@ -32,6 +32,45 @@ describe('AlertCard', () => {
     jest.clearAllMocks();
   });
 
+  /**
+   * LAUNCH_PLAN §6 R26 — the order number is rendered "Order ##1001" in production.
+   *
+   * Shopify's order name ALREADY carries a leading '#' (orders.order_number is
+   * stored as "#1001"), and AlertCard prepended a second one. The existing
+   * rendering test could never catch this: its fixture uses "ORD-12345", which
+   * has no '#', so the assertion passed in both the broken and fixed states
+   * (.claude/rules/tests.md — a check that cannot fail is not a check).
+   *
+   * Observed on the live dev store 2026-09-20 while capturing App Store
+   * screenshots, which is the one place this defect is expensive.
+   */
+  describe('Order number formatting', () => {
+    it('does not double the hash when the order number already has one', () => {
+      render(
+        <AlertCard
+          alert={{ ...baseAlert, orderId: '#1001' }}
+          onAction={mockOnAction}
+          variant="active"
+        />,
+      );
+
+      expect(screen.getByText('Order #1001')).toBeInTheDocument();
+      expect(screen.queryByText('Order ##1001')).not.toBeInTheDocument();
+    });
+
+    it('still adds a hash when the order number has none', () => {
+      render(
+        <AlertCard
+          alert={{ ...baseAlert, orderId: 'ORD-12345' }}
+          onAction={mockOnAction}
+          variant="active"
+        />,
+      );
+
+      expect(screen.getByText('Order #ORD-12345')).toBeInTheDocument();
+    });
+  });
+
   describe('Component Rendering', () => {
     it('should render the AlertCard component', () => {
       render(<AlertCard alert={baseAlert} onAction={mockOnAction} variant="active" />);

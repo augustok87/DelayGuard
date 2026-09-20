@@ -30,6 +30,7 @@ import { Button } from '../../ui/Button';
 import { Accordion } from '../../ui/Accordion';
 import { InfoTooltip } from '../../ui/InfoTooltip'; // Phase A: UX clarity
 import { DelayAlert, PersistedTrackingEvent } from '../../../types';
+import { formatOrderNumber } from '../../../utils/order-number';
 import styles from './AlertCard.module.css';
 
 interface AlertCardProps {
@@ -522,7 +523,7 @@ export function AlertCard({ alert, onAction, variant }: AlertCardProps) {
       <div className={styles.header}>
         <div className={styles.orderInfo}>
           <div className={styles.orderHeader}>
-            <h4 className={styles.orderId}>Order #{alert.orderId}</h4>
+            <h4 className={styles.orderId}>Order #{formatOrderNumber(alert.orderId)}</h4>
             {/* Phase 1.1: Order total prominently displayed */}
             {alert.totalAmount && (
               <span className={styles.orderTotal}>

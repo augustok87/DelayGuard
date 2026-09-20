@@ -123,6 +123,10 @@ export interface AlertStats {
   sent_alerts: string;
   pending_alerts: string;
   failed_alerts: string;
+  // Merchant triage, written by PUT /api/alerts/:id/status into the same
+  // status column as the dispatch lifecycle above.
+  resolved_alerts: string;
+  dismissed_alerts: string;
   alerts_last_30_days: string;
   alerts_last_7_days: string;
 }
@@ -391,6 +395,8 @@ export class MerchantApiService {
            COUNT(CASE WHEN da.status = 'sent' THEN 1 END) as sent_alerts,
            COUNT(CASE WHEN da.status = 'pending' THEN 1 END) as pending_alerts,
            COUNT(CASE WHEN da.status = 'failed' THEN 1 END) as failed_alerts,
+           COUNT(CASE WHEN da.status = 'resolved' THEN 1 END) as resolved_alerts,
+           COUNT(CASE WHEN da.status = 'dismissed' THEN 1 END) as dismissed_alerts,
            COUNT(CASE WHEN da.created_at >= NOW() - INTERVAL '30 days' THEN 1 END) as alerts_last_30_days,
            COUNT(CASE WHEN da.created_at >= NOW() - INTERVAL '7 days' THEN 1 END) as alerts_last_7_days
          FROM delay_alerts da

@@ -264,7 +264,62 @@ describe("mapSettingsRow / settingsToWire", () => {
   });
 });
 
+describe("mapAnalyticsToStats — header must agree with the alerts tab (§6 R26)", () => {
+  /**
+   * delay_alerts.status carries TWO state machines in one column: the dispatch
+   * lifecycle written by the notification pipeline (pending | sent | failed)
+   * and the merchant triage written by PUT /api/alerts/:id/status
+   * (active | resolved | dismissed).
+   *
+   * mapAlertStatus() already resolves that ambiguity for the alerts list: an
+   * alert is ACTIVE unless a merchant explicitly resolved or dismissed it. The
+   * header counted `pending_alerts` instead, so on the live dev store it read
+   * "0 ACTIVE" while the tab immediately below it read "Active 8" — both on
+   * screen at once, from the same eight rows.
+   */
+  const analytics = (alerts: Record<string, string>) => ({
+    alerts: {
+      total_alerts: "0",
+      sent_alerts: "0",
+      pending_alerts: "0",
+      failed_alerts: "0",
+      resolved_alerts: "0",
+      dismissed_alerts: "0",
+      ...alerts,
+    },
+    orders: {},
+  });
+
+  it("counts a dispatched alert as active, matching mapAlertStatus", () => {
+    const stats = mapAnalyticsToStats(
+      analytics({ total_alerts: "8", sent_alerts: "8" }),
+    );
+
+    expect(stats.activeAlerts).toBe(8);
+    expect(stats.resolvedAlerts).toBe(0);
+  });
+
+  it("subtracts only explicit merchant resolutions from the active count", () => {
+    const stats = mapAnalyticsToStats(
+      analytics({
+        total_alerts: "10",
+        sent_alerts: "5",
+        resolved_alerts: "3",
+        dismissed_alerts: "2",
+      }),
+    );
+
+    expect(stats.activeAlerts).toBe(5);
+    expect(stats.resolvedAlerts).toBe(3);
+  });
+
+});
+
 describe("mapAnalyticsToStats", () => {
+  // Updated with §6 R26. This previously asserted activeAlerts 3 / resolvedAlerts
+  // 9 — the dispatch counts — which is precisely the defect that made the live
+  // header read "0 ACTIVE" beside a tab reading "Active 8". Active now means
+  // "not resolved and not dismissed by the merchant", matching mapAlertStatus.
   it("maps Postgres string counts into numeric StatsData", () => {
     const stats = mapAnalyticsToStats({
       alerts: {
@@ -272,6 +327,8 @@ describe("mapAnalyticsToStats", () => {
         sent_alerts: "9",
         pending_alerts: "3",
         failed_alerts: "0",
+        resolved_alerts: "4",
+        dismissed_alerts: "1",
         alerts_last_30_days: "5",
         alerts_last_7_days: "2",
       },
@@ -284,8 +341,8 @@ describe("mapAnalyticsToStats", () => {
     });
     expect(stats).toEqual({
       totalAlerts: 12,
-      activeAlerts: 3,
-      resolvedAlerts: 9,
+      activeAlerts: 7,
+      resolvedAlerts: 4,
       totalOrders: 104,
       delayedOrders: 12,
     });

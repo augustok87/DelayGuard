@@ -158,6 +158,8 @@ describe('appSlice', () => {
             sent_alerts: '9',
             pending_alerts: '3',
             failed_alerts: '0',
+            resolved_alerts: '4',
+            dismissed_alerts: '1',
             alerts_last_30_days: '5',
             alerts_last_7_days: '2',
           },
@@ -173,10 +175,12 @@ describe('appSlice', () => {
       const store = createStore();
       await store.dispatch(fetchDashboardStats());
 
+      // §6 R26: active means "not resolved, not dismissed" — the dispatch
+      // counts (pending/sent) describe a different state machine entirely.
       expect(store.getState().app.stats).toEqual({
         totalAlerts: 12,
-        activeAlerts: 3,
-        resolvedAlerts: 9,
+        activeAlerts: 7,
+        resolvedAlerts: 4,
         totalOrders: 104,
         delayedOrders: 12,
       });
