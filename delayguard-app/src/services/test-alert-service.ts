@@ -83,29 +83,39 @@ export function sanitizeProviderReason(error: unknown): string {
   return reason.length > 300 ? `${reason.slice(0, 297)}...` : reason;
 }
 
-const SAMPLE_DELAY_DETAILS: Record<TestAlertDelayType, DelayDetails> = {
+type SampleDelay = Omit<DelayDetails, "estimatedDelivery">;
+
+const SAMPLE_DELAYS: Record<TestAlertDelayType, SampleDelay> = {
   warehouse: {
-    estimatedDelivery: "2026-05-22",
     trackingNumber: "TEST-WH-001",
     trackingUrl: sampleTrackingUrl("TEST-WH-001"),
     delayDays: 3,
     delayReason: "WAREHOUSE_DELAY",
   },
   carrier: {
-    estimatedDelivery: "2026-05-25",
     trackingNumber: "1Z999TEST00001",
     trackingUrl: sampleTrackingUrl("1Z999TEST00001"),
     delayDays: 2,
     delayReason: "DELAYED_STATUS",
   },
   transit: {
-    estimatedDelivery: "2026-05-28",
     trackingNumber: "1Z999TEST00002",
     trackingUrl: sampleTrackingUrl("1Z999TEST00002"),
     delayDays: 7,
     delayReason: "STUCK_IN_TRANSIT",
   },
 };
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/** A fixed date goes stale; the sample estimate is always its delay-days from now. */
+function buildSampleDelayDetails(delayType: TestAlertDelayType): DelayDetails {
+  const sample = SAMPLE_DELAYS[delayType];
+  const estimatedDelivery = new Date(Date.now() + sample.delayDays * MS_PER_DAY)
+    .toISOString()
+    .slice(0, 10);
+  return { ...sample, estimatedDelivery };
+}
 
 function buildSampleOrderInfo(shopDomain: string): OrderInfo {
   return {
@@ -194,7 +204,7 @@ export class TestAlertService {
 
     const requested: TestAlertChannel[] = req.channels ?? ["email", "sms"];
     const orderInfo = buildSampleOrderInfo(shopDomain);
-    const delayDetails = SAMPLE_DELAY_DETAILS[req.delayType];
+    const delayDetails = buildSampleDelayDetails(req.delayType);
 
     const channelsAttempted: TestAlertChannel[] = [];
     const dispatches: Promise<void>[] = [];

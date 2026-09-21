@@ -404,6 +404,38 @@ describe("TestAlertService.dispatchTestAlert", () => {
     });
   });
 
+  describe("sample delivery estimate", () => {
+    // The samples shipped with fixed dates (2026-05-22/25/28), so by
+    // September every test alert promised a "new estimated delivery" months
+    // in the past — on the first email an App Store reviewer receives.
+    beforeEach(() => {
+      jest.useFakeTimers({
+        now: new Date("2026-09-21T15:00:00Z"),
+        doNotFake: ["nextTick", "queueMicrotask"],
+      });
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it.each([
+      ["warehouse", "2026-09-24"],
+      ["carrier", "2026-09-23"],
+      ["transit", "2026-09-28"],
+    ] as const)(
+      "%s sample estimates delivery its delay-days after today (%s)",
+      async(delayType, expectedDate) => {
+        mockShopRow({});
+
+        await service.dispatchTestAlert(shopDomain, { delayType });
+
+        const [, , delayDetails] = (emailService.sendDelayEmail as jest.Mock)
+          .mock.calls[0];
+        expect(delayDetails.estimatedDelivery).toBe(expectedDate);
+      },
+    );
+  });
+
   /**
    * Regression (LAUNCH_PLAN §6 R16).
    *

@@ -17,7 +17,9 @@ Found while filming the App Store screencast on a newly created dev store. Typin
 
 **Then the save "succeeded" and the form reloaded empty.** With the phone fixed, `PUT /api/merchant-settings` returned 200 in production (it was 400 before the deploy), yet a reload showed blank fields. The dashboard never read contact details back: `GET /api/merchant-settings` has existed since Phase 2.6, but no client code called it, and `GET /api/settings` carries only the `app_settings` columns. `fetchSettings` now reads it too, best effort, so an unreadable contact row still leaves the delay rules loaded. The load test ran RED first. The best-effort test passes against the old code by design, because it guards the over-correction, and a comment says so.
 
-**Gate**: 2,566 passing / 2,591, 25 skipped, 0 failing, 140 suites. Lint 0 errors, type-check clean, build compiled.
+**The test alert promised a delivery date in the past.** Its sample details carried fixed dates (`2026-05-22`, `-25`, `-28`), so by September every test email read "New estimated delivery: 2026-05-22". It is the first email a reviewer receives. The estimate is now each sample's delay-days from today. The three tests ran RED against the fixed dates under a stubbed clock.
+
+**Gate**: 2,569 passing / 2,594, 25 skipped, 0 failing, 140 suites. Lint 0 errors, type-check clean, build compiled.
 
 ---
 
