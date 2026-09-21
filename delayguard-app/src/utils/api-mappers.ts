@@ -237,6 +237,23 @@ export function settingsToWire(settings: AppSettings): UnknownRecord {
   };
 }
 
+/** Read the camelCase GET /api/merchant-settings contact fields; blanks are omitted. */
+export function mapMerchantContact(
+  data: unknown,
+): Pick<AppSettings, "merchantEmail" | "merchantPhone" | "merchantName"> {
+  const record = asRecord(data) ?? {};
+  const contact: Pick<AppSettings, "merchantEmail" | "merchantPhone" | "merchantName"> = {};
+
+  const merchantEmail = toOptionalString(record.merchantEmail);
+  const merchantPhone = toOptionalString(record.merchantPhone);
+  const merchantName = toOptionalString(record.merchantName);
+  if (merchantEmail) contact.merchantEmail = merchantEmail;
+  if (merchantPhone) contact.merchantPhone = merchantPhone;
+  if (merchantName) contact.merchantName = merchantName;
+
+  return contact;
+}
+
 /**
  * Serialize the merchant contact fields to the PUT /api/merchant-settings
  * body — **camelCase**, unlike /settings.

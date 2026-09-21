@@ -14,12 +14,14 @@ import { apiClient } from '../../../../src/utils/api-client';
 jest.mock('../../../../src/utils/api-client', () => ({
   apiClient: {
     getSettings: jest.fn(),
+    getMerchantSettings: jest.fn(),
     updateSettings: jest.fn(),
     updateMerchantSettings: jest.fn(),
     testAlert: jest.fn(),
   },
 }));
 const mockedGetSettings = apiClient.getSettings as jest.Mock;
+const mockedGetMerchantSettings = apiClient.getMerchantSettings as jest.Mock;
 const mockedUpdateSettings = apiClient.updateSettings as jest.Mock;
 const mockedTestAlert = apiClient.testAlert as jest.Mock;
 const mockedUpdateMerchantSettings = apiClient.updateMerchantSettings as jest.Mock;
@@ -269,6 +271,53 @@ describe('settingsSlice', () => {
         autoResolveDays: 7,
         theme: 'light',
       });
+    });
+
+    // Contact details live on `shops` and were written through their own
+    // endpoint but never read back, so the form reloaded empty after a
+    // successful save and the merchant saw their email "not saved".
+    it('fetchSettings loads the merchant contact details saved through /api/merchant-settings', async() => {
+      mockedGetSettings.mockResolvedValueOnce({
+        success: true,
+        data: { delay_threshold_days: 4 },
+      });
+      mockedGetMerchantSettings.mockResolvedValueOnce({
+        success: true,
+        data: {
+          merchantEmail: 'ops@example.com',
+          merchantPhone: null,
+          merchantName: 'Example Store',
+          warehouseDelaysEnabled: true,
+        },
+      });
+
+      await store.dispatch(fetchSettings());
+
+      expect(store.getState().settings.data).toMatchObject({
+        delayThreshold: 4,
+        merchantEmail: 'ops@example.com',
+        merchantName: 'Example Store',
+      });
+      expect(store.getState().settings.data.merchantPhone).toBeUndefined();
+    });
+
+    // Guards the over-correction, so it passes against the old code too:
+    // an unreadable contact row must not take the delay rules down with it.
+    it('fetchSettings still loads the settings when the contact details cannot be read', async() => {
+      mockedGetSettings.mockResolvedValueOnce({
+        success: true,
+        data: { delay_threshold_days: 4 },
+      });
+      mockedGetMerchantSettings.mockResolvedValueOnce({
+        success: false,
+        error: 'Failed to fetch merchant settings',
+      });
+
+      await store.dispatch(fetchSettings());
+
+      const state = store.getState().settings;
+      expect(state.error).toBeNull();
+      expect(state.data.delayThreshold).toBe(4);
     });
 
     it('fetchSettings rejects with the API error on failure', async() => {

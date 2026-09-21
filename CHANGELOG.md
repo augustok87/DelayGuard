@@ -2,20 +2,22 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 21, 2026 (R27 — contact details save on a fresh install)
+**Last Updated**: September 21, 2026 (R27 — contact details save on a fresh install, and survive a reload)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
 
-### v1.79 (2026-09-21): Contact details could not be saved on a fresh install (R27)
+### v1.79 (2026-09-21): Contact details could not be saved on a fresh install, and never reloaded (R27)
 
 Found while filming the App Store screencast on a newly created dev store. Typing a merchant email into **Notification Preferences** and leaving the optional phone empty toasted **"Invalid phone format - must contain at least 10 digits"** and persisted nothing: the form sends all three contact fields on every save, so the untouched phone arrived as `""` and failed the digit check. An empty email failed the same way against `EMAIL_REGEX`. Every merchant who installs and fills in only an email hits this, and so would a reviewer following the testing instructions.
 
 `updateMerchantSettings` now treats a blank or whitespace-only email or phone as not provided (`null`, so `COALESCE` keeps the stored value) before validating. A malformed non-blank value (`555-12`) is still rejected. The two new tests ran RED against the old code with the exact production messages.
 
-**Gate**: 2,564 passing / 2,589, 25 skipped, 0 failing, 140 suites. Lint 0 errors, type-check clean, build compiled.
+**Then the save "succeeded" and the form reloaded empty.** With the phone fixed, `PUT /api/merchant-settings` returned 200 in production (it was 400 before the deploy), yet a reload showed blank fields. The dashboard never read contact details back: `GET /api/merchant-settings` has existed since Phase 2.6, but no client code called it, and `GET /api/settings` carries only the `app_settings` columns. `fetchSettings` now reads it too, best effort, so an unreadable contact row still leaves the delay rules loaded. The load test ran RED first. The best-effort test passes against the old code by design, because it guards the over-correction, and a comment says so.
+
+**Gate**: 2,566 passing / 2,591, 25 skipped, 0 failing, 140 suites. Lint 0 errors, type-check clean, build compiled.
 
 ---
 

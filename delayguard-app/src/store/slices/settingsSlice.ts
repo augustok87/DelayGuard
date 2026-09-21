@@ -4,6 +4,7 @@ import { AppSettings } from '../../types';
 import { apiClient } from '../../utils/api-client';
 import {
   mapSettingsRow,
+  mapMerchantContact,
   settingsToWire,
   contactToWire,
 } from '../../utils/api-mappers';
@@ -41,7 +42,20 @@ export const fetchSettings = createAsyncThunk(
       }
       // Overlay the persisted wire columns onto the defaults; local-only
       // fields (theme, language, …) keep their defaults.
-      return mapSettingsRow(response.data, defaultSettings);
+      const settings = mapSettingsRow(response.data, defaultSettings);
+
+      // Contact details live on `shops` behind their own endpoint (R12).
+      // Without this read the form reloaded empty after a successful save.
+      // Best effort: an unreadable contact row must not hide the delay rules.
+      try {
+        const contactResponse = await apiClient.getMerchantSettings();
+        if (contactResponse?.success) {
+          return { ...settings, ...mapMerchantContact(contactResponse.data) };
+        }
+      } catch {
+        // fall through with the rules loaded and the contact fields blank
+      }
+      return settings;
     } catch {
       return rejectWithValue('Failed to fetch settings');
     }

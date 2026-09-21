@@ -218,6 +218,14 @@ class ApiClient {
   }
 
   /**
+   * GET /api/merchant-settings
+   * Merchant contact details (and delay-type toggles). camelCase on the wire.
+   */
+  async getMerchantSettings() {
+    return this.request<unknown>("/merchant-settings");
+  }
+
+  /**
    * PUT /api/merchant-settings
    * Update merchant contact details (and Phase 2.6 delay-type toggles).
    *
