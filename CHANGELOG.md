@@ -2,12 +2,30 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 16, 2026 (R24 — delay detection works with no carrier API)
+**Last Updated**: September 21, 2026 (R26 — dashboard header agrees with the alerts tab; listing ready bar the screencast)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.78 (2026-09-20): The dashboard header contradicted the alerts tab, and order numbers doubled their hash (R26)
+
+Both found while capturing App Store screenshots on the live dev store — the one place they are expensive, because a reviewer sees them on the app's first screen.
+
+**`0 ACTIVE` beside `Active 8`, from the same eight rows.** `delay_alerts.status` carries two state machines in one column: the dispatch lifecycle the notification pipeline writes (`pending | sent | failed`) and the merchant triage `PUT /api/alerts/:id/status` writes (`active | resolved | dismissed`). `mapAlertStatus` already treated every dispatch state as active; `mapAnalyticsToStats` counted `pending_alerts`, so a store whose alerts had all been sent showed zero. `activeAlerts` is now `total − resolved − dismissed`, the analytics query exposes those two counts, and `resolvedAlerts` stops meaning "email was sent".
+
+**`Order ##1001`.** `formatOrderNumber` already existed — added in R18 after the first real delay email read `Order ##DG1001` — and was wired into email and SMS but never the dashboard. `AlertCard` now uses it.
+
+**Why the tests missed both:** the `AlertCard` fixture is `ORD-12345`, which carries no hash, so the rendering test passed identically in both states; and two analytics tests had encoded `activeAlerts 3 / resolvedAlerts 9` — the defect — as the contract. Those are updated with the reason. The new tests ran RED first; one more, asserting the count never goes negative, passed against the broken code and was deleted.
+
+**Verified in production after deploy:** header `TOTAL 8 · ACTIVE 8`, then `ACTIVE 4 · RESOLVED 4` after four alerts were resolved, matching the tab each time; cards read `Order #1001` / `Order #DG1001`.
+
+**Not touched:** `EnhancedDashboard` carries the same `pending_alerts` mapping but nothing imports it.
+
+**Gate**: 2,562 passing / 2,587, 25 skipped, 0 failing, 140 suites. Lint 0 errors, type-check clean.
+
+---
 
 ### v1.77 (2026-09-16): /monitoring/health stops returning 503 for a degraded dependency
 
