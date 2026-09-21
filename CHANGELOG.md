@@ -2,12 +2,22 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 21, 2026 (R26 — dashboard header agrees with the alerts tab; listing ready bar the screencast)
+**Last Updated**: September 21, 2026 (R27 — contact details save on a fresh install)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.79 (2026-09-21): Contact details could not be saved on a fresh install (R27)
+
+Found while filming the App Store screencast on a newly created dev store. Typing a merchant email into **Notification Preferences** and leaving the optional phone empty toasted **"Invalid phone format - must contain at least 10 digits"** and persisted nothing: the form sends all three contact fields on every save, so the untouched phone arrived as `""` and failed the digit check. An empty email failed the same way against `EMAIL_REGEX`. Every merchant who installs and fills in only an email hits this, and so would a reviewer following the testing instructions.
+
+`updateMerchantSettings` now treats a blank or whitespace-only email or phone as not provided (`null`, so `COALESCE` keeps the stored value) before validating. A malformed non-blank value (`555-12`) is still rejected. The two new tests ran RED against the old code with the exact production messages.
+
+**Gate**: 2,564 passing / 2,589, 25 skipped, 0 failing, 140 suites. Lint 0 errors, type-check clean, build compiled.
+
+---
 
 ### v1.78 (2026-09-20): The dashboard header contradicted the alerts tab, and order numbers doubled their hash (R26)
 

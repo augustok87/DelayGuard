@@ -180,6 +180,10 @@ export interface UpdateMerchantSettingsInput {
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function blankToNull(value: string | null | undefined): string | null | undefined {
+  return typeof value === "string" && value.trim() === "" ? null : value;
+}
 const SETTINGS_DEFAULTS = {
   delay_threshold_days: 2,
   email_enabled: true,
@@ -525,8 +529,17 @@ export class MerchantApiService {
 
   async updateMerchantSettings(
     shopDomain: string,
-    input: UpdateMerchantSettingsInput,
+    rawInput: UpdateMerchantSettingsInput,
   ): Promise<void> {
+    // The settings form sends every contact field on each save, so an
+    // optional field the merchant never filled arrives as "". That means
+    // "not provided" (COALESCE keeps the stored value), not "invalid".
+    const input: UpdateMerchantSettingsInput = {
+      ...rawInput,
+      merchantEmail: blankToNull(rawInput.merchantEmail),
+      merchantPhone: blankToNull(rawInput.merchantPhone),
+    };
+
     // Validate inputs BEFORE resolving the shop — fail fast on bad payloads.
     if (
       input.merchantEmail !== undefined &&

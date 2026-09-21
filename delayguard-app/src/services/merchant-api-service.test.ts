@@ -637,6 +637,41 @@ describe("MerchantApiService", () => {
       expect(mockQuery).not.toHaveBeenCalled();
     });
 
+    // The form sends every contact field on each save, so an untouched
+    // optional field arrives as "". Rejecting it blocked saving the email
+    // on every fresh install ("Invalid phone format" with the phone empty).
+    it("treats a blank phone as not provided: saves the email and leaves merchant_phone alone", async() => {
+      mockShopResolved();
+      mockQuery.mockResolvedValueOnce([]); // shops UPDATE
+
+      await service.updateMerchantSettings(SHOP, {
+        merchantEmail: "merchant@test.com",
+        merchantPhone: "",
+        merchantName: "Merchant One",
+      });
+
+      const [, updateParams] = mockQuery.mock.calls[1];
+      expect(updateParams).toEqual([
+        "merchant@test.com",
+        null,
+        "Merchant One",
+        SHOP,
+      ]);
+    });
+
+    it("treats a blank email as not provided, the same way", async() => {
+      mockShopResolved();
+      mockQuery.mockResolvedValueOnce([]); // shops UPDATE
+
+      await service.updateMerchantSettings(SHOP, {
+        merchantEmail: "   ",
+        merchantPhone: "+15551234567",
+      });
+
+      const [, updateParams] = mockQuery.mock.calls[1];
+      expect(updateParams).toEqual([null, "+15551234567", undefined, SHOP]);
+    });
+
     it("throws ShopNotFoundError when shop missing (no UPDATEs attempted)", async() => {
       mockShopMissing();
       await expect(
