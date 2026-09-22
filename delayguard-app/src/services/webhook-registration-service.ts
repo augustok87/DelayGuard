@@ -45,6 +45,11 @@ export const WEBHOOK_TOPICS = [
   // path below is our own routing choice and is unaffected.
   { topic: "FULFILLMENTS_UPDATE", path: "/webhooks/fulfillments/updated" },
   { topic: "ORDERS_PAID", path: "/webhooks/orders/paid" },
+  // Not a delay-detection topic, but registered on the same pass: it is the
+  // only signal that a merchant has left, and without it both cron sweeps go
+  // on emailing an uninstalled shop's customers until shop/redact lands 48h
+  // later. Handler: routes/webhooks.ts `/app/uninstalled`.
+  { topic: "APP_UNINSTALLED", path: "/webhooks/app/uninstalled" },
 ] as const;
 
 /**

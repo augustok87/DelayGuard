@@ -30,11 +30,13 @@ import {
   type FulfillmentWebhookPayload,
 } from "../services/fulfillment-persistence-service";
 import { TrackingIngestService } from "../services/tracking-ingest-service";
+import { ShopAuthService } from "../services/shop-auth-service";
 
 const router = new Router();
 
 const orderUpsertService = new OrderUpsertService();
 const fulfillmentService = new FulfillmentPersistenceService();
+const shopAuthService = new ShopAuthService();
 // TrackingIngestService is lazy — CarrierService constructor throws if
 // SHIPENGINE_API_KEY is unset, and we want the route module to load even
 // in environments without ShipEngine (tests, local dev).
@@ -245,6 +247,47 @@ router.post("/orders/paid", async(ctx) => {
     ctx.body = { success: true };
   } catch (error) {
     logger.error("Error processing order paid webhook", error as Error);
+    ctx.status = 500;
+    ctx.body = { error: "Internal server error" };
+  }
+});
+
+/**
+ * app/uninstalled — stop serving a shop the moment the merchant leaves.
+ *
+ * Until this handler existed there was no uninstall signal anywhere in the
+ * app: the `shops` row stayed live with a now-dead access token, and both
+ * cron sweeps kept selecting that shop's orders and emailing its customers
+ * for the 48 hours until shop/redact arrived. Flagging the shop is all this
+ * needs to do — deletion is shop/redact's job (see routes/gdpr.ts), and a
+ * merchant who reinstalls first has the flag cleared by the OAuth upsert.
+ */
+router.post("/app/uninstalled", async(ctx) => {
+  const hmac = ctx.get("X-Shopify-Hmac-Sha256");
+  const body = ctx.request.rawBody || JSON.stringify(ctx.request.body);
+  const shop = ctx.get("X-Shopify-Shop-Domain");
+
+  if (!verifyWebhook(body, hmac)) {
+    ctx.status = 401;
+    ctx.body = { error: "Unauthorized" };
+    return;
+  }
+
+  logger.info("App uninstalled webhook received", { shop });
+
+  try {
+    const flagged = await shopAuthService.markShopUninstalled(shop);
+
+    if (!flagged) {
+      logger.warn("App uninstalled webhook for an unknown shop — skipping", {
+        shop,
+      });
+    }
+
+    ctx.status = 200;
+    ctx.body = { success: true };
+  } catch (error) {
+    logger.error("Error processing app uninstalled webhook", error as Error);
     ctx.status = 500;
     ctx.body = { error: "Internal server error" };
   }

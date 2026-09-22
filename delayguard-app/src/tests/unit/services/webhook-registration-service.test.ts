@@ -10,7 +10,7 @@
  * mutation right after OAuth.
  *
  * These tests mock global fetch (the GraphQL transport) and assert:
- *   - all three topics succeed
+ *   - every topic in WEBHOOK_TOPICS succeeds
  *   - an "already been taken" userError is treated as SUCCESS (idempotent)
  *   - a real GraphQL userError is recorded as a failure
  *   - a network timeout (AbortError) is recorded as a failure, never thrown
@@ -38,7 +38,13 @@ const EXPECTED = [
     callbackUrl: `${APP_URL}/webhooks/fulfillments/updated`,
   },
   { topic: "ORDERS_PAID", callbackUrl: `${APP_URL}/webhooks/orders/paid` },
+  {
+    topic: "APP_UNINSTALLED",
+    callbackUrl: `${APP_URL}/webhooks/app/uninstalled`,
+  },
 ] as const;
+
+const ALL_TOPICS = EXPECTED.map((entry) => entry.topic);
 
 /** A successful webhookSubscriptionCreate response for a fresh subscription. */
 function okResponse(id = "gid://shopify/WebhookSubscription/1"): {
@@ -101,18 +107,14 @@ describe("webhook-registration-service", () => {
     delete process.env.SHOPIFY_APP_URL;
   });
 
-  it("registers all three topics and returns them as registered", async() => {
+  it("registers every topic and returns them as registered", async() => {
     mockFetch.mockResolvedValue(okResponse());
 
     const result = await registerWebhooks(SHOP, ACCESS_TOKEN);
 
-    expect(result.registered).toEqual([
-      "ORDERS_UPDATED",
-      "FULFILLMENTS_UPDATE",
-      "ORDERS_PAID",
-    ]);
+    expect(result.registered).toEqual([...ALL_TOPICS]);
     expect(result.failed).toEqual([]);
-    expect(mockFetch).toHaveBeenCalledTimes(3);
+    expect(mockFetch).toHaveBeenCalledTimes(ALL_TOPICS.length);
   });
 
   it("sends the exact Admin GraphQL endpoint, auth header, topic enums and callback URLs", async() => {
@@ -177,15 +179,11 @@ describe("webhook-registration-service", () => {
           "Address for this topic has already been taken",
         ),
       )
-      .mockResolvedValueOnce(okResponse());
+      .mockResolvedValue(okResponse());
 
     const result = await registerWebhooks(SHOP, ACCESS_TOKEN);
 
-    expect(result.registered).toEqual([
-      "ORDERS_UPDATED",
-      "FULFILLMENTS_UPDATE",
-      "ORDERS_PAID",
-    ]);
+    expect(result.registered).toEqual([...ALL_TOPICS]);
     expect(result.failed).toEqual([]);
   });
 
@@ -193,11 +191,15 @@ describe("webhook-registration-service", () => {
     mockFetch
       .mockResolvedValueOnce(okResponse())
       .mockResolvedValueOnce(userErrorResponse("Invalid callback URL"))
-      .mockResolvedValueOnce(okResponse());
+      .mockResolvedValue(okResponse());
 
     const result = await registerWebhooks(SHOP, ACCESS_TOKEN);
 
-    expect(result.registered).toEqual(["ORDERS_UPDATED", "ORDERS_PAID"]);
+    expect(result.registered).toEqual([
+      "ORDERS_UPDATED",
+      "ORDERS_PAID",
+      "APP_UNINSTALLED",
+    ]);
     expect(result.failed).toEqual([
       { topic: "FULFILLMENTS_UPDATE", reason: "Invalid callback URL" },
     ]);
@@ -209,13 +211,15 @@ describe("webhook-registration-service", () => {
     mockFetch
       .mockResolvedValueOnce(okResponse())
       .mockResolvedValueOnce(okResponse())
-      .mockRejectedValueOnce(abortError);
+      .mockRejectedValueOnce(abortError)
+      .mockResolvedValue(okResponse());
 
     const result = await registerWebhooks(SHOP, ACCESS_TOKEN);
 
     expect(result.registered).toEqual([
       "ORDERS_UPDATED",
       "FULFILLMENTS_UPDATE",
+      "APP_UNINSTALLED",
     ]);
     expect(result.failed).toHaveLength(1);
     expect(result.failed[0].topic).toBe("ORDERS_PAID");
@@ -230,11 +234,15 @@ describe("webhook-registration-service", () => {
         status: 200,
         json: async() => ({ errors: [{ message: "Throttled" }] }),
       })
-      .mockResolvedValueOnce(okResponse());
+      .mockResolvedValue(okResponse());
 
     const result = await registerWebhooks(SHOP, ACCESS_TOKEN);
 
-    expect(result.registered).toEqual(["ORDERS_UPDATED", "ORDERS_PAID"]);
+    expect(result.registered).toEqual([
+      "ORDERS_UPDATED",
+      "ORDERS_PAID",
+      "APP_UNINSTALLED",
+    ]);
     expect(result.failed).toEqual([
       { topic: "FULFILLMENTS_UPDATE", reason: "Throttled" },
     ]);
@@ -249,13 +257,15 @@ describe("webhook-registration-service", () => {
         status: 401,
         statusText: "Unauthorized",
         json: async() => ({}),
-      });
+      })
+      .mockResolvedValue(okResponse());
 
     const result = await registerWebhooks(SHOP, ACCESS_TOKEN);
 
     expect(result.registered).toEqual([
       "ORDERS_UPDATED",
       "FULFILLMENTS_UPDATE",
+      "APP_UNINSTALLED",
     ]);
     expect(result.failed).toHaveLength(1);
     expect(result.failed[0].topic).toBe("ORDERS_PAID");

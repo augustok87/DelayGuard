@@ -53,8 +53,36 @@ describe('Billing routes', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.plans.free.price).toBe(0);
-      expect(response.body.plans.pro.price).toBe(7);
-      expect(response.body.plans.enterprise.price).toBe(25);
+    });
+
+    /**
+     * The Pro ($7) and Enterprise ($25) plans were DELETED from Shopify App
+     * Pricing in v1.80 — the app is free-only and the live App Store listing
+     * carries exactly one plan, "Free". This endpoint is public and
+     * unauthenticated, so until v1.81 anyone (a reviewer included) could read
+     * a catalog advertising two tiers that cannot be subscribed to. Selling a
+     * plan Shopify does not have is a rejection, and a rejection costs a full
+     * review cycle.
+     *
+     * This asserts on the whole payload rather than on the two names that
+     * happen to exist today: a future tier added to the catalog but not to
+     * the Partner Dashboard is the same defect under a different key.
+     */
+    it('advertises no paid plan and no price above zero', async() => {
+      const response = await request(app.callback())
+        .get('/billing/plans')
+        .expect(200);
+
+      const plans = response.body.plans as Record<
+        string,
+        { price: number; trial_days?: number }
+      >;
+
+      expect(Object.keys(plans)).toEqual(['free']);
+      for (const [tier, plan] of Object.entries(plans)) {
+        expect([tier, plan.price]).toEqual([tier, 0]);
+      }
+      expect(JSON.stringify(plans)).not.toMatch(/enterprise/i);
     });
 
     it('does not respond on the old double-prefixed path', async() => {

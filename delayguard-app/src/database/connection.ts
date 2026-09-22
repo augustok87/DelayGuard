@@ -499,6 +499,25 @@ export async function runMigrations(): Promise<void> {
       END $$;
     `);
 
+    // app/uninstalled: the moment a merchant removes DelayGuard, the shop
+    // must stop being swept. Without this column there was no uninstall
+    // signal at all — the shops row stayed live, both cron sweeps kept
+    // selecting its orders, and its customers kept receiving delay emails
+    // for the 48 hours until shop/redact arrived. NULL means installed;
+    // ShopAuthService.upsertShop clears it again on reinstall. Deletion is
+    // still shop/redact's job, never this webhook's.
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='shops' AND column_name='uninstalled_at'
+        ) THEN
+          ALTER TABLE shops ADD COLUMN uninstalled_at TIMESTAMP;
+        END IF;
+      END $$;
+    `);
+
     // Create indexes for performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_orders_shop_id ON orders(shop_id);

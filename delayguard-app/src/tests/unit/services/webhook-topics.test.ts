@@ -35,6 +35,11 @@ const VERIFIED_TOPIC_ENUM_VALUES = new Set([
   "ORDERS_PAID", // orders/paid
   "FULFILLMENTS_CREATE", // fulfillments/create
   "FULFILLMENTS_UPDATE", // fulfillments/update
+  // app/uninstalled. Read from the enum page (re-fetched 2026-09-22), not
+  // from memory, as this list requires: "APP_UNINSTALLED — The webhook topic
+  // for `app/uninstalled` events. Occurs whenever a shop has uninstalled the
+  // app."
+  "APP_UNINSTALLED",
 ]);
 
 describe("webhook topic enums", () => {
@@ -53,12 +58,23 @@ describe("webhook topic enums", () => {
     expect(topics).not.toContain("FULFILLMENTS_UPDATED");
   });
 
-  it("still registers all three delay-detection topics", () => {
+  it("still registers the three delay-detection topics, plus uninstall", () => {
     expect(WEBHOOK_TOPICS.map((entry) => entry.topic).sort()).toEqual([
+      "APP_UNINSTALLED",
       "FULFILLMENTS_UPDATE",
       "ORDERS_PAID",
       "ORDERS_UPDATED",
     ]);
+  });
+
+  it("registers app/uninstalled, without which the sweeps email dead shops", () => {
+    // Nothing else tells the app a merchant left: shops.uninstalled_at stays
+    // NULL, both cron sweeps keep selecting that shop's orders, and its
+    // customers keep receiving delay emails until shop/redact lands 48h later.
+    expect(WEBHOOK_TOPICS).toContainEqual({
+      topic: "APP_UNINSTALLED",
+      path: "/webhooks/app/uninstalled",
+    });
   });
 
   it("points every topic at a handler path under /webhooks", () => {

@@ -20,13 +20,19 @@ const router = new Router();
 /**
  * GET /billing/plans
  * Public plan catalog (matches the Partner Dashboard App Pricing plans).
+ *
+ * Free-only since v1.80: the Pro ($7) and Enterprise ($25) plans were deleted
+ * from Shopify App Pricing, and the live App Store listing carries exactly one
+ * plan. This endpoint is unauthenticated, so anyone — a reviewer included —
+ * could read it, and advertising a tier Shopify has no record of is grounds
+ * for rejection. The tier ladder itself stays in billing-service.ts: SMS is
+ * still gated on Pro+ in code, which is the money-path guard, and this route
+ * is only about what the app SELLS.
  */
 router.get("/plans", async(ctx: Context) => {
   try {
     const plans = {
       free: billingService.getPlanConfig("free"),
-      pro: billingService.getPlanConfig("pro"),
-      enterprise: billingService.getPlanConfig("enterprise"),
     };
 
     ctx.status = 200;

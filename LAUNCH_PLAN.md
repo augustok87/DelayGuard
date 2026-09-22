@@ -738,7 +738,9 @@ Session tokens passing proves Shopify **has** session data for this app, so the 
 
 **The causal link to that specific dashboard check is `[I]` inferred**, not measured — Shopify does not say why it failed. It is strongly supported and it is the only App-Bridge-related deviation in the bundle.
 
-**FIXED in v1.82.** `APP::` went 119 → 0 in the rebuilt bundle and `createApp` → 0. `app-bridge-cdn-only.test.ts` pins it (RED first, naming both offending files). ⏳ The dashboard re-checks every 2 hours, so the ❌ will persist until the next run — that wait is the critical path to submission.
+**ROOT CAUSE (found v1.83, and v1.82 only got half of it).** The app blocked Shopify's script with its own header: it sent `Cross-Origin-Embedder-Policy: require-corp`, and `cdn.shopify.com/shopifycloud/app-bridge.js` returns `access-control-allow-origin: *` but **no** `Cross-Origin-Resource-Policy`. Under `require-corp` a no-CORS cross-origin `<script>` is blocked without CORP — so the bridge never executed, `window.shopify` never existed, and the legacy npm bridge was silently carrying every session token. Removing the legacy bridge alone made the dashboard 401 on every call and the live console said so: `App Bridge global not present — app-bridge.js has not initialised`. COEP and COOP are gone; CORP is `cross-origin`; `frame-ancestors` (R6) still controls framing.
+
+**FIXED in v1.82 + v1.83.** `APP::` went 119 → 0 in the rebuilt bundle and `createApp` → 0. `app-bridge-cdn-only.test.ts` pins it (RED first, naming both offending files). ⏳ The dashboard re-checks every 2 hours, so the ❌ will persist until the next run — that wait is the critical path to submission.
 
 **Fix shape (as executed).** Deleted the legacy initialization: drop `ShopifyProvider`'s `createApp`, drop the npm fallback in `utils/api-client.ts` `getToken()` (which already **prefers** `window.shopify.idToken()`), and remove `@shopify/app-bridge` from `package.json`. ⚠️ **This touches the authentication surface**, where a mistake turns the one currently-green embedded check red. **Verification is not immediate** — the dashboard re-checks every 2 hours, so this cannot be confirmed inside one session.
 
@@ -756,9 +758,37 @@ There is **no paid plan** (Pro and Enterprise were deleted in v1.80) and **SMS c
 
 Same page, milder: **Address** is justified as *"Compute the delay and revised ETA from the shipping destination"*, but nothing computes an ETA from the address — it is stored and **displayed** on the alert (`api-mappers.ts` `shippingDestination`). The field has a real use; the stated reason is wrong. Reword it.
 
-### R32 — The app's own CSP blocks the font it ships `[AGENT]` — **new 2026-09-22, NOT FIXED**
+### ~~R32 (original entry) — The app's own CSP blocks the font it ships~~ — superseded by the fixed entry above
 
 `security-headers.ts` sends `style-src 'self' 'unsafe-inline' https://cdn.shopify.com` and `font-src 'self' https://cdn.shopify.com`, while the app document links `https://fonts.googleapis.com/css2?family=Inter...` and preconnects `fonts.gstatic.com`. Neither host is allowed, so the stylesheet is **blocked**: `document.styleSheets` reports it opaque, `transferSize` is 0, and `getComputedStyle(document.body).fontFamily` resolves to `-apple-system, "system-ui", …` with no Inter. The admin console shows the matching *"Content Security Policy of your site blocks some resources"* and *"Verify stylesheet URLs"* issues. Merchants never see the intended typography. Either allow the two Google hosts or self-host Inter.
+
+### ~~R30 — The listing's own website URL shows the app erroring~~ `[HUMAN]` — **handed over 2026-09-22**
+
+Unchanged and still owed: `websiteUrl` points at the embedded app document, which outside the iframe renders "Error: Missing Authorization header". Change it in the listing editor.
+
+### ~~R32 — The app's own CSP blocks the font it ships~~ `[AGENT]` — ✅ **FIXED 2026-09-22 (v1.83)**
+
+`style-src` now allows `https://fonts.googleapis.com` and `font-src` allows `https://fonts.gstatic.com`. Same class as R29's root cause: the app forbidding its own assets.
+
+### R33 — There was no uninstall signal anywhere in the app `[AGENT]` — ✅ **FIXED 2026-09-22 (v1.83)**
+
+No `app/uninstalled` route, no topic, no column. A merchant who uninstalled kept a live `shops` row with a dead token while both sweeps went on selecting their orders and **emailing their customers** for the 48 hours until `shop/redact` arrived. Now: `shops.uninstalled_at`, an HMAC-verified `POST /webhooks/app/uninstalled` that flags (deletion stays `shop/redact`'s job), the `APP_UNINSTALLED` topic, `AND s.uninstalled_at IS NULL` in both sweeps, and an OAuth upsert that clears the flag so reinstall works.
+
+⚠️ **Deploy order matters and is not covered by a test.** Both sweeps now reference `s.uninstalled_at`. Ship the code before the migration and **every cron tick throws `column "uninstalled_at" does not exist`** and no alerts go out. Run `npm run migrate:vercel` FIRST, then deploy. The migration is additive and idempotent.
+
+⚠️ **Weaker test shape, recorded not hidden.** pg-mem cannot run either sweep query (rejects the correlated `LEFT JOIN LATERAL`, then the `timestamptz` cast), so the sweep filter is asserted by regex on the emitted SQL. It fails against the old code, so it is a real gate, but it cannot catch a predicate that is present and wrong.
+
+### R34 — Money-path calls could hang toward the 30s cap `[AGENT]` — ✅ **FIXED 2026-09-22 (v1.83)**
+
+`AbortController` on the Shopify Admin GraphQL fetch and the OAuth token exchange; `sgMail.send` and Twilio `messages.create` take no signal, so they race a rejecting timeout naming the provider and the budget. All four failed RED by hanging until Jest killed the test. Timeouts throw, so BullMQ's `attempts: 3` still retries.
+
+### R35 — `/billing/plans` sold two deleted plans, unauthenticated `[AGENT]` — ✅ **FIXED 2026-09-22 (v1.83)**
+
+Returned 200 with Pro $7 and Enterprise $25 to anyone, both removed from App Pricing in v1.80 while the live listing carries one plan. Catalog is free-only; the `PlanTier` ladder is untouched so SMS stays gated and `getCurrentPlan` still fails closed to `free`.
+
+### R36 — The local gate could not fail on what the deploy fails on `[AGENT]` — ✅ **FIXED 2026-09-22**
+
+The v1.82 deploy died on `TS6142` with every local check green: `type-check` uses the root tsconfig (sets `jsx`), Vercel builds with `tsconfig.vercel.json` (does not). Measured on the broken state: `vercel-build` errors, `type-check` reports **0**. Quality gates now run `npm run vercel-build` as an 8th gate, verified by reintroducing the broken import.
 
 ### R9 — The agent can no longer authenticate to Shopify, or read any Vercel secret `[HUMAN]` — **new 2026-08-25**
 

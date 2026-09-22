@@ -13,9 +13,12 @@ export class SecurityHeadersMiddleware {
   private static readonly CSP_POLICY = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.shopify.com https://checkout.shopify.com",
-    "style-src 'self' 'unsafe-inline' https://cdn.shopify.com",
+    // fonts.googleapis.com serves the Inter stylesheet index.html links, and
+    // fonts.gstatic.com serves the font files it references. Omitting them
+    // blocked the app's own typography on every merchant's screen (§6 R32).
+    "style-src 'self' 'unsafe-inline' https://cdn.shopify.com https://fonts.googleapis.com",
     "img-src 'self' data: https: blob:",
-    "font-src 'self' https://cdn.shopify.com",
+    "font-src 'self' https://cdn.shopify.com https://fonts.gstatic.com",
     "connect-src 'self' https://api.shopify.com https://checkout.shopify.com wss:",
     "frame-src 'self' https://checkout.shopify.com",
     "object-src 'none'",
@@ -89,10 +92,22 @@ export class SecurityHeadersMiddleware {
       ].join(", "),
     );
 
-    // Cross-Origin Policies
-    ctx.set("Cross-Origin-Embedder-Policy", "require-corp");
-    ctx.set("Cross-Origin-Opener-Policy", "same-origin");
-    ctx.set("Cross-Origin-Resource-Policy", "same-origin");
+    // Cross-Origin Policies (LAUNCH_PLAN §6 R29 — root cause).
+    //
+    // This app's entire job is to run inside someone else's admin, so
+    // cross-origin ISOLATION is the wrong posture. `require-corp` blocks every
+    // cross-origin subresource that does not carry CORP, and
+    // https://cdn.shopify.com/shopifycloud/app-bridge.js sends
+    // `access-control-allow-origin: *` but NO `Cross-Origin-Resource-Policy`.
+    // So the app's own header blocked Shopify's App Bridge from executing:
+    // `window.shopify` never existed, the legacy npm bridge silently carried
+    // every session token, and Shopify's "latest App Bridge script" review
+    // check failed because its script never ran.
+    //
+    // `cross-origin` on our own responses is what lets admin.shopify.com embed
+    // them. Who may frame us is governed by the per-shop `frame-ancestors`
+    // directive above (R6), which is the real framing control and is untouched.
+    ctx.set("Cross-Origin-Resource-Policy", "cross-origin");
 
     // Cache Control for sensitive endpoints
     if (ctx.path.startsWith("/api/") || ctx.path.startsWith("/auth/")) {

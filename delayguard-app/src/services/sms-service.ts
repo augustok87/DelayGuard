@@ -33,6 +33,19 @@ interface TwilioClient {
 /** Mirrors email-service's fallback so both channels say the same thing. */
 const NO_DELIVERY_ESTIMATE = "Not yet available";
 
+/**
+ * Deadline for a live send (CLAUDE.md third-party invariant). The notification
+ * sweep runs inside a Vercel function capped at 30s and works through a batch,
+ * so one unanswered send would otherwise consume the whole invocation and take
+ * every later alert in the batch down with it.
+ *
+ * Twilio's Node SDK accepts no AbortSignal, so — as in `ping()` below — this
+ * races the send against a rejecting timer instead of cancelling it. The
+ * request keeps running upstream; what matters is that we stop waiting and
+ * throw, so BullMQ's `attempts: 3` exponential backoff gets its turn.
+ */
+const SEND_TIMEOUT_MS = 10_000;
+
 export class SMSService {
   private client: TwilioClient;
   private phoneNumber: string;
@@ -69,14 +82,31 @@ export class SMSService {
         ? `DelayGuard: order #${orderNumber} for ${orderInfo.customerName} is delayed (${delayDetails.delayReason}). New ETA: ${eta}.${tracking}`
         : `Hi ${orderInfo.customerName}, your order #${orderNumber} is delayed. New delivery: ${eta}.${tracking}`;
 
+    let timeoutHandle: NodeJS.Timeout | undefined;
+
     try {
-      await this.client.messages.create({
-        body: message,
-        from: this.phoneNumber,
-        to: phone,
+      const timedOut = new Promise<never>((_resolve, reject) => {
+        timeoutHandle = setTimeout(
+          () =>
+            reject(
+              new Error(`Twilio send timed out after ${SEND_TIMEOUT_MS}ms`),
+            ),
+          SEND_TIMEOUT_MS,
+        );
       });
+
+      await Promise.race([
+        this.client.messages.create({
+          body: message,
+          from: this.phoneNumber,
+          to: phone,
+        }),
+        timedOut,
+      ]);
     } catch (error) {
       throw new Error(`Failed to send SMS: ${error}`);
+    } finally {
+      clearTimeout(timeoutHandle);
     }
   }
 

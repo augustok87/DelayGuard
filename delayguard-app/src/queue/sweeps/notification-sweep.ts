@@ -4,10 +4,10 @@
  * Postgres is the durable notification queue: every detected delay writes
  * a delay_alerts row (delay-check processor) BEFORE any dispatch happens.
  * Each tick this sweep:
- *   - selects pending alerts (created in the last 7 days, at least one
- *     channel enabled + unsent + recipient present — mirroring the
- *     processor's own dispatch gates so disabled channels can't cause an
- *     infinite re-select loop), newest first;
+ *   - selects pending alerts (created in the last 7 days, on a shop that has
+ *     not uninstalled, at least one channel enabled + unsent + recipient
+ *     present — mirroring the processor's own dispatch gates so disabled
+ *     channels can't cause an infinite re-select loop), newest first;
  *   - synthesizes the NotificationJobData payload — including the Phase
  *     2.1 routing fields (warehouse → merchant, carrier/transit →
  *     customer, mirroring processors/delay-check.ts) — and invokes the
@@ -118,6 +118,7 @@ export async function processNotificationSweep(): Promise<NotificationSweepStats
         LIMIT 1
       ) f ON TRUE
       WHERE da.created_at > NOW() - INTERVAL '7 days'
+        AND s.uninstalled_at IS NULL
         AND (
           (st.email_enabled AND NOT da.email_sent AND o.customer_email IS NOT NULL)
           OR (st.sms_enabled AND NOT da.sms_sent AND o.customer_phone IS NOT NULL)

@@ -155,30 +155,34 @@ describe('Security Headers Middleware', () => {
   });
 
   describe('Cross-Origin Policies', () => {
-    it('should set Cross-Origin-Embedder-Policy', async() => {
+    /**
+     * These used to assert `require-corp` + `same-origin`, and that contract
+     * was the bug (§6 R29). Cross-origin ISOLATION is the wrong posture for an
+     * app that exists to run inside admin.shopify.com: `require-corp` blocks
+     * every cross-origin subresource lacking CORP, and Shopify's own
+     * app-bridge.js does not send CORP — so the app blocked the bridge it is
+     * required to use, and Shopify's review check failed.
+     */
+    it('must NOT set Cross-Origin-Embedder-Policy — it blocks Shopify app-bridge.js', async() => {
       await securityHeaders(ctx, next);
 
-      expect(ctx.set).toHaveBeenCalledWith(
-        'Cross-Origin-Embedder-Policy',
-        'require-corp',
-      );
+      const names = (ctx.set as jest.Mock).mock.calls.map(([name]) => name);
+      expect(names).not.toContain('Cross-Origin-Embedder-Policy');
     });
 
-    it('should set Cross-Origin-Opener-Policy', async() => {
+    it('must NOT isolate the document with COOP same-origin', async() => {
       await securityHeaders(ctx, next);
 
-      expect(ctx.set).toHaveBeenCalledWith(
-        'Cross-Origin-Opener-Policy',
-        'same-origin',
-      );
+      const names = (ctx.set as jest.Mock).mock.calls.map(([name]) => name);
+      expect(names).not.toContain('Cross-Origin-Opener-Policy');
     });
 
-    it('should set Cross-Origin-Resource-Policy', async() => {
+    it('sets Cross-Origin-Resource-Policy to cross-origin so the admin can embed us', async() => {
       await securityHeaders(ctx, next);
 
       expect(ctx.set).toHaveBeenCalledWith(
         'Cross-Origin-Resource-Policy',
-        'same-origin',
+        'cross-origin',
       );
     });
   });

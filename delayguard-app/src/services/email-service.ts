@@ -82,6 +82,20 @@ export function resolveFromAddress(): string {
  */
 const NO_DELIVERY_ESTIMATE = "Not yet available";
 
+/**
+ * Deadline for a live send (CLAUDE.md third-party invariant). The notification
+ * sweep runs inside a Vercel function capped at 30s and works through a batch,
+ * so one unanswered send would otherwise consume the whole invocation and take
+ * every later alert in the batch down with it.
+ *
+ * The SendGrid SDK accepts no AbortSignal, so this races the send against a
+ * rejecting timer rather than cancelling it — the same shape `ping()` in
+ * sms-service.ts uses for Twilio. The request keeps running upstream; what
+ * matters is that we stop waiting and throw, so BullMQ's `attempts: 3`
+ * exponential backoff gets its turn.
+ */
+const SEND_TIMEOUT_MS = 10_000;
+
 export interface SendDelayEmailOptions {
   /**
    * Greeting name for the template's {{recipientName}} merge field.
@@ -125,10 +139,24 @@ export class EmailService {
       },
     };
 
+    let timeoutHandle: NodeJS.Timeout | undefined;
+
     try {
-      await sgMail.send(msg);
+      const timedOut = new Promise<never>((_resolve, reject) => {
+        timeoutHandle = setTimeout(
+          () =>
+            reject(
+              new Error(`SendGrid send timed out after ${SEND_TIMEOUT_MS}ms`),
+            ),
+          SEND_TIMEOUT_MS,
+        );
+      });
+
+      await Promise.race([sgMail.send(msg), timedOut]);
     } catch (error) {
       throw new Error(`Failed to send email: ${error}`);
+    } finally {
+      clearTimeout(timeoutHandle);
     }
   }
 

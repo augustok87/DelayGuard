@@ -2,12 +2,38 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 22, 2026 (v1.82 — CDN-only App Bridge unblocks submission; v1.81 double-send fix)
+**Last Updated**: September 22, 2026 (v1.83 — COEP blocked App Bridge; uninstall webhook, money-path timeouts, free-only catalog)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.83 (2026-09-22): The header that blocked Shopify's own App Bridge — plus uninstall, timeouts and a free-only catalog
+
+**R29's real root cause, and v1.82 only got half of it.** Removing the legacy bridge made the dashboard 401 on every call: the live console said `App Bridge global not present — app-bridge.js has not initialised`. `window.shopify` had *never* existed, and the legacy npm bridge had been silently carrying every session token.
+
+The app was blocking Shopify's script with its own header. It sent `Cross-Origin-Embedder-Policy: require-corp`, and `https://cdn.shopify.com/shopifycloud/app-bridge.js` returns `access-control-allow-origin: *` but **no** `Cross-Origin-Resource-Policy`. Under `require-corp` a no-CORS cross-origin `<script>` is blocked unless it carries CORP — so the app refused the bridge it is required to use, which is exactly why Shopify's "latest App Bridge script" check failed. Chrome had been saying so all along in an issue nobody had read: *"Specify a Cross-Origin Resource Policy to stop a resource from being blocked."*
+
+Cross-origin **isolation** is the wrong posture for an app whose whole job is to run inside someone else's admin. COEP is gone, COOP is gone, and CORP is now `cross-origin`. Who may frame the app is still governed by the per-shop `frame-ancestors` directive (R6), which is untouched and has a regression test.
+
+Three tests asserted the old headers. That contract *was* the bug, so they now assert its opposite, with the reason recorded.
+
+**R32, the same class of bug one directive over**: `style-src` omitted `fonts.googleapis.com` while the document links an Inter stylesheet from it, so the app blocked its own typography on every merchant's screen. `style-src` and `font-src` now allow the two Google Fonts hosts.
+
+**`app/uninstalled` — the app had no uninstall signal at all.** No route, no topic, no column. A merchant who uninstalled kept a live `shops` row with a dead token, and both cron sweeps went on selecting their orders and **emailing their customers** until `shop/redact` arrived 48 hours later. Now: `shops.uninstalled_at`, an HMAC-verified `POST /webhooks/app/uninstalled` that flags rather than deletes (deletion stays `shop/redact`'s job), the `APP_UNINSTALLED` topic, `AND s.uninstalled_at IS NULL` in both sweeps, and an OAuth upsert that clears the flag so reinstall works. Eight assertions failed RED first, several with `column "uninstalled_at" does not exist`.
+
+⚠️ **Known weaker shape, recorded rather than hidden:** pg-mem cannot run either sweep query (it rejects the correlated `LEFT JOIN LATERAL`, then the `timestamptz` cast), so the sweep filter is asserted by regex against the SQL the sweeps emit. That fails against the old code, so it is a real gate — but it could not catch a predicate that is present and wrong. Both test headers say so.
+
+**Money-path timeouts.** The Shopify Admin GraphQL fetch and the OAuth token exchange now use `AbortController`; `sgMail.send` and Twilio's `messages.create` take no signal, so they race a rejecting timeout that names the provider and the budget. All four failed RED by **hanging until Jest killed the test**, which is the bug itself. A timeout throws, so BullMQ's `attempts: 3` still retries.
+
+**`/billing/plans` stopped selling deleted plans.** It was returning 200 unauthenticated with Pro $7 and Enterprise $25 — both removed from Shopify App Pricing in v1.80, while the live listing carries exactly one plan. The catalog is free-only; the `PlanTier` ladder in `billing-service.ts` is untouched, so SMS stays gated and `getCurrentPlan` still fails closed to `free`.
+
+**A gate that could not fail on what the deploy fails on.** The v1.82 deploy died on `TS6142` while every local check was green, because `type-check` uses the root tsconfig (which sets `jsx`) and Vercel builds with `tsconfig.vercel.json` (which does not). Quality gates now run `npm run vercel-build` as an 8th gate; verified by reintroducing the broken import and watching it fail.
+
+**Gate**: 2,595 passing / 2,620, 25 skipped, 0 failing, 146 suites. Lint 0 errors, type-check clean, Vercel build clean.
+
+---
 
 ### v1.82 (2026-09-22): The app shipped two App Bridges, and Shopify was blocking submission on it
 

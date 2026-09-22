@@ -23,6 +23,16 @@ import { query } from "../database/connection";
 const SHOPIFY_API_VERSION = "2026-07";
 
 /**
+ * Deadline for a single Admin GraphQL call (CLAUDE.md third-party invariant,
+ * matching webhook-registration-service.ts). Callers run inside a Vercel
+ * function capped at 30s, so an endpoint that accepts the connection and then
+ * stops answering would otherwise consume the whole invocation and be killed
+ * before any error surfaced. Aborting throws, which is what lets BullMQ's
+ * `attempts: 3` exponential backoff retry the work.
+ */
+const GRAPHQL_TIMEOUT_MS = 10_000;
+
+/**
  * Internal representation of order line item
  */
 export interface OrderLineItem {
@@ -98,17 +108,36 @@ export async function createGraphQLClient(
     ): Promise<ShopifyGraphQLResponse<T>> => {
       const url = `https://${normalizedDomain}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`;
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Access-Token": accessToken,
-        },
-        body: JSON.stringify({
-          query: queryString,
-          variables,
-        }),
-      });
+      const controller = new AbortController();
+      const timeoutHandle = setTimeout(
+        () => controller.abort(),
+        GRAPHQL_TIMEOUT_MS,
+      );
+
+      let response: Response;
+      try {
+        response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Shopify-Access-Token": accessToken,
+          },
+          body: JSON.stringify({
+            query: queryString,
+            variables,
+          }),
+          signal: controller.signal,
+        });
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          throw new Error(
+            `Shopify API timeout after ${GRAPHQL_TIMEOUT_MS}ms for ${normalizedDomain}`,
+          );
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeoutHandle);
+      }
 
       // Handle HTTP errors
       if (!response.ok) {

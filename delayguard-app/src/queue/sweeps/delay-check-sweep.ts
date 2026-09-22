@@ -4,10 +4,11 @@
  *
  * Every tick pulls a bounded batch of candidate orders straight from
  * Postgres and runs the EXISTING delay-check processor per order:
- *   - candidates: not delivered, created in the last 30 days, and with no
- *     delay_alert in the last 7 days (suppression window — the sweep
- *     re-scans periodically, unlike the old one-shot webhook trigger, and
- *     must not re-alert the same order every tick);
+ *   - candidates: not delivered, on a shop that has not uninstalled, created
+ *     in the last 30 days, and with no delay_alert in the last 7 days
+ *     (suppression window — the sweep re-scans periodically, unlike the old
+ *     one-shot webhook trigger, and must not re-alert the same order every
+ *     tick);
  *   - resumes from a Redis cursor (same pattern as tracking-refresh);
  *   - stops early when the 25s time budget is exhausted (30s Vercel cap);
  *   - finally discards the now-redundant webhook-enqueued BullMQ
@@ -109,6 +110,7 @@ export async function processDelayCheckSweep(): Promise<DelayCheckSweepStats> {
         LIMIT 1
       ) f ON TRUE
       WHERE (o.tracking_status IS NULL OR o.tracking_status <> 'DELIVERED')
+        AND s.uninstalled_at IS NULL
         AND o.created_at > NOW() - INTERVAL '30 days'
         AND NOT EXISTS (
           SELECT 1 FROM delay_alerts da

@@ -17,6 +17,8 @@
  *       Returns public shop metadata (NOT the access token) for the
  *       /auth/shop endpoint. Token reads belong in a future service
  *       extracted from middleware/shopify-session.ts.
+ *   - markShopUninstalled(shopDomain)
+ *       app/uninstalled: flags the shop so the cron sweeps skip it.
  */
 
 import { query } from "../database/connection";
@@ -55,6 +57,15 @@ export interface TokenExchangeResult {
   scope: string;
 }
 
+/**
+ * Deadline for the OAuth token exchange (CLAUDE.md third-party invariant).
+ * The install callback runs inside a Vercel function capped at 30s, so a
+ * Shopify endpoint that accepts the connection and then stops answering
+ * would otherwise consume the whole invocation and be killed without ever
+ * raising an error the merchant or the logs could act on.
+ */
+const TOKEN_EXCHANGE_TIMEOUT_MS = 10_000;
+
 export class ShopAuthService {
   /**
    * Exchange the OAuth authorization `code` for a permanent offline
@@ -66,6 +77,12 @@ export class ShopAuthService {
     shopDomain: string,
     code: string,
   ): Promise<TokenExchangeResult> {
+    const controller = new AbortController();
+    const timeoutHandle = setTimeout(
+      () => controller.abort(),
+      TOKEN_EXCHANGE_TIMEOUT_MS,
+    );
+
     try {
       const response = await fetch(
         `https://${shopDomain}/admin/oauth/access_token`,
@@ -77,6 +94,7 @@ export class ShopAuthService {
             client_secret: appConfig.shopify.apiSecret,
             code,
           }),
+          signal: controller.signal,
         },
       );
 
@@ -96,12 +114,19 @@ export class ShopAuthService {
 
       return { accessToken: json.access_token, scope: json.scope ?? "" };
     } catch (error) {
-      logger.error(
-        "OAuth token exchange failed",
-        error instanceof Error ? error : new Error(String(error)),
-        { shopDomain },
-      );
-      throw error;
+      const failure =
+        error instanceof Error && error.name === "AbortError"
+          ? new Error(
+            `OAuth token exchange timed out after ${TOKEN_EXCHANGE_TIMEOUT_MS}ms`,
+          )
+          : error instanceof Error
+            ? error
+            : new Error(String(error));
+
+      logger.error("OAuth token exchange failed", failure, { shopDomain });
+      throw failure;
+    } finally {
+      clearTimeout(timeoutHandle);
     }
   }
 
@@ -120,6 +145,7 @@ export class ShopAuthService {
          DO UPDATE SET
            access_token = EXCLUDED.access_token,
            scope = EXCLUDED.scope,
+           uninstalled_at = NULL,
            updated_at = CURRENT_TIMESTAMP`,
         [shopDomain, accessToken, scopeArray],
       );
@@ -135,6 +161,40 @@ export class ShopAuthService {
     } catch (error) {
       logger.error(
         "Failed to persist shop auth record",
+        error instanceof Error ? error : new Error(String(error)),
+        { shopDomain },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Flag the shop as uninstalled so the cron sweeps stop selecting it
+   * (app/uninstalled webhook). Deliberately does NOT delete anything —
+   * shop/redact owns deletion, 48 hours later, and a merchant who
+   * reinstalls before then gets their data back via `upsertShop`, which
+   * clears this column.
+   *
+   * @returns true when a shop row was flagged; false for an unknown shop,
+   *   which the route treats as a silent skip rather than an error.
+   */
+  async markShopUninstalled(shopDomain: string): Promise<boolean> {
+    try {
+      // RETURNING, not rowCount: the shared `query` helper hands back rows,
+      // and rows are the only evidence that survives __mocks__/pg.js (R17).
+      const flagged = await query<{ id: number }>(
+        `UPDATE shops
+         SET uninstalled_at = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE shop_domain = $1
+         RETURNING id`,
+        [shopDomain],
+      );
+
+      return flagged.length > 0;
+    } catch (error) {
+      logger.error(
+        "Failed to mark shop as uninstalled",
         error instanceof Error ? error : new Error(String(error)),
         { shopDomain },
       );
