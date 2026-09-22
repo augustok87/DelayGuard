@@ -477,15 +477,20 @@ function collectCi() {
     };
   });
 
-  const greenOnHead = workflows.filter((w) => w.green && w.tested_head);
+  // Only push-triggered workflows can ever sit on HEAD. Grading a scheduled
+  // sweep for head-freshness makes green_on_head permanently false, which is
+  // a check that can never pass — as useless as one that can never fail.
+  const headGradable = workflows.filter((w) => w.event === "push");
+  const greenOnHead = headGradable.filter((w) => w.green && w.tested_head);
 
   return {
     available: true,
     workflows,
-    // Deliberately two different questions. all_green says the last run passed;
-    // green_on_head says the tree you are looking at has actually been tested.
-    green_on_head: workflows.length > 0 && greenOnHead.length === workflows.length,
-    max_commits_behind: workflows.reduce(
+    // Deliberately two different questions. all_green says each workflow's last
+    // run passed; green_on_head says the tree you are looking at was tested.
+    green_on_head: headGradable.length > 0 && greenOnHead.length === headGradable.length,
+    head_gradable_workflows: headGradable.map((w) => w.name),
+    max_commits_behind: headGradable.reduce(
       (worst, w) => Math.max(worst, w.commits_since_tested ?? 0), 0,
     ),
     all_green: workflows.every((w) => w.green === true),
