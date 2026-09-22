@@ -2,12 +2,30 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 22, 2026 (v1.83 — COEP blocked App Bridge; uninstall webhook, money-path timeouts, free-only catalog)
+**Last Updated**: September 22, 2026 (v1.84 — landing page for the listing's website URL; PCD and listing copy corrected)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.84 (2026-09-22): The listing's website link showed the app erroring — `/` now answers by audience
+
+The live listing's `websiteUrl` is `https://delayguard-api.vercel.app`, and that served the **embedded app document**. Opened outside the Shopify admin — exactly what a reviewer does clicking the listing's website link — App Bridge cannot initialise, every `/api/*` call 401s, and the visitor gets a red **"Error: Missing Authorization header"** banner over `0 / 0 / 0` counters and "Not Connected". Screenshotted before the fix.
+
+Rather than point the listing somewhere else, `/` now answers by audience: a request Shopify framed (`embedded`, `id_token`, `host` or `shop` present) gets the app exactly as before, and a bare request gets a plain informational page. So the listing field was already correct — it just needed the URL to mean something.
+
+The page is deliberately self-contained: no bundle, no external stylesheet, no web font, so there is nothing for the app's own CSP to block. It claims no carrier integration, because detection runs off Shopify's own fulfillment and tracking status, and shows no price, because the listing carries exactly one plan. Tests assert both of those absences.
+
+**Three of the seven assertions are the regression half** — serving marketing copy into the admin iframe would be a worse bug than the one being fixed — and they passed before the change, which is what proved the harness was wired to the real handler.
+
+**Listing copy corrected in the same pass.** `featureList.0` read "Real-time delay detection across major shipping carriers". The app has no carrier account and no carrier API key; §7 had flagged this copy for softening before H9 and it had never been done. It now reads **"Automatic delay detection from Shopify fulfillment and tracking status"**, which is what the code does. Saved and confirmed to survive a reload.
+
+**Protected customer data corrected.** The **Phone** field was requested with the reason *"Send SMS delay alerts to buyers when a merchant enables SMS on a paid plan"* — there is no paid plan since v1.80 and SMS cannot send at all. Phone is now deselected entirely. **Address** claimed *"Compute the delay and revised ETA from the shipping destination"*, which nothing performs; it now reads *"Show the merchant the order's shipping destination on the delay alert"*, which is what `api-mappers` actually does with it.
+
+**Gate**: 2,605 passing / 2,630, 25 skipped, 0 failing, 148 suites. Lint 0 errors, type-check clean, Vercel build clean.
+
+---
 
 ### v1.83 (2026-09-22): The header that blocked Shopify's own App Bridge — plus uninstall, timeouts and a free-only catalog
 
