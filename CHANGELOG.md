@@ -2,12 +2,30 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 22, 2026 (v1.81 — double-send claim-before-send; adversarial pre-launch review)
+**Last Updated**: September 22, 2026 (v1.82 — CDN-only App Bridge unblocks submission; v1.81 double-send fix)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.82 (2026-09-22): The app shipped two App Bridges, and Shopify was blocking submission on it
+
+The Partner Dashboard showed **"Using the latest App Bridge script loaded from Shopify's CDN" ❌** and **"Submit for review" greyed out**, while `app-bridge-setup.test.ts` — the suite named after that exact requirement — stayed green. That suite asserts the HTML *template* carries the CDN script tag. It always did. What nothing asked was what the **bundle** does once the template has loaded.
+
+`AppProvider`, the root provider rendered by `index.tsx`, wrapped the whole app in `ShopifyProvider`, which called `createApp()` from the legacy npm `@shopify/app-bridge` v3.7.10. So the app loaded the CDN App Bridge *and* booted the previous generation on top of it. Measured, not assumed: the deployed `vendors` chunk carried **119 `APP::` legacy action types**, and inside the real Shopify admin iframe the app's own frame logged `✅ App Bridge initialized successfully` — that was `createApp` succeeding. An earlier load also produced `Failed to execute 'postMessage' … target origin ('https://delayguard-api.vercel.app') does not match the recipient window's origin ('https://admin.shopify.com')`, the legacy bridge messaging the wrong window.
+
+**Fix**: the CDN global is now the only bridge. `ShopifyProvider` constructs nothing — it reads `window.shopify` and exposes it. `api-client.getToken()` reads the live global on every request (App Bridge installs it independently of React's mount order) and **has no fallback**: a missing or failing bridge sends no `Authorization` header rather than a wrong one, and logs loudly. `@shopify/app-bridge` is removed from `package.json`.
+
+**Result in the bundle**: `APP::` 119 → **0**, `createApp` → **0**, both content hashes changed.
+
+**The new test is about the shipped source, not the template**, because a requirement about which bridge *runs* cannot be checked by reading the HTML that loads one of them. `app-bridge-cdn-only.test.ts` fails if the package returns as a dependency, if any shipped file imports it, or if `createApp()` is called. All three failed RED first, naming `components/ShopifyProvider.tsx` and `utils/api-client.ts`. The `createApp` assertion strips comments first — otherwise the paragraph explaining the mistake would fail the test that forbids it — and that relaxation was itself checked by reintroducing a real `createApp()` call and confirming the test still caught it.
+
+Three `api-client` tests covered the npm fallback that no longer exists. The one asserting "falls back to the npm util when the CDN idToken() rejects" now asserts the opposite and correct contract: the request goes out **unauthenticated** and the server answers 401.
+
+**Gate**: 2,576 passing / 2,601, 25 skipped, 0 failing, 142 suites. Lint 0 errors / 3 warnings, type-check clean, build compiled.
+
+---
 
 ### v1.81 (2026-09-22): Two dispatches of one alert both sent — the sent-flag recorded delivery, it never claimed it
 

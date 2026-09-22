@@ -716,7 +716,7 @@ Because the configured From number does not belong to the account, every send fa
 
 **Left open on purpose.** `delay_alerts` still has no `UNIQUE(order_id, delay_reason)`, so its `ON CONFLICT DO NOTHING` is still a no-op. **The constraint `CLAUDE.md` prescribes would break escalation** — a second slip a week later is *supposed* to raise a second `WAREHOUSE_DELAY` alert, which is the behaviour R17 was fixed to preserve. Duplicate rows are held off upstream by the sweep's 7-day `NOT EXISTS` window. `CLAUDE.md`'s money-path note should be corrected rather than implemented.
 
-### R29 — Shopify itself is blocking submission: the embedded App Bridge check FAILS `[AGENT]` — **new 2026-09-22, NOT FIXED**
+### ~~R29 — Shopify itself is blocking submission: the embedded App Bridge check FAILS~~ `[AGENT]` — ✅ **FIXED 2026-09-22 (v1.82), awaiting Shopify's 2-hourly re-check**
 
 **"Submission-ready, 0 blocking issues" is false.** The Partner Dashboard App Store review page, read 2026-09-22, shows status **Draft**, an **Attention** banner, **"Submit for review" greyed out**, and:
 
@@ -738,7 +738,9 @@ Session tokens passing proves Shopify **has** session data for this app, so the 
 
 **The causal link to that specific dashboard check is `[I]` inferred**, not measured — Shopify does not say why it failed. It is strongly supported and it is the only App-Bridge-related deviation in the bundle.
 
-**Fix shape.** Delete the legacy initialization: drop `ShopifyProvider`'s `createApp`, drop the npm fallback in `utils/api-client.ts` `getToken()` (which already **prefers** `window.shopify.idToken()`), and remove `@shopify/app-bridge` from `package.json`. ⚠️ **This touches the authentication surface**, where a mistake turns the one currently-green embedded check red. **Verification is not immediate** — the dashboard re-checks every 2 hours, so this cannot be confirmed inside one session.
+**FIXED in v1.82.** `APP::` went 119 → 0 in the rebuilt bundle and `createApp` → 0. `app-bridge-cdn-only.test.ts` pins it (RED first, naming both offending files). ⏳ The dashboard re-checks every 2 hours, so the ❌ will persist until the next run — that wait is the critical path to submission.
+
+**Fix shape (as executed).** Deleted the legacy initialization: drop `ShopifyProvider`'s `createApp`, drop the npm fallback in `utils/api-client.ts` `getToken()` (which already **prefers** `window.shopify.idToken()`), and remove `@shopify/app-bridge` from `package.json`. ⚠️ **This touches the authentication surface**, where a mistake turns the one currently-green embedded check red. **Verification is not immediate** — the dashboard re-checks every 2 hours, so this cannot be confirmed inside one session.
 
 ### R30 — The listing's own website URL shows the app erroring `[AGENT]` — **new 2026-09-22, NOT FIXED**
 

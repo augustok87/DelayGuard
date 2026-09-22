@@ -1,6 +1,5 @@
-import { getSessionToken } from "@shopify/app-bridge/utilities";
-import type { ClientApplication } from "@shopify/app-bridge";
 import { logger } from "./logger";
+import type { CdnAppBridge } from "../components/ShopifyProvider";
 
 /**
  * Authenticated API Client for Shopify Embedded Apps
@@ -19,16 +18,7 @@ import { logger } from "./logger";
 
 interface ApiClientConfig {
   baseUrl?: string;
-  app?: ClientApplication;
-}
-
-/**
- * Global installed by the latest CDN-hosted App Bridge
- * (https://cdn.shopify.com/shopifycloud/app-bridge.js — req 2.2.3).
- * `idToken()` is the CDN equivalent of the npm `getSessionToken` util.
- */
-interface CdnAppBridgeGlobal {
-  idToken?: () => Promise<string>;
+  app?: CdnAppBridge;
 }
 
 export interface TestAlertPayload {
@@ -55,7 +45,7 @@ interface ApiResponse<T> {
 
 class ApiClient {
   private baseUrl: string;
-  private app: ClientApplication | undefined;
+  private app: CdnAppBridge | undefined;
 
   constructor(config: ApiClientConfig = {}) {
     this.baseUrl = config.baseUrl || "/api";
@@ -63,10 +53,11 @@ class ApiClient {
   }
 
   /**
-   * Set the App Bridge instance
-   * This must be called before making any authenticated requests
+   * Supply the App Bridge global explicitly. `getToken` prefers the live
+   * `window.shopify` and only falls back to this, so it is a convenience for
+   * React and for tests rather than a prerequisite.
    */
-  setApp(app: ClientApplication) {
+  setApp(app: CdnAppBridge) {
     this.app = app;
     logger.debug("App Bridge instance set for API client");
   }
@@ -76,38 +67,23 @@ class ApiClient {
    * This token is a JWT that proves the request is coming from Shopify
    */
   private async getToken(): Promise<string | null> {
-    // Prefer the latest App Bridge CDN global (window.shopify.idToken) —
-    // present whenever the app-bridge.js script tag from index.html has
-    // loaded. The npm @shopify/app-bridge path below is kept as a
-    // fallback so existing behavior is preserved (G1 rule: prefer the
-    // CDN global, don't rewrite the working token attachment).
-    const cdnShopify = (globalThis as { shopify?: CdnAppBridgeGlobal })
-      .shopify;
-    if (cdnShopify && typeof cdnShopify.idToken === "function") {
-      try {
-        const token = await cdnShopify.idToken();
-        logger.debug("Session token retrieved from CDN App Bridge");
-        return token;
-      } catch (error) {
-        logger.error(
-          "CDN App Bridge idToken() failed; falling back to npm App Bridge",
-          error as Error,
-        );
-        // fall through to the npm App Bridge path
-      }
-    }
+    // The CDN App Bridge global is the only session-token source. It is read
+    // live on every request rather than captured once, because app-bridge.js
+    // installs it independently of React's mount order.
+    const bridge =
+      (globalThis as { shopify?: Partial<CdnAppBridge> }).shopify ?? this.app;
 
-    if (!this.app) {
-      logger.warn("App Bridge not initialized. Returning null token.");
+    if (!bridge || typeof bridge.idToken !== "function") {
+      logger.error(
+        "App Bridge global unavailable — cannot mint a session token, so this request would be unauthenticated",
+      );
       return null;
     }
 
     try {
-      const token = await getSessionToken(this.app);
-      logger.debug("Session token retrieved successfully");
-      return token;
+      return await bridge.idToken();
     } catch (error) {
-      logger.error("Failed to get session token", error as Error);
+      logger.error("App Bridge idToken() failed", error as Error);
       return null;
     }
   }

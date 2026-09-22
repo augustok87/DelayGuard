@@ -1,9 +1,9 @@
 import { ApiClient } from '../../../utils/api-client';
-import { getSessionToken } from '@shopify/app-bridge/utilities';
 
-// Mock App Bridge
-jest.mock('@shopify/app-bridge/utilities');
-const mockGetSessionToken = getSessionToken as jest.MockedFunction<typeof getSessionToken>;
+// The CDN App Bridge global is the only session-token source (R29): the npm
+// @shopify/app-bridge package is no longer a dependency, so there is nothing
+// to jest.mock — the stub below IS the bridge.
+const mockGetSessionToken = jest.fn<Promise<string>, []>();
 
 // Mock logger
 jest.mock('../../../utils/logger', () => ({
@@ -25,10 +25,16 @@ describe('ApiClient', () => {
 
   beforeEach(() => {
     client = new ApiClient({ baseUrl: '/api' });
-    mockApp = { test: 'app' };
-    
+    mockApp = { idToken: mockGetSessionToken };
+    (window as unknown as Record<string, unknown>).shopify = mockApp;
+
     jest.clearAllMocks();
     mockFetch.mockClear();
+    mockGetSessionToken.mockResolvedValue('token');
+  });
+
+  afterEach(() => {
+    delete (window as unknown as Record<string, unknown>).shopify;
   });
 
   describe('Token Management (CDN App Bridge global)', () => {
@@ -88,14 +94,13 @@ describe('ApiClient', () => {
       );
     });
 
-    it('should fall back to the npm util when the CDN idToken() rejects', async() => {
-      const mockIdToken = jest.fn().mockRejectedValue(new Error('CDN error'));
+    it('sends the request unauthenticated when idToken() rejects', async() => {
+      // There is no npm fallback any more (R29). A failing bridge must not
+      // silently attach a stale or wrong token — it attaches none, and the
+      // server answers 401.
       (window as unknown as Record<string, unknown>).shopify = {
-        idToken: mockIdToken,
+        idToken: jest.fn().mockRejectedValue(new Error('CDN error')),
       };
-      mockGetSessionToken.mockResolvedValueOnce('npm-token');
-
-      client.setApp(mockApp);
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -107,15 +112,13 @@ describe('ApiClient', () => {
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/alerts',
         expect.objectContaining({
-          headers: expect.objectContaining({
-            'Authorization': 'Bearer npm-token',
+          headers: expect.not.objectContaining({
+            'Authorization': expect.anything(),
           }),
         }),
       );
     });
-  });
 
-  describe('POST /api/test-alert', () => {
     it('should dispatch a test alert with the given delay type', async() => {
       mockGetSessionToken.mockResolvedValueOnce('token');
 
@@ -201,8 +204,8 @@ describe('ApiClient', () => {
   describe('Token Management', () => {
     it('should get session token from App Bridge', async() => {
       const testToken = 'test-session-token';
-      mockGetSessionToken.mockResolvedValueOnce(testToken);
-      
+      mockGetSessionToken.mockResolvedValue(testToken);
+
       client.setApp(mockApp);
       
       mockFetch.mockResolvedValueOnce({
@@ -212,7 +215,7 @@ describe('ApiClient', () => {
 
       await client.getAlerts();
 
-      expect(mockGetSessionToken).toHaveBeenCalledWith(mockApp);
+      expect(mockGetSessionToken).toHaveBeenCalled();
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/alerts',
         expect.objectContaining({
@@ -224,7 +227,8 @@ describe('ApiClient', () => {
     });
 
     it('should make request without token if App Bridge not initialized', async() => {
-      // Don't set app
+      // The global is what makes the bridge available, so remove it.
+      delete (window as unknown as Record<string, unknown>).shopify;
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async() => ({ success: true, data: [] }),

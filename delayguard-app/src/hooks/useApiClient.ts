@@ -29,7 +29,7 @@ export const useApiClient = () => {
       logger.debug("API client initialized with App Bridge");
     } else {
       logger.warn(
-        "App Bridge not available - API client may not work correctly",
+        "App Bridge global not available yet - api-client re-reads window.shopify per request, so this is not fatal",
       );
     }
   }, [app]);

@@ -22,7 +22,8 @@ React 18 + TypeScript, Shopify Polaris UI, Shopify App Bridge, Redux Toolkit (RT
 ## Polaris + App Bridge
 
 - Polaris components live under [components/ui/](delayguard-app/src/components/ui/). Compose with these before reaching for a third-party component or hand-rolled CSS.
-- App Bridge is initialized in [ShopifyProvider.tsx](delayguard-app/src/components/ShopifyProvider.tsx) via `useAppBridge()`. Don't re-initialize App Bridge in child components.
+- **App Bridge is the CDN one, and nothing constructs it.** `index.html` loads `https://cdn.shopify.com/shopifycloud/app-bridge.js` as the first script in `<head>`, and it auto-initialises from the `shopify-api-key` meta tag above it. [ShopifyProvider.tsx](delayguard-app/src/components/ShopifyProvider.tsx) only *reads* the resulting `window.shopify` global and exposes it via `useAppBridge()`.
+- **Never add `@shopify/app-bridge` back as a dependency** (§6 R29). Its `createApp()` booted the previous-generation bridge on top of the CDN one, which failed Shopify's "Using the latest App Bridge script loaded from Shopify's CDN" review check and greyed out "Submit for review". `app-bridge-cdn-only.test.ts` fails if the package, an import of it, or a `createApp()` call reappears. Session tokens come from `window.shopify.idToken()` and there is deliberately **no fallback** — a failing bridge sends no `Authorization` header rather than a wrong one.
 - Custom hooks live in `delayguard-app/src/hooks/` (18 files) — check for an existing hook before writing a new fetch/state hook.
 
 ## Prop-type widening rule (v1.33 incident)

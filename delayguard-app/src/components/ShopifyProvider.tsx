@@ -1,15 +1,18 @@
 import React, { ReactNode, createContext, useContext, useMemo } from "react";
-import { createApp } from "@shopify/app-bridge";
 
 /**
- * Shopify App Bridge Provider
+ * Shopify App Bridge provider.
  *
- * This component initializes the Shopify App Bridge for embedded apps.
- * It must wrap your entire app to enable Shopify-specific features like:
- * - Session token authentication
- * - Toast notifications
- * - Navigation
- * - Modal/Fullscreen APIs
+ * The bridge is the one the CDN script installs — `index.html` loads
+ * https://cdn.shopify.com/shopifycloud/app-bridge.js as the first script in
+ * <head>, and it auto-initialises from the `shopify-api-key` meta tag above
+ * it. There is nothing to construct here.
+ *
+ * This deliberately does NOT use the npm `@shopify/app-bridge` package
+ * (LAUNCH_PLAN §6 R29). Calling its `createApp()` booted the previous
+ * generation of App Bridge on top of the CDN one, which failed Shopify's
+ * "Using the latest App Bridge script loaded from Shopify's CDN" review check
+ * and blocked submission. `app-bridge-cdn-only.test.ts` pins that.
  *
  * @see https://shopify.dev/docs/api/app-bridge-library
  */
@@ -18,120 +21,54 @@ interface ShopifyProviderProps {
   children: ReactNode;
 }
 
-/**
- * Get the API key from environment variables
- * In production, this is set via Vercel/deployment config
- * In development, load from .env file
- */
-const getApiKey = (): string => {
-  const apiKey =
-    process.env.REACT_APP_SHOPIFY_API_KEY || process.env.SHOPIFY_API_KEY;
-
-  if (!apiKey) {
-    console.warn("SHOPIFY_API_KEY not found in environment variables");
-    return "development-api-key"; // Fallback for local development
-  }
-
-  return apiKey;
-};
+/** The subset of the CDN App Bridge global this app uses. */
+export interface CdnAppBridge {
+  idToken: () => Promise<string>;
+}
 
 /**
- * Get the shop from URL parameters
- * Shopify passes the shop domain as a query parameter when loading the app
+ * Read the global, or null when the CDN script has not installed it — which
+ * is the normal case outside the Shopify admin iframe.
  */
-const getShopFromUrl = (): string | undefined => {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get("shop") || undefined;
-};
+export function readAppBridgeGlobal(): CdnAppBridge | null {
+  const candidate = (globalThis as { shopify?: Partial<CdnAppBridge> }).shopify;
+  return candidate && typeof candidate.idToken === "function"
+    ? (candidate as CdnAppBridge)
+    : null;
+}
+
+const AppBridgeContext = createContext<CdnAppBridge | null>(null);
 
 /**
- * Get the host from URL parameters
- * Shopify passes the host as a query parameter for OAuth and API requests
+ * The App Bridge global, or null when the app is not framed by Shopify.
+ * `api-client` re-reads the live global on every request, so a null here
+ * never permanently disables authentication.
  */
-const getHostFromUrl = (): string | undefined => {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get("host") || undefined;
-};
-
-// Create context for App Bridge instance
-const AppBridgeContext = createContext<any>(null);
-
-/**
- * Hook to access the App Bridge instance
- * This is used by useApiClient and other components that need session tokens
- */
-export const useAppBridge = () => {
-  const app = useContext(AppBridgeContext);
-  if (!app) {
-    console.warn("useAppBridge called outside of ShopifyProvider");
-  }
-  return app;
-};
+export const useAppBridge = (): CdnAppBridge | null =>
+  useContext(AppBridgeContext);
 
 export const ShopifyProvider: React.FC<ShopifyProviderProps> = ({
   children,
 }) => {
-  const config = useMemo(() => {
-    const apiKey = getApiKey();
-    const shop = getShopFromUrl();
-    const host = getHostFromUrl();
+  const appBridge = useMemo(() => {
+    const bridge = readAppBridgeGlobal();
 
-    // Check if we're in an embedded context
-    if (shop && host) {
-      console.log("✅ Running in Shopify embedded context");
-      return {
-        apiKey,
-        host,
-        forceRedirect: false,
-      };
-    }
-
-    // Development mode fallback
-    if (process.env.NODE_ENV === "development") {
-      console.log("🔧 Development mode: Running without Shopify parameters");
-      console.log("ℹ️  App will render but API calls will be mocked/bypassed");
-      console.log(
-        "ℹ️  To test with real Shopify: deploy and open from Shopify Admin",
+    if (bridge) {
+      console.log("✅ App Bridge (CDN) available");
+    } else {
+      // Loud on purpose: without the global every /api/* call goes out
+      // unauthenticated and the dashboard renders "Missing Authorization
+      // header" rather than data.
+      console.warn(
+        "⚠️ App Bridge global not present — app-bridge.js has not initialised. Expected outside the Shopify admin.",
       );
-
-      // Return a minimal config that won't crash App Bridge
-      return {
-        apiKey,
-        host: btoa("development.myshopify.com/admin"),
-        forceRedirect: false,
-      };
     }
 
-    // Production without parameters - should redirect to OAuth
-    console.warn("⚠️  No shop or host parameters found");
-    return null;
+    return bridge;
   }, []);
 
-  // Create App Bridge instance
-  const app = useMemo(() => {
-    // Don't create App Bridge if no config
-    if (!config) {
-      console.log("Skipping App Bridge initialization - no config");
-      return null;
-    }
-
-    try {
-      const appInstance = createApp(config);
-      console.log("✅ App Bridge initialized successfully");
-      return appInstance;
-    } catch (error) {
-      console.error("❌ Failed to create App Bridge instance:", error);
-      // In development, return null so app can still render
-      if (process.env.NODE_ENV === "development") {
-        console.log("ℹ️  Continuing without App Bridge in development mode");
-        return null;
-      }
-      throw error;
-    }
-  }, [config]);
-
   return (
-    <AppBridgeContext.Provider value={app}>
+    <AppBridgeContext.Provider value={appBridge}>
       {children}
     </AppBridgeContext.Provider>
   );
