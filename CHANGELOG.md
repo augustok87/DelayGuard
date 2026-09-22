@@ -2,12 +2,36 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 21, 2026 (R27 + free-only launch; screencast done, listing at 0 issues)
+**Last Updated**: September 22, 2026 (v1.81 — double-send claim-before-send; adversarial pre-launch review)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.81 (2026-09-22): Two dispatches of one alert both sent — the sent-flag recorded delivery, it never claimed it
+
+Found by adversarial pre-launch review, reproduced against a real SQL engine, and the reason it survived is written down in the file that caused it. `queue/sweeps/notification-sweep.ts` carried this in its header:
+
+> processNotification re-checks email_sent/sms_sent itself — for the specific alert named by alertId — so overlapping cron ticks cannot double-send.
+
+That was false, and it was load-bearing: it is the stated reason no atomic claim was ever added. `processNotification` SELECTed `email_sent`, awaited SendGrid, and only then UPDATEd the flag — so the entire provider call was a window in which a second dispatch read `FALSE` and sent the same customer the same email again. The flag recorded what had finished; nothing ever claimed what had started.
+
+`/api/cron/notification-dispatch` has no lease, no advisory lock and answers both GET and POST behind a bearer secret. The GitHub Actions schedule, its `curl --retry 2`, a `workflow_dispatch` run and any manual curl are four independent ways to have two sweeps in flight at once.
+
+**Fix**: a `dispatchOnce` helper claims one channel of one alert before calling the provider — `UPDATE delay_alerts SET <flag> = TRUE WHERE id = $1 AND <flag> = FALSE RETURNING id` — and skips the send when the claim returns no rows. Under READ COMMITTED the second writer blocks on the row lock, re-evaluates against the committed `TRUE`, and gets nothing back, so exactly one caller is ever handed the send. A failed send releases the claim so the BullMQ retry still works. `notification_sent_at` is now stamped only after a send succeeds, so the dashboard's delivery badge can no longer show a time for a dispatch that failed.
+
+**RED first, and it named the defect**: `expect(sendDelayEmail).toHaveBeenCalledTimes(1)` → *Received number of calls: 2*. The first draft of the harness failed by *timing out* instead — counting microtask ticks never reached the provider — which proved nothing, so it was rewritten to wait on the actual send. The mocked email resolves only when the test releases it; with an instantaneous mock the two dispatches never overlap and the test passes against the broken code.
+
+**Two test doubles had to become self-consistent, and both are the same defect class as R17.** `__mocks__/pg.js` answered every `UPDATE` with `rowCount: 1` but `rows: []`, so a `RETURNING` claim read as "someone else got there first" on every call and nothing sent; `wireQuery` in `tests/unit/queue/notification.test.ts` answered every `UPDATE delay_alerts` with `[]` for the same reason. Both now return a row for a `RETURNING` claim. **Neither reads the predicate**, so neither can tell a won race from a lost one — comments say so, and point at `pg-mem-schema.ts`. Fifteen dispatch tests failed for this harness reason before the doubles were fixed, which is itself the measurement: those 32 tests could never have seen this bug.
+
+Two of the three new tests pass in both states and are kept deliberately, per `.claude/rules/tests.md`: one pins that the claim does not lose the write or duplicate the row, the other that a claim which is too aggressive does not suppress the *only* dispatch — a worse bug than the one fixed.
+
+**Not fixed, and deliberately so:** `delay_alerts` still has no `UNIQUE(order_id, delay_reason)`, so its `ON CONFLICT DO NOTHING` remains a no-op. The constraint `CLAUDE.md` prescribes would **break escalation** — an order that slips again a week later is supposed to raise a second `WAREHOUSE_DELAY` alert, and that is the behaviour R17 was fixed to preserve. Duplicate *rows* are prevented upstream by the sweep's 7-day `NOT EXISTS` suppression window; what was missing was the concurrency guard on the send, which is what landed here.
+
+**Gate**: 2,573 passing / 2,598, 25 skipped, 0 failing, 141 suites. Lint 0 errors / 13 pre-existing warnings, type-check clean, build compiled.
+
+---
 
 ### v1.80 (2026-09-22): Free-only launch — the SMS toggle no longer points at a plan that does not exist
 

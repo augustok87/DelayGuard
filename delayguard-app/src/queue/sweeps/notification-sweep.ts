@@ -15,8 +15,15 @@
  *   - finally discards the redundant BullMQ notification jobs (each one
  *     corresponds to a delay_alerts row this sweep already covers).
  *
- * processNotification re-checks email_sent/sms_sent itself — for the specific
- * alert named by alertId — so overlapping cron ticks cannot double-send.
+ * Overlapping ticks are safe because processNotification CLAIMS each channel
+ * of the alert named by alertId — `UPDATE … WHERE <flag> = FALSE RETURNING id`
+ * — before it calls the provider, and skips the send when the claim returns
+ * nothing. The re-check alone was not enough and this header used to say it
+ * was: reading the flag, awaiting the provider and only then writing the flag
+ * leaves the whole provider call as a window in which a second tick reads
+ * FALSE and sends again. This endpoint has no lease, and the schedule, its
+ * `curl --retry`, a `workflow_dispatch` run and a manual curl can each put two
+ * sweeps in flight at once.
  */
 import { query } from "../../database/connection";
 import { logger } from "../../utils/logger";

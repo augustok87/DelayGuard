@@ -46,6 +46,69 @@ interface NotificationJobData {
   customerPhone?: string;
 }
 
+/**
+ * Claim one channel of one alert, then send — in that order.
+ *
+ * The sent-flag used to be written *after* the provider returned, which made
+ * it a record of what finished rather than a lock on what started: two
+ * dispatches overlapping anywhere inside the provider call both read FALSE and
+ * both sent. `/api/cron/notification-dispatch` has no lease, so the GitHub
+ * Actions schedule, its `--retry`, a `workflow_dispatch` run and a manual curl
+ * are four independent ways to have two sweeps in flight at once.
+ *
+ * `UPDATE … WHERE <flag> = FALSE RETURNING id` is the whole guard: under READ
+ * COMMITTED the second writer blocks on the row lock, re-evaluates the
+ * predicate against the committed TRUE, and returns no rows — so exactly one
+ * caller is ever handed the send. A failed send releases the claim so the
+ * BullMQ retry (or the next sweep) can try again.
+ *
+ * `notification_sent_at` is stamped only after a send succeeds, so the
+ * dashboard's delivery badge never shows a time for a dispatch that failed.
+ */
+async function dispatchOnce(
+  channel: 'email' | 'sms',
+  alertId: number,
+  orderId: number,
+  send: () => Promise<void>,
+): Promise<void> {
+  const flag = channel === 'email' ? 'email_sent' : 'sms_sent';
+
+  const claimed = await query<{ id: number }>(
+    `UPDATE delay_alerts
+     SET ${flag} = TRUE
+     WHERE id = $1 AND ${flag} = FALSE
+     RETURNING id`,
+    [alertId],
+  );
+
+  if (claimed.length === 0) {
+    logger.info(
+      `↩️ ${channel} for alert ${alertId} (order ${orderId}) already claimed by another dispatch — skipping`,
+    );
+    return;
+  }
+
+  try {
+    await send();
+  } catch (error) {
+    await query(`UPDATE delay_alerts SET ${flag} = FALSE WHERE id = $1`, [
+      alertId,
+    ]);
+    logger.error(`Error sending ${channel} notification`, error as Error);
+    throw error;
+  }
+
+  await query(
+    `UPDATE delay_alerts
+     SET notification_sent_at = COALESCE(notification_sent_at, CURRENT_TIMESTAMP)
+     WHERE id = $1`,
+    [alertId],
+  );
+  logger.info(
+    `✅ ${channel === 'email' ? 'Email' : 'SMS'} sent for alert ${alertId} (order ${orderId})`,
+  );
+}
+
 export async function processNotification(job: Job<NotificationJobData>): Promise<void> {
   const { orderId, delayDetails } = job.data;
 
@@ -194,25 +257,11 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
 
     if (order.email_enabled && recipientEmail && !alert.email_sent) {
       promises.push(
-        emailService
-          .sendDelayEmail(recipientEmail, orderInfo, delayDetails, {
+        dispatchOnce('email', alertId, orderId, () =>
+          emailService.sendDelayEmail(recipientEmail, orderInfo, delayDetails, {
             recipientName,
-          })
-          .then(async() => {
-            // Mark email as sent + stamp first-dispatch time (dashboard badge)
-            await query(
-              `UPDATE delay_alerts
-               SET email_sent = TRUE,
-                   notification_sent_at = COALESCE(notification_sent_at, CURRENT_TIMESTAMP)
-               WHERE id = $1`,
-              [alertId],
-            );
-            logger.info(`✅ Email sent for alert ${alertId} (order ${orderId})`);
-          })
-          .catch(error => {
-            logger.error('Error sending email notification', error as Error);
-            throw error;
           }),
+        ),
       );
     }
 
@@ -236,25 +285,11 @@ export async function processNotification(job: Job<NotificationJobData>): Promis
 
     if (smsWanted && smsAllowed) {
       promises.push(
-        smsService
-          .sendDelaySMS(recipientPhone, orderInfo, delayDetails, {
+        dispatchOnce('sms', alertId, orderId, () =>
+          smsService.sendDelaySMS(recipientPhone, orderInfo, delayDetails, {
             audience: recipientType,
-          })
-          .then(async() => {
-            // Mark SMS as sent + stamp first-dispatch time (dashboard badge)
-            await query(
-              `UPDATE delay_alerts
-               SET sms_sent = TRUE,
-                   notification_sent_at = COALESCE(notification_sent_at, CURRENT_TIMESTAMP)
-               WHERE id = $1`,
-              [alertId],
-            );
-            logger.info(`✅ SMS sent for alert ${alertId} (order ${orderId})`);
-          })
-          .catch(error => {
-            logger.error('Error sending SMS notification', error as Error);
-            throw error;
           }),
+        ),
       );
     }
 

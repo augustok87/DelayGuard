@@ -78,8 +78,19 @@ class MockClient {
     }
     
     if (text.includes('UPDATE')) {
-      return { 
-        rows: [], 
+      // This mock has always claimed `rowCount: 1` for an UPDATE without
+      // reading the WHERE clause. A `RETURNING` clause must agree with that
+      // count, or a claim-before-send (`UPDATE … WHERE flag = FALSE RETURNING
+      // id`) reads as "another dispatch got there first" on every call and the
+      // send never happens.
+      //
+      // This makes the mock self-consistent; it does NOT make it able to see
+      // whether a claim would really have won. Nothing here reads the
+      // predicate. Any assertion about what a statement actually DID — rows
+      // affected, which row, who won a race — belongs in a test built on
+      // `src/tests/helpers/pg-mem-schema.ts` against a real SQL engine.
+      return {
+        rows: /RETURNING/i.test(text) ? [{ id: 1 }] : [],
         rowCount: 1,
         command: 'UPDATE',
         oid: null,

@@ -153,7 +153,15 @@ function makeJob(
  * Wire mockQuery to respond in the order the processor calls:
  *   1. SELECT order + shop          → [orderRow]
  *   2. SELECT delay_alerts          → [alertRow]
- *   3+. UPDATE delay_alerts ...     → []  (per channel actually fired)
+ *   3+. UPDATE delay_alerts ...     → per channel actually fired
+ *
+ * The claim-before-send issues `UPDATE … WHERE <flag> = FALSE RETURNING id`
+ * and treats an empty result as "another dispatch already owns this send".
+ * This stub must therefore hand back a row for a RETURNING claim, or every
+ * dispatch here reads as lost and nothing is ever sent. It grants the claim
+ * unconditionally — it does not read the predicate, so it cannot tell a won
+ * race from a lost one. The race itself is asserted against a real SQL engine
+ * in tests/integration/notification-double-send-race.test.ts.
  */
 function wireQuery(orderRow: OrderRow | null, alertRow: AlertRow | null): void {
   mockQuery.mockReset();
@@ -165,7 +173,7 @@ function wireQuery(orderRow: OrderRow | null, alertRow: AlertRow | null): void {
       return alertRow ? [alertRow] : [];
     }
     if (sql.startsWith('UPDATE delay_alerts')) {
-      return [];
+      return /RETURNING/i.test(sql) ? [{ id: alertRow?.id ?? 1 }] : [];
     }
     return [];
   });
