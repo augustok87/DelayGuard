@@ -115,7 +115,7 @@ export const testDelayDetection = createAsyncThunk(
       const message =
         channels.length > 0
           ? `Test alert sent via ${channels.join(' + ')}`
-          : 'No channels attempted — enable email/SMS and set a merchant contact in Settings';
+          : 'No channels attempted — enable email notifications and set a merchant contact in Settings';
       return { success: true, message };
     } catch {
       return rejectWithValue('Failed to send test alert');

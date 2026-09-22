@@ -528,7 +528,7 @@ describe('NotificationPreferences Component', () => {
         />,
       );
 
-      expect(screen.getByText(/Optional: Receive SMS notifications for warehouse delays/i)).toBeInTheDocument();
+      expect(screen.getByText(/Optional: kept for future text message alerts/i)).toBeInTheDocument();
     });
 
     it('should display help text for merchant name', () => {

@@ -180,7 +180,7 @@ export function NotificationPreferences({
                 disabled={loading}
               />
               <p className={styles.helpText}>
-                Optional: Receive SMS notifications for warehouse delays
+                Optional: kept for future text message alerts
               </p>
             </div>
 
@@ -215,7 +215,7 @@ export function NotificationPreferences({
               Send Test Alert
             </Button>
             <p className={styles.helpText} style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
-              Test your notification system by sending a sample delay alert to your email/SMS. This helps you verify that notifications are working correctly before going live.
+              Test your notification system by sending a sample delay alert to your email. This helps you verify that notifications are working correctly before going live.
             </p>
           </div>
         )}

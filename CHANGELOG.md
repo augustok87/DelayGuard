@@ -19,6 +19,8 @@ That made the settings screen dishonest: toggling SMS answered `403 SMS notifica
 
 Two pre-existing tests asserted the old copy and that the SMS box enables whenever `loading` is false; both updated with the reason. A third new test was **deleted rather than kept**: `fireEvent.click` fires change on a disabled input in jsdom, so it failed for a reason a browser never reproduces — the same trap `.claude/rules/tests.md` records.
 
+Three strings that still sold SMS went with it: the merchant-phone hint, the test-alert description ("to your email/SMS") and the no-channels message.
+
 **Gate**: 2,570 passing / 2,595, 25 skipped, 0 failing, 140 suites. Lint 0 errors, type-check clean, build compiled.
 
 ---
