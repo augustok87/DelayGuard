@@ -20,6 +20,15 @@ interface NotificationPreferencesProps {
  * Manages notification settings (email and SMS).
  * Moved from SettingsCard in v1.20 to separate tab.
  */
+/**
+ * SMS dispatch is gated on a paid plan, and Free is the only public plan
+ * (the paid plans were removed before App Store submission because the
+ * Twilio trial cannot send). Enabling the toggle answered 403 "requires
+ * the Pro plan or above" — a plan that no longer exists. Flip this back
+ * when SMS can be sold and sent.
+ */
+const SMS_AVAILABLE = false;
+
 export function NotificationPreferences({
   settings,
   loading = false,
@@ -108,12 +117,12 @@ export function NotificationPreferences({
               type="checkbox"
               checked={settings.smsNotifications}
               onChange={handleSmsToggle}
-              disabled={loading}
+              disabled={loading || !SMS_AVAILABLE}
               aria-label="Enable SMS notifications"
             />
             <span>
               <strong>SMS Notifications</strong>
-              <span className={styles.helpText}>Send text message alerts to customers (requires phone numbers)</span>
+              <span className={styles.helpText}>Text message alerts are not available yet. Delay notifications are sent by email.</span>
             </span>
           </label>
         </div>

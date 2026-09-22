@@ -2,12 +2,26 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 21, 2026 (R27 — contact details save and reload; screencast done, listing at 0 issues)
+**Last Updated**: September 21, 2026 (R27 + free-only launch; screencast done, listing at 0 issues)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.80 (2026-09-22): Free-only launch — the SMS toggle no longer points at a plan that does not exist
+
+SMS is the only feature gated behind a paid plan (`notification.ts`, `api.ts` `ensureSmsPlan`), and the listing stopped advertising SMS in v1.78 because the Twilio trial cannot send it. That left three public plans — Free, Pro $7, Enterprise $25 — where the paid two bought nothing a merchant could use, with no top features described on any of them.
+
+**Pro and Enterprise were deleted** from Shopify App Pricing (nobody was subscribed; Shopify offers no way to hide a public plan, only delete). Free is now the single public plan.
+
+That made the settings screen dishonest: toggling SMS answered `403 SMS notifications require the Pro plan or above`, naming a plan that no longer exists. The toggle is now disabled behind `SMS_AVAILABLE`, and reads "Text message alerts are not available yet. Delay notifications are sent by email." The server-side plan gate is untouched — it stays the money-path guard.
+
+Two pre-existing tests asserted the old copy and that the SMS box enables whenever `loading` is false; both updated with the reason. A third new test was **deleted rather than kept**: `fireEvent.click` fires change on a disabled input in jsdom, so it failed for a reason a browser never reproduces — the same trap `.claude/rules/tests.md` records.
+
+**Gate**: 2,570 passing / 2,595, 25 skipped, 0 failing, 140 suites. Lint 0 errors, type-check clean, build compiled.
+
+---
 
 ### v1.79 (2026-09-21): Contact details could not be saved on a fresh install, and never reloaded (R27)
 

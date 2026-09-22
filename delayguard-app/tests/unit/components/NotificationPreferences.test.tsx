@@ -138,7 +138,12 @@ describe('NotificationPreferences Component', () => {
       expect(checkbox.checked).toBe(false);
     });
 
-    it('should call onSettingsChange when SMS checkbox is toggled', () => {
+    // SMS ships behind a paid plan, and the only public plan is Free
+    // (the paid plans were removed before submission because the Twilio
+    // trial cannot send). Enabling it returned 403 "requires the Pro plan
+    // or above", naming a plan that no longer exists, so the control has
+    // to read as unavailable rather than fail on click.
+    it('disables the SMS checkbox while SMS is unavailable', () => {
       render(
         <NotificationPreferences
           settings={mockSettings}
@@ -146,13 +151,19 @@ describe('NotificationPreferences Component', () => {
         />,
       );
 
-      const checkbox = screen.getByLabelText('Enable SMS notifications');
-      fireEvent.click(checkbox);
+      const checkbox = screen.getByLabelText('Enable SMS notifications') as HTMLInputElement;
+      expect(checkbox.disabled).toBe(true);
+    });
 
-      expect(mockOnSettingsChange).toHaveBeenCalledWith({
-        ...mockSettings,
-        smsNotifications: true,
-      });
+    it('says SMS is not available yet', () => {
+      render(
+        <NotificationPreferences
+          settings={mockSettings}
+          onSettingsChange={mockOnSettingsChange}
+        />,
+      );
+
+      expect(screen.getByText(/not available yet/i)).toBeInTheDocument();
     });
   });
 
@@ -246,10 +257,10 @@ describe('NotificationPreferences Component', () => {
       );
 
       const emailCheckbox = screen.getByLabelText('Enable email notifications');
-      const smsCheckbox = screen.getByLabelText('Enable SMS notifications');
 
       expect(emailCheckbox).not.toBeDisabled();
-      expect(smsCheckbox).not.toBeDisabled();
+      // SMS stays disabled regardless of `loading` while it is unavailable;
+      // see the SMS Notifications block.
     });
   });
 
@@ -273,7 +284,7 @@ describe('NotificationPreferences Component', () => {
         />,
       );
 
-      expect(screen.getByText(/Send text message alerts to customers \(requires phone numbers\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/Text message alerts are not available yet/i)).toBeInTheDocument();
     });
   });
 
