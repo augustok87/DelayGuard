@@ -2,7 +2,7 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 21, 2026 (R27 — contact details save on a fresh install, and survive a reload)
+**Last Updated**: September 21, 2026 (R27 — contact details save and reload; screencast done, listing at 0 issues)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
