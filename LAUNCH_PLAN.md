@@ -790,6 +790,12 @@ Returned 200 with Pro $7 and Enterprise $25 to anyone, both removed from App Pri
 
 The v1.82 deploy died on `TS6142` with every local check green: `type-check` uses the root tsconfig (sets `jsx`), Vercel builds with `tsconfig.vercel.json` (does not). Measured on the broken state: `vercel-build` errors, `type-check` reports **0**. Quality gates now run `npm run vercel-build` as an 8th gate, verified by reintroducing the broken import.
 
+### R37 — Install asked for two write scopes the app never uses `[AGENT]` — ✅ **CODE FIXED 2026-09-22 (v1.83)**, ⚠️ needs `shopify app deploy`
+
+The live OAuth redirect carried `write_orders` and `write_fulfillments`; the only mutation in the codebase is `webhookSubscriptionCreate`, which needs neither. Removed from `app-config.ts`, `shopify.app.toml` and `env.example`. `minimum-scopes.test.ts` ties the scope list to actual usage in both directions.
+
+⚠️ **Two human steps before this is real:** (1) `shopify app deploy` to push the new `access_scopes`, and (2) if `SHOPIFY_SCOPES` is set as a Vercel env var it overrides the code default — check it there too. Reducing scopes prompts existing installs to re-consent; at one dev-store install that is harmless.
+
 ### R9 — The agent can no longer authenticate to Shopify, or read any Vercel secret `[HUMAN]` — **new 2026-08-25**
 
 Two operational facts this plan asserted as ground truth are **false as of today**, and together they block all agent-side verification of authenticated endpoints:

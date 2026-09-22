@@ -31,7 +31,9 @@ Three tests asserted the old headers. That contract *was* the bug, so they now a
 
 **A gate that could not fail on what the deploy fails on.** The v1.82 deploy died on `TS6142` while every local check was green, because `type-check` uses the root tsconfig (which sets `jsx`) and Vercel builds with `tsconfig.vercel.json` (which does not). Quality gates now run `npm run vercel-build` as an 8th gate; verified by reintroducing the broken import and watching it fail.
 
-**Gate**: 2,595 passing / 2,620, 25 skipped, 0 failing, 146 suites. Lint 0 errors, type-check clean, Vercel build clean.
+**Minimum scopes.** The install consent screen asked for `write_orders` and `write_fulfillments` — verified live on the production OAuth redirect — and the app has never written to either. The only GraphQL mutation in the codebase is `webhookSubscriptionCreate`, which needs neither. Both are gone from the code defaults, `shopify.app.toml` and `env.example`. The test is tied to *usage*, not to a hardcoded list: one assertion fails if a write scope returns without a write mutation, another fails if a write mutation appears without the scope, so the pair cannot drift into agreeing with each other while disagreeing with reality. ⚠️ Requires `shopify app deploy` to take effect on the install screen.
+
+**Gate**: 2,598 passing / 2,623, 25 skipped, 0 failing, 147 suites. Lint 0 errors, type-check clean, Vercel build clean.
 
 ---
 

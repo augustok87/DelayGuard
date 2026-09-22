@@ -32,7 +32,7 @@ automatically_update_urls_on_dev = false
 [access_scopes]
 # Keep in sync with SHOPIFY_SCOPES (env.example) and the code defaults in
 # src/config/app-config.ts (WS-C C2).
-scopes = "read_orders,write_orders,read_fulfillments,write_fulfillments,read_products,read_customers"
+scopes = "read_orders,read_fulfillments,read_products,read_customers"
 # The app implements the authorization-code OAuth grant (src/routes/auth.ts).
 # Shopify-managed installation (the default, use_legacy_install_flow = false)
 # would bypass that flow; flip this only after migrating install to token

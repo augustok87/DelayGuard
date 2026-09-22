@@ -38,10 +38,14 @@ function requireEnvDev(key: string, defaultValue?: string): string {
  * shopify.app.toml and SHOPIFY_SCOPES in env.example.
  */
 export const DEFAULT_SHOPIFY_SCOPES = [
+  // Read-only on purpose. The app observes orders and fulfillments and never
+  // writes to either — its only mutation is webhookSubscriptionCreate, which
+  // needs neither scope. Requesting a write scope the app never exercises is
+  // an App Store review finding, and it shows on the merchant's consent
+  // screen. `minimum-scopes.test.ts` fails if one is added back without a
+  // matching write mutation.
   "read_orders",
-  "write_orders",
   "read_fulfillments",
-  "write_fulfillments",
   "read_products", // Phase 1.2: Required for fetching product line items
   "read_customers", // Phase 2.1.a: Customer intelligence ingestion
 ] as const satisfies readonly string[];
