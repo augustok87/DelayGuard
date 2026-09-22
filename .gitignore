@@ -102,6 +102,8 @@ temp/
 !.claude/settings.json
 !.claude/rules/
 !.claude/hooks/
+!.claude/commands/
+!.claude/artifacts.json
 
 # OS generated files
 .DS_Store

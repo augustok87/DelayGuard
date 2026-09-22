@@ -441,7 +441,7 @@ function collectCi() {
       "run", "list",
       "--workflow", String(definition.id),
       "--limit", "1",
-      "--json", "conclusion,status,event,createdAt,headBranch,url",
+      "--json", "conclusion,status,event,createdAt,headBranch,headSha,url",
     ], { cwd: PROJECT_ROOT, timeoutMs: 45_000 });
 
     let latest = null;
@@ -455,6 +455,13 @@ function collectCi() {
       return { name: definition.name, green: null, note: "no runs found" };
     }
 
+    // Green on WHAT? A success from ten commits ago is not evidence about the
+    // code in the tree, and reporting it as "CI green" is the same lie as a
+    // deployed build that is not HEAD.
+    const behind = latest.headSha
+      ? Number(capture("git", ["rev-list", "--count", `${latest.headSha}..HEAD`], { cwd: PROJECT_ROOT }))
+      : null;
+
     return {
       name: definition.name,
       conclusion: latest.conclusion,
@@ -463,13 +470,24 @@ function collectCi() {
       branch: latest.headBranch,
       at: latest.createdAt,
       url: latest.url,
+      tested_sha: latest.headSha ? latest.headSha.slice(0, 8) : null,
+      commits_since_tested: Number.isFinite(behind) ? behind : null,
+      tested_head: behind === 0,
       green: latest.conclusion === "success",
     };
   });
 
+  const greenOnHead = workflows.filter((w) => w.green && w.tested_head);
+
   return {
     available: true,
     workflows,
+    // Deliberately two different questions. all_green says the last run passed;
+    // green_on_head says the tree you are looking at has actually been tested.
+    green_on_head: workflows.length > 0 && greenOnHead.length === workflows.length,
+    max_commits_behind: workflows.reduce(
+      (worst, w) => Math.max(worst, w.commits_since_tested ?? 0), 0,
+    ),
     all_green: workflows.every((w) => w.green === true),
   };
 }
