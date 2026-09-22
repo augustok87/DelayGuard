@@ -1,5 +1,5 @@
 import { logger } from "./logger";
-import type { CdnAppBridge } from "../components/ShopifyProvider";
+import type { CdnAppBridge } from "../types/app-bridge";
 
 /**
  * Authenticated API Client for Shopify Embedded Apps

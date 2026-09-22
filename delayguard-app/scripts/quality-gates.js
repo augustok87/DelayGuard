@@ -111,6 +111,30 @@ const qualityGates = [
     }
   }),
 
+  // `tsc --noEmit` above uses the ROOT tsconfig, which sets `jsx`. Vercel
+  // builds the serverless function with tsconfig.vercel.json, which does not —
+  // so a frontend/backend shared import can pass every local check and still
+  // fail the deploy. That happened on 2026-09-22 (TS6142: api-client.ts
+  // importing a type out of ShopifyProvider.tsx): the gate was green, the
+  // deploy was red. Run the build Vercel actually runs.
+  new QualityGate('Vercel Build (tsconfig.vercel.json)', async() => {
+    try {
+      execSync('npm run vercel-build', { stdio: 'pipe' });
+      return {
+        passed: true,
+        message: 'Serverless build compiles with the deploy tsconfig',
+      };
+    } catch (error) {
+      const detail = `${error.stdout || ''}${error.stderr || ''}`
+        .split('\n')
+        .find(line => line.includes('error TS'));
+      return {
+        passed: false,
+        message: `Vercel build failed — this WILL fail the deploy: ${detail || error.message}`,
+      };
+    }
+  }),
+
   new QualityGate('Test Suite', async() => {
     try {
       const output = execSync('npm test -- --coverage --watchAll=false --passWithNoTests', { 

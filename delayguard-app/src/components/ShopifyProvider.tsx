@@ -1,4 +1,5 @@
 import React, { ReactNode, createContext, useContext, useMemo } from "react";
+import type { CdnAppBridge } from "../types/app-bridge";
 
 /**
  * Shopify App Bridge provider.
@@ -21,10 +22,7 @@ interface ShopifyProviderProps {
   children: ReactNode;
 }
 
-/** The subset of the CDN App Bridge global this app uses. */
-export interface CdnAppBridge {
-  idToken: () => Promise<string>;
-}
+export type { CdnAppBridge };
 
 /**
  * Read the global, or null when the CDN script has not installed it — which
