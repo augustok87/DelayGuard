@@ -740,6 +740,8 @@ Session tokens passing proves Shopify **has** session data for this app, so the 
 
 **ROOT CAUSE (found v1.83, and v1.82 only got half of it).** The app blocked Shopify's script with its own header: it sent `Cross-Origin-Embedder-Policy: require-corp`, and `cdn.shopify.com/shopifycloud/app-bridge.js` returns `access-control-allow-origin: *` but **no** `Cross-Origin-Resource-Policy`. Under `require-corp` a no-CORS cross-origin `<script>` is blocked without CORP — so the bridge never executed, `window.shopify` never existed, and the legacy npm bridge was silently carrying every session token. Removing the legacy bridge alone made the dashboard 401 on every call and the live console said so: `App Bridge global not present — app-bridge.js has not initialised`. COEP and COOP are gone; CORP is `cross-origin`; `frame-ancestors` (R6) still controls framing.
 
+**✅ VERIFIED LIVE 2026-09-22 21:4x UTC.** After deploying the COEP removal, the embedded app in the real admin iframe logs **`✅ App Bridge (CDN) available`**, the header reads **"Connected to delayguard-dev"** with 8 alerts, and there is **no "Missing Authorization header" banner**. The app frame's console went from 17 messages (8 × `401`, plus Chrome's CORP-blocked, CSP-blocked and stylesheet issues) to **4**, none of them ours. `window.shopify` now exists, which it never had before. ⏳ The dashboard still shows ❌ because it re-checks every 2 hours; re-read it after that window.
+
 **FIXED in v1.82 + v1.83.** `APP::` went 119 → 0 in the rebuilt bundle and `createApp` → 0. `app-bridge-cdn-only.test.ts` pins it (RED first, naming both offending files). ⏳ The dashboard re-checks every 2 hours, so the ❌ will persist until the next run — that wait is the critical path to submission.
 
 **Fix shape (as executed).** Deleted the legacy initialization: drop `ShopifyProvider`'s `createApp`, drop the npm fallback in `utils/api-client.ts` `getToken()` (which already **prefers** `window.shopify.idToken()`), and remove `@shopify/app-bridge` from `package.json`. ⚠️ **This touches the authentication surface**, where a mistake turns the one currently-green embedded check red. **Verification is not immediate** — the dashboard re-checks every 2 hours, so this cannot be confirmed inside one session.
@@ -795,6 +797,16 @@ The v1.82 deploy died on `TS6142` with every local check green: `type-check` use
 The live OAuth redirect carried `write_orders` and `write_fulfillments`; the only mutation in the codebase is `webhookSubscriptionCreate`, which needs neither. Removed from `app-config.ts`, `shopify.app.toml` and `env.example`. `minimum-scopes.test.ts` ties the scope list to actual usage in both directions.
 
 ⚠️ **Two human steps before this is real:** (1) `shopify app deploy` to push the new `access_scopes`, and (2) if `SHOPIFY_SCOPES` is set as a Vercel env var it overrides the code default — check it there too. Reducing scopes prompts existing installs to re-consent; at one dev-store install that is harmless.
+
+### R38 — Migration ran against localhost, and "success" prints nothing `[AGENT]` — **diagnosed 2026-09-22**
+
+`npm run migrate:vercel` failed with *"The server does not support SSL connections"*. That is not an SSL problem: `connection.ts` passes `connectionString: process.env.DATABASE_URL`, which was **unset**, so `pg` fell back to the libpq default of localhost while `NODE_ENV=production` forced SSL on. `migrate.ts` calls `dotenv.config()`, which reads `.env` — and only `.env.local` existed, holding nothing but `VERCEL_OIDC_TOKEN`.
+
+Fixed by `npx vercel env pull .env --environment=production` first. `DATABASE_URL` is type **Config**, not Sensitive, so it pulls decrypted — the "8 Secret values cannot be pulled" warning covers the API keys, not the database.
+
+⚠️ **Delete `.env` immediately afterwards.** `dotenv.config()` is the same call the test suite makes; a leftover `.env` pointing at production Postgres is the R21 failure mode aimed at the live database instead of a phantom one.
+
+⚠️ **A successful migration prints NOTHING.** `logger.ts` sets `logLevel = WARN` unless `NODE_ENV === "development"`, so `logInfo("Database migrations completed successfully")` is suppressed while `logError` still prints. Silence is success; two ERROR lines are failure. **Proven end-to-end rather than assumed:** the GitHub Actions cron-sweeps workflow was triggered against the new deployment and passed, and since it uses `curl -fsS` and both sweeps now query `s.uninstalled_at`, a green run is proof the column exists in production.
 
 ### R9 — The agent can no longer authenticate to Shopify, or read any Vercel secret `[HUMAN]` — **new 2026-08-25**
 
