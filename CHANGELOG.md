@@ -2,12 +2,31 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 22, 2026 (v1.85 — a stale env var kept production asking for write scopes; the scope parser may now only narrow)
+**Last Updated**: September 23, 2026 (v1.86 — two tables outlived the GDPR webhook that should have erased them; the auth path's JWT library had an HMAC bypass)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.86 (2026-09-23): Two tables outlived `redact`, and the auth path verified HMAC with a library that could be tricked
+
+Both GDPR redaction handlers delete a **hand-written list of tables**, so a table added later is covered only if someone remembered to extend the list. Two were not, and the app requests `read_customers`, which puts it under Shopify's Protected Customer Data requirements — these webhooks get tested during review.
+
+- **`shop/redact` left the access log behind.** `data_access_log` keys on a plain `shop_domain` string with **no foreign key**, so nothing cascades it when `shops` goes. Its rows — shop domain plus the Shopify staff `user_id` that touched each endpoint — outlived the shop they described. The erasure now runs *before* the shop lookup, because a shop row that is already gone is exactly the case where its log rows are still there.
+- **`customers/redact` left the customer behind.** `customer_intelligence` cascades from `shops`, so shop-redact did reach it — but the customer handler never named it. A customer erasure request left that customer's `shopify_customer_id`, lifetime spend, order count and marketing-consent flag in place. Unlike `orders` there is nothing to anonymize into: the row *is* the customer, so erasure means deleting it.
+
+**RED first**, against pg-mem rather than `__mocks__/pg.js` — which answers every statement `rowCount: 1` without reading the `WHERE` clause, under which a `DELETE` that removed nothing is indistinguishable from one that worked. Seven new assertions: **two failed** (`Expected: 0, Received: 2` for the access log; `Expected: 0, Received: 1` for the customer), five passed throughout. Those five are the regression half and they are the point — a fix that deleted the whole table would satisfy the two failing tests, so each gap is pinned by a pair: one test that erasure happens, one that it stops at the shop or customer the webhook names, including the same Shopify customer id under a second shop.
+
+**`jws` 3.2.2 → 3.2.3 (GHSA-869p-cjfg-cm3x, "Improperly Verifies HMAC Signature").** This is not a transitive-tooling advisory: `src/middleware/shopify-session.ts` imports `jsonwebtoken` directly to verify every Shopify session token, and that is the library underneath it. Pinned via `overrides`; the range satisfies jsonwebtoken@9's own `^3.2.2`, so nothing else moved.
+
+**Two dead dependencies removed.** `@shopify/koa-shopify-auth` and `@shopify/koa-shopify-graphql-proxy` are imported nowhere — `server.ts` has carried the comment *"@shopify/koa-shopify-auth is gone"* since it rejected Shopify's webhook POSTs — but they stayed in `package.json`, dragging in `@shopify/shopify-api@1.4.3` → `jsonwebtoken@8.5.1`, which carries a **signature-validation bypass**. Deleting the packages deleted the advisory. Production vulnerabilities 30 → 27; both auth-path advisories gone.
+
+**`CLAUDE.md` was prescribing a constraint that would break escalation alerts.** It told the next agent to back `delay_alerts`' unmatched `ON CONFLICT DO NOTHING` with `UNIQUE(order_id, delay_reason)`. The delay-check sweep deliberately re-alerts an order still late after seven days (`NOT EXISTS … created_at > NOW() - INTERVAL '7 days'`), and that re-alert carries the **same** `delay_reason` — the constraint would have silently swallowed every escalation for the life of the order. Its premise was also stale: it warned the claim-before-send had not landed, and it landed in v1.81.
+
+**Gate**: 2,616 passing / 2,641, 25 skipped, 0 failing, 149 suites; lint 0 errors; type-check clean; build compiled.
+
+---
 
 ### v1.85 (2026-09-22): The minimum-scope test passed while production asked for write scopes
 

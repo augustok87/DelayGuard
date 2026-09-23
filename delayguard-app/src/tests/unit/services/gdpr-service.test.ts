@@ -176,12 +176,13 @@ describe('GDPRService', () => {
 
       mockQuery
         .mockResolvedValueOnce([{ count: 2 }]) // Update orders
+        .mockResolvedValueOnce([]) // Delete customer_intelligence
         .mockResolvedValueOnce([{ count: 1 }]) // Update alerts
         .mockResolvedValueOnce([{ count: 1 }]); // Update fulfillments
 
       await gdprService.handleCustomerRedact(webhook);
 
-      expect(mockQuery).toHaveBeenCalledTimes(3);
+      expect(mockQuery).toHaveBeenCalledTimes(4);
       
       // Verify customer email was anonymized
       expect(mockQuery).toHaveBeenCalledWith(
@@ -220,6 +221,7 @@ describe('GDPRService', () => {
 
       mockQuery
         .mockResolvedValueOnce([{ count: 1 }])
+        .mockResolvedValueOnce([]) // Delete customer_intelligence
         .mockResolvedValueOnce([{ count: 1 }])
         .mockResolvedValueOnce([{ count: 0 }]);
 
@@ -254,6 +256,7 @@ describe('GDPRService', () => {
 
       mockQuery
         .mockResolvedValueOnce([{ count: 0 }])
+        .mockResolvedValueOnce([]) // Delete customer_intelligence
         .mockResolvedValueOnce([{ count: 0 }])
         .mockResolvedValueOnce([{ count: 0 }]);
 
@@ -297,6 +300,7 @@ describe('GDPRService', () => {
       };
 
       mockQuery
+        .mockResolvedValueOnce([]) // Delete data_access_log
         .mockResolvedValueOnce([{ id: 'shop-uuid-123' }]) // Get shop by domain
         .mockResolvedValueOnce([{ count: 5 }]) // Delete alerts
         .mockResolvedValueOnce([{ count: 3 }]) // Delete fulfillments
@@ -306,15 +310,19 @@ describe('GDPRService', () => {
 
       await gdprService.handleShopRedact(webhook);
 
-      expect(mockQuery).toHaveBeenCalledTimes(6);
+      expect(mockQuery).toHaveBeenCalledTimes(7);
 
-      // Verify deletion order (referential integrity)
+      // Verify deletion order (referential integrity). The access log goes
+      // first: it has no foreign key to cascade it and is erased even when the
+      // shop row has already gone, so it precedes the shop lookup.
       const calls = mockQuery.mock.calls;
-      expect(calls[1][0]).toContain('DELETE FROM delay_alerts');
-      expect(calls[2][0]).toContain('DELETE FROM fulfillments');
-      expect(calls[3][0]).toContain('DELETE FROM orders');
-      expect(calls[4][0]).toContain('DELETE FROM app_settings');
-      expect(calls[5][0]).toContain('DELETE FROM shops');
+      expect(calls[0][0]).toContain('DELETE FROM data_access_log');
+      expect(calls[1][0]).toContain('SELECT id FROM shops');
+      expect(calls[2][0]).toContain('DELETE FROM delay_alerts');
+      expect(calls[3][0]).toContain('DELETE FROM fulfillments');
+      expect(calls[4][0]).toContain('DELETE FROM orders');
+      expect(calls[5][0]).toContain('DELETE FROM app_settings');
+      expect(calls[6][0]).toContain('DELETE FROM shops');
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('GDPR shop redaction completed'),
@@ -332,7 +340,9 @@ describe('GDPRService', () => {
         shop_domain: 'nonexistent-shop.myshopify.com',
       };
 
-      mockQuery.mockResolvedValueOnce([]); // Shop not found
+      mockQuery
+        .mockResolvedValueOnce([]) // Delete data_access_log
+        .mockResolvedValueOnce([]); // Shop not found
 
       await gdprService.handleShopRedact(webhook);
 
@@ -341,8 +351,9 @@ describe('GDPRService', () => {
         expect.any(Object),
       );
 
-      // Should not attempt deletions
-      expect(mockQuery).toHaveBeenCalledTimes(1);
+      // Should not attempt deletions beyond the access-log erasure, which
+      // runs before the lookup precisely because the shop row may be gone.
+      expect(mockQuery).toHaveBeenCalledTimes(2);
     });
 
     it('should handle deletion errors', async() => {
@@ -352,6 +363,7 @@ describe('GDPRService', () => {
       };
 
       mockQuery
+        .mockResolvedValueOnce([]) // Delete data_access_log
         .mockResolvedValueOnce([{ id: 'shop-uuid-123' }])
         .mockRejectedValueOnce(new Error('Deletion failed'));
 
@@ -405,6 +417,7 @@ describe('GDPRService', () => {
 
       mockQuery
         .mockResolvedValueOnce([{ count: 1 }])
+        .mockResolvedValueOnce([]) // Delete customer_intelligence
         .mockResolvedValueOnce([{ count: 1 }])
         .mockResolvedValueOnce([{ count: 1 }]);
 

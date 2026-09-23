@@ -137,6 +137,19 @@ export class GDPRService {
         ],
       );
 
+      // customer_intelligence is keyed by `shopify_customer_id`, so unlike
+      // `orders` there is nothing to anonymize into — the row IS the customer
+      // (lifetime spend, order count, marketing consent). Erasure means
+      // deleting it. Scoped to this shop as well as this customer: the same
+      // Shopify customer id can appear under two shops, and the webhook speaks
+      // for only one of them.
+      await query(
+        `DELETE FROM customer_intelligence
+         WHERE shop_id = (SELECT id FROM shops WHERE shop_domain = $1)
+           AND shopify_customer_id = $2`,
+        [webhook.shop_domain, String(webhook.customer.id)],
+      );
+
       // No customer PII in delay_alerts (B11b): the table carries only
       // order_id, delay metadata and notification flags — customer identity
       // lives on `orders`, which the UPDATE above anonymizes. The previous
@@ -189,6 +202,15 @@ export class GDPRService {
         shop_id: webhook.shop_id,
         shop_domain: webhook.shop_domain,
       });
+
+      // The access log keys on a plain `shop_domain` string with no foreign
+      // key, so nothing cascades it when `shops` goes. It is erased first, and
+      // before the early return below, because a shop row that is already gone
+      // is exactly the case where its log rows are still here.
+      await query(
+        "DELETE FROM data_access_log WHERE shop_domain = $1",
+        [webhook.shop_domain],
+      );
 
       // Get shop UUID from shop_id
       const shopResult = await query<{ id: string }>(
