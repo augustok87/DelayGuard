@@ -59,14 +59,26 @@ export const DEFAULT_SHOPIFY_SCOPES = [
  * `scope=…,read_customers%0A` in production (R2/B1, 2026-07-29), which is
  * not a scope Shopify recognizes. Falls back to the code defaults when the
  * env var is unset or contains nothing usable.
+ *
+ * The env var may NARROW the defaults and never widen them (R39). A
+ * SHOPIFY_SCOPES set in Vercel 338 days before the scopes were reduced kept
+ * production asking merchants for write_orders and write_fulfillments, while
+ * `minimum-scopes.test.ts` — which only ever read the constant below — went
+ * on passing. Filtering here is what makes that test's claim true of the
+ * authorize URL the merchant actually sees. Adding a scope stays a code
+ * change, which is the same place the review evidence for needing it lives.
  */
 export function parseScopes(raw: string | undefined): string[] {
-  const parsed = (raw ?? "")
+  const declared = new Set<string>(DEFAULT_SHOPIFY_SCOPES);
+
+  const requested = (raw ?? "")
     .split(",")
     .map((scope) => scope.trim())
     .filter((scope) => scope.length > 0);
 
-  return parsed.length > 0 ? parsed : [...DEFAULT_SHOPIFY_SCOPES];
+  const granted = requested.filter((scope) => declared.has(scope));
+
+  return granted.length > 0 ? granted : [...DEFAULT_SHOPIFY_SCOPES];
 }
 
 /**

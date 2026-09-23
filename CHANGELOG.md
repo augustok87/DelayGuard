@@ -2,12 +2,32 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 22, 2026 (v1.84 — landing page for the listing's website URL; PCD and listing copy corrected)
+**Last Updated**: September 22, 2026 (v1.85 — a stale env var kept production asking for write scopes; the scope parser may now only narrow)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.85 (2026-09-22): The minimum-scope test passed while production asked for write scopes
+
+`minimum-scopes.test.ts` is titled **"OAuth scopes are the minimum the app actually uses"**. It passed. Production's authorize redirect, read live the same day, was:
+
+```
+scope=read_orders,write_orders,read_fulfillments,write_fulfillments,read_products,read_customers
+```
+
+`SHOPIFY_SCOPES` had been set in Vercel **338 days** before the scopes were reduced in v1.83, and `parseScopes` returned whatever the env said. The test only ever read `DEFAULT_SHOPIFY_SCOPES` — a constant the env overrides — so it asserted the honest value while the dishonest one was on the merchant's consent screen. A check that cannot fail on the thing it claims to guard is the same defect as a check that is permanently red.
+
+**The env var may now narrow the defaults and never widen them.** `parseScopes` intersects its value with `DEFAULT_SHOPIFY_SCOPES`; anything undeclared is dropped, and an env value with nothing left falls back to the defaults rather than sending an empty `scope=`. Adding a scope is a code change now, which is the same place the evidence for needing it lives. Fixing the env var alone would have left the mechanism intact.
+
+**RED first**: three new assertions failed against the old parser, the first replaying production's exact scope string. The narrowing case ("still honours an env var that asks for less") passed throughout and is kept as a documented regression guard. Three pre-existing whitespace tests used `write_orders` as filler and were re-fixtured onto declared scopes — they still fail if trimming is removed, since an untrimmed `read_customers\n` no longer matches a declared scope at all.
+
+**R37 released.** `shopify app deploy` had been failing with *"Could not find a Shopify app configuration file"* — run from the repo root, while `shopify.app.toml` lives in `delayguard-app/` and the CLI searches upward only. Re-run from the right directory it listed `access_scopes` as the sole `(updated)` field and released **`delayguard-2-4`**.
+
+**Gate**: 2,609 passing / 2,634, 25 skipped, 0 failing, 148 suites.
+
+---
 
 ### v1.84 (2026-09-22): The listing's website link showed the app erroring — `/` now answers by audience
 
