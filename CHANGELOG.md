@@ -2,12 +2,26 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 23, 2026 (v1.86 — two tables outlived the GDPR webhook that should have erased them; the auth path's JWT library had an HMAC bypass)
+**Last Updated**: September 23, 2026 (v1.87 — remote CI had been red on a test the local gate could not fail, because the gate builds before it tests)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.87 (2026-09-23): The local gate could not fail the test that was failing CI
+
+Pushing the ten stranded commits turned remote CI red, and it had been red on `e3c03f79` before this session touched anything — nobody had seen it because **nothing had been pushed**. Three assertions in `landing-page.test.ts` failed on every push while the 8-gate local run passed on the same code.
+
+`public/app.html` is a webpack artifact and is **gitignored**. The local gate builds *before* it tests, so the file is always there; CI's test job runs Jest without building, so it never is. `readAppDocument` then falls back to its missing-bundle document, and the three framed-request assertions — which check that a request Shopify framed still gets `<div id="root">` — got the fallback instead.
+
+So the local gate was structurally incapable of failing this test. Its build step manufactured the precondition the test depended on. That is the same defect class as a check that is permanently red: **the gate's own setup was hiding the thing the gate existed to catch.**
+
+**RED reproduced locally** by moving `public/app.html` aside — the same three failures, same names, confirming the diagnosis rather than inferring it from the CI log. The fix makes the test supply its own stand-in document when the build output is absent, and remove it again; the branch under test chooses *which* document to serve, not what webpack put inside it. Verified in both modes: green with the artifact absent (the CI condition) and green with the real artifact restored, which is left in place.
+
+**Gate**: 2,616 passing / 2,641, 25 skipped, 0 failing, 149 suites.
+
+---
 
 ### v1.86 (2026-09-23): Two tables outlived `redact`, and the auth path verified HMAC with a library that could be tricked
 
