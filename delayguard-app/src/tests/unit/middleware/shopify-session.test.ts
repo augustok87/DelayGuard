@@ -1,6 +1,6 @@
 import { Context } from 'koa';
 import jwt from 'jsonwebtoken';
-import { requireAuth, getShopDomain, optionalAuth } from '../../../middleware/shopify-session';
+import { requireAuth, getShopDomain } from '../../../middleware/shopify-session';
 
 // Mock dependencies
 jest.mock('../../../database/connection');
@@ -359,55 +359,6 @@ describe('Shopify Session Middleware', () => {
       expect(() => getShopDomain(mockCtx as Context)).toThrow(
         'Shop domain not found in context',
       );
-    });
-  });
-
-  describe('optionalAuth middleware', () => {
-    it('should authenticate with valid token', async() => {
-      const mockShopData = {
-        id: 'shop-123',
-        access_token: 'test-access-token',
-        scope: 'read_products,write_orders',
-      };
-
-      const token = jwt.sign(
-        {
-          iss: `https://${testShop}/admin`,
-          dest: `https://${testShop}`,
-          aud: testApiKey,
-          sub: 'user-123',
-          exp: Math.floor(Date.now() / 1000) + 3600,
-          nbf: Math.floor(Date.now() / 1000),
-          iat: Math.floor(Date.now() / 1000),
-          jti: 'jwt-123',
-          sid: 'session-123',
-        },
-        testApiSecret,
-      );
-
-      mockCtx.headers = { authorization: `Bearer ${token}` };
-      mockQuery.mockResolvedValueOnce([mockShopData]);
-
-      await optionalAuth(mockCtx as Context, mockNext);
-
-      expect(mockNext).toHaveBeenCalled();
-      expect(mockCtx.state?.shopDomain).toBe(testShop);
-    });
-
-    it('should continue without authentication on invalid token', async() => {
-      mockCtx.headers = { authorization: 'Bearer invalid-token' };
-
-      await optionalAuth(mockCtx as Context, mockNext);
-
-      expect(mockNext).toHaveBeenCalled();
-      expect(mockCtx.state?.shopDomain).toBeUndefined();
-    });
-
-    it('should continue without authentication when no token provided', async() => {
-      await optionalAuth(mockCtx as Context, mockNext);
-
-      expect(mockNext).toHaveBeenCalled();
-      expect(mockCtx.state?.shopDomain).toBeUndefined();
     });
   });
 });

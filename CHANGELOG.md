@@ -2,12 +2,32 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 23, 2026 (v1.87 — remote CI had been red on a test the local gate could not fail, because the gate builds before it tests)
+**Last Updated**: September 23, 2026 (v1.88 — the production audit was 30 advisories of noise hiding 2 real ones; now 17 and zero critical)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.88 (2026-09-23): An audit nobody can read is not an audit
+
+Two deferred calls, both decided by measuring what actually deploys rather than by reasoning about it.
+
+**`@vercel/node` moved to devDependencies.** It is imported nowhere, yet it sat in `dependencies` dragging `undici`, `tar` and a second copy of `path-to-regexp` into the production audit. The decisive measurement was the real build artifact, not `npm ls`: `vercel build` writes the deployable lambda to `.vercel/output`, and inside it `path-to-regexp` is **6.3.0, via `koa-router`** — outside the advisory's `4.0.0 - 6.2.2` range. The vulnerable `6.1.0` under `@vercel/node` was never in the lambda at all, and neither were `undici` or `tar`.
+
+So this change removes **no** reachable vulnerability. It was still worth making: `npm audit --omit=dev` reported 30 advisories of which essentially none shipped, and that is exactly the noise the two *real* ones — `jws`' HMAC bypass and `jsonwebtoken@8.5.1`'s signature-validation bypass, both on the live session-token path — hid inside until this week. A signal at 30 is a signal nobody reads.
+
+The risk was that Vercel's build needs the package. It does not, and the proof was already in the repo: `typescript`, `webpack`, `ts-node` and `ts-loader` are **all** devDependencies and the production build uses every one of them, so Vercel installs devDependencies despite `NODE_ENV=production` in `vercel.json`. Verified anyway by running `vercel build` before and after — both succeed, and the lambda is the same 23M with the same contents.
+
+**Production vulnerabilities 30 → 17; critical 1 → 0** (the `tar` race condition came in through `@vercel/node`); high 17 → 10. Everything left is unreachable transitive tooling.
+
+**`optionalAuth` deleted (117 lines).** It was exported from `shopify-session.ts` and wired to nothing — no route, no barrel, no import anywhere but its own tests. It also **fails open on every error path**, including a database error: the catch calls `await next()` and the request proceeds unauthenticated. Harmless while unreferenced, and a loaded gun the moment someone attaches it to a route — which its name invites, on an app that is about to be reviewed for Protected Customer Data Level 2. Dead code that fails open is the worst kind of dead code; git history keeps it if it is ever wanted.
+
+Its three tests went with it. A test for code that no longer exists asserts nothing, and the suite count moved 2,616 → 2,613 — exactly three, which is how the deletion was confirmed to have taken nothing else with it.
+
+**Gate**: 2,613 passing / 2,638, 25 skipped, 0 failing, 149 suites; `vercel build` succeeds.
+
+---
 
 ### v1.87 (2026-09-23): The local gate could not fail the test that was failing CI
 
