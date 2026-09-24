@@ -2,12 +2,30 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 23, 2026 (v1.88 — the production audit was 30 advisories of noise hiding 2 real ones; now 17 and zero critical)
+**Last Updated**: September 24, 2026 (v1.89 — the free plan's 50-alert limit was documentation; the bill follows a different number entirely)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.89 (2026-09-24): The free tier's limit was documentation, and it was measuring the wrong thing
+
+`monthly_alert_limit: 50` appears in three config files and **no code anywhere counts an alert** — so the free plan is unlimited, and has been. Before a cap can be enforced honestly the number has to exist, and it turns out one number is not enough.
+
+**The advertised limit and the actual cost driver are different quantities.** `delay-check-sweep` scans every undelivered order from the last thirty days whether or not it raises an alert. So a shop with fifty thousand quiet orders consumes Redis commands, Neon compute and Vercel invocations on all fifty thousand while sending nothing. **Capping alerts would limit what a merchant sees and leave the bill untouched.** `collectShopUsage` therefore returns both: `alertsThisMonth`, the output a cap would govern, and `ordersMonitored`, the population the sweep actually walks — deliberately mirroring the sweep's own candidate predicate, because a usage figure that counts a different population than the job doing the work is a number that looks precise and means nothing.
+
+**Measurement only. No cap is enforced, and that is the point** — blocking a free merchant when there is no paid plan to upgrade to breaks the app and earns nothing. Enforcement becomes a one-line change the day a Pro plan exists.
+
+No schema change and no migration: both figures derive from `orders` and `delay_alerts` as they already stand, so nothing was added to the send path.
+
+**RED first**, then mutation-tested, which is the part worth recording. Three deliberate breaks, each failing exactly the assertion named for it: dropping the `DELIVERED` filter broke *"counts the same population the sweep scans"* (3→4); dropping the month boundary broke *"counts this calendar month only"* (2→3); dropping the uninstalled-shop filter broke both scope assertions. A test suite that passes is not evidence until each check has been watched failing for its own reason.
+
+Recorded on **both** sweep exit paths. A sweep finding no candidates is still a sweep, and on a low-traffic install it is most of them — logging only the busy path would miss precisely the quiet baseline needed to tell an expensive shop from a cheap one. Best-effort in its own try/catch: instrumentation must never fail the job it measures.
+
+**Gate**: 2,619 passing / 2,644, 25 skipped, 0 failing, 150 suites.
+
+---
 
 ### v1.88 (2026-09-23): An audit nobody can read is not an audit
 

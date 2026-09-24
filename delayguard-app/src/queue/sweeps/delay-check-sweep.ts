@@ -24,6 +24,7 @@ import { logger } from "../../utils/logger";
 import { processDelayCheck } from "../processors/delay-check";
 import { delayCheckQueue } from "../setup";
 import { asJob } from "./synth-job";
+import { collectShopUsage } from "../../services/usage-service";
 
 export interface DelayCheckSweepStats {
   ordersChecked: number;
@@ -86,6 +87,33 @@ async function discardRedundantQueueJobs(): Promise<void> {
   }
 }
 
+/**
+ * Record per-shop usage. Nothing else measures it: the free plan declares a
+ * 50-alert limit that no code counts, and the infrastructure bill follows
+ * `ordersMonitored` rather than alerts, because this sweep scans every
+ * undelivered order whether or not it produces one.
+ *
+ * Measurement only — no cap is enforced. Blocking a free merchant when there is
+ * no paid plan to upgrade to would break the app and earn nothing.
+ *
+ * Called on both exit paths: a sweep that finds no candidates is still a sweep,
+ * and for a low-traffic install it is most of them, so recording only on the
+ * busy path would miss the shops that matter least and cost least — exactly the
+ * baseline needed to tell the two apart. Best-effort in its own try/catch:
+ * instrumentation must never fail the job it measures.
+ */
+async function logShopUsage(): Promise<void> {
+  try {
+    for (const usage of await collectShopUsage()) {
+      logger.info("📊 Shop usage", { ...usage });
+    }
+  } catch (error) {
+    logger.warn("Could not collect shop usage (sweep unaffected)", {
+      reason: error instanceof Error ? error.message : "unknown",
+    });
+  }
+}
+
 export async function processDelayCheckSweep(): Promise<DelayCheckSweepStats> {
   const startedAt = Date.now();
   const stats: DelayCheckSweepStats = { ordersChecked: 0, errors: 0 };
@@ -133,6 +161,7 @@ export async function processDelayCheckSweep(): Promise<DelayCheckSweepStats> {
         await writeCursor(0);
       }
       await discardRedundantQueueJobs();
+      await logShopUsage();
       return stats;
     }
 
@@ -189,6 +218,8 @@ export async function processDelayCheckSweep(): Promise<DelayCheckSweepStats> {
       lastProcessedId,
       durationMs: Date.now() - startedAt,
     });
+
+    await logShopUsage();
 
     return stats;
   } catch (error) {
