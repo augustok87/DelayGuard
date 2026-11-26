@@ -118,15 +118,15 @@ describe('Delay Check Processor - Notification Routing', () => {
       // Assert
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('merchant_email'),
-        [1],
+        [1, 5], // orderId, TRANSIT_EXTRA_DAYS
       );
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('merchant_phone'),
-        [1],
+        [1, 5], // orderId, TRANSIT_EXTRA_DAYS
       );
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('merchant_name'),
-        [1],
+        [1, 5], // orderId, TRANSIT_EXTRA_DAYS
       );
     });
 
@@ -170,15 +170,15 @@ describe('Delay Check Processor - Notification Routing', () => {
       // Assert
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('warehouse_delays_enabled'),
-        [1],
+        [1, 5], // orderId, TRANSIT_EXTRA_DAYS
       );
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('carrier_delays_enabled'),
-        [1],
+        [1, 5], // orderId, TRANSIT_EXTRA_DAYS
       );
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('transit_delays_enabled'),
-        [1],
+        [1, 5], // orderId, TRANSIT_EXTRA_DAYS
       );
     });
   });
