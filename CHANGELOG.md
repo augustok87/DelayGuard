@@ -2,12 +2,24 @@
 *Complete historical record of all features, improvements, and bug fixes*
 
 **Purpose**: Archive of all development milestones and version details
-**Last Updated**: September 24, 2026 (v1.89 — the free plan's 50-alert limit was documentation; the bill follows a different number entirely)
+**Last Updated**: November 26, 2026 (v1.90 — the merchant's delay threshold was saved and never read)
 **For recent versions only**: See [CLAUDE.md](CLAUDE.md#recent-version-history)
 
 ---
 
 ## VERSION HISTORY
+
+### v1.90 (2026-11-26): The merchant's delay threshold was saved and never read
+
+The settings screen has one number — *"Alert me when orders sit unfulfilled for N days"* — saved to `app_settings.delay_threshold_days`, and it promises "Stuck in Transit" is auto-calculated as N + 5. The delay check read `warehouse_delay_days` and `transit_delay_days` instead, which **no code path writes**. Every shop therefore ran on the column defaults, 2 and 7 days, whatever the merchant chose. Found while planning an end-to-end alert test on the dev store.
+
+**Fixed on the read side**, in the delay-check SELECT: warehouse = `delay_threshold_days`, transit = `delay_threshold_days + TRANSIT_EXTRA_DAYS` (5), each falling back to the old column only when the setting is NULL. Reading rather than writing means every existing shop is corrected on the next sweep, with no re-save and no migration.
+
+**RED against the broken code first**: `delay-threshold-settings.test.ts` runs `processDelayCheck` on pg-mem with the production schema. Three assertions failed for the bug's own reason (threshold 5 still alerted at 3 days; threshold 1 did not alert at 25 hours; transit did not alert at 6 days). A fourth — no transit alert one day short of N + 5 — passes in both states and is kept, commented, to pin the "+5" half against an over-correction. Two routing tests updated: the query now also receives `TRANSIT_EXTRA_DAYS`.
+
+**Gate**: local CI, all 8 gates passed.
+
+---
 
 ### v1.89 (2026-09-24): The free tier's limit was documentation, and it was measuring the wrong thing
 

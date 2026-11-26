@@ -7,6 +7,10 @@ import { addNotificationJob } from '../setup';
 import { PriorityScoreService } from '../../services/priority-score-service';
 import { resolveTrackingUrl } from '../../utils/tracking-url';
 
+// "Stuck in Transit" = the merchant's warehouse threshold + this many days,
+// as the settings screen states (SettingsCard "auto-calculated").
+const TRANSIT_EXTRA_DAYS = 5;
+
 interface DelayCheckJobData {
   orderId: number;
   trackingNumber: string;
@@ -25,11 +29,16 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
     // runMigrations in database/connection.ts); shops only carries the
     // merchant contact columns. Reading flags off the shops alias is
     // runtime-fatal in production ("column s.email_enabled does not exist").
+    //
+    // The merchant sets ONE number in the dashboard, saved to
+    // delay_threshold_days; the settings screen promises "Stuck in Transit" is
+    // that number + TRANSIT_EXTRA_DAYS. Nothing writes warehouse_delay_days or
+    // transit_delay_days, so they are only the fallback for a NULL setting.
     const orderResult = await query(
       `SELECT o.*,
-              st.warehouse_delay_days,
+              COALESCE(st.delay_threshold_days, st.warehouse_delay_days) AS warehouse_delay_days,
               st.carrier_delay_days,
-              st.transit_delay_days,
+              COALESCE(st.delay_threshold_days + $2, st.transit_delay_days) AS transit_delay_days,
               st.email_enabled,
               st.sms_enabled,
               s.merchant_email,
@@ -42,7 +51,7 @@ export async function processDelayCheck(job: Job<DelayCheckJobData>): Promise<vo
        JOIN shops s ON o.shop_id = s.id
        JOIN app_settings st ON st.shop_id = o.shop_id
        WHERE o.id = $1`,
-      [orderId],
+      [orderId, TRANSIT_EXTRA_DAYS],
     );
 
     if (orderResult.length === 0) {
